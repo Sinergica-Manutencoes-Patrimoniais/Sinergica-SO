@@ -1,7 +1,7 @@
 import { Button, ConfirmDialog, Modal, Skeleton, useToast } from "@sinergica/ui";
 // EstruturaClientePage.tsx — E01-S76 (AC-1, AC-2, AC-3): CRUD de Área > Local (árvore) de um
 // cliente. Mora como aba dentro de VisaoClientePage (design.md — "aba em VisaoClientePage.tsx").
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronRight,
@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { baixarPlanilha } from "../../../lib/sheetjs";
+import { supabase } from "../../../lib/supabase-client";
 import { ativosClienteQueryKeys } from "../application/ativos-cliente-queries";
+import { AnexosLocalizacaoAtualizada } from "../interfaces/levantamentos/AnexosLocalizacaoAtualizada";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
 import type { ClienteHeader } from "../application/cliente-360-gateway";
 import {
   criarArea,
@@ -46,6 +49,23 @@ import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipame
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
+import { GruposQuantitativos } from "../interfaces/estrutura-tecnica/GruposQuantitativos";
+import { ComposicaoLocal } from "../interfaces/estrutura-tecnica/ComposicaoLocal";
+import { EntradaLevantamentos } from "../interfaces/levantamentos/Conectado";
+import { CentralMateriais } from "../interfaces/listas-materiais/Central";
+import { ConsultaCodigoPublico } from "../interfaces/codigos-publicos/Consulta";
+import { PoliticaEquipment } from "../interfaces/codigos-publicos/PoliticaEquipment";
+import { ReservasEquipment } from "../interfaces/codigos-publicos/ReservasEquipment";
+import { CapacidadeAgendaWorkspace } from "../interfaces/capacidade-agenda/Workspace";
+import { ReferenciasRetorno } from "../interfaces/pendencias-tecnicas/ReferenciasRetorno";
+import { ImportacaoPlanoWorkspace } from "../interfaces/importacao-plano/Workspace";
+import { ReconciliacaoWorkspace } from "../interfaces/reconciliacao/Workspace";
+import { DiagnosticoCliente } from "../interfaces/migracao/DiagnosticoCliente";
+import { DiagnosticoCodigosLegados } from "../interfaces/migracao/DiagnosticoCodigosLegados";
+import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
+import { ClassificarRetorno } from "../interfaces/retorno-campo/ClassificarRetorno";
+import { EstadoCampo } from "../interfaces/origem-campo/EstadoCampo";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
 type ModalLocal =
@@ -57,14 +77,25 @@ function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
   return nodes.flatMap((node) => [node, ...achatar(node.filhos)]);
 }
 
+// Sublocais são nós da mesma árvore; exibir o caminho evita nomes iguais ambíguos.
+function locaisParaGrupo(nodes: LocalArvoreNode[], caminho: string[]): { id: string; nome: string }[] {
+  return nodes.flatMap((node) => {
+    if (!node.ativo) return [];
+    const proximo = [...caminho, node.nome];
+    return [{ id: node.id, nome: proximo.join(" / ") }, ...locaisParaGrupo(node.filhos, proximo)];
+  });
+}
+
 export function EstruturaClientePage({
   cliente,
-  temEscrita,
+  temEscrita: escritaLegada,
   userId,
+  onAbrirOs,
 }: {
   cliente: ClienteHeader;
   temEscrita: boolean;
   userId: string;
+  onAbrirOs?: (osId: string) => void;
 }) {
   const clienteId = cliente.id;
   const [carregando, setCarregando] = useState(true);
@@ -100,6 +131,21 @@ export function EstruturaClientePage({
   const [localParaExcluir, setLocalParaExcluir] = useState<LocalArvoreNode | null>(null);
   const toast = useToast();
   const queryClient = useQueryClient();
+  const capacidadeHabilitada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  async function conferirCapacidade() {
+    const antes = await supabase.auth.getUser();
+    if (antes.error || antes.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
+    const depois = await supabase.auth.getUser();
+    if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+  }
+  const capacidade = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
+    enabled: capacidadeHabilitada && escritaLegada, refetchOnWindowFocus: true,
+    queryFn: async () => { await conferirCapacidade(); return true; } });
+  const temEscrita = escritaLegada && (!capacidadeHabilitada || (!capacidade.isFetching && !capacidade.isError && capacidade.data === true));
+  async function exigirGestao() {
+    if (!temEscrita) throw new Error("Permissão de cadastro indisponível.");
+    if (capacidadeHabilitada) await conferirCapacidade();
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -181,6 +227,8 @@ export function EstruturaClientePage({
     plano: Parameters<typeof executarPlanoEstrutura>[0],
     onProgresso: (atual: number, total: number) => void,
   ) {
+    if (capacidadeHabilitada) throw new Error("Use a recepção de levantamentos para conferência antes da incorporação.");
+    await exigirGestao();
     const relatorio = await executarPlanoEstrutura(
       plano,
       {
@@ -220,6 +268,7 @@ export function EstruturaClientePage({
   }
 
   async function salvarArea(dados: AreaFormData) {
+    await exigirGestao();
     if (modalArea?.modo === "editar") {
       await editarArea(supabaseHierarquiaAdapter, {
         ...dados,
@@ -234,6 +283,7 @@ export function EstruturaClientePage({
   }
 
   async function salvarLocal(dados: LocalFormData) {
+    await exigirGestao();
     if (modalLocal?.modo === "editar") {
       await editarLocal(supabaseHierarquiaAdapter, {
         ...dados,
@@ -248,18 +298,21 @@ export function EstruturaClientePage({
   }
 
   async function adicionarTipoDeLocal(nome: string) {
+    await exigirGestao();
     await criarTipoDeLocal(supabaseHierarquiaAdapter, { clienteId, nome, userId });
     await carregar();
   }
 
   async function removerTipoDeLocal() {
     if (!tipoParaRemover) return;
+    await exigirGestao();
     await desativarTipoDeLocal(supabaseHierarquiaAdapter, tipoParaRemover.id, userId);
     await carregar();
   }
 
   async function excluirArea() {
     if (!areaParaExcluir) return;
+    await exigirGestao();
     await desativarArea(supabaseHierarquiaAdapter, areaParaExcluir.id, userId);
     await carregar();
   }
@@ -274,6 +327,7 @@ export function EstruturaClientePage({
 
   async function excluirLocal() {
     if (!localParaExcluir) return;
+    await exigirGestao();
     await desativarLocal(supabaseHierarquiaAdapter, localParaExcluir.id, userId);
     await carregar();
   }
@@ -343,7 +397,7 @@ export function EstruturaClientePage({
           <Button variant="secondary" onClick={() => void exportarExcel()}>
             Exportar Excel
           </Button>
-          {temEscrita && (
+          {temEscrita && !capacidadeHabilitada && (
             <Button variant="secondary" onClick={() => setImportando(true)}>
               Importar Excel
             </Button>
@@ -439,6 +493,39 @@ export function EstruturaClientePage({
         onAdicionar={adicionarTipoDeLocal}
         onRemover={setTipoParaRemover}
       />
+      {import.meta.env.VITE_SSO_CONSULTA_CODIGOS_ENABLED === "true" && <ConsultaCodigoPublico key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      <PoliticaEquipment userId={userId} />
+      <ReservasEquipment userId={userId} clienteId={clienteId} />
+      {import.meta.env.VITE_SSO_CAPACIDADE_AGENDA_ENABLED === "true" && <CapacidadeAgendaWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {import.meta.env.VITE_SSO_REFERENCIAS_RETORNO_ENABLED === "true" && <ReferenciasRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {import.meta.env.VITE_SSO_IMPORTACAO_PLANO_ENABLED === "true" && <ImportacaoPlanoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {import.meta.env.VITE_SSO_RECONCILIACAO_ENABLED === "true" && <ReconciliacaoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+      {import.meta.env.VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED === "true" && <DiagnosticoCliente key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {import.meta.env.VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED === "true" && <DiagnosticoCodigosLegados key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      <SistemasDistribuidos key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      {import.meta.env.VITE_SSO_CLASSIFICAR_RETORNO_ENABLED === "true" && <ClassificarRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {import.meta.env.VITE_SSO_ESTADO_CAMPO_ENABLED === "true" && <EstadoCampo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+      <CentralMateriais usuario={userId} cliente={clienteId} onAbrirOs={onAbrirOs} />
+      <GruposQuantitativos
+        key={clienteId}
+        userId={userId}
+        clienteId={clienteId}
+        locais={areas.filter((area) => area.ativo).flatMap((area) => locaisParaGrupo(arvores[area.id] ?? [], [area.nome]))}
+        categorias={categorias.map((categoria) => ({
+          id: categoria.id,
+          nome: categoria.descricao,
+        }))}
+        sistemas={sistemas
+          .filter((sistema) => sistema.ativo)
+          .map((sistema) => ({ id: sistema.id, nome: sistema.nome }))}
+      />
+      {temEscrita && (
+        <EntradaLevantamentos
+          userId={userId}
+          clienteId={clienteId}
+          habilitado={import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED}
+        />
+      )}
       {importando && (
         <ImportacaoEstruturaModal
           estado={{
@@ -520,6 +607,8 @@ export function EstruturaClientePage({
               </div>
               {expandidas.has(area.id) && (
                 <div className="px-4 py-2">
+                  <AnexosLocalizacaoAtualizada userId={userId} clienteId={clienteId} tipo="area" entidadeId={area.id}/>
+                  <HistoricoCadastroLevantamento userId={userId} clienteId={clienteId} tipo="area" entidadeId={area.id}/>
                   {locais.length === 0 ? (
                     <p className="py-3 text-caption text-ink-3">
                       Nenhum Local cadastrado nesta Área.
@@ -527,7 +616,10 @@ export function EstruturaClientePage({
                   ) : (
                     <LocalTree
                       nodes={locais}
+                      userId={userId}
+                      clienteId={clienteId}
                       areaId={area.id}
+                      caminho={[area.nome]}
                       nivel={0}
                       temEscrita={temEscrita}
                       onNovoFilho={(parentId) =>
@@ -705,7 +797,10 @@ function TiposDeLocalPainel({
 
 function LocalTree({
   nodes,
+  userId,
+  clienteId,
   areaId,
+  caminho,
   nivel,
   temEscrita,
   onNovoFilho,
@@ -713,7 +808,10 @@ function LocalTree({
   onExcluir,
 }: {
   nodes: LocalArvoreNode[];
+  userId: string;
+  clienteId: string;
   areaId: string;
+  caminho: string[];
   nivel: number;
   temEscrita: boolean;
   onNovoFilho: (parentId: string) => void;
@@ -765,10 +863,16 @@ function LocalTree({
               </div>
             )}
           </div>
+          <ComposicaoLocal userId={userId} clienteId={clienteId} localId={node.id} caminho={[...caminho, node.nome]} />
+          <AnexosLocalizacaoAtualizada userId={userId} clienteId={clienteId} tipo={nivel === 0 ? "local" : "sublocal"} entidadeId={node.id}/>
+          <HistoricoCadastroLevantamento userId={userId} clienteId={clienteId} tipo={nivel === 0 ? "local" : "sublocal"} entidadeId={node.id}/>
           {node.filhos.length > 0 && (
             <LocalTree
               nodes={node.filhos}
+              userId={userId}
+              clienteId={clienteId}
               areaId={areaId}
+              caminho={[...caminho, node.nome]}
               nivel={nivel + 1}
               temEscrita={temEscrita}
               onNovoFilho={onNovoFilho}

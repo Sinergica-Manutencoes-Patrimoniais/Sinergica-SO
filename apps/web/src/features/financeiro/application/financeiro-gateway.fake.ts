@@ -52,7 +52,7 @@ export function criarFinanceiroGatewayFake(
     obterRentabilidadeClienteMes: vi.fn().mockResolvedValue([]),
     obterCustoOsPorClienteMes: vi.fn().mockResolvedValue([]),
     anexarComprovante: vi.fn(),
-    urlAssinadaComprovante: vi.fn(),
+    baixarComprovante: vi.fn(),
     corrigirLancamento: vi.fn(),
     estornarLancamentoRealizado: vi.fn(),
     criarTransferencia: vi.fn(),

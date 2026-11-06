@@ -1,0 +1,401 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
+import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
+import { conflitoPreparacaoVisita } from "./conflito-preparacao-visita";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+type Candidato = {
+  visita_id: string;
+  semana_origem: string;
+  vencimento_original: string;
+  estado_visita: string;
+  feriado_declarado: boolean;
+  vigencia_declarada: boolean;
+  ocorrencia_preparada: boolean;
+};
+const itemSchema = z
+  .object({
+    visitaId: z.string().uuid(),
+    ocorrenciaId: z.string().uuid(),
+    fonteDiaUtil: z.string().min(1).max(500),
+  })
+  .strict();
+const pedidoSchema = z
+  .object({
+    requestId: z.string().uuid(),
+    clienteId: z.string().uuid(),
+    planoId: z.string().uuid(),
+    versaoId: z.string().uuid(),
+    rotinaId: z.string().uuid(),
+    revision: z.number().int().positive(),
+    itens: z.array(itemSchema).min(1).max(25),
+  })
+  .strict();
+type Pedido = z.infer<typeof pedidoSchema>;
+export function LoteOcorrenciasVisita(props: Parameters<typeof Conteudo>[0]) {
+  return (
+    <Conteudo
+      key={JSON.stringify([
+        props.userId,
+        props.clienteId,
+        props.planoId,
+        props.versaoId,
+        props.rotinaId,
+        props.serieId,
+      ])}
+      {...props}
+    />
+  );
+}
+function Conteudo({
+  userId,
+  clienteId,
+  planoId,
+  versaoId,
+  rotinaId,
+  serieId,
+  revision,
+  candidatos,
+  consultando,
+}: {
+  userId: string;
+  clienteId: string;
+  planoId: string;
+  versaoId: string;
+  rotinaId: string;
+  serieId: string;
+  revision: number;
+  candidatos: Candidato[];
+  consultando: boolean;
+}) {
+  const cache = useQueryClient();
+  const storage = `lote-visita:${JSON.stringify([userId, clienteId, planoId, versaoId, rotinaId, serieId])}`;
+  const trava = useRef(false);
+  const montado = useRef(false);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  async function conferirSessao() {
+    await conferirSessaoDiagnostico(userId);
+    if (!montado.current) throw new Error("Tela desmontada.");
+  }
+  const primeira = useRef(false);
+  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+  const [fonte, setFonte] = useState("");
+  const [confirmado, setConfirmado] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [resultados, setResultados] = useState<
+    Array<{ visitaId: string; ocorrenciaId: string; criada: boolean }>
+  >([]);
+  const [filaAberta, setFilaAberta] = useState<string | null>(null);
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(storage);
+      if (!raw) return null;
+      const p = pedidoSchema.parse(JSON.parse(raw));
+      return p.clienteId === clienteId &&
+        p.planoId === planoId &&
+        p.versaoId === versaoId &&
+        p.rotinaId === rotinaId
+        ? p
+        : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const envio = useMutation({
+    mutationFn: async (p: Pedido) => {
+      await conferirSessao();
+      if (sessionStorage.getItem(storage) !== JSON.stringify(p))
+        throw new Error("Tentativa divergente.");
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_preparar_lote_visita_canonica", {
+          p_request_id: p.requestId,
+          p_cliente_id: p.clienteId,
+          p_plano_id: p.planoId,
+          p_versao_id: p.versaoId,
+          p_rotina_id: p.rotinaId,
+          p_expected_revision: p.revision,
+          p_itens: p.itens,
+        });
+      if (error) throw error;
+      const r = z
+        .object({
+          requestId: z.string().uuid(),
+          itens: z.array(
+            z
+              .object({
+                requestId: z.string().uuid(),
+                ocorrenciaId: z.string().uuid(),
+                cicloVisitaId: z.string().uuid(),
+                visitaId: z.string().uuid(),
+                criada: z.boolean(),
+                osCriada: z.literal(false),
+                tarefaAuvoCriada: z.literal(false),
+                fonteFeriadosCompleta: z.literal(false),
+              })
+              .strict(),
+          ),
+          atomico: z.literal(true),
+          osCriada: z.literal(false),
+          tarefaAuvoCriada: z.literal(false),
+          fonteFeriadosCompleta: z.literal(false),
+        })
+        .strict()
+        .parse(data);
+      if (
+        r.requestId !== p.requestId ||
+        r.itens.length !== p.itens.length ||
+        new Set(r.itens.map((i) => i.ocorrenciaId.toLowerCase())).size !== r.itens.length ||
+        JSON.stringify(r.itens.map((i) => i.visitaId).sort()) !==
+          JSON.stringify(p.itens.map((i) => i.visitaId).sort())
+      )
+        throw new Error("Resposta divergente.");
+      await conferirSessao();
+      return r;
+    },
+    onSuccess: async (r, p) => {
+      try {
+        await conferirSessao();
+        if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error();
+        sessionStorage.removeItem(storage);
+      } catch {
+        if (montado.current) setAviso("Lote confirmado, mas tentativa local não removida; procure suporte.");
+        return;
+      }
+      setPendente(null);
+      setSelecionadas([]);
+      setConfirmado(null);
+      setResultados(
+        r.itens.map(({ visitaId, ocorrenciaId, criada }) => ({ visitaId, ocorrenciaId, criada })),
+      );
+      setFilaAberta(null);
+      setAviso(`${r.itens.length} Visita(s) processadas; nenhuma OS ou tarefa foi criada.`);
+      await Promise.all([
+        cache.invalidateQueries({
+          queryKey: [
+            "previa-ocorrencia-visita",
+            userId,
+            clienteId,
+            planoId,
+            versaoId,
+            rotinaId,
+            serieId,
+          ],
+        }),
+        cache.invalidateQueries({ queryKey: ["ciclos-uniformes", userId, clienteId, planoId] }),
+        cache.invalidateQueries({
+          queryKey: ["obrigacoes-preparadas", userId, clienteId, planoId],
+        }),
+        cache.invalidateQueries({
+          queryKey: ["reserva-futuro-visitas", userId, clienteId, planoId],
+        }),
+        cache.invalidateQueries({ queryKey: ["reserva-futuro", userId, clienteId, planoId] }),
+      ]);
+    },
+    onError: async (error, p) => {
+      if (!montado.current) return;
+      if (primeira.current && conflitoPreparacaoVisita(error)) {
+        try {
+          await conferirSessao();
+          if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error();
+          sessionStorage.removeItem(storage);
+          setPendente(null);
+          setConfirmado(null);
+          setAviso("A revisão ou a Visita selecionada mudou. Atualize e confira novamente.");
+          return;
+        } catch {
+          if (montado.current) setAviso("Tentativa preservada; procure suporte.");
+          return;
+        }
+      }
+      setAviso(
+        "Resultado não confirmado. Repita a mesma tentativa; se persistir, procure suporte.",
+      );
+    },
+    onSettled: () => {
+      trava.current = false;
+      primeira.current = false;
+    },
+  });
+  const enviar = (p: Pedido, nova = false) => {
+    if (trava.current) return;
+    trava.current = true;
+    primeira.current = nova;
+    envio.mutate(p);
+  };
+  const selecionados = [...selecionadas]
+    .sort()
+    .map((id) => candidatos.find((c) => c.visita_id === id));
+  const assinatura =
+    selecionados.length > 0 && selecionados.every(Boolean)
+      ? JSON.stringify([
+          userId,
+          clienteId,
+          planoId,
+          versaoId,
+          rotinaId,
+          serieId,
+          revision,
+          fonte.trim(),
+          selecionados,
+        ])
+      : null;
+  const confirmacaoAtual = assinatura !== null && confirmado === assinatura;
+  const iniciar = () => {
+    if (pendente || trava.current || !confirmacaoAtual || consultando) return;
+    try {
+      const ids = [...selecionadas].sort();
+      if (
+        ids.some(
+          (id) =>
+            !candidatos.some(
+              (c) => c.visita_id === id && !c.feriado_declarado && c.vigencia_declarada,
+            ),
+        )
+      )
+        throw new Error();
+      const p = pedidoSchema.parse({
+        requestId: crypto.randomUUID(),
+        clienteId,
+        planoId,
+        versaoId,
+        rotinaId,
+        revision,
+        itens: ids.map((id) => ({
+          visitaId: id,
+          ocorrenciaId: crypto.randomUUID(),
+          fonteDiaUtil: fonte.trim(),
+        })),
+      });
+      if (sessionStorage.getItem(storage) !== null) throw new Error();
+      sessionStorage.setItem(storage, JSON.stringify(p));
+      setPendente(p);
+      setResultados([]);
+      setFilaAberta(null);
+      enviar(p, true);
+    } catch {
+      setAviso("Confira Visitas, fonte, revisão e sessão. Nada foi enviado.");
+    }
+  };
+  return (
+    <section aria-label="Preparação em lote por Visita">
+      <h5>Preparar lote por Visita</h5>
+      <p>
+        Até 25 Visitas da lista consultada. A mesma fonte declarada será usada para cada uma;
+        feriados conhecidos não são incluídos, mas a lista não comprova cobertura completa. Falha em
+        um item reverte o lote; não cria OS ou tarefa Auvo.
+      </p>
+      <fieldset disabled={!!pendente || envio.isPending || consultando}>
+        <ul>
+          {candidatos.map((c) => (
+            <li key={c.visita_id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selecionadas.includes(c.visita_id)}
+                  disabled={
+                    c.feriado_declarado ||
+                    !c.vigencia_declarada ||
+                    (!selecionadas.includes(c.visita_id) && selecionadas.length >= 25)
+                  }
+                  onChange={(e) => {
+                    setConfirmado(null);
+                    setSelecionadas((atual) =>
+                      e.target.checked
+                        ? [...atual, c.visita_id]
+                        : atual.filter((id) => id !== c.visita_id),
+                    );
+                  }}
+                />{" "}
+                Visita {c.visita_id} · semana {c.semana_origem} · vencimento {c.vencimento_original}{" "}
+                · {c.feriado_declarado ? "feriado declarado" : "feriado não comprovado"} ·{" "}
+                {c.vigencia_declarada ? "vigência declarada" : "sem vigência"} ·{" "}
+                {c.ocorrencia_preparada ? "já preparada; poderá ser reutilizada" : "não preparada"}
+              </label>
+            </li>
+          ))}
+        </ul>
+        <label>
+          Fonte consultada para cada dia{" "}
+          <input
+            maxLength={500}
+            value={fonte}
+            onChange={(e) => {
+              setFonte(e.target.value);
+              setConfirmado(null);
+            }}
+          />
+        </label>
+        <p>
+          Selecionadas: {selecionadas.length} · revisão do Plano {revision}.
+        </p>
+        <label>
+          <input
+            type="checkbox"
+            checked={confirmacaoAtual}
+            disabled={!assinatura}
+            onChange={(e) => setConfirmado(e.target.checked ? assinatura : null)}
+          />{" "}
+          Conferi cada Visita, vigência e fonte declarada
+        </label>
+        <button
+          type="button"
+          disabled={!confirmacaoAtual || !fonte.trim() || selecionadas.length < 1}
+          onClick={iniciar}
+        >
+          Preparar lote
+        </button>
+      </fieldset>
+      {resultados.length > 0 && (
+        <section aria-label="Resultados das Visitas preparadas">
+          <h6>Ocorrências preparadas</h6>
+          <ul>
+            {resultados.map((r) => (
+              <li key={r.visitaId}>
+                Visita {r.visitaId} · ocorrência {r.ocorrenciaId} ·{" "}
+                {r.criada ? "preparada" : "reutilizada"}{" "}
+                {import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && (
+                  <button
+                    type="button"
+                    aria-expanded={filaAberta === r.ocorrenciaId}
+                    onClick={() =>
+                      setFilaAberta((atual) => (atual === r.ocorrenciaId ? null : r.ocorrenciaId))
+                    }
+                  >
+                    {filaAberta === r.ocorrenciaId ? "Ocultar fila" : "Conferir inclusão na fila"}
+                  </button>
+                )}
+                {filaAberta === r.ocorrenciaId && (
+                  <FilaPreventivaPcm
+                    userId={userId}
+                    clienteId={clienteId}
+                    planoId={planoId}
+                    preparadaId={r.ocorrenciaId}
+                    tipo="visita"
+                  />
+                )}
+                <IntegrarOrigemOcorrencia
+                  userId={userId}
+                  clienteId={clienteId}
+                  planoId={planoId}
+                  revision={revision}
+                  preparadaId={r.ocorrenciaId}
+                  tipo="visita"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>
+          Repetir mesmo lote
+        </button>
+      )}
+      {aviso && <output>{aviso}</output>}
+    </section>
+  );
+}

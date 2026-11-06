@@ -114,6 +114,7 @@ export async function auvoToken(): Promise<string> {
 interface AuvoRequestState {
   retriedOn401?: boolean;
   retriedOn429?: boolean;
+  chamadaUnica?: boolean;
 }
 
 async function auvoRequest<T>(
@@ -125,6 +126,8 @@ async function auvoRequest<T>(
   const token = await auvoToken();
   const res = await fetch(`${AUVO_BASE_URL}${path}`, {
     method,
+    // Não reenviar credencial nem corpo para outro endereço em escritas T−24.
+    redirect: state.chamadaUnica ? "error" : "follow",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -134,22 +137,27 @@ async function auvoRequest<T>(
 
   const requestId = res.headers.get("X-Request-Id");
 
+  // Uma escrita T−24 não é repetida, mesmo ao renovar o token. Invalidar o
+  // cache somente prepara uma chamada futura, após reconciliação do resultado.
+  if (res.status === 401 && state.chamadaUnica) invalidateToken();
+
   // 401: token expirado/revogado no meio da chamada — invalida cache, faz login de novo, 1 retry.
-  if (res.status === 401 && !state.retriedOn401) {
+  if (res.status === 401 && !state.retriedOn401 && !state.chamadaUnica) {
     logAuvoCall({ method, path, status: res.status, requestId, ok: false, detail: "401 — retry com novo login" });
     invalidateToken();
     return auvoRequest<T>(method, path, body, { ...state, retriedOn401: true });
   }
 
   // 429: rate limit — 1 retry com backoff simples.
-  if (res.status === 429 && !state.retriedOn429) {
+  if (res.status === 429 && !state.retriedOn429 && !state.chamadaUnica) {
     logAuvoCall({ method, path, status: res.status, requestId, ok: false, detail: "429 — retry com backoff" });
     await sleep(RATE_LIMIT_BACKOFF_MS);
     return auvoRequest<T>(method, path, body, { ...state, retriedOn429: true });
   }
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => "");
+    // Não registrar nem consumir corpo remoto potencialmente sensível em T−24.
+    const detail = state.chamadaUnica ? undefined : await res.text().catch(() => "");
     logAuvoCall({ method, path, status: res.status, requestId, ok: false, detail });
     throw new AuvoApiError(res.status, `Auvo ${method} ${path} falhou (status ${res.status})`, requestId ?? undefined);
   }
@@ -177,6 +185,15 @@ export function auvoPut<T>(path: string, body: unknown): Promise<T> {
  * decisão do usuário: delete no PCM nunca vira DELETE físico no Auvo). */
 export function auvoPatch<T>(path: string, body: unknown): Promise<T> {
   return auvoRequest<T>("PATCH", path, body);
+}
+
+/** T−24: uma única tentativa HTTP; erro não comprova ausência de efeito remoto. */
+export function auvoPostUmaVez<T>(path: string, body: unknown): Promise<T> {
+  return auvoRequest<T>("POST", path, body, { chamadaUnica: true });
+}
+
+export function auvoPatchUmaVez<T>(path: string, body: unknown): Promise<T> {
+  return auvoRequest<T>("PATCH", path, body, { chamadaUnica: true });
 }
 
 /** DELETE físico — implementado por completude de contrato do cliente HTTP, mas nenhum descriptor

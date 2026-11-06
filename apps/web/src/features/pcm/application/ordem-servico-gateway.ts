@@ -123,7 +123,7 @@ export interface OrdemServicoGateway {
    * "Confirmar chamado") — mint do `CH-XXXX`, vincula na OS, fecha o ciclo (`convertido_os`).
    * Cliente/título são lidos da própria OS no adapter — não depende do que o client já tem em
    * memória. */
-  confirmarChamado(input: { ordemId: string; userId: string }): Promise<{ numero: string }>;
+  confirmarChamado(input: { ordemId: string; userId: string; somenteRepetir?: boolean }): Promise<{ numero: string }>;
   /** E01-S81 AC-4: sinaliza se a IA de título está configurada/ativa — booleano público, nunca
    * expõe a credencial (checagem separada de `fn_integracao_tem_segredo`, que é superadmin-only). */
   iaTituloAtiva(): Promise<boolean>;

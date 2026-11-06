@@ -19,28 +19,39 @@ const Ctx = createContext<PermissoesCtx | null>(null);
 
 export function PermissoesProvider({ children }: { children: React.ReactNode }) {
   const { user, status } = useAuth();
+  const usuarioId = user?.id;
+  const papel = user?.papel;
   const [permissoes, setPermissoes] = useState<PermissaoModulo[]>([]);
+  const [origem, setOrigem] = useState<{ id: string; papel: string } | null>(null);
   const [carregando, setCarregando] = useState(true);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: depende só de user?.id de propósito — troca de referência sem troca de id não deve recarregar permissões nem desmontar telas de config.
   useEffect(() => {
     let ativo = true;
 
-    if (status !== "autenticado" || !user) {
+    if (status !== "autenticado" || !usuarioId || !papel) {
       setPermissoes([]);
+      setOrigem(null);
       setCarregando(status === "carregando");
       return;
     }
 
     setCarregando(true);
+    setOrigem(null);
+    const identidade = { id: usuarioId, papel };
     resolverMinhasPermissoes(supabaseConfigAdapter)
       .then((lista) => {
-        if (ativo) setPermissoes(lista);
+        if (ativo) {
+          setPermissoes(lista);
+          setOrigem(identidade);
+        }
       })
       .catch(() => {
         // Falha ao resolver permissões não pode travar a Home — trata como "sem permissão
         // nenhuma" (mais restritivo, nunca mais permissivo que o real).
-        if (ativo) setPermissoes([]);
+        if (ativo) {
+          setPermissoes([]);
+          setOrigem(identidade);
+        }
       })
       .finally(() => {
         if (ativo) setCarregando(false);
@@ -49,15 +60,24 @@ export function PermissoesProvider({ children }: { children: React.ReactNode }) 
     return () => {
       ativo = false;
     };
-  }, [status, user?.id]);
+  }, [status, usuarioId, papel]);
+
+  const corresponde =
+    status === "autenticado" && !!user && origem?.id === user.id && origem.papel === user.papel;
 
   const podeAcessar = useCallback(
     (modulo: ModuloId, nivel: NivelAcesso): boolean =>
-      podeAcessarModulo(user?.papel ?? "", permissoes, modulo, nivel),
-    [permissoes, user],
+      corresponde && podeAcessarModulo(user?.papel ?? "", permissoes, modulo, nivel),
+    [corresponde, permissoes, user],
   );
 
-  return <Ctx.Provider value={{ carregando, podeAcessar }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider
+      value={{ carregando: carregando || (status === "autenticado" && !corresponde), podeAcessar }}
+    >
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function usePermissoes() {

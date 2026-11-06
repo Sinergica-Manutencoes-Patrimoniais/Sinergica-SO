@@ -1,0 +1,63 @@
+{
+  "tipo": "sobreposição diagnóstica; não é pacote de release",
+  "manifesto_base_preservado": "docs/planejamento/plano-manutencao/recorte-candidato-migrations.json",
+  "overlay_anterior_preservado": "docs/planejamento/plano-manutencao/recorte-candidato-diagnostico-0803.json",
+  "base_main": "22aca3918224bc45175e80c6ec88b957fdb604aa",
+  "fonte_backup": "84c9fcf8fc7ec32bda5399872ad30192c1587ed6",
+  "status": "INCOMPLETO — uso em clone descartável; não implantar",
+  "migrations_adicionais": [
+    {
+      "caminho": "supabase/migrations/0803_E01-S168_recebimento_origem_visita.sql",
+      "git_blob": "8631831a92af5368840187866b4ec464474f0a7b",
+      "sha256": "c338ce1cddb0c5923f0dd43779e55e392b9d9b54d92032e2903dcb134569a24f",
+      "evidencia": "0402 → 0803 → 0903: insere ramo Visita no classificador; 0903 exige trecho.",
+      "efeitos": "Altera classificador privado e revoga EXECUTE; não cria tabelas."
+    },
+    {
+      "caminho": "supabase/migrations/0805_E01-S168_guarda_cobertura_origem_visita.sql",
+      "git_blob": "75ce14a4627a57c6a01c749e9fcf5529d4ed0f8e",
+      "sha256": "0480611e2a48136ae8354388925ba8d34b6b4db91a74f932d93fd5d3166b44dc",
+      "evidencia": "0582 → 0805 → 0904 → 1692: introduz ramo Visita da guarda de cobertura.",
+      "efeitos": "Altera guarda de cobertura privada e revoga EXECUTE; preserva barreira 0729."
+    },
+    {
+      "caminho": "supabase/migrations/0807_E01-S173_pendencia_origem_visita.sql",
+      "git_blob": "534877fa30bef40a1d43f4a1dde07ac97aa72001",
+      "sha256": "a6663bdb65c1ddd23307ae0674059f6319a89fcb97293086924d455416f2ab56",
+      "evidencia": "0371 → 0807 → 0906: introduz ramo/variável Visita que 0906 exige.",
+      "efeitos": "Altera registrador privado de pendências e revoga EXECUTE; preserva barreira 0729."
+    },
+    {
+      "caminho": "supabase/migrations/0811_E01-S168_previa_cobertura_visita.sql",
+      "git_blob": "de662315dd063db5a15c3f13910f933e41e121b7",
+      "sha256": "19387af3ecd002db556f2bebf1201f9754fc36b483b5fe2b26dec041c56a9339",
+      "evidencia": "0562 → 0811 → 0905 → 1692: introduz ramo Visita da prévia.",
+      "efeitos": "Altera prévia privada de cobertura e revoga EXECUTE."
+    },
+    {
+      "caminho": "supabase/migrations/0904_E01-S168_cobertura_retorno_grupo.sql",
+      "git_blob": "30ae2e47025510c2d13f7eb493070b367238e4eb",
+      "sha256": "5e5ab25b4378163c13ac9f75d8c603f71f947105e57c9486b40dbd56f4116338",
+      "evidencia": "0805 → 0904 → 1692: transforma ramo Visita em elsif exigido por 1692.",
+      "efeitos": "Altera guarda privada para Grupo e revoga EXECUTE."
+    },
+    {
+      "caminho": "supabase/migrations/0905_E01-S168_perguntas_retorno_grupo.sql",
+      "git_blob": "972f227f6d95c5ba932851817860fbfa148875be",
+      "sha256": "e29b75ed034111a1bc57eb0fb0b4148b30474c413da8e0d094dea502fa600bbf",
+      "evidencia": "0811 → 0905 → 1692: transforma ramo Visita em elsif exigido por 1692.",
+      "efeitos": "Altera prévia privada para Grupo e revoga EXECUTE."
+    }
+  ],
+  "prerequisitos_identificados": [
+    "0371, 0402, 0562, 0582, 0726, 0729, 0815, 0823, 0903, 0906 e 1692 constam do manifesto original; presença não comprova aplicação nem fecho.",
+    "0904/0905 referem vínculos e ocorrências de Grupo criados por 0823/0815, já no manifesto.",
+    "Todas as substituições dinâmicas devem encontrar a definição esperada na ordem; SQL não foi executado nesta análise."
+  ],
+  "limites": [
+    "Modo diagnóstico ainda antecipa duas ações da 0415 que não substituem 0323/0334.",
+    "Cadeias S168/S173 mudam reconhecimento de Visita/Grupo e ACLs; revisão de escopo, RLS e concorrência obrigatória antes de release.",
+    "Omissões comportamentais 1587/1591/1675 e outras dependências transitivas não são solucionadas por este overlay.",
+    "Não é pacote de release e não prova que a seleção inteira compile."
+  ]
+}

@@ -21,7 +21,7 @@ describe("getSession", () => {
 
   it("retorna sem-perfil quando a sessão existe mas não há linha em config.usuarios", async () => {
     const gateway = gatewayMock({ getPerfil: vi.fn(async () => null) });
-    expect(await getSession(gateway)).toEqual({ status: "sem-perfil" });
+    expect(await getSession(gateway)).toEqual({ status: "sem-perfil", userId: "u1" });
   });
 
   it("retorna autenticado com o usuário resolvido quando sessão e perfil existem", async () => {

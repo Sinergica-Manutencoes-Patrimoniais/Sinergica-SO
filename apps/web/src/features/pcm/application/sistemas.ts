@@ -65,12 +65,12 @@ export async function criarSistema(
         `O identificador ${primeiro.identificador} já existe. Mude o número no nome ou edite o identificador.`,
       );
     }
-    const segundo = await resolverIdentificadorNaCriacao(
-      opcoesIdentificador.identificador,
-      entradaIdentificador,
-      { ...opcoesIdentificador, userId: input.userId },
-    );
     try {
+      const segundo = await resolverIdentificadorNaCriacao(
+        opcoesIdentificador.identificador,
+        entradaIdentificador,
+        { ...opcoesIdentificador, userId: input.userId },
+      );
       return await gateway.criar({
         ...validado,
         codigo: segundo.identificador,
@@ -90,39 +90,11 @@ export async function criarSistema(
 export async function editarSistema(
   gateway: SistemasGateway,
   input: EditarSistemaCommand,
-  opcoesIdentificador?: CriarComIdentificadorOpcoes,
+  _opcoesIdentificador?: CriarComIdentificadorOpcoes,
 ) {
   const validado = validarSistema(input);
-  if (
-    !opcoesIdentificador ||
-    !validado.alterarIdentificador ||
-    opcoesIdentificador.identificadorManual !== null
-  ) {
-    return gateway.editar({ ...validado, id: input.id, userId: input.userId });
-  }
-  const preparado = await prepararIdentificadorNaCriacao(
-    opcoesIdentificador.identificador,
-    {
-      clienteId: validado.clienteId,
-      areaId: validado.areaId ?? null,
-      localId: validado.localId ?? null,
-      categoriaId: validado.categoriaId as string,
-      nomeAtivo: validado.nome,
-    },
-    { ...opcoesIdentificador, userId: input.userId },
-  );
-  try {
-    return await gateway.editar({
-      ...validado,
-      id: input.id,
-      codigo: preparado.identificador,
-      alterarIdentificador: true,
-      userId: input.userId,
-    });
-  } catch (erro) {
-    await preparado.desfazer();
-    throw erro;
-  }
+  if (validado.alterarIdentificador) throw new Error("Alteração de código deve usar a jornada de códigos públicos.");
+  return gateway.editar({ ...validado, id: input.id, userId: input.userId });
 }
 
 export async function desativarSistema(gateway: SistemasGateway, id: string, userId: string) {

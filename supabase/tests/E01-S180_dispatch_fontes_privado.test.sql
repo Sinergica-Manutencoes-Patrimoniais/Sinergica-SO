@@ -1,0 +1,12 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select plan(6);
+select has_function('pcm','sso_s180_dispatch_fontes_privado',array['text','text','text'],'dispatcher por fonte existe');
+select ok(not has_function_privilege('authenticated','pcm.sso_s180_dispatch_fontes_privado(text,text,text)','execute'),'authenticated não acessa');
+select ok(not has_function_privilege('anon','pcm.sso_s180_dispatch_fontes_privado(text,text,text)','execute'),'anon não acessa');
+select ok(not has_function_privilege('service_role','pcm.sso_s180_dispatch_fontes_privado(text,text,text)','execute'),'service_role não acessa');
+select is(pcm.sso_s180_dispatch_fontes_privado('desconhecido','x','y'),false,'bucket desconhecido negado');
+select is((select count(*)::integer from pg_policies where schemaname='storage' and tablename='objects' and coalesce(with_check,'') like '%sso_s180_dispatch_fontes_privado%'),0,'função permanece desconectada das policies');
+select * from finish();
+rollback;

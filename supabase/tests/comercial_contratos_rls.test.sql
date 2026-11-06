@@ -6,6 +6,7 @@
 -- antes desta suíte ser escrita. Rodar com `supabase test db` (requer Docker).
 
 begin;
+set local app.auvo_sync_write = 'true';
 select plan(20);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
@@ -14,6 +15,18 @@ values
   ('00000000-0000-0000-0000-000000000902', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'leitura-s07@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
   ('00000000-0000-0000-0000-000000000903', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'escrita-s07@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+-- Autorizações atuais vêm do cadastro, não das permissões alegadas no JWT.
+insert into config.usuarios (user_id, papel, nome, ativo) values
+  ('00000000-0000-0000-0000-000000000901', 'colaborador', 'Sem módulo S07', true),
+  ('00000000-0000-0000-0000-000000000902', 'colaborador', 'Leitura S07', true),
+  ('00000000-0000-0000-0000-000000000903', 'colaborador', 'Escrita S07', true)
+on conflict (user_id) do nothing;
+insert into config.usuario_modulos (user_id, modulo, nivel) values
+  ('00000000-0000-0000-0000-000000000902', 'comercial', 'leitura'),
+  ('00000000-0000-0000-0000-000000000903', 'comercial', 'escrita'),
+  ('00000000-0000-0000-0000-000000000903', 'financeiro', 'escrita')
+on conflict (user_id, modulo) do nothing;
 
 insert into pcm.clientes (id, nome, ativo, created_by)
 values ('00000000-0000-0000-0000-0000000009d1', 'Condomínio Teste E03-S07', true, '00000000-0000-0000-0000-000000000901')
@@ -34,11 +47,14 @@ values
   ('00000000-0000-0000-0000-000000000ca2', '00000000-0000-0000-0000-0000000009d1', '00000000-0000-0000-0000-0000000009f1', 'Oportunidade avulso — S07'),
   ('00000000-0000-0000-0000-000000000ca3', '00000000-0000-0000-0000-0000000009d1', '00000000-0000-0000-0000-0000000009f1', 'Oportunidade valor zero — S07');
 
+-- Fixture de custos é criada pelo proprietário; o comportamento do usuário permanece testado abaixo.
+reset role;
 insert into comercial.propostas (id, oportunidade_id, tipo, status, custo_total_centavos, piso_centavos, preco_sugerido_centavos, preco_centavos)
 values
   ('00000000-0000-0000-0000-000000000cb1', '00000000-0000-0000-0000-000000000ca1', 'residente', 'aceita', 10000, 10638, 12766, 50000),
   ('00000000-0000-0000-0000-000000000cb2', '00000000-0000-0000-0000-000000000ca2', 'simples', 'aceita', 10000, 10638, 12766, 12766),
   ('00000000-0000-0000-0000-000000000cb3', '00000000-0000-0000-0000-000000000ca3', 'volante', 'aceita', 0, 0, 0, 0);
+set local role authenticated;
 
 -- ─────────────────────────── AC-1: RLS ───────────────────────────────────────
 

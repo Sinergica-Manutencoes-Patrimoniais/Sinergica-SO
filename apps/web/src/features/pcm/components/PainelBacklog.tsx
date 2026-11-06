@@ -17,10 +17,9 @@ const PRIO_MAP: Record<PrioridadeBacklog, { label: string; dot: string }> = {
   baixa: { label: "Baixa", dot: "bg-ink-4" },
 };
 
-// score_pcm é GENERATED (coalesce → sempre 1..125), mas guardamos a faixa para não deixar um dado
-// inesperado derrubar a UI: fora do intervalo cai em "baixa" em vez de lançar RangeError.
-function faixaSegura(score: number): PrioridadeBacklog {
-  if (!Number.isInteger(score) || score < SCORE_GUT_MIN || score > SCORE_GUT_MAX) return "baixa";
+// Uma pontuação inválida não demonstra prioridade baixa.
+function faixaSegura(score: number): PrioridadeBacklog | null {
+  if (!Number.isInteger(score) || score < SCORE_GUT_MIN || score > SCORE_GUT_MAX) return null;
   return classificarPrioridade(score);
 }
 
@@ -43,7 +42,11 @@ export function PainelBacklog({
       ) : (
         <div className="divide-y divide-line-soft">
           {ordens.map((os) => {
-            const prio = PRIO_MAP[faixaSegura(os.scorePcm)];
+            const faixa =
+              os.gravidade == null || os.urgencia == null || os.tendencia == null
+                ? null
+                : faixaSegura(os.scorePcm);
+            const prio = faixa ? PRIO_MAP[faixa] : null;
             return (
               <Tooltip key={os.id} content={os.descricao ?? null}>
                 <button
@@ -63,13 +66,13 @@ export function PainelBacklog({
                     </p>
                   </div>
                   <span className="hidden sm:inline-flex items-center gap-1 text-micro font-medium shrink-0">
-                    <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />
-                    <span className="text-ink-2">{prio.label}</span>
+                    {prio && <span className={`w-1.5 h-1.5 rounded-full ${prio.dot}`} />}
+                    <span className="text-ink-2">{prio?.label ?? "Prioridade indisponível"}</span>
                   </span>
                   <span className="text-caption font-bold font-brand text-ink-2 tabular-nums shrink-0 w-16 text-right">
-                    {os.gravidade ?? 1}·{os.urgencia ?? 1}·{os.tendencia ?? 1}
+                    {os.gravidade ?? "?"}·{os.urgencia ?? "?"}·{os.tendencia ?? "?"}
                     <span className="block text-micro font-normal text-ink-3">
-                      score {os.scorePcm}
+                      {faixa ? `score ${os.scorePcm}` : "score indisponível"}
                     </span>
                   </span>
                 </button>

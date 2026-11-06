@@ -1,0 +1,18 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(12);
+select has_function('pcm','sso_fontes_demanda_autorizadas',array['uuid','date','uuid','integer'],'fontes têm entrada serializada');
+select has_function('pcm','sso_fontes_esforco_autorizadas',array['uuid','date','uuid','integer'],'esforço tem entrada serializada');
+select has_function('pcm','sso_ocorrencias_sem_os_autorizadas',array['uuid','date','text','uuid','integer'],'ocorrências têm entrada serializada');
+select ok(has_function_privilege('authenticated','pcm.sso_fontes_demanda_autorizadas(uuid,date,uuid,integer)','execute'),'usuário autenticado acessa demanda mediada');
+select ok(has_function_privilege('authenticated','pcm.sso_fontes_esforco_autorizadas(uuid,date,uuid,integer)','execute'),'usuário autenticado acessa esforço mediado');
+select ok(has_function_privilege('authenticated','pcm.sso_ocorrencias_sem_os_autorizadas(uuid,date,text,uuid,integer)','execute'),'usuário autenticado acessa ocorrências mediadas');
+select ok(not has_function_privilege('anon','pcm.sso_fontes_demanda_autorizadas(uuid,date,uuid,integer)','execute'),'anônimo não acessa demanda');
+select ok(not has_function_privilege('anon','pcm.sso_fontes_esforco_autorizadas(uuid,date,uuid,integer)','execute'),'anônimo não acessa esforço');
+select ok(not has_function_privilege('anon','pcm.sso_ocorrencias_sem_os_autorizadas(uuid,date,text,uuid,integer)','execute'),'anônimo não acessa ocorrências');
+select ok(not has_function_privilege('authenticated','pcm.sso_mediar_fontes_demanda_visita(uuid,date,uuid,integer)','execute'),'fonte antiga não contorna guarda');
+select ok(not has_function_privilege('authenticated','pcm.sso_mediar_fontes_esforco_visita(uuid,date,uuid,integer)','execute'),'esforço antigo não contorna guarda');
+select ok(not has_function_privilege('authenticated','pcm.sso_mediar_ocorrencias_sem_os(uuid,date,text,uuid,integer)','execute'),'ocorrências antigas não contornam guarda');
+select * from finish();
+rollback;

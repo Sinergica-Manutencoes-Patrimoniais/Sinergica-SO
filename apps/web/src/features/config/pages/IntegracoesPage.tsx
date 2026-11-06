@@ -13,6 +13,11 @@ import {
 } from "../application/integracoes";
 import type { Integracao } from "../application/integracoes-gateway";
 import { supabaseIntegracoesAdapter } from "../infrastructure/supabase-integracoes-adapter";
+import { OrfaosFilaAdmin } from "./OrfaosFilaAdmin";
+import { LimiteDemoraIntegracao } from "./LimiteDemoraIntegracao";
+import { DiagnosticoExecutorFila } from "./DiagnosticoExecutorFila";
+import { ConfigurarExecutorFila } from "./ConfigurarExecutorFila";
+import { ContratosOrigemCampo } from "./ContratosOrigemCampo";
 
 const CHAVE_EMAIL = "email";
 const CHAVE_MERCADOPAGO = "mercadopago";
@@ -184,6 +189,12 @@ export function IntegracoesPage() {
           Credenciais de serviços externos. A chave nunca é exibida de novo depois de salva.
         </p>
       </div>
+
+      {import.meta.env.VITE_SSO_ORFAOS_FILA_ADMIN_ENABLED === "true" && <OrfaosFilaAdmin userId={user.id} />}
+      {import.meta.env.VITE_SSO_CONFIG_LIMITE_DEMORA_ENABLED === "true" && <LimiteDemoraIntegracao key={user.id} userId={user.id} />}
+      {import.meta.env.VITE_SSO_DIAGNOSTICO_EXECUTOR_FILA_ENABLED === "true" && <DiagnosticoExecutorFila key={user.id} userId={user.id} />}
+      {import.meta.env.VITE_SSO_CONFIG_EXECUTOR_FILA_ENABLED === "true" && <ConfigurarExecutorFila key={user.id} userId={user.id} />}
+      {import.meta.env.VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED === "true" && <ContratosOrigemCampo key={user.id} userId={user.id} />}
 
       {erro && (
         <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">

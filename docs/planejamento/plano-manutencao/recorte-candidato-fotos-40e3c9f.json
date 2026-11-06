@@ -1,0 +1,239 @@
+{
+  "base_main": "22aca3918224bc45175e80c6ec88b957fdb604aa",
+  "snapshot_original_preservado": "84c9fcf8fc7ec32bda5399872ad30192c1587ed6",
+  "manifesto_anterior_preservado": "docs/planejamento/plano-manutencao/recorte-candidato-fotos-c2efe94.json",
+  "fonte_backup": "40e3c9f75c8f0eee28ccae0808d8031a6a025b32",
+  "status": "INCOMPLETO — candidatas e pré-requisitos; não aplicar nem implantar; fecho transitivo e revisão pendentes",
+  "novas_migrations_candidatas": [
+    {
+      "caminho": "supabase/migrations/1802_E01-S176_foto_cadastral_grupo_mediada.sql",
+      "git_blob": "049e17046f02042904cb9975eef52360b12e99c6",
+      "sha256": "7756cb70c7491583b1a279b0ad5dcfee24244df3b5bcf9f284533f8a07374e24",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Migration própria para leitura ou ingestão de foto cadastral."
+    },
+    {
+      "caminho": "supabase/migrations/1803_E01-S176_ingestao_foto_cadastral_grupo.sql",
+      "git_blob": "97bf4cc0c59723e3ddd0e6f7799b9255d9d2c141",
+      "sha256": "cf0228021475f55810bed334dd6b60918a58ace3c68e944bb9abbb01f4171747",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Migration própria para leitura ou ingestão de foto cadastral."
+    }
+  ],
+  "fontes_candidatas": [
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.test.tsx",
+      "git_blob": "b69b43e97afb22a4f4d398682b207c361441c852",
+      "sha256": "bce0fb06ba81b837bfef7208cd84da01febdc8c31435e27e94788277bebeeb17",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.tsx",
+      "git_blob": "fa34658b6f31da0ed1aadb5a331e957bbdc33a12",
+      "sha256": "dad7d40881b3b3fd04bc8dc5a770572576ae0a9840f91f3acb66b3802a563870",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/_shared/auth.ts",
+      "git_blob": "c884e8676acf16074466f3092afe9500d3b7c477",
+      "sha256": "cd57922d21c0e78f84922dd041e8507e5d0b78fa7a250526b05fe56969a859de",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/_shared/cors.ts",
+      "git_blob": "431546f204559e9bbdcc7e8f4c6683d387013077",
+      "sha256": "934bb9dc2f7e23b8a46ebfb726ec8cf662e289ab3d6c2018585b68dc5fb2537d",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/_shared/crypto.ts",
+      "git_blob": "c5ab0650afcd3b3a686932b19d61329e4d2cc0f2",
+      "sha256": "a69dc8d7afc7016c895ef4b27f2ffe33186f080ca8b1c6f7c6c11817cff7b139",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/pcm-foto-cadastral-grupo-segura/handler.ts",
+      "git_blob": "69563d71266e962c07146d7a6a8bc0b38af25a42",
+      "sha256": "0a7ab7d89860861bb720c37edd9e68a9afa8ebe7cf2676bb4fa995e67eb26fe9",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/pcm-foto-cadastral-grupo-segura/handler_test.ts",
+      "git_blob": "fa7a0de393ac8af95aeea74ea0504276e319cf32",
+      "sha256": "392ff40c7d969fed4e0f3ef7dd4ef1cd2fc56b22f9f07a0031be7818d829db13",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/pcm-foto-cadastral-grupo-segura/index.ts",
+      "git_blob": "8318e484dc250356c678ac365e345e866981e72a",
+      "sha256": "c1f08d8ef83c34acb84c58fed83b343341b401c4ef1e1d30c75730ff5cdae52b",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/pcm-ingestao-foto-cadastral-grupo/handler.test.ts",
+      "git_blob": "52d6e4d2ce6bff1b16b37e768af1d9431f21d7f2",
+      "sha256": "6c9e005ea990df6e1079634a211353655d2306bf830a9b88870ef078e05e651b",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/pcm-ingestao-foto-cadastral-grupo/handler.ts",
+      "git_blob": "7698208b3d2c0f7913804dff12e30f32bac8fbbf",
+      "sha256": "df984fd07a997f4acc0b4d6a1a6bd42bb64b127b360a695508762bf234ed3a77",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    },
+    {
+      "caminho": "supabase/functions/pcm-ingestao-foto-cadastral-grupo/index.ts",
+      "git_blob": "46d942b6ed4272b8eacf504c54376def6cb634d0",
+      "sha256": "51488672fca5b913ea85636bab10c3b180b38771227a7751159af458569ed17a",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Fonte direta de UI, handler, Auth/CORS ou teste; revisar diffs relativos à base."
+    }
+  ],
+  "dependencias_diretas_identificadas": [
+    {
+      "caminho": "supabase/migrations/0001_E00-S00_schemas_dominio.sql",
+      "git_blob": "95f1770d45772b7ca1a90b4f150b09452a30e4a9",
+      "sha256": "88f4ad7ed56585542bf62fa0be801170d1421a574a246875d9b160a38d7427d2",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Cria schema atendimento e demais schemas base."
+    },
+    {
+      "caminho": "supabase/migrations/0018_E01-S02_ze_fluxo_a_operacional.sql",
+      "git_blob": "8266e31ef5e112981140052ce83f1b81a5403ae5",
+      "sha256": "fd0d1ac622633afaf379739e53ba6e538c54ccecfbd41a532e4a1c1f08e8eb1c",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Concede USAGE em atendimento a service_role; revalidar privilégios finais."
+    },
+    {
+      "caminho": "supabase/migrations/0142_E09-S01_portal_fundacao_acesso.sql",
+      "git_blob": "2c1aad61e078a911bf3d28bb9b39a6dbfd4d6b57",
+      "sha256": "8dc5b46bb15e4bb3a1bf782ff4a5aea555cddc695ff1afe1227177b623d94587",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Definição histórica de config.custom_access_token_hook; verificar instalação/hook e claim user_role na plataforma."
+    },
+    {
+      "caminho": "supabase/migrations/0146_E02-S22_atendimento_evolution_multiinstancia.sql",
+      "git_blob": "b778c9b60f2c1bde53197ab527fe09062237d9b1",
+      "sha256": "94b331f589f59c12940bffe6724144679d148321e291a56695076c05aeb6545d",
+      "presente_inalterado_na_base": true,
+      "evidencia": "Cria atendimento.webhook_rate_limits e fn_consumir_rate_limit_webhook; EXECUTE service_role. Arquivo inclui outras funcionalidades; já presente na base."
+    },
+    {
+      "caminho": "supabase/migrations/0239_E01-S170_capacidades_sso.sql",
+      "git_blob": "a9693b0d993ebacf8ebf0668b9da9b0c343cf408",
+      "sha256": "409aaf88ecb8a938dd0555c97af7195011c0e5aa9aded1a02b73df005dae5477",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Catálogo, concessões e contrato de autorização, dependem dos objetos anteriores de autenticação e clientes."
+    },
+    {
+      "caminho": "supabase/migrations/0246_E01-S170_modulos_elegiveis.sql",
+      "git_blob": "7bc123ac5c8d3fe605bbbe876cd746135b6898dc",
+      "sha256": "716195f46b027bb8e4976b6fa6297bf0c4c6b0befebebfd5049a790eb92f9bea",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Autoriza ações por usuário/claim/papel, módulo e Cliente."
+    },
+    {
+      "caminho": "supabase/migrations/0248_E01-S176_grupos_quantitativos.sql",
+      "git_blob": "01df7cce764d42832e6c44d2c6f17904179c79d2",
+      "sha256": "ce671bcbe38cb8df70c26da5aef7b95dc0cd651f974b81a66194282789bcb3a3",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Cria Grupos, ações cadastro.ler/gerir e mapeamento de módulo."
+    },
+    {
+      "caminho": "supabase/migrations/0319_E01-S170_serializar_permissoes_visita.sql",
+      "git_blob": "47a76cee34df26509c8e7462a1ede672d1df17c1",
+      "sha256": "6389fe84470fbfd5ea976cfd5b8c059cf59f163a8db9b556caad3ed8493fc952",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Funções 1802/1803 usam chave compartilhada de serialização de autorização; conferir escritores e ordem."
+    },
+    {
+      "caminho": "supabase/migrations/0383_E01-S176_vinculos_fotos_grupos.sql",
+      "git_blob": "dd349e8714607a4286ff0586fb5af4c311ed22a8",
+      "sha256": "ffb7cf21e30ef08d4d05d27af08e347b000de7c3b878af0386fba10fb5a9da5c",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Cria sso_grupo_fotos e gate privado; 1802/1803 dependem de ambos."
+    },
+    {
+      "caminho": "supabase/migrations/0385_E01-S176_upload_fotos_grupos.sql",
+      "git_blob": "2116d499e7cd84f0d81353367c2da6846169fb84",
+      "sha256": "85b56231455f32525f48791cabf7c9adc224953079c4ad387d057ff7307186b1",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Cria bucket privado sso-grupos-fotos e políticas de acesso; também contém funções de upload legadas privadas."
+    }
+  ],
+  "documentacao_e_validacao": [
+    {
+      "caminho": "docs/adr/1660-fotos-cadastrais-grupo.md",
+      "git_blob": "c4c9be9e1ea6bf786d5c525cd9c39b9fd93c2ddb",
+      "sha256": "e2da94ff6beae62e3e4687390b324335c1e8eb2511d44ea46344d4b1897a76f2",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Decisão arquitetural leitura cadastral."
+    },
+    {
+      "caminho": "docs/adr/1661-ingestao-foto-cadastral-grupo.md",
+      "git_blob": "8a0f16dcd88a5da97393a52fe817576d1da09364",
+      "sha256": "85fdf06a880d16eab7c356c65333325ea184a686066d3fd6468a06ddfd7a6b55",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Decisão arquitetural ingestão e digest."
+    },
+    {
+      "caminho": "apps/web/e2e/s166-isolado/bootstrap-interno.py",
+      "git_blob": "efd3f308b29f15842f9e590a5f7ad51a3200c65e",
+      "sha256": "a6a892ef9f8e493ce16d7cc4f5a13d92a66c1ca2197ae18d88108ab50b590fa1",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Bootstrap de banco/Auth/PostgREST do ensaio; suporte operacional, não copiar sem revisar origem."
+    },
+    {
+      "caminho": "apps/web/e2e/s176-fotos-isolado/executar.py",
+      "git_blob": "1485333e928e3d3dcea04448e089edccaab49e0b",
+      "sha256": "4e615282beb979283e86efacbde5846177c1d2698627fac58e770f6199001865",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Jornada Auth/Storage/Edge, schema-only e cleanup."
+    },
+    {
+      "caminho": "apps/web/e2e/s176-fotos-isolado/gateway.ts",
+      "git_blob": "922bb719c20503421881fb9b08e7de2e71d659c7",
+      "sha256": "fe4b1bb5f04e67659a16b9aae5b39c2a0f6a5ad92737d8fe3a67a386b260289c",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Gateway com destinos fixos em rede interna."
+    },
+    {
+      "caminho": "apps/web/e2e/s176-fotos-isolado/desconectar.ts",
+      "git_blob": "a27c30f5069abc42cb1100797c30350141a0b0c3",
+      "sha256": "5ad46a160f2697bcc1803ae327f5b10f786d5d677202af223529f3609ec29881",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Cliente sintético para simular desconexão real."
+    },
+    {
+      "caminho": "supabase/manual-tests/E01-S176_fotos_edge_storage_isolado.md",
+      "git_blob": "39a6ac981d66093f66811f1938adc49a9d65da76",
+      "sha256": "3c50faf6ece9e9753d7637383c9ec0c5fc7f6cdd1e6db16b02247caa206bf6cf",
+      "presente_inalterado_na_base": false,
+      "evidencia": "Roteiro e limites do ensaio isolado."
+    }
+  ],
+  "pre_requisitos_de_plataforma": [
+    "Supabase Auth validando JWT e claim user_role coerente com config.usuarios; conferir hook e ciclo de sessão.",
+    "Storage objetos/buckets, service_role, bucket privado sso-grupos-fotos; conferir RLS e proibições SELECT/UPDATE/DELETE para clientes.",
+    "Exposição PostgREST de schemas pcm e atendimento para service_role; conferir USAGE/EXECUTE sem ampliar privilégios.",
+    "Configuração explícita das duas Edge Functions, SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEY, CORS e flags SSO_FOTO_CADASTRAL_GRUPO_ENABLED e SSO_INGESTAO_FOTO_CADASTRAL_GRUPO_ENABLED, fechadas por padrão; VITE_SSO_FOTOS_GRUPO_ENABLED também fechada. Não adicionar entradas de deploy automaticamente."
+  ],
+  "limites": [
+    "A presença dos quatro arquivos de base no Git não comprova que o ambiente de destino os aplicou nem a configuração efetiva de ACL/Auth/Storage.",
+    "As seis migrations adicionais constam das 640 candidatas antigas; não representam prova do fecho completo e podem transportar efeitos de outras stories.",
+    "Rate limit 0146 já existe na base do Git, mas também implementa Evolution; não selecionar integralmente se a base de destino já contém sua versão exata.",
+    "O ensaio sintético passou em schema de base mais migrations 1614–1803 e seeds seletivos; não prova que recorte reduzido ou migração em produção funcionam.",
+    "Não copiar cegamente arquivos compartilhados: confronto estrutural/semântico e checagem de múltiplas dependências transitivas ainda pendentes.",
+    "Manter snapshot c2efe94 e manifesto original sem alteração; nenhum deploy, aplicação ou tarefa Auvo."
+  ]
+}

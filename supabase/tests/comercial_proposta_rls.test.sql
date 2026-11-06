@@ -4,7 +4,7 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(14);
+select plan(15);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -13,6 +13,17 @@ values
   ('00000000-0000-0000-0000-000000000603', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prop-escrita-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
   ('00000000-0000-0000-0000-000000000604', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prop-superadmin-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+insert into config.usuarios (user_id, papel, nome, ativo) values
+  ('00000000-0000-0000-0000-000000000601', 'colaborador', 'Sem módulo S04', true),
+  ('00000000-0000-0000-0000-000000000602', 'colaborador', 'Leitura S04', true),
+  ('00000000-0000-0000-0000-000000000603', 'colaborador', 'Escrita S04', true),
+  ('00000000-0000-0000-0000-000000000604', 'superadmin', 'Admin S04', true)
+on conflict (user_id) do nothing;
+insert into config.usuario_modulos (user_id, modulo, nivel) values
+  ('00000000-0000-0000-0000-000000000602', 'comercial', 'leitura'),
+  ('00000000-0000-0000-0000-000000000603', 'comercial', 'escrita')
+on conflict (user_id, modulo) do nothing;
 
 insert into pcm.clientes (id, nome, ativo, created_by)
 values ('00000000-0000-0000-0000-0000000006c1', 'Condomínio Teste E03-S04', true, '00000000-0000-0000-0000-000000000601')
@@ -24,7 +35,7 @@ on conflict (id) do nothing;
 
 set local role authenticated;
 
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000603","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000604","user_role":"superadmin","user_modulos":{}}';
 insert into comercial.oportunidades (id, cliente_id, etapa_id, titulo)
 values ('00000000-0000-0000-0000-0000000006a1', '00000000-0000-0000-0000-0000000006c1', '00000000-0000-0000-0000-0000000006e1', 'Oportunidade teste S04');
 
@@ -42,22 +53,23 @@ select is(
 -- 2) leitura: enxerga, mas não escreve
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000602","user_role":"colaborador","user_modulos":{"comercial":"leitura"}}';
 select is(
-  (select count(*)::int from comercial.propostas where id = '00000000-0000-0000-0000-0000000006b1'),
+  (select count(*)::int from comercial.propostas_sem_custos where id = '00000000-0000-0000-0000-0000000006b1'),
   1,
-  'leitura comercial: select enxerga a proposta'
+  'leitura comercial: consulta sem custos enxerga a proposta'
 );
+select is((select count(*)::int from comercial.propostas where id = '00000000-0000-0000-0000-0000000006b1'), 0, 'leitura comercial não expõe a tabela privada');
 -- UPDATE sob RLS não lança erro quando a policy USING filtra a linha (diferente de INSERT, cujo
 -- WITH CHECK lança 42501) — vira "0 linhas afetadas" silencioso. Confirma pelo status inalterado.
 update comercial.propostas set status = 'em_revisao'
    where id = '00000000-0000-0000-0000-0000000006b1';
 select is(
-  (select status from comercial.propostas where id = '00000000-0000-0000-0000-0000000006b1'),
+  (select status from comercial.propostas_sem_custos where id = '00000000-0000-0000-0000-0000000006b1'),
   'rascunho',
   'leitura comercial NAO atualiza proposta (status segue rascunho)'
 );
 
 -- 3) AC-4: preço abaixo do piso é recusado NO BANCO, mesmo por quem tem escrita
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000603","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000604","user_role":"superadmin","user_modulos":{}}';
 select throws_ok(
   $$ update comercial.propostas set preco_centavos = 5000
      where id = '00000000-0000-0000-0000-0000000006b1' $$,
@@ -116,7 +128,7 @@ select throws_ok(
 );
 
 -- 7) RPCs: fn_criar_proposta e fn_salvar_composicao_proposta ponta a ponta
-set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000603","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000604","user_role":"superadmin","user_modulos":{}}';
 select is(
   (select status from comercial.fn_criar_proposta('00000000-0000-0000-0000-0000000006a1', 'volante')),
   'rascunho',

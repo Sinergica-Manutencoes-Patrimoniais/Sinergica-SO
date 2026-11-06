@@ -1,6 +1,8 @@
 import { Button, ConfirmDialog, Skeleton } from "@sinergica/ui";
+import { useQuery } from "@tanstack/react-query";
 import { Boxes, Pencil, Plus, Search, Wrench } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../../lib/supabase-client";
 import {
   useAreasDoCliente,
   useComponentesDoCliente,
@@ -23,6 +25,7 @@ import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipame
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { EquipamentoModal } from "./EquipamentoModal";
 
 type Modal = { modo: "novo" } | { modo: "editar"; item: EquipamentoItem } | null;
@@ -58,6 +61,17 @@ export function PainelItensDoCliente({
     supabaseIdentificadorAtivoAdapter,
   );
   const desativar = useDesativarComponente(supabaseEquipamentosAdapter, clienteId);
+  const capacidadeHabilitada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  async function conferirCapacidade() {
+    const antes = await supabase.auth.getUser();
+    if (antes.error || antes.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
+    const depois = await supabase.auth.getUser();
+    if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+  }
+  const capacidade = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
+    enabled: capacidadeHabilitada && temEscrita, refetchOnWindowFocus: true,
+    queryFn: async () => { await conferirCapacidade(); return true; } });
+  const podeEditar = temEscrita && (!capacidadeHabilitada || (!capacidade.isFetching && !capacidade.isError && capacidade.data === true));
 
   const carregando =
     componentes.isLoading ||
@@ -101,11 +115,13 @@ export function PainelItensDoCliente({
   }, [assinaturaFiltros, clienteId]);
 
   useEffect(() => {
-    if (abrirNovoToken > 0 && temEscrita) setModal({ modo: "novo" });
-  }, [abrirNovoToken, temEscrita]);
+    if (abrirNovoToken > 0 && podeEditar) setModal({ modo: "novo" });
+  }, [abrirNovoToken, podeEditar]);
 
   async function salvar(dados: EquipamentoFormData) {
     setErroAcao(null);
+    if (!podeEditar) throw new Error("Permissão de cadastro indisponível.");
+    if (capacidadeHabilitada) await conferirCapacidade();
     if (modal?.modo === "editar") {
       await editar.mutateAsync({ ...dados, id: modal.item.id, userId });
     } else {
@@ -158,7 +174,7 @@ export function PainelItensDoCliente({
             Cadastro e posição dos componentes deste cliente
           </p>
         </div>
-        {temEscrita && (
+        {podeEditar && (
           <Button variant="accent" size="sm" onClick={() => setModal({ modo: "novo" })}>
             <Plus className="h-4 w-4" /> Novo componente
           </Button>
@@ -290,7 +306,7 @@ export function PainelItensDoCliente({
                     {sistemaPorItem.get(item.id) ?? "—"}
                   </p>
                 </div>
-                {temEscrita && (
+                {podeEditar && (
                   <div className="flex shrink-0 gap-1">
                     <Button
                       variant="ghost"
@@ -334,6 +350,8 @@ export function PainelItensDoCliente({
         rotuloConfirmar="Desativar"
         onConfirmar={async () => {
           if (!paraDesativar) return;
+          if (!podeEditar) throw new Error("Permissão de cadastro indisponível.");
+          if (capacidadeHabilitada) await conferirCapacidade();
           await desativar.mutateAsync({ id: paraDesativar.item.id, userId });
         }}
       />

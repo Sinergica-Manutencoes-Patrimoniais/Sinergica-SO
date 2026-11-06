@@ -1,0 +1,3 @@
+# ADR-0491 — Atualização de localização via levantamento
+
+Linhas conferidas de Área, Local ou Sublocal podem atualizar somente nome de cadastro existente, preservando identidade e hierarquia, com snapshot otimista, autorização, lote aprovado e auditoria. Referência de pai deve ser incorporada e coincidir com o pai oficial; sem referência, Local/Sublocal não são alterados. A atualização usa registro próprio para não quebrar unicidade histórica das incorporações. Campos desconhecidos, código informado, duplicidade ou revisão divergente bloqueiam; não altera automaticamente dependentes. Gate desligado, sem concessão; testes e revisão necessários.

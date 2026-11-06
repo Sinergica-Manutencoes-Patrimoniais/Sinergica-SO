@@ -4,6 +4,8 @@ import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
+import { origemPreventivaLegada } from "../_shared/preventivas/confirmacao.ts";
+import { identidadeOsProvisoria } from "../_shared/numero-os.ts";
 
 const Input = z.object({ avaliacaoId: z.string().uuid(), descricao: z.string().trim().min(3).max(2000) });
 function escrita(req: Request): boolean { try { const p = (req.headers.get("Authorization")?.replace("Bearer ", "") ?? "").split(".")[1]; const c = JSON.parse(atob((p ?? "").replace(/-/g, "+").replace(/_/g, "/"))); return c.user_role === "superadmin" || c.user_modulos?.pcm === "escrita"; } catch { return false; } }
@@ -19,18 +21,19 @@ serve(async (req) => {
     const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", getSupabaseServiceKey(), { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: existente, error: existenteErro } = await db.schema("pcm").from("achados_preventivos").select("backlog_os_id").eq("avaliacao_id", input.avaliacaoId).eq("chave_origem", "decisao-manual").maybeSingle();
     if (existenteErro) throw existenteErro;
-    if (existente?.backlog_os_id) return resposta(200, { ok: true, osId: existente.backlog_os_id, created: false }, cors);
     const { data: avaliacao, error: avaliacaoErro } = await db.schema("pcm").from("avaliacoes_preventivas").select("id,ocorrencia_id,item_referencia,local_informado,resposta").eq("id", input.avaliacaoId).single();
     if (avaliacaoErro) throw avaliacaoErro;
-    const { data: ocorrencia, error: ocorrenciaErro } = await db.schema("pcm").from("ocorrencias_preventivas").select("plano_id").eq("id", avaliacao.ocorrencia_id).single();
+    const { data: ocorrencia, error: ocorrenciaErro } = await db.schema("pcm").from("ocorrencias_preventivas").select("plano_id,origem").eq("id", avaliacao.ocorrencia_id).single();
     if (ocorrenciaErro) throw ocorrenciaErro;
+    if (!origemPreventivaLegada(ocorrencia)) throw new HttpError(409, "Origem da ocorrência incompatível com o fluxo preventivo legado.");
+    if (existente?.backlog_os_id) return resposta(200, { ok: true, osId: existente.backlog_os_id, created: false }, cors);
     const { data: plano, error: planoErro } = await db.schema("pcm").from("planos_preventivos").select("cliente_id,sistema_id,equipamento_id").eq("id", ocorrencia.plano_id).single();
     if (planoErro) throw planoErro;
     const { data: achado, error: achadoErro } = await db.schema("pcm").from("achados_preventivos").upsert({ avaliacao_id: avaliacao.id, chave_origem: "decisao-manual", descricao: input.descricao, decisao: "pendente" }, { onConflict: "avaliacao_id,chave_origem" }).select("id,backlog_os_id").single();
     if (achadoErro) throw achadoErro;
     if (achado.backlog_os_id) return resposta(200, { ok: true, osId: achado.backlog_os_id, created: false }, cors);
     const local = [avaliacao.local_informado, avaliacao.item_referencia].filter(Boolean).join(" · ") || null;
-    const { data: os, error: osErro } = await db.schema("pcm").from("ordens_servico").insert({ client_id: plano.cliente_id, titulo: `Achado preventivo: ${input.descricao.slice(0, 120)}`, descricao: input.descricao, categoria: "corretiva", status: "solicitacao", prioridade: "normal", origem: "preventiva_achado", local_descricao: local, created_by: userId, sistema_id: plano.sistema_id, equipamento_id: plano.equipamento_id }).select("id").single();
+    const { data: os, error: osErro } = await db.schema("pcm").from("ordens_servico").insert({ ...identidadeOsProvisoria(crypto.randomUUID()), client_id: plano.cliente_id, titulo: `Achado preventivo: ${input.descricao.slice(0, 120)}`, descricao: input.descricao, categoria: "corretiva", status: "solicitacao", prioridade: "normal", origem: "preventiva_achado", local_descricao: local, created_by: userId, sistema_id: plano.sistema_id, equipamento_id: plano.equipamento_id }).select("id").single();
     if (osErro) throw osErro;
     const { error: atualizarErro } = await db.schema("pcm").from("achados_preventivos").update({ decisao: "backlog", backlog_os_id: os.id, decidido_em: new Date().toISOString(), decidido_por: userId }).eq("id", achado.id);
     if (atualizarErro) throw atualizarErro;

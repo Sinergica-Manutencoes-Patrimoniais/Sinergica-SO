@@ -1,0 +1,354 @@
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+
+const id = z.string().uuid();
+const candidato = z
+  .object({
+    legada_id: id,
+    escolha_request_id: id.nullable(),
+    vencimento: z.string(),
+    modo: z.string().nullable(),
+    conflitante: z.boolean(),
+  })
+  .strict();
+const pedido = z
+  .object({
+    request: id,
+    cliente: id,
+    plano: id,
+    legada: id,
+    escolha: id,
+    motivo: z.string().min(1).max(2000),
+    foto: z.record(z.string(), z.unknown()),
+    tentativaIncerta: z.boolean().optional(),
+  })
+  .strict();
+type Pedido = z.infer<typeof pedido>;
+type Props = { userId: string; clienteId: string; planoId: string };
+export function ReconciliarLegadaInerte(props: Props) {
+  return <Conteudo key={JSON.stringify(props)} {...props} />;
+}
+function Conteudo({ userId, clienteId, planoId }: Props) {
+  const chave = `sso-declaracao-legada:${JSON.stringify([userId, clienteId, planoId])}`;
+  const trava = useRef(false);
+  const [legada, setLegada] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [confirmado, setConfirmado] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
+    try {
+      const s = sessionStorage.getItem(chave);
+      if (!s) return null;
+      const p = pedido.parse(JSON.parse(s));
+      return p.cliente === clienteId && p.plano === planoId ? p : "invalido";
+    } catch {
+      return "invalido";
+    }
+  });
+  const lista = useInfiniteQuery({
+    queryKey: ["legadas-inertes-sso", userId, clienteId, planoId],
+    initialPageParam: null as string | null,
+    retry: false,
+    queryFn: async ({ pageParam, signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_listar_legadas_inertes_sso", {
+          p_ator: userId,
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_apos: pageParam,
+          p_limite: 20,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const rows = z.array(candidato).parse(data);
+      await conferirSessaoDiagnostico(userId, signal);
+      return rows;
+    },
+    getNextPageParam: (rows) => (rows.length === 20 ? rows.at(-1)?.legada_id : undefined),
+  });
+  const selecionada = lista.data?.pages.flat().find((x) => x.legada_id === legada);
+  const escolha = selecionada?.escolha_request_id;
+  const previa = useQuery({
+    queryKey: ["previa-legada-inerte", userId, clienteId, planoId, legada, escolha],
+    enabled: !!escolha && !selecionada?.conflitante,
+    retry: false,
+    queryFn: async ({ signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_prever_reconciliacao_legada_sso", {
+          p_ator: userId,
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_legada: legada,
+          p_escolha: escolha,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const r = z
+        .object({
+          foto: z.record(z.string(), z.unknown()),
+          registroPreparativo: z.literal(true),
+          execucaoAutorizada: z.literal(false),
+        })
+        .passthrough()
+        .parse(data);
+      await conferirSessaoDiagnostico(userId, signal);
+      return r;
+    },
+  });
+  const status = useQuery({
+    queryKey: ["status-legada-inerte", userId, clienteId, planoId, legada, escolha],
+    enabled: !!escolha && !selecionada?.conflitante,
+    retry: false,
+    queryFn: async ({ signal }) => {
+      await conferirSessaoDiagnostico(userId, signal);
+      const { data, error } = await supabase
+        .schema("pcm")
+        .rpc("sso_consultar_declaracao_legada_sso", {
+          p_ator: userId,
+          p_cliente: clienteId,
+          p_plano: planoId,
+          p_legada: legada,
+          p_escolha: escolha,
+        })
+        .abortSignal(signal);
+      if (error) throw error;
+      const r = z
+        .object({
+          registrada: z.boolean(),
+          integracaoAtual: z.boolean(),
+          integracaoOperacionalPendente: z.boolean(),
+          fotografiaAtual: z.boolean().optional(),
+        })
+        .passthrough()
+        .parse(data);
+      await conferirSessaoDiagnostico(userId, signal);
+      return r;
+    },
+  });
+  const assinatura =
+    status.data &&
+    (!status.data.registrada || !status.data.integracaoAtual) &&
+    previa.data?.foto.efeitoSso !== true &&
+    !status.isFetching &&
+    !status.isError &&
+    previa.data &&
+    !previa.isFetching &&
+    !previa.isError &&
+    !lista.isFetching &&
+    !lista.isError &&
+    escolha
+      ? JSON.stringify([legada, escolha, motivo.trim(), previa.data.foto])
+      : null;
+  const enviar = async (entrada: Pedido) => {
+    if (trava.current) return;
+    trava.current = true;
+    setEnviando(true);
+    try {
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(entrada)) throw Error();
+      const jaIncerta = entrada.tentativaIncerta !== false;
+      const p = pedido.parse({ ...entrada, tentativaIncerta: true });
+      sessionStorage.setItem(chave, JSON.stringify(p));
+      setPendente(p);
+      const { data, error } = await supabase.schema("pcm").rpc("sso_reconciliar_legada_sso", {
+        p_ator: userId,
+        p_request: p.request,
+        p_cliente: p.cliente,
+        p_plano: p.plano,
+        p_legada: p.legada,
+        p_escolha: p.escolha,
+        p_motivo: p.motivo,
+        p_foto_esperada: p.foto,
+      });
+      if (error) {
+        if (
+          !jaIncerta &&
+          typeof error === "object" &&
+          "code" in error &&
+          error.code === "P0010" &&
+          "message" in error &&
+          error.message === "fotografia_obsoleta"
+        ) {
+          await conferirSessaoDiagnostico(userId);
+          if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
+          sessionStorage.removeItem(chave);
+          setPendente(null);
+          setConfirmado(null);
+          setAviso(
+            "As fontes mudaram. Confira a nova fotografia e confirme novamente; nada foi registrado nesta tentativa.",
+          );
+          void previa.refetch();
+          void status.refetch();
+          return;
+        }
+        throw error;
+      }
+      const r = z
+        .object({
+          requestId: id,
+          legadaId: id,
+          escolhaRequestId: id,
+          declaracaoRegistrada: z.literal(true),
+          integracaoOperacionalPendente: z.boolean(),
+          legadaAlterada: z.literal(false),
+          osCriada: z.literal(false),
+          tarefaAuvoCriada: z.literal(false),
+        })
+        .passthrough()
+        .parse(data);
+      if (r.requestId !== p.request || r.legadaId !== p.legada || r.escolhaRequestId !== p.escolha)
+        throw Error();
+      await conferirSessaoDiagnostico(userId);
+      if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw Error();
+      sessionStorage.removeItem(chave);
+      setPendente(null);
+      setConfirmado(null);
+      setAviso(
+        r.integracaoOperacionalPendente
+          ? "Declaração registrada anteriormente. Consulte o estado atual para conferir a integração; a ocorrência legada não foi alterada."
+          : "Declaração registrada e integrada ao tratamento do ciclo. A ocorrência legada permanece no histórico.",
+      );
+      void lista.refetch();
+      void status.refetch();
+    } catch {
+      setConfirmado(null);
+      setAviso("Resultado não confirmado. Repita a mesma tentativa ou procure suporte.");
+    } finally {
+      trava.current = false;
+      setEnviando(false);
+    }
+  };
+  const iniciar = () => {
+    if (
+      !assinatura ||
+      confirmado !== assinatura ||
+      !previa.data ||
+      !escolha ||
+      !motivo.trim() ||
+      pendente
+    )
+      return;
+    try {
+      const p = pedido.parse({
+        request: crypto.randomUUID(),
+        cliente: clienteId,
+        plano: planoId,
+        legada,
+        escolha,
+        motivo: motivo.trim(),
+        foto: previa.data.foto,
+        tentativaIncerta: false,
+      });
+      if (sessionStorage.getItem(chave) !== null) throw Error();
+      sessionStorage.setItem(chave, JSON.stringify(p));
+      setPendente(p);
+      void enviar(p);
+    } catch {
+      setAviso("Não foi possível guardar a tentativa; nada foi enviado.");
+    }
+  };
+  return (
+    <section aria-label="Conferência de ocorrência legada">
+      <h5>Conferir ocorrência legada</h5>
+      <p>
+        A declaração reconcilia a ocorrência com o ciclo SSO, preservando o histórico. Não cria OS
+        nem tarefa no Auvo.
+      </p>
+      <fieldset disabled={!!pendente || enviando}>
+        <label>
+          Ocorrência{" "}
+          <select
+            value={legada}
+            onChange={(e) => {
+              setLegada(e.target.value);
+              setConfirmado(null);
+            }}
+          >
+            <option value="">Selecione</option>
+            {lista.data?.pages.flat().map((c) => (
+              <option
+                key={c.legada_id}
+                value={c.legada_id}
+                disabled={c.conflitante || !c.escolha_request_id}
+              >
+                {c.vencimento} · {c.modo ?? "origem ambígua"} · {c.legada_id}
+                {c.conflitante ? " · conflito; exige conferência" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        {lista.isError && <p role="alert">Candidatos indisponíveis.</p>}
+        {lista.hasNextPage && (
+          <button type="button" onClick={() => void lista.fetchNextPage()}>
+            Mais ocorrências
+          </button>
+        )}
+        {status.data?.registrada && (
+          <output>
+            {status.data.integracaoAtual
+              ? "Reconciliação ativa; o histórico da ocorrência legada está preservado."
+              : previa.data?.foto.efeitoSso === true
+                ? "Há execução SSO registrada e a reconciliação precisa de análise pelo PCM."
+                : "Reconciliação inativa; confira as fontes antes de registrar nova declaração."}
+          </output>
+        )}
+        {status.isError && <p role="alert">Estado da declaração indisponível; tente novamente.</p>}
+        {previa.isError && (
+          <p role="alert">
+            Prévia indisponível ou fontes alteradas; confira novamente e registre nova declaração.
+          </p>
+        )}
+        {previa.data && (
+          <>
+            <p>Confira as fontes observadas:</p>
+            <pre aria-label="Fotografia da ocorrência">
+              {JSON.stringify(previa.data.foto, null, 2)}
+            </pre>
+          </>
+        )}
+        <label>
+          Motivo{" "}
+          <textarea
+            maxLength={2000}
+            value={motivo}
+            onChange={(e) => {
+              setMotivo(e.target.value);
+              setConfirmado(null);
+            }}
+          />
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={!!assinatura && confirmado === assinatura}
+            disabled={!assinatura || !motivo.trim()}
+            onChange={(e) => setConfirmado(e.target.checked ? assinatura : null)}
+          />{" "}
+          Conferi as informações e autorizo o registro da reconciliação
+        </label>
+        <button
+          type="button"
+          disabled={!assinatura || confirmado !== assinatura || !motivo.trim()}
+          onClick={iniciar}
+        >
+          Registrar declaração
+        </button>
+      </fieldset>
+      {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
+      {pendente && pendente !== "invalido" && (
+        <button type="button" disabled={enviando} onClick={() => void enviar(pendente)}>
+          Repetir mesma tentativa
+        </button>
+      )}
+      {aviso && <output>{aviso}</output>}
+    </section>
+  );
+}

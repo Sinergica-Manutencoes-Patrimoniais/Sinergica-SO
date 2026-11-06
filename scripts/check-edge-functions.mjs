@@ -7,6 +7,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, resolve, relative, extname } from "node:path";
+import ts from "typescript";
 
 const ROOT = resolve(process.argv[2] || ".");
 const FUNCTIONS_DIR = join(ROOT, "supabase", "functions");
@@ -51,22 +52,24 @@ function walkTsFiles(dir) {
 }
 
 function findInvokeCalls(files) {
-  // Casa `functions.invoke("literal")` / `.invoke('literal')`. Nome dinâmico (variável, template
-  // literal com interpolação) não é verificável estaticamente — vira aviso, nunca falso positivo.
   const calls = [];
-  const literalRe = /functions\.invoke\(\s*["'`]([a-zA-Z0-9_-]+)["'`]/g;
-  const dynamicRe = /functions\.invoke\(\s*(?!["'`])/g;
   for (const file of files) {
     const text = readFileSync(file, "utf8");
-    let m;
-    literalRe.lastIndex = 0;
-    while ((m = literalRe.exec(text)) !== null) {
-      calls.push({ file, name: m[1], dynamic: false });
-    }
-    dynamicRe.lastIndex = 0;
-    while ((m = dynamicRe.exec(text)) !== null) {
-      calls.push({ file, name: null, dynamic: true });
-    }
+    const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true,
+      file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    const visit = (node) => {
+      if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) &&
+          node.expression.name.text === "invoke" &&
+          ts.isPropertyAccessExpression(node.expression.expression) &&
+          node.expression.expression.name.text === "functions") {
+        const arg = node.arguments[0];
+        const literal = arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg)) &&
+          /^[a-zA-Z0-9_-]+$/.test(arg.text);
+        calls.push(literal ? { file, name: arg.text, dynamic: false } : { file, name: null, dynamic: true });
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
   }
   return calls;
 }

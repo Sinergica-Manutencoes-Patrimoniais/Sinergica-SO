@@ -4,6 +4,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../../../lib/supabase-client", () => ({
+  supabase: new Proxy({}, {
+    get: () => { throw new Error("Acesso inesperado ao Supabase em teste unitário"); },
+  }),
+  supabaseUrl: "http://127.0.0.1:1",
+}));
 import { PainelSistemasCliente } from "./PainelSistemasCliente";
 
 vi.mock("../infrastructure/supabase-hierarquia-adapter", () => ({

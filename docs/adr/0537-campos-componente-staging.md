@@ -1,0 +1,3 @@
+# ADR-0537 — Campos canônicos de Equipamentos e Componentes
+
+Edições explícitas e revisão humana no staging para `observacoes`, `categoriaId`, `areaId`, `localId` e `parentItemId`, preservando omissão e nulo. Identidade de Equipamento/Componente e código não são editáveis nesta trilha; não mapeia classificação livre ou dispara sincronização. Referências fornecidas são verificadas no Cliente e a conferência compara retrato e ciclo. Incorporação permanece bloqueada enquanto aplicação oficial não estiver integrada; nenhum cadastro oficial é alterado. Gates fechados; revisão e testes obrigatórios.

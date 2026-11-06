@@ -1,0 +1,8 @@
+# S173 — revogação concorrente da preparação mediada
+
+Experimento em banco descartável `sso_s173_concorrencia_20261030`, no container isolado `sso_diagnostico_reconstrucao`, sem schema/extension cron ou net e sem dados reais. O schema foi clonado do diagnóstico com `pg_dump -s -N cron -N net`, sem as extensões cron e net; ACLs restantes foram copiadas. As migrations 1023/1024 e `E01-S173_fixture_revogacao.sql` foram aplicadas apenas no clone. A fixture insere decisão sintética depois de resposta Não OK; não prova execução real de S168 nem recepção Auvo.
+
+1. Com `request.jwt.claims` do usuário sintético, role `authenticated`, uma transação executou `sso_preparar_pendencias_retorno_mediado` com request `17391000-0000-4000-8000-000000000011`: retornou uma Pendência. Em outra sessão, `UPDATE config.sso_concessoes SET ativa=false` para `execucao.validar` do mesmo Cliente aguardou com `wait_event_type=Lock` e `wait_event=advisory`. Após commit da primeira, revogação atualizou uma linha e comitou.
+2. Após restaurar a concessão somente no clone, nova transação revogou sem commit. A preparação com request `17391000-0000-4000-8000-000000000012` recusou com `autorizacao_em_alteracao` (55P03). Após commit da revogação, repetição recusou com `sem_acesso` (42501). Havia uma Pendência e um comando de preparação, nenhum comando do segundo request e concessão desativada.
+
+O clone foi removido após o teste. Isso comprova apenas essas duas ordens para uma concessão direta e uma origem sintética legada, não todas as fontes de autorização, os leitores, origem Grupo/Visita, outras transações ou revogação de token externo. Os gates do banco de diagnóstico permaneceram fechados; não liberar rollout com base neste teste.

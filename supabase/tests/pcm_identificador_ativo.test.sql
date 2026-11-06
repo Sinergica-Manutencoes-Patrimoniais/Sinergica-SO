@@ -2,7 +2,8 @@
 -- Roda no job db-tests; esta máquina não tem Docker/Supabase local.
 
 begin;
-select plan(16);
+set local app.auvo_sync_write = 'true';
+select plan(19);
 
 select has_column('pcm', 'clientes', 'sigla', 'AC-1: Cliente tem sigla');
 select has_column('pcm', 'areas', 'sigla', 'AC-1: Área tem sigla');
@@ -129,9 +130,24 @@ select throws_ok(
   '23505', null,
   'AC-5: índice padrão rejeita identificador duplicado'
 );
+-- Simula registros anteriores à guarda, sem desligar índices; escopo somente desta transação.
+reset role;
+set local session_replication_role = replica;
 select lives_ok(
   $$ insert into pcm.equipamentos (id, nome, identificador) values ('00000000-0000-0000-0000-000000000270', '[TESTE] Legado 1 S157', '123'), ('00000000-0000-0000-0000-000000000271', '[TESTE] Legado 2 S157', '123') $$,
-  'AC-5: índice padrão permite identificador legado duplicado'
+  'AC-5: índice padrão permite duplicata numérica legada anterior à guarda'
+);
+set local session_replication_role = origin;
+set local role service_role;
+select lives_ok(
+  $$ update pcm.equipamentos set nome = '[TESTE] Legado preservado S157' where id = '00000000-0000-0000-0000-000000000270' and identificador = '123' $$,
+  'S177: código legado duplicado é preservado ao editar outro campo'
+);
+select is((select count(*)::integer from pcm.equipamentos where id in ('00000000-0000-0000-0000-000000000270','00000000-0000-0000-0000-000000000271') and identificador='123'), 2, 'S177: ambos os códigos legados permanecem inalterados');
+select throws_ok(
+  $$ insert into pcm.equipamentos (id, nome, identificador) values ('00000000-0000-0000-0000-000000000272', '[TESTE] Nova duplicata S157', '123') $$,
+  '23505', null,
+  'S177: nova duplicata de código legado é rejeitada'
 );
 
 reset role;

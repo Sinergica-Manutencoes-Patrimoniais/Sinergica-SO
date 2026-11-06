@@ -1,0 +1,23 @@
+-- EXCLUSIVAMENTE cluster descartável: remove trigger somente dentro da transação revertida.
+begin;
+set local app.auvo_sync_write='true';
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(7);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('16797006-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s167-numero@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into pcm.clientes(id,nome,created_by) values ('16797006-0000-4000-8000-00000000000a','Cliente A','16797006-0000-4000-8000-000000000001');
+insert into pcm.chamados(id,numero,cliente_id,titulo,created_by) values ('16797006-0000-4000-8000-000000000011','CH-S167-AUVO-A','16797006-0000-4000-8000-00000000000a','Chamado A','16797006-0000-4000-8000-000000000001'),('16797006-0000-4000-8000-000000000012','CH-S167-AUVO-B','16797006-0000-4000-8000-00000000000a','Chamado B','16797006-0000-4000-8000-000000000001');
+insert into pcm.ordens_servico(id,client_id,chamado_id,numero,titulo,categoria,status,origem,created_by) values ('16797006-0000-4000-8000-000000000021','16797006-0000-4000-8000-00000000000a','16797006-0000-4000-8000-000000000011','CH-S167-AUVO-A','OS A','corretiva','solicitacao','auvo','16797006-0000-4000-8000-000000000001');
+select is((select numero from pcm.ordens_servico where id='16797006-0000-4000-8000-000000000021'),'CH-S167-AUVO-A','trigger legado mantém mesmo número enviado');
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,origem,created_by) values ('16797007-0000-4000-8000-000000000023','16797006-0000-4000-8000-00000000000a','PRE-16797007','Backlog A','corretiva','solicitacao','manual','16797006-0000-4000-8000-000000000001');
+select is((select numero from pcm.ordens_servico where id='16797007-0000-4000-8000-000000000023'),'PRE-16797007','PRE explícito permanece com trigger');
+drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
+insert into pcm.ordens_servico(id,client_id,chamado_id,numero,titulo,categoria,status,origem,created_by) values ('16797006-0000-4000-8000-000000000022','16797006-0000-4000-8000-00000000000a','16797006-0000-4000-8000-000000000012','CH-S167-AUVO-B','OS B','corretiva','solicitacao','auvo','16797006-0000-4000-8000-000000000001');
+select is((select numero from pcm.ordens_servico where id='16797006-0000-4000-8000-000000000022'),'CH-S167-AUVO-B','número explícito funciona sem trigger');
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,origem,created_by) values ('16797008-0000-4000-8000-000000000024','16797006-0000-4000-8000-00000000000a','PRE-16797008','Backlog B','corretiva','solicitacao','manual','16797006-0000-4000-8000-000000000001');
+select is((select numero from pcm.ordens_servico where id='16797008-0000-4000-8000-000000000024'),'PRE-16797008','PRE explícito funciona sem trigger');
+select is((select numero from pcm.ordens_servico where id='16797006-0000-4000-8000-000000000021'),'CH-S167-AUVO-A','número existente permanece inalterado');
+select is((select count(*)::int from pcm.os_status_eventos where ordem_servico_id in ('16797006-0000-4000-8000-000000000021','16797006-0000-4000-8000-000000000022')),2,'ambas registram evento de criação');
+select is((select count(*)::int from pcm.auvo_sync_outbox where row_id in ('16797006-0000-4000-8000-000000000021','16797006-0000-4000-8000-000000000022')),0,'sem intenção externa sintética');
+select * from finish();
+rollback;

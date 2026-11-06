@@ -21,6 +21,7 @@ import { getSupabaseServiceKey, HttpError, requireServiceRole } from "../_shared
 import { AuvoApiError, auvoGet, buildParamFilter } from "../_shared/auvo/client.ts";
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoPaginate, DEFAULT_PAGE_SIZE } from "../_shared/auvo/paginate.ts";
+import { capturarEnvelopeCampo, resolverEnvelopeCampo } from "../_shared/auvo/captura-inbox.ts";
 import {
   consolidarResultadoPreventiva,
   type ResultadoPreventiva,
@@ -28,6 +29,7 @@ import {
 import {
   marcarChamadoAutomaticoComOs,
   montarLinhaOs,
+  indexarChamadosPorNumero,
   obterUsuarioSistema,
   type OsStatus,
   proximosNumerosChamado,
@@ -192,6 +194,9 @@ if (import.meta.main) serve(async (req) => {
 
     // Pagina TODAS as páginas de `GET /tasks` (se qualquer página falhar, propaga → catch →
     // nenhuma escrita no banco, mesma guarda de `pcm-auvo-customers-import`).
+    const inboxExclusiva = Deno.env.get("SSO_ORIGEM_CAMPO_INBOX_EXCLUSIVA_ENABLED") === "true";
+    const capturaHabilitada = Deno.env.get("SSO_CAPTURA_INBOX_CAMPO_POLLING_ENABLED") === "true";
+    if (inboxExclusiva && !capturaHabilitada) throw new HttpError(503, "Captura de origem indisponível");
     const tarefas = await auvoPaginate<AuvoTask>(
       (pageNumber, pageSize) =>
         auvoGet<AuvoTasksResponse>(
@@ -199,10 +204,22 @@ if (import.meta.main) serve(async (req) => {
         ).then((r) => {
           if (Array.isArray(r?.result)) return r.result;
           if (Array.isArray(r?.result?.entityList)) return r.result.entityList;
+          if (inboxExclusiva) throw new Error("Página de tarefas inválida.");
           return [];
         }),
       { pageSize: DEFAULT_PAGE_SIZE },
     );
+
+    if (capturaHabilitada) {
+      // Não declarar captura completa se qualquer tarefa não tiver identidade ou a RPC falhar.
+      for (const tarefa of tarefas) {
+        const taskId = extractTaskId(tarefa);
+        if (taskId === null) throw new Error("Tarefa sem identidade para captura.");
+        const captura = await capturarEnvelopeCampo(db, { taskId, clienteExternoId: tarefa.customerId ?? null, payload: tarefa });
+        if (Deno.env.get("SSO_RESOLUCAO_INBOX_CAMPO_ENABLED") === "true") await resolverEnvelopeCampo(db, captura.envelopeId);
+      }
+      if (inboxExclusiva) return json(202, { pulled: tarefas.length, estado: "capturado_pendente", eventoAplicado: false }, cors);
+    }
 
     // Só as tarefas SEM OS local correspondente entram no fluxo de criação — a query em lote evita
     // 1 SELECT por tarefa.
@@ -319,18 +336,19 @@ if (import.meta.main) serve(async (req) => {
         });
       }
 
-      const chamadosCriados: Array<{ id: string }> = [];
+      const chamadosCriados: Array<{ id: string; numero: string }> = [];
       for (let i = 0; i < chamadosParaCriar.length; i += TAMANHO_LOTE_INSERT) {
         const lote = chamadosParaCriar.slice(i, i + TAMANHO_LOTE_INSERT);
-        const { data, error } = await db.schema("pcm").from("chamados").insert(lote).select("id");
+        const { data, error } = await db.schema("pcm").from("chamados").insert(lote).select("id,numero");
         if (error) throw error;
-        chamadosCriados.push(...((data ?? []) as Array<{ id: string }>));
+        chamadosCriados.push(...((data ?? []) as Array<{ id: string; numero: string }>));
       }
+      const porNumero = indexarChamadosPorNumero(chamadosParaCriar.map((c) => String(c.numero)), chamadosCriados);
       if (chamadosCriados.length > 0) {
-        const eventos = chamadosCriados.map((chamado, i) => ({
+        const eventos = chamadosCriados.map((chamado) => ({
           chamado_id: chamado.id,
           tipo: "criado" as const,
-          metadata: { numero: chamadosParaCriar[i]?.numero, auto: true },
+          metadata: { numero: chamado.numero, auto: true },
         }));
         const { error } = await db.schema("pcm").from("chamados_eventos").insert(eventos);
         if (error) throw error;
@@ -339,8 +357,9 @@ if (import.meta.main) serve(async (req) => {
       const linhas: Array<Record<string, unknown>> = [];
       for (let i = 0; i < candidatasParaChamado.length; i++) {
         const c = candidatasParaChamado[i];
-        const chamadoId = chamadosCriados[i]?.id;
-        if (!chamadoId) continue;
+        const numeroChamado = String(chamadosParaCriar[i]?.numero ?? "");
+        const chamadoId = porNumero.get(numeroChamado);
+        if (!chamadoId) throw new Error("Chamado criado não encontrado pelo número.");
         const tecnicoFuncionarioId = c.tecnicoAuvoUserId != null
           ? funcionarioIdsPorAuvoId.get(c.tecnicoAuvoUserId) ?? null
           : null;
@@ -357,7 +376,7 @@ if (import.meta.main) serve(async (req) => {
               checkOutAt: c.checkOutAt,
               detalhes: c.detalhes,
             },
-            { clienteId: c.clienteId, chamadoId, systemUserId, tecnicoFuncionarioId },
+            { clienteId: c.clienteId, chamadoId, numeroChamado, systemUserId, tecnicoFuncionarioId },
           ),
         );
       }

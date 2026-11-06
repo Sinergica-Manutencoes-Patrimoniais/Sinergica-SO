@@ -1,6 +1,7 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { ExternalLink, Puzzle, RefreshCw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
 import {
   useCadastroSistema,
   useComponentesSistema,
@@ -11,6 +12,14 @@ import { linkAuvoDaOs, separarOsSistema, ultimaManutencaoSistema } from "../doma
 import type { OsSistema, PreventivaSistema } from "../domain/detalhe-sistema";
 import { auvoTaskDeepLink } from "../domain/ordens-servico";
 import { supabaseDetalheSistemaAdapter } from "../infrastructure/supabase-detalhe-sistema-adapter";
+import { EdicaoRascunhoCodigo } from "../interfaces/codigos-publicos/EdicaoRascunho";
+import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
+import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingAtivo";
+import { PlanosDoAlvo } from "../interfaces/estrutura-tecnica/PlanosDoAlvo";
+import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
+import { PendenciasDoAlvo } from "../interfaces/pendencias-tecnicas/PendenciasDoAlvo";
+import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
 import { DrawerDetalheAtivo } from "./DrawerDetalheAtivo";
 
 function dataBr(valor: string | null | undefined, comHora = false): string {
@@ -47,6 +56,7 @@ export function DrawerDetalheSistema({
   onClose: () => void;
   onAbrirOs?: (osId: string) => void;
 }) {
+  const { user } = useAuth();
   const focoAnterior = useRef<HTMLElement | null>(null);
   const [componenteAbertoId, setComponenteAbertoId] = useState<string | null>(null);
   const componenteAbertoIdRef = useRef<string | null>(null);
@@ -114,6 +124,64 @@ export function DrawerDetalheSistema({
         )}
         {cadastro.data && (
           <div className="flex flex-col gap-4 p-4">
+            {user && clienteId && !cadastro.error && (
+              <EdicaoRascunhoCodigo
+                userId={user.id}
+                clienteId={clienteId}
+                tipo="sistema"
+                ativoId={sistemaId}
+                onAtualizado={() => {
+                  void cadastro.refetch();
+                }}
+              />
+            )}
+            {user && clienteId && !cadastro.isFetching && (
+              <ResultadosDoAlvo
+                userId={user.id}
+                clienteId={clienteId}
+                tipo="sistema"
+                id={sistemaId}
+                nome={cadastro.data.nome}
+              />
+            )}
+            {user && clienteId && !cadastro.isFetching && (
+              <PendenciasDoAlvo
+                userId={user.id}
+                clienteId={clienteId}
+                tipo="sistema"
+                id={sistemaId}
+              />
+            )}
+            {user && clienteId && !cadastro.isFetching && (
+              <PlanosDoAlvo userId={user.id} clienteId={clienteId} tipo="sistema" id={sistemaId} />
+            )}
+            {user && clienteId && (
+              <FotosStagingAtivo
+                userId={user.id}
+                clienteId={clienteId}
+                tipo="sistema"
+                entidadeId={sistemaId}
+              />
+            )}
+            {user && clienteId && (
+              <DocumentosStagingAtivo
+                userId={user.id}
+                clienteId={clienteId}
+                tipo="sistema"
+                entidadeId={sistemaId}
+              />
+            )}
+            {user && clienteId && (
+              <HistoricoCadastroLevantamento
+                userId={user.id}
+                clienteId={clienteId}
+                tipo="sistema"
+                entidadeId={sistemaId}
+              />
+            )}
+            {user && clienteId && (
+              <SistemasDistribuidos userId={user.id} clienteId={clienteId} sistemaId={sistemaId} />
+            )}
             <section className="rounded-lg border border-line bg-surface p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -138,6 +206,9 @@ export function DrawerDetalheSistema({
                 <Campo titulo="Cadastrado em" valor={dataBr(cadastro.data.criadoEm, true)} />
                 <Campo titulo="Atualizado em" valor={dataBr(cadastro.data.atualizadoEm, true)} />
               </dl>
+              <p className="mt-3 text-caption text-ink-3">
+                Criticidade e completude não estão disponíveis nesta fonte.
+              </p>
             </section>
 
             <Secao titulo="OS abertas">
@@ -396,18 +467,34 @@ function ListaPreventivas({
                     <span>
                       {dataBr(ocorrencia.visitaEm ?? ocorrencia.vencimento)} ·{" "}
                       {ocorrencia.tecnicoNome ?? "Técnico não informado"} ·{" "}
-                      {resultadoPreventiva(ocorrencia.resultado)} · {ocorrencia.estado}
+                      {ocorrencia.reconciliacaoLegada === "substituida"
+                        ? "Substituída por ciclo SSO"
+                        : `${resultadoPreventiva(ocorrencia.resultado)} · ${ocorrencia.estado}`}
                     </span>
                     <span className="flex gap-2">
-                      {ocorrencia.osId && (
-                        <button
-                          type="button"
-                          onClick={() => onAbrirOs(ocorrencia.osId as string)}
-                          className="font-semibold text-orange hover:underline"
-                        >
-                          {ocorrencia.osNumero ?? ocorrencia.osId ?? "Abrir OS"}
-                        </button>
+                      {(ocorrencia.ordensVinculadas?.length ?? 0) > 1 && (
+                        <span>Conferir ordens:</span>
                       )}
+                      {ocorrencia.ordensVinculadas && ocorrencia.ordensVinculadas.length > 1
+                        ? ocorrencia.ordensVinculadas.map((ordem) => (
+                            <button
+                              key={ordem.id}
+                              type="button"
+                              onClick={() => onAbrirOs(ordem.id)}
+                              className="font-semibold text-orange hover:underline"
+                            >
+                              {ordem.numero} · {ordem.status}
+                            </button>
+                          ))
+                        : ocorrencia.osId && (
+                            <button
+                              type="button"
+                              onClick={() => onAbrirOs(ocorrencia.osId as string)}
+                              className="font-semibold text-orange hover:underline"
+                            >
+                              {ocorrencia.osNumero ?? ocorrencia.osId ?? "Abrir OS"}
+                            </button>
+                          )}
                       {linkAuvo && (
                         <a
                           href={linkAuvo}

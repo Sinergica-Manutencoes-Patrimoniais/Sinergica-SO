@@ -1,0 +1,12 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(6);
+select has_function('pcm','sso_snapshot_exportacao_conferido',array['uuid','uuid','uuid','integer','integer'],'snapshot tem entrada paginada e alvo conferido');
+select ok(has_function_privilege('authenticated','pcm.sso_snapshot_exportacao_conferido(uuid,uuid,uuid,integer,integer)','execute'),'autenticado pode solicitar leitura mediada');
+select ok(not has_function_privilege('anon','pcm.sso_snapshot_exportacao_conferido(uuid,uuid,uuid,integer,integer)','execute'),'anônimo não executa');
+select ok(not has_function_privilege('service_role','pcm.sso_snapshot_exportacao_conferido(uuid,uuid,uuid,integer,integer)','execute'),'service role não contorna sessão');
+select ok(not has_function_privilege('authenticated','pcm.sso_snapshot_exportacao_plano(uuid,uuid,uuid,integer,integer)','execute'),'núcleo antigo não contorna validação de alvo');
+select ok(not has_table_privilege('authenticated','pcm.sso_snapshot_exportacao_gate','update'),'usuário não altera gate');
+select * from finish();
+rollback;

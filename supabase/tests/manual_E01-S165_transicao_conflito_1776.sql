@@ -1,0 +1,37 @@
+-- Clone descartável; comandos reais; gate habilitado somente no rollback.
+begin;
+\ir manual_E01-S166_decisao_ativacao_1728.sql
+insert into pcm.rotina_origem_geracao(rotina_logica_id,alvo_tipo,alvo_id,origem) values ('16660000-0000-4000-8000-000000000032','sistema','16660000-0000-4000-8000-000000000033','plano');
+update pcm.sso_preparar_ciclo_vencido_gate set habilitado=true where id;
+update pcm.sso_materializar_ciclo_canonico_gate set habilitado=true where id;
+update pcm.sso_identidade_ciclo_gate set habilitado=true where id;
+update pcm.ocorrencia_rotina_gate set habilitado=true where id;
+update pcm.sso_guarda_ciclo_canonico_gate set habilitado=true where id;
+update pcm.sso_concorrencia_impacto_gate set habilitado=true where id;
+update pcm.sso_pmoc_mediado_gate set habilitado=true where id;
+update pcm.sso_diagnostico_pmoc_gate set habilitado=true where id;
+update pcm.sso_decisao_pmoc_gate set habilitado=true where id;
+update pcm.sso_vinculo_ciclo_pmoc_gate set habilitado=true where id;
+update pcm.sso_origem_lote_gate set habilitado=true where id;
+update pcm.sso_origem_rotina_gate set habilitado=true where id;
+update pcm.sso_fila_preventiva_pcm_gate set habilitado=true where id;
+update pcm.sso_fila_sem_vinculo_gate set habilitado=true where id;
+update pcm.sso_estado_ocorrencia_vinculada_gate set habilitado=true where id;
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,created_by) values('17340000-0000-4000-8000-000000000099','16660000-0000-4000-8000-00000000000a','AC7-FIXTURE','OS sintética','corretiva','16660000-0000-4000-8000-000000000001');
+create temporary table ac7_os as select to_jsonb(o) foto from pcm.ordens_servico o where id='17340000-0000-4000-8000-000000000099';
+set local role authenticated;
+do $$ begin
+ begin perform pcm.sso_transicao_plano_mediada('16660000-0000-4000-8000-000000000001','16660000-0000-4000-8000-00000000000a','17760000-0000-4000-8000-000000000002','16660000-0000-4000-8000-000000000011',99,'suspender',current_setting('sso.fixture.sp')::date,'fixture'); raise exception 'conflito_aceito'; exception when sqlstate 'P0011' then if sqlerrm <> 'revisao_obsoleta' then raise; end if; end;
+end $$;
+select pcm.sso_transicao_plano_mediada('16660000-0000-4000-8000-000000000001','16660000-0000-4000-8000-00000000000a','17340000-0000-4000-8000-000000000001','16660000-0000-4000-8000-000000000011',1,'suspender',current_setting('sso.fixture.sp')::date,'fixture');
+do $$ declare r jsonb; begin r:=pcm.sso_transicao_plano_mediada('16660000-0000-4000-8000-000000000001','16660000-0000-4000-8000-00000000000a','17340000-0000-4000-8000-000000000001','16660000-0000-4000-8000-000000000011',1,'suspender',current_setting('sso.fixture.sp')::date,'fixture'); if (r->>'revision')::integer<>2 or r->>'state'<>'suspenso' then raise exception 'replay_divergente'; end if; end $$;
+do $$ begin
+ begin perform pcm.sso_transicao_plano_mediada('16660000-0000-4000-8000-000000000001','16660000-0000-4000-8000-00000000000a','17760000-0000-4000-8000-000000000001','16660000-0000-4000-8000-000000000011',1,'retomar',current_setting('sso.fixture.sp')::date,'fixture'); raise exception 'conflito_aceito'; exception when sqlstate 'P0011' then if sqlerrm <> 'revisao_obsoleta' then raise; end if; end;
+end $$;
+do $$ begin begin perform pcm.sso_materializar_ciclo_canonico('17340000-0000-4000-8000-000000000098','16660000-0000-4000-8000-00000000000a','16660000-0000-4000-8000-000000000011','16660000-0000-4000-8000-000000000021','16660000-0000-4000-8000-000000000031',2,current_setting('sso.fixture.sp')::date+1); raise exception 'geracao_suspensa_aceita';exception when check_violation then if sqlerrm<>'plano_indisponivel' then raise;end if;end;end $$;
+select pcm.sso_transicao_plano_mediada('16660000-0000-4000-8000-000000000001','16660000-0000-4000-8000-00000000000a','17340000-0000-4000-8000-000000000002','16660000-0000-4000-8000-000000000011',2,'retomar',current_setting('sso.fixture.sp')::date,'fixture');
+select pcm.sso_transicao_plano_mediada('16660000-0000-4000-8000-000000000001','16660000-0000-4000-8000-00000000000a','17340000-0000-4000-8000-000000000003','16660000-0000-4000-8000-000000000011',3,'encerrar',current_setting('sso.fixture.sp')::date,'fixture');
+do $$ begin begin perform pcm.sso_materializar_ciclo_canonico('17340000-0000-4000-8000-000000000097','16660000-0000-4000-8000-00000000000a','16660000-0000-4000-8000-000000000011','16660000-0000-4000-8000-000000000021','16660000-0000-4000-8000-000000000031',4,current_setting('sso.fixture.sp')::date+1); raise exception 'geracao_encerrada_aceita';exception when check_violation then if sqlerrm<>'plano_indisponivel' then raise;end if;end;end $$;
+reset role;
+do $$ begin if (select foto from ac7_os) is distinct from (select to_jsonb(o) from pcm.ordens_servico o where id='17340000-0000-4000-8000-000000000099') then raise exception 'os_alterada';end if;if exists(select 1 from pcm.ocorrencias_rotina_preparadas where plano_id='16660000-0000-4000-8000-000000000011') then raise exception 'ocorrencia_indevida';end if;end $$;
+rollback;

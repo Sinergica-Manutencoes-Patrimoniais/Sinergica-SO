@@ -157,7 +157,7 @@ export interface FinanceiroGateway {
 
   /** AC-1: upload direto no bucket privado + grava o path no lançamento. */
   anexarComprovante(lancamentoId: string, arquivo: File): Promise<string>;
-  urlAssinadaComprovante(path: string): Promise<string>;
+  baixarComprovante(lancamentoId: string): Promise<Blob>;
   /** AC-2: edita um lançamento realizado registrando o diff em financeiro.lancamentos_eventos. */
   corrigirLancamento(input: EditarLancamentoCommand): Promise<LancamentoItem>;
   /** AC-2: exclui (estorna) um lançamento realizado não conciliado, com auditoria antes de apagar. */

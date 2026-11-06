@@ -1,0 +1,36 @@
+-- Fluxo sintético local, sem entrega externa; toda alteração é revertida.
+begin;
+\ir E01-S168_origem_calendario_valida_fixture.sql
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(13);
+update pcm.sso_origem_execucao_unificada_gate set habilitado=true where id;
+update pcm.sso_integridade_retorno_calendario_gate set habilitado=true where id;
+update pcm.origem_campo_inbox_gate set habilitado=true where id;
+update pcm.validacao_os_gate set habilitado=true where id;
+update pcm.sso_conferencia_cobertura_retorno_gate set habilitado=true where id;
+update pcm.sso_upload_evidencia_resposta_gate set habilitado=true where id;
+update pcm.sso_validacao_resposta_gate set habilitado=true where id;
+update pcm.sso_revisao_validacao_os_gate set habilitado=true where id;
+update pcm.sso_condicao_retorno_gate set habilitado=true where id;
+update pcm.sso_condicao_evidencia_gate set habilitado=true where id;
+update pcm.sso_atestacao_pcm_gate set habilitado=true where id;
+update pcm.sso_pendencias_gate set habilitado=true where id;
+set local request.jwt.claims='{"sub":"16891000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+select is((pcm.sso_classificar_retorno_campo_manual('16891000-0000-4000-8000-000000000037','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000035','16891000-0000-4000-8000-000000000036','16891000-0000-4000-8000-000000000038','[{"perguntaId":"p1","resultado":"nao_inspecionado"},{"perguntaId":"p2","resultado":"nao_ok"}]')->>'coberturaComprovada')::boolean,false,'classificação não comprova cobertura');
+select lives_ok($$select pcm.sso_conferir_cobertura_retorno('16891000-0000-4000-8000-000000000040','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000038',null,0,'Conferência sintética')$$,'opcional não inspecionada não impede conferência');
+select lives_ok($$select pcm.sso_atestar_aprovar_retorno_pcm('16891000-0000-4000-8000-000000000046','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000038',(select id from pcm.sso_conferencias_cobertura_retorno where request_id='16891000-0000-4000-8000-000000000040'),0,0,'Atestação sintética')$$,'aprovação de retorno com opcional não inspecionada');
+select is((select count(*)::integer from pcm.sso_pendencias_tecnicas where retorno_id='16891000-0000-4000-8000-000000000038' and pergunta='p2'),1,'Não OK obrigatório gera uma Pendência');
+select is((select count(*)::integer from pcm.sso_pendencias_tecnicas where retorno_id='16891000-0000-4000-8000-000000000038' and pergunta='p1'),0,'opcional não inspecionada não gera Pendência');
+select is((select status::text from pcm.ordens_servico where id='16891000-0000-4000-8000-000000000017'),'em_execucao','atestar não encerra OS');
+select is((pcm.sso_atestar_aprovar_retorno_pcm('16891000-0000-4000-8000-000000000046','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000038',(select id from pcm.sso_conferencias_cobertura_retorno where request_id='16891000-0000-4000-8000-000000000040'),0,0,'Atestação sintética')->>'pendenciasProcessadas')::integer,1,'replay da aprovação retorna resultado original');
+select is((select count(*)::integer from pcm.sso_pendencias_tecnicas where retorno_id='16891000-0000-4000-8000-000000000038'),1,'replay não duplica Pendência');
+select throws_ok($$select pcm.sso_atestar_aprovar_retorno_pcm('16891000-0000-4000-8000-000000000046','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000038',(select id from pcm.sso_conferencias_cobertura_retorno where request_id='16891000-0000-4000-8000-000000000040'),0,0,'Justificativa divergente')$$,'23505','request_id_conflitante','mesmo request com outro payload é recusado');
+insert into pcm.origem_campo_inbox(id,integracao,task_id,chave_evento,cliente_externo_id,payload) values ('16891000-0000-4000-8000-000000000041','auvo',168910002,'s168-obrigatoria-nao-inspecionada','168910001','{}');
+insert into pcm.origem_campo_resolucoes(id,envelope_id,cliente_id,os_id,resultado) values ('16891000-0000-4000-8000-000000000042','16891000-0000-4000-8000-000000000041','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000017','os_identificada');
+select is((pcm.sso_classificar_retorno_campo_manual('16891000-0000-4000-8000-000000000043','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000041','16891000-0000-4000-8000-000000000042','16891000-0000-4000-8000-000000000044','[{"perguntaId":"p1","resultado":"ok"},{"perguntaId":"p2","resultado":"nao_inspecionado"}]')->>'coberturaComprovada')::boolean,false,'segundo retorno também exige conferência');
+select throws_ok($$select pcm.sso_conferir_cobertura_retorno('16891000-0000-4000-8000-000000000045','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000044',null,0,'Conferência sintética')$$,'23514','cobertura_estrutural_incompleta','obrigatória não inspecionada impede conferência');
+select is((select alvo_tipo from pcm.sso_pendencias_tecnicas where retorno_id='16891000-0000-4000-8000-000000000038'),'sistema','Pendência preserva tipo de alvo da Rotina');
+select is((select alvo_id::text from pcm.sso_pendencias_tecnicas where retorno_id='16891000-0000-4000-8000-000000000038'),'16891000-0000-4000-8000-000000000020','Pendência preserva alvo de ocorrência e Plano legado');
+select * from finish();
+rollback;

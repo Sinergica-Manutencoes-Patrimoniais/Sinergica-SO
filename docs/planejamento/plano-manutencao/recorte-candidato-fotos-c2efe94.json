@@ -1,0 +1,103 @@
+{
+  "base_main": "22aca3918224bc45175e80c6ec88b957fdb604aa",
+  "snapshot_original": "84c9fcf8fc7ec32bda5399872ad30192c1587ed6",
+  "fonte_revisada": "c2efe943a38c5a91f8e04781cf207315b9e1795a",
+  "status": "INCOMPLETO — lista candidata; não aplicar; efeitos de outras stories e integração de Edge pendentes",
+  "migrations_anteriores_verificadas_inalteradas": 640,
+  "novas_migrations_candidatas": [
+    {
+      "caminho": "supabase/migrations/1802_E01-S176_foto_cadastral_grupo_mediada.sql",
+      "git_blob": "049e17046f02042904cb9975eef52360b12e99c6",
+      "sha256": "7756cb70c7491583b1a279b0ad5dcfee24244df3b5bcf9f284533f8a07374e24",
+      "razao": "candidata S176 para foto cadastral: listagem/leitura ou ingestão e digest"
+    },
+    {
+      "caminho": "supabase/migrations/1803_E01-S176_ingestao_foto_cadastral_grupo.sql",
+      "git_blob": "97bf4cc0c59723e3ddd0e6f7799b9255d9d2c141",
+      "sha256": "cf0228021475f55810bed334dd6b60918a58ace3c68e944bb9abbb01f4171747",
+      "razao": "candidata S176 para foto cadastral: listagem/leitura ou ingestão e digest"
+    }
+  ],
+  "fontes_candidatas": [
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.test.tsx",
+      "git_blob": "b69b43e97afb22a4f4d398682b207c361441c852",
+      "sha256": "bce0fb06ba81b837bfef7208cd84da01febdc8c31435e27e94788277bebeeb17",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.tsx",
+      "git_blob": "fa34658b6f31da0ed1aadb5a331e957bbdc33a12",
+      "sha256": "dad7d40881b3b3fd04bc8dc5a770572576ae0a9840f91f3acb66b3802a563870",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/_shared/auth.ts",
+      "git_blob": "c884e8676acf16074466f3092afe9500d3b7c477",
+      "sha256": "cd57922d21c0e78f84922dd041e8507e5d0b78fa7a250526b05fe56969a859de",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/_shared/cors.ts",
+      "git_blob": "431546f204559e9bbdcc7e8f4c6683d387013077",
+      "sha256": "934bb9dc2f7e23b8a46ebfb726ec8cf662e289ab3d6c2018585b68dc5fb2537d",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/_shared/crypto.ts",
+      "git_blob": "c5ab0650afcd3b3a686932b19d61329e4d2cc0f2",
+      "sha256": "a69dc8d7afc7016c895ef4b27f2ffe33186f080ca8b1c6f7c6c11817cff7b139",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/pcm-foto-cadastral-grupo-segura/handler.ts",
+      "git_blob": "69563d71266e962c07146d7a6a8bc0b38af25a42",
+      "sha256": "0a7ab7d89860861bb720c37edd9e68a9afa8ebe7cf2676bb4fa995e67eb26fe9",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/pcm-foto-cadastral-grupo-segura/handler_test.ts",
+      "git_blob": "fa7a0de393ac8af95aeea74ea0504276e319cf32",
+      "sha256": "392ff40c7d969fed4e0f3ef7dd4ef1cd2fc56b22f9f07a0031be7818d829db13",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/pcm-foto-cadastral-grupo-segura/index.ts",
+      "git_blob": "8318e484dc250356c678ac365e345e866981e72a",
+      "sha256": "c1f08d8ef83c34acb84c58fed83b343341b401c4ef1e1d30c75730ff5cdae52b",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/pcm-ingestao-foto-cadastral-grupo/handler.test.ts",
+      "git_blob": "52d6e4d2ce6bff1b16b37e768af1d9431f21d7f2",
+      "sha256": "6c9e005ea990df6e1079634a211353655d2306bf830a9b88870ef078e05e651b",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/pcm-ingestao-foto-cadastral-grupo/handler.ts",
+      "git_blob": "7698208b3d2c0f7913804dff12e30f32bac8fbbf",
+      "sha256": "df984fd07a997f4acc0b4d6a1a6bd42bb64b127b360a695508762bf234ed3a77",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    },
+    {
+      "caminho": "supabase/functions/pcm-ingestao-foto-cadastral-grupo/index.ts",
+      "git_blob": "46d942b6ed4272b8eacf504c54376def6cb634d0",
+      "sha256": "51488672fca5b913ea85636bab10c3b180b38771227a7751159af458569ed17a",
+      "razao": "código ou dependência compartilhada necessária a avaliar, não copiada"
+    }
+  ],
+  "dependencias": {
+    "0383_fotos_grupo": true,
+    "0385_bucket": true,
+    "0248_grupos": true,
+    "0239_capacidades": true,
+    "0246_autorizacao": true
+  },
+  "duvidas": [
+    "Verificar fecho de migrations/alterações intermediárias, ACL, transações e concorrência; matcher textual não prova fechamento.",
+    "Revisar diffs de fontes compartilhadas e imports transitivos antes de qualquer cópia; dependências remotas Deno e Storage/Auth exigem configuração isolada.",
+    "Rota 1802/1803 exige configuração Edge específica e flags/gates false; não declarar nem implantar automaticamente.",
+    "Revisar S181/S183 e catálogo exigido por 1795, sem omitir escopo.",
+    "Testar servidor, Storage, RLS e UI com dados sintéticos, autenticação e rede isolada; ensaio anterior usa base sintética e seeds parciais."
+  ]
+}

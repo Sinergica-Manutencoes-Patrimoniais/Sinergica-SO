@@ -1,6 +1,7 @@
 import type { ItemCalendarioPreventiva } from "./PreventivasCalendarioView";
 
 const ESTADO: Record<ItemCalendarioPreventiva["estado"], string> = {
+  conferencia: "Conferir ordens",
   prevista: "Prevista",
   atrasada: "Atrasada",
   agendada: "Agendada",

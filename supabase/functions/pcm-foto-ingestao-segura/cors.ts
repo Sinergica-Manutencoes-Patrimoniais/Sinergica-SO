@@ -1,0 +1,1 @@
+export function cabecalhosFotos(base:Record<string,string>):Record<string,string>{return {...base,"Access-Control-Allow-Headers":`${base["Access-Control-Allow-Headers"]}, x-request-id, x-lote-id, x-linha-chave, x-foto-id`};}

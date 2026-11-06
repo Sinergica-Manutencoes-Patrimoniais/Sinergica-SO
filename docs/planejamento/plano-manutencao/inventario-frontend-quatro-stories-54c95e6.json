@@ -1,0 +1,3056 @@
+{
+  "base": "22aca3918224bc45175e80c6ec88b957fdb604aa",
+  "snapshot": "54c95e6",
+  "status": "inventário exploratório; não é manifesto de release",
+  "raizes": [
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/",
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/",
+    "apps/web/src/features/pcm/interfaces/capacidades-sso/",
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/"
+  ],
+  "rotas_compartilhadas": [
+    "apps/web/src/app/HomePage.tsx",
+    "apps/web/src/features/pcm/pages/VisaoClientePage.tsx",
+    "apps/web/src/features/pcm/pages/EstruturaClientePage.tsx",
+    "apps/web/src/features/pcm/pages/EquipamentosPage.tsx",
+    "apps/web/src/features/pcm/pages/SistemasPage.tsx"
+  ],
+  "arquivos": {
+    "apps/web/src/features/pcm/pages/SistemasPage.tsx": {
+      "blob": "01779cb38b50992317979e4caa1dd8c9c9e31cad",
+      "sha256": "bbf1f5e468c6c716ffa67f53d25473d80f6569d694cdb158d3d8761ce4038027",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/app/auth-context.tsx",
+        "apps/web/src/app/permissoes-context.tsx",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/equipamentos.ts",
+        "apps/web/src/features/pcm/application/sistemas.ts",
+        "apps/web/src/features/pcm/components/ComposicaoSistema.tsx",
+        "apps/web/src/features/pcm/components/DrawerDetalheSistema.tsx",
+        "apps/web/src/features/pcm/components/HistoricoOsSistema.tsx",
+        "apps/web/src/features/pcm/components/SistemaModal.tsx",
+        "apps/web/src/features/pcm/domain/equipamentos.ts",
+        "apps/web/src/features/pcm/domain/sistemas.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-equipamentos-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-identificador-ativo-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-sistemas-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts"
+      ],
+      "flags": [
+        "VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/PlanosDoAlvo.tsx": {
+      "blob": "15a5d6b42d3c479c06a8a71f76537dc08f91b67b",
+      "sha256": "e14543d85aca601062cb883c113c4785b5b47a2464e8604078bf02a3b14797c8",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_PLANOS_POR_ALVO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingAtivo.tsx": {
+      "blob": "610d2768e5a5e474fdefade8318676baa68aca0f",
+      "sha256": "8a3c7a4765a4ee1824b0c31cab549fd0f080a9f5a0d814db17e74266a96d44c6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED",
+        "VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DocumentosStagingAtivo.tsx": {
+      "blob": "85775ed671300186195245e844cba4379993e177",
+      "sha256": "62133dfb54d8afdc07aefdfff1727617f81855b6d5e2d6c9ea3c2ba5115889c4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DOCUMENTOS_STAGING_ATIVO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/SistemasDistribuidos.tsx": {
+      "blob": "525933145c332e474e42d062cf2abbe282e01b0a",
+      "sha256": "b0f47d117e0c6b5d4007cc7bb1878c91ddb9fa47f36598d60a4fc202e968e592",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-estrutura-tecnica-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/PendenciasDoAlvo.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/ResultadosAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosVerificadasGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/PlanosDoAlvo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_SISTEMAS_DISTRIBUIDOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx": {
+      "blob": "19c154f7f8a147bef913b820d59fba3d615de808",
+      "sha256": "f8014cc16c337bde36f226194c8e71e02eca203a1853a71a8cb5683fcb6f3fad",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-estrutura-tecnica-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MotivoEventoGrupo.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MotivoEventoGrupo.tsx": {
+      "blob": "69e77366fdbe5663c319a22ba36c37049d6f6129",
+      "sha256": "1541c36f6707aee7307d6dd489bb01b9a3366d8f3cd61da2a2d68a5862be8cc2",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_MOTIVOS_HISTORICO_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosVerificadasGrupo.tsx": {
+      "blob": "a475357a9a414225dcd896099b626a9ee213c728",
+      "sha256": "8024f873bee1f7ef7b6d0e7f9c119eacb3ad23dd9090d63cbd0a139c2c96517a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FOTOS_VERIFICADAS_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingGrupo.tsx": {
+      "blob": "84d7cc1e902d20eb427a661fe552744090e642c8",
+      "sha256": "3fe56672a7c6ebddef16c01389fee25b4c0d71dd857145452684c35928849643",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FOTOS_STAGING_GRUPO_ENABLED",
+        "VITE_SSO_LISTAR_FOTOS_GRUPO_MEDIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/pages/EquipamentosPage.tsx": {
+      "blob": "81930d7ecaaee39e6814ed4acbb146b323f38791",
+      "sha256": "1700ab283b116b6d9db7d259f0b027a4a72aea730f233dcd746f44b8fa98ed30",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/app/auth-context.tsx",
+        "apps/web/src/app/permissoes-context.tsx",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/equipamentos.ts",
+        "apps/web/src/features/pcm/components/EquipamentoModal.tsx",
+        "apps/web/src/features/pcm/domain/equipamentos.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-equipamentos-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-identificador-ativo-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentacaoDetalhe.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentacaoDetalhe.tsx": {
+      "blob": "d59115ebdb920771fd472cbbacd45152f9fb18ac",
+      "sha256": "2fedfc0d578d685362f2c8e9103a7fc7ad4844f12b4525d4bdb96854af1e0c63",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/estrutura-tecnica.ts",
+        "apps/web/src/features/pcm/domain/equipamentos.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-estrutura-tecnica-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentarComponente.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentarComponente.tsx": {
+      "blob": "1ef562e251d5e5cddc288c090fa59a72b36144ee",
+      "sha256": "c6bcb7271dc5e9d8234002eaa0eaa204e2ad0289188a418ab6efe14990be9ac1",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/estrutura-tecnica.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-gateway.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/pages/EstruturaClientePage.tsx": {
+      "blob": "39bc5ca031b68b8e5863ad812a4e70d78c25a3c7",
+      "sha256": "39f06f7c8298736f7a5464d56a7cb2645ccc4d2a4a2440866fd9ce33e4d508a6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/sheetjs.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/ativos-cliente-queries.ts",
+        "apps/web/src/features/pcm/interfaces/levantamentos/AnexosLocalizacaoAtualizada.tsx",
+        "apps/web/src/features/pcm/interfaces/levantamentos/HistoricoCadastroLevantamento.tsx",
+        "apps/web/src/features/pcm/application/cliente-360-gateway.ts",
+        "apps/web/src/features/pcm/application/hierarquia.ts",
+        "apps/web/src/features/pcm/application/importacao-estrutura.ts",
+        "apps/web/src/features/pcm/components/AjudaPcm.tsx",
+        "apps/web/src/features/pcm/components/ImportacaoEstruturaModal.tsx",
+        "apps/web/src/features/pcm/domain/cliente-360-filtros.ts",
+        "apps/web/src/features/pcm/domain/hierarquia.ts",
+        "apps/web/src/features/pcm/domain/hierarquia.ts",
+        "apps/web/src/features/pcm/domain/importacao-estrutura.ts",
+        "apps/web/src/features/pcm/domain/siglas.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-catalogos-simples-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-equipamentos-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-hierarquia-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-identificador-ativo-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-sistemas-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/GruposQuantitativos.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ComposicaoLocal.tsx",
+        "apps/web/src/features/pcm/interfaces/levantamentos/Conectado.tsx",
+        "apps/web/src/features/pcm/interfaces/listas-materiais/Central.tsx",
+        "apps/web/src/features/pcm/interfaces/codigos-publicos/Consulta.tsx",
+        "apps/web/src/features/pcm/interfaces/codigos-publicos/PoliticaEquipment.tsx",
+        "apps/web/src/features/pcm/interfaces/codigos-publicos/ReservasEquipment.tsx",
+        "apps/web/src/features/pcm/interfaces/capacidade-agenda/Workspace.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/ReferenciasRetorno.tsx",
+        "apps/web/src/features/pcm/interfaces/importacao-plano/Workspace.tsx",
+        "apps/web/src/features/pcm/interfaces/reconciliacao/Workspace.tsx",
+        "apps/web/src/features/pcm/interfaces/migracao/DiagnosticoCliente.tsx",
+        "apps/web/src/features/pcm/interfaces/migracao/DiagnosticoCodigosLegados.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/SistemasDistribuidos.tsx",
+        "apps/web/src/features/pcm/interfaces/retorno-campo/ClassificarRetorno.tsx",
+        "apps/web/src/features/pcm/interfaces/origem-campo/EstadoCampo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CAPACIDADE_AGENDA_ENABLED",
+        "VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED",
+        "VITE_SSO_CLASSIFICAR_RETORNO_ENABLED",
+        "VITE_SSO_CONSULTA_CODIGOS_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED",
+        "VITE_SSO_ESTADO_CAMPO_ENABLED",
+        "VITE_SSO_IMPORTACAO_PLANO_ENABLED",
+        "VITE_SSO_LEVANTAMENTOS_ENABLED",
+        "VITE_SSO_RECONCILIACAO_ENABLED",
+        "VITE_SSO_REFERENCIAS_RETORNO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ComposicaoLocal.tsx": {
+      "blob": "b666ac6273975faf50e041b5a1599b1c8b7b370d",
+      "sha256": "9a7ac4e1a656cb0d1d7f7d2286695772841053f84c2b014d3d9e95fbe2868491",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/PendenciasDoAlvo.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/ResultadosAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/AtivoLocalLeitura.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosVerificadasGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/PlanosDoAlvo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_BREADCRUMB_GRUPO_ENABLED",
+        "VITE_SSO_COMPOSICAO_LOCAL_ENABLED",
+        "VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED",
+        "VITE_SSO_FOTOS_GRUPO_ENABLED",
+        "VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.tsx": {
+      "blob": "fa34658b6f31da0ed1aadb5a331e957bbdc33a12",
+      "sha256": "dad7d40881b3b3fd04bc8dc5a770572576ae0a9840f91f3acb66b3802a563870",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FOTOS_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbGrupo.tsx": {
+      "blob": "9d54931b14cb4d174659876d3d65b90c069fe258",
+      "sha256": "3acaeb9c4458cb9d5734e202c3656cdbda88b45f4fb211647d34ad94a4fe8c02",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_BREADCRUMB_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbAtivo.tsx": {
+      "blob": "1710dc35d4ae3332c9622931d37c3d4b034c395d",
+      "sha256": "5c19a1b93d55fad4359abfd3c8990ba9508ec9d68287be34dc77c34af8ac38fd",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_BREADCRUMB_ATIVO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/AtivoLocalLeitura.tsx": {
+      "blob": "8ef4a5a6205e4f713d543cbd257224eedf6cb66a",
+      "sha256": "d4b4939075a92a45a70941943457a9c04f7901180805f9b914efac8165fcbe91",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/PreventivasLegadasLocal.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_LOCAL_ATIVO_LEITURA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/PreventivasLegadasLocal.tsx": {
+      "blob": "18da94e0f242829b093b0c01c29b26cf07c941b1",
+      "sha256": "f5874e28e970fa8357cce47f020a123ae1c43e8d31d0b658f41ee962700975b5",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_PREVENTIVAS_LEGADAS_LOCAL_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/GruposQuantitativos.tsx": {
+      "blob": "aed6ab272f91fd9472d3e05974d666fbc12fd265",
+      "sha256": "ae48ef8e63be02f4b2df1fb12ff420c0324538611132730ba18d3f555c9ee1c0",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/estrutura-tecnica.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-gateway.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-estrutura-tecnica-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ReclassificarGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MoverGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/QuantidadeMotivadaGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HierarquiaGrupos.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DiagnosticoVinculosGrupos.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DiagnosticoAncestraisGrupos.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosVerificadasGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DocumentosStagingAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/AtribuirCodigoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/CodigoAtualGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/levantamentos/HistoricoCadastroLevantamento.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/RemoverCaracteristicaGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/EstadoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/ResultadosAtivo.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/PendenciasDoAlvo.tsx",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/PlanosDoAlvo.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/EstadoGrupo.tsx": {
+      "blob": "e27acd92ea3342feac519d1df6275d7cdeedaeeb",
+      "sha256": "1824a87b1f79862b7a7a3e61563181464269a66cdaf4e281ef78ae4a57e54063",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ESTADO_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/RemoverCaracteristicaGrupo.tsx": {
+      "blob": "7197a1f36ca478307c3fb7bb239efcfe6410f6d8",
+      "sha256": "bd19e085f75ec1d7c7132aead3370375a67ce01a81f3ea95a56a5cf29e1dcb44",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-gateway.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_REMOVER_CARACTERISTICA_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/CodigoAtualGrupo.tsx": {
+      "blob": "021d43fe60c3e4d85c0871d607ab84f5fdad24df",
+      "sha256": "ced22aef5673a048be45fac5c829d5bb887730a8325bc99fa2bf9d643ad7d122",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/codigos-publicos/Substituicao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/AtribuirCodigoGrupo.tsx": {
+      "blob": "8c3b8fdf71dc556071b9c918a2820c7bfcefaea1",
+      "sha256": "215fc6637d3e611e8371535c82a7895ec34b658e7793d73badaf2ae5c67d75da",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ATRIBUIR_CODIGO_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DiagnosticoAncestraisGrupos.tsx": {
+      "blob": "789c72f1377749bd50d773f63fa6726f12336a58",
+      "sha256": "31330cfd9644add052e8ccb8ef4ba5668d24d31ef80d292ec92fc7b5abc53dc7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICO_ANCESTRAIS_GRUPOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DiagnosticoVinculosGrupos.tsx": {
+      "blob": "30d1a5119d7eae2eb732fa69b612be5cbedb3e63",
+      "sha256": "f94f1f74142823584c6ce52d2a3332f520ba69029d30c27aad5277eda5239968",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICO_VINCULOS_GRUPOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HierarquiaGrupos.tsx": {
+      "blob": "43db995225ea8bcf779162b0eb09c19b4a02ccb9",
+      "sha256": "7485e4037ff170ba971a958474f1245f9591c929d34598aa45d47a0cd57e38cf",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbGrupo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_HIERARQUIA_GRUPOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/QuantidadeMotivadaGrupo.tsx": {
+      "blob": "612720a7b2ece10caf562840fa5ea3d932df70b7",
+      "sha256": "efde37bd8f8b386f65bb5d9626583cef25a8099a2ec0a85d1d97fe3c5bd4d71b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-gateway.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_QUANTIDADE_MOTIVADA_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MoverGrupo.tsx": {
+      "blob": "9f1a2d6539178ed8020a840e33de946d25f31699",
+      "sha256": "53186f50e4dcba5b7251ecc90ddb4eaca91e6a500158bef035162e48c8cedffc",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-gateway.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_IMPACTO_EXECUCAO_GRUPO_ENABLED",
+        "VITE_SSO_IMPACTO_GRUPO_ENABLED",
+        "VITE_SSO_IMPACTO_GRUPO_MEDIADO_ENABLED",
+        "VITE_SSO_MOVER_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ReclassificarGrupo.tsx": {
+      "blob": "f394abfdb544b7404efe86396f33c9417a4c3d00",
+      "sha256": "cd54cf50734d188dcb8626da8212c7ece43eb9b6c810374854111e600b0ac1a3",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-gateway.ts",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_RECLASSIFICAR_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/pages/VisaoClientePage.tsx": {
+      "blob": "eeeefa4e94b5ebdb781509b8be18d6cd8fbd89ac",
+      "sha256": "22bfd814e9d0634fd46e7230b60a73e903e5e8d0b6e2521f91e01400ac4cdbfb",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/app/auth-context.tsx",
+        "apps/web/src/app/permissoes-context.tsx",
+        "apps/web/src/app/use-formulario-sujo.ts",
+        "apps/web/src/features/config/infrastructure/supabase-config-adapter.ts",
+        "apps/web/src/features/pcm/application/chamados.ts",
+        "apps/web/src/features/pcm/application/cliente-360-gateway.ts",
+        "apps/web/src/features/pcm/application/cliente-alma.ts",
+        "apps/web/src/features/pcm/application/cliente-responsaveis.ts",
+        "apps/web/src/features/pcm/application/clientes-crud.ts",
+        "apps/web/src/features/pcm/application/listar-clientes.ts",
+        "apps/web/src/features/pcm/application/obter-visao-cliente.ts",
+        "apps/web/src/features/pcm/components/AjudaPcm.tsx",
+        "apps/web/src/features/pcm/components/ArvoreAtivos.tsx",
+        "apps/web/src/features/pcm/components/BoardAtivos.tsx",
+        "apps/web/src/features/pcm/components/CabecalhoCliente.tsx",
+        "apps/web/src/features/pcm/components/Cliente360AcoesRapidas.tsx",
+        "apps/web/src/features/pcm/components/ClienteFormModal.tsx",
+        "apps/web/src/features/pcm/components/ClienteNaoEncontrado.tsx",
+        "apps/web/src/features/pcm/components/NovaOrdemServicoModal.tsx",
+        "apps/web/src/features/pcm/components/NovoChamadoModal.tsx",
+        "apps/web/src/features/pcm/components/OrdemServicoDetalheDrawer.tsx",
+        "apps/web/src/features/pcm/components/PainelBacklog.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/PainelLateralBacklog.tsx",
+        "apps/web/src/features/pcm/components/PainelEquipamentos.tsx",
+        "apps/web/src/features/pcm/components/PainelFerramentasCliente.tsx",
+        "apps/web/src/features/pcm/components/PainelHistorico.tsx",
+        "apps/web/src/features/pcm/components/PainelItensDoCliente.tsx",
+        "apps/web/src/features/pcm/components/PainelSistemasCliente.tsx",
+        "apps/web/src/features/pcm/components/PreventivasWorkspace.tsx",
+        "apps/web/src/features/pcm/domain/assessment.ts",
+        "apps/web/src/features/pcm/domain/cliente-responsaveis.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-chamados-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-cliente-360-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-cliente-alma-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-cliente-responsaveis-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/Workspace.tsx",
+        "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/Workspace.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/Workspace.tsx",
+        "apps/web/src/features/pcm/interfaces/visitas/Workspace.tsx",
+        "apps/web/src/features/pcm/pages/EstruturaClientePage.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/Workspace.tsx": {
+      "blob": "ff34f580fd2ca37e177b7baf1e9ad98bf8ae28f3",
+      "sha256": "54dafad0b934c513a65de367dde09f6b62b4c1c420d51315c2d4d04de9b7ecc7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/plano-manutencao.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoPlano.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DetalhePlano.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/TransicaoPlano.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_TRANSICAO_PLANO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/TransicaoPlano.tsx": {
+      "blob": "e92f2b52f435cadd34ddb49feb1bb0eccc9b2596",
+      "sha256": "e9b95aa4cef6da9c11f6bc40c1611e33a2fccef67c0c8321256ff42a58b2141b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/InventarioGeracaoLegada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RelacaoPlanoLegado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DECISAO_VENCIMENTO_ENABLED",
+        "VITE_SSO_HISTORICO_TRANSICOES_PLANO_ENABLED",
+        "VITE_SSO_INVENTARIO_GERACAO_LEGADA_ENABLED",
+        "VITE_SSO_RELACAO_PLANO_LEGADO_ENABLED",
+        "VITE_SSO_TRANSICAO_PLANO_MEDIADA_ENABLED",
+        "VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/RelacaoPlanoLegado.tsx": {
+      "blob": "56c450cc69f9f17b84aff6143f6c95fb1a2bd5fc",
+      "sha256": "70734158ed33eee628a18757c1ebfe13cb5ff6a5d4d32bc8b13bc047aa5d193c",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ClassificarLegadoNaoRelacionado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaPlanoLegado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloLegado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarVisitaLegado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_CONFERENCIA_PLANO_LEGADO_ENABLED",
+        "VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED",
+        "VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts": {
+      "blob": "c5678d135b6230db14b7e3c80f6435ed239d3482",
+      "sha256": "0b81f0c4df4c552c485d4a368ebfe4b30c99b7086c199ec5ffb229330bfe870e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarVisitaLegado.tsx": {
+      "blob": "adb5a263cffcf2c68478ad655305160f79610e4e",
+      "sha256": "c2485fc314b679a64876b49c427299b6d40c8298006c7545d08b30f581a165c1",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteVisitaLegado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloLegado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReconciliarLegadaInerte.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_APROVAR_REVISAO_ENABLED",
+        "VITE_SSO_LOTE_VISITA_LEGADO_ENABLED",
+        "VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx": {
+      "blob": "b1508ee07f45bf9546743bd9e9cd24fc056eece4",
+      "sha256": "215cc70a924ae968b789ed513ff205bfab601639d81ead939b669f4bf5baea24",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED",
+        "VITE_SSO_FILA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx": {
+      "blob": "e0b5462682e7a4e082911574ada3dd539779a1af",
+      "sha256": "b25f82a70cdd087e1322f99c9a97efcffddf0aac1f5616328f61b042f47ca92f",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferirGrupoFila.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED",
+        "VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferirGrupoFila.tsx": {
+      "blob": "12722e4a35b1eaa9c8ac66a4206b26cac9a8af57",
+      "sha256": "93cbed541f9213f7b38cfc44c5daa2cf7dd8a3259c02b0d148c000efb2e865ab",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RegistrarOcorrenciaGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReabrirGrupoFila.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReabrirGrupoFila.tsx": {
+      "blob": "7ba94ba743dea8f53a8892b08dfd2d274d6b3da5",
+      "sha256": "db70cafe9e36a846a7ac327c48ecb9c4f95ed148300c6e5807de05709c237623",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/RegistrarOcorrenciaGrupo.tsx": {
+      "blob": "19ecb6b7786f18ff3566b3f875f3055aa2af3cb5",
+      "sha256": "173294e7066181b450741f2e820df7103ed9b8e33e8f11594185cf94b91ab0c6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReconciliarLegadaInerte.tsx": {
+      "blob": "c6187324a22ca0dfc11fb0b131c0347ef3c06df3",
+      "sha256": "4fb6a3bcc375f5560725f3602583b5987774767ce7ffc918e2b678ae5c65025b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloLegado.tsx": {
+      "blob": "14ee0e91ff1ea92443927fb20e3600dcd3ae213a",
+      "sha256": "cb4a9f566def2fc017cbb57c3c772c365ce5aa768926f01dbccc3dc3fa3eebb4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/conflito-reserva.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/conflito-reserva.ts": {
+      "blob": "01b292f9a3453c91eedf10aecbdfbb68402aaf5e",
+      "sha256": "22e3d3a4bc114cb71d934d1fabaa8371d3800ea6f09e84c9392c9f0d801deb12",
+      "alterado_base": true,
+      "imports_relativos": [],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteVisitaLegado.tsx": {
+      "blob": "27d23349d34a5ddef23d6bfa241881f5a9e84f57",
+      "sha256": "a07f3d53305ed6c7cc7790d2ff31bf5693d45c6008729a32c67e85ab03358d66",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloLegado.tsx": {
+      "blob": "81e2f6aeeeccbdc57ad8525d08ce426e3fc1cb60",
+      "sha256": "0790d084265e0b96d245e8f7795587497a929ae67f33a269111fd7265a927089",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteCiclosLegados.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloLegado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarLegadaExistente.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReconciliarLegadaInerte.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_APROVAR_REVISAO_ENABLED",
+        "VITE_SSO_GERACAO_FUSO_SNAPSHOT_ENABLED",
+        "VITE_SSO_INTEGRAR_LEGADA_EXISTENTE_ENABLED",
+        "VITE_SSO_LOTE_CICLOS_LEGADOS_ENABLED",
+        "VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarLegadaExistente.tsx": {
+      "blob": "1a20643a5c9e434bec758692306c23c99476b6a9",
+      "sha256": "45fa29f02444883e75c633c0ef004be11593a24d3a26d440277bdea6d1385d53",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteCiclosLegados.tsx": {
+      "blob": "6a589b0158edae3ca47af216c436da2b3f9276b0",
+      "sha256": "e2fa4315bd079603117d782898a0bbe6579bd0682a4af5d0c4ed3d39a9e61eae",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaPlanoLegado.tsx": {
+      "blob": "09a7851b58f4d27bdcac205e0a5c5a2229ca028e",
+      "sha256": "8bddef06bf947c99da3add926e6590fa44ec3da46e7dc83a9a255a6a3f6409f6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloFuturo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararCalendarioLegado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_APROVAR_REVISAO_ENABLED",
+        "VITE_SSO_COMPARAR_CALENDARIO_LEGADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararCalendarioLegado.tsx": {
+      "blob": "2551e928d25677f8800d3f3bdda270eb54b90b00",
+      "sha256": "46c2e942be5c04b77ba4994835d81f4861a6b145cf401250fc3e6a5dde0a6838",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloFuturo.tsx": {
+      "blob": "92109db10419113bd55436ca9855fb35be4f12e5",
+      "sha256": "28d73e9b5b13be4d72b3d25a046a935c57cafcb808ebbca15803904220b189ac",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/conflito-reserva.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararVisitaLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararVisitaLegado.tsx": {
+      "blob": "141536659258f111675a4f8e8c4c379019dd5c51",
+      "sha256": "0ad5d0b916bd8ed97b5c6cd486bd6e0b117de70b891dc9eefb2080246bebdd42",
+      "alterado_base": true,
+      "imports_relativos": [],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ClassificarLegadoNaoRelacionado.tsx": {
+      "blob": "c58a4395d07c51bea9c53e3d711d6ff4200c0e3e",
+      "sha256": "0a8c5bc6b81d243ffe5c6eb1647689aa09431de71135ba466792adfed2255e30",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/InventarioGeracaoLegada.tsx": {
+      "blob": "b8c5e57a83af036f371cd9605958729797f87fd4",
+      "sha256": "7a21e7e6943bbc48ae145e6711c48fb5b30b138d7827458a063afce9ce308754",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DetalhePlano.tsx": {
+      "blob": "ed9f0e452ea358eb878a328742c3aed09d9f7b3a",
+      "sha256": "be6c8fc568c4d3016acad72e77531b99d0371cfa27ec7ab0053b7600a730fc50",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/domain/plano-manutencao.ts",
+        "apps/web/src/features/pcm/domain/vigencia-plano.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FormularioRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/NaturezaAlvoRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/NaturezaAlvoAprovada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarVersaoPlano.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarCronogramaFotografia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExigenciaLegalRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoNormativoAprovado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoModoVisita.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FusoPlanoDeclarado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VincularSerieRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaCiclos.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaVencimentosPlano.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PrepararRotinasJanela.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CiclosUniformes.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ContratoPerguntas.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IniciarRevisaoContratos.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ContratoEvidencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisionada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/QuestionarioAprovado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RetiradaRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ObrigacoesPreparadas.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ObrigacoesPmoc.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CopiarPlanoAprovado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CopiarRotinaModelo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ProvenienciaRotinaModelo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaRotinaCopiada.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CICLOS_UNIFORMES_ENABLED",
+        "VITE_SSO_CONFERENCIA_COPIA_ROTINA_ENABLED",
+        "VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED",
+        "VITE_SSO_CONTRATO_EVIDENCIA_ENABLED",
+        "VITE_SSO_CONTRATO_PERGUNTAS_ENABLED",
+        "VITE_SSO_COPIA_PLANO_ENABLED",
+        "VITE_SSO_COPIA_ROTINA_MODELO_ENABLED",
+        "VITE_SSO_CRONOGRAMA_PARCIAL_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_MODO_VISITA_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_NORMATIVO_ENABLED",
+        "VITE_SSO_EDICAO_ROTINA_REVISAO_ENABLED",
+        "VITE_SSO_EXIGENCIA_LEGAL_ENABLED",
+        "VITE_SSO_EXPORTAR_PLANO_ENABLED",
+        "VITE_SSO_FILA_OBRIGACOES_PREPARADAS_ENABLED",
+        "VITE_SSO_FUSO_PLANO_DECLARADO_ENABLED",
+        "VITE_SSO_INCLUIR_RETIRAR_REVISAO_ENABLED",
+        "VITE_SSO_LOCALIZAR_COPIA_ROTINA_ENABLED",
+        "VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED",
+        "VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED",
+        "VITE_SSO_ORIGEM_LOTE_ENABLED",
+        "VITE_SSO_PREVIA_VENCIMENTOS_PLANO_ENABLED",
+        "VITE_SSO_PROVENIENCIA_ROTINA_MODELO_ENABLED",
+        "VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED",
+        "VITE_SSO_REVISAR_ROTINA_APROVADA_ENABLED",
+        "VITE_SSO_VINCULAR_ROTINA_SERIE_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaRotinaCopiada.tsx": {
+      "blob": "b4cfb8c187e5a7d043f69ac8ec4692e5f78e9e10",
+      "sha256": "9043416011d5c10db867c126e0bb9533830b1b90217d6d3d4d0ad819426b60aa",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ProvenienciaRotinaModelo.tsx": {
+      "blob": "6a819bac8bd90dcb2373d3233b4815f3c6e238e6",
+      "sha256": "e43f7e8825a8b02f6d57b93246a1ae21f6d1190f39e04ccad229b3db8c3017a7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CopiarRotinaModelo.tsx": {
+      "blob": "e9a88ad8526537dc74643cd13b93cb405bbab337",
+      "sha256": "6271d335b1e0a820c1b23ffa46d1a12add0a224a0e97ea6c5f3762c98793dc3a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts"
+      ],
+      "flags": [
+        "VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED",
+        "VITE_SSO_RECIBO_COPIA_ROTINA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CopiarPlanoAprovado.tsx": {
+      "blob": "fecd6ac72d1fe3ab005ddf120b805d4c116f69c0",
+      "sha256": "2dda4016031e46cee5172793b47d5966a00974054ac34202a432e7f6a08afa66",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ObrigacoesPmoc.tsx": {
+      "blob": "ec65327cb0b531c64a8ad87424cae00871d9dc2f",
+      "sha256": "18168c662ca06ca2b2cfdb9b22989169e02da92417f680edd7d97a359cea5d7f",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_OBRIGACOES_PMOC_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ObrigacoesPreparadas.tsx": {
+      "blob": "32cad933485a13bbf256e01ee0c0b6decae2153f",
+      "sha256": "a1d5d843492f59137b86dffffb50b8ae26df3fdee85bcd8f36ef73723b968400",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RegistrarOcorrenciaGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VincularOsGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntencaoOsGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AtestadoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FotosAtestadoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RegistrarFotoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoFotoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/QuantidadeGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoQuantidadeGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EsforcoGrupo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/NaturezaAlvoAprovada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoOcorrenciaVinculada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IncluirFilaSelecionada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ChamadoCicloPreventivo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ATESTADO_GRUPO_ENABLED",
+        "VITE_SSO_CHAMADO_PREVENTIVO_ENABLED",
+        "VITE_SSO_COMPARAR_QUANTIDADE_GRUPO_ENABLED",
+        "VITE_SSO_DECISAO_FOTO_GRUPO_ENABLED",
+        "VITE_SSO_ESFORCO_GRUPO_ENABLED",
+        "VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED",
+        "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED",
+        "VITE_SSO_FILA_SELECIONADA_ENABLED",
+        "VITE_SSO_FILA_VISITA_ENABLED",
+        "VITE_SSO_FOTO_GRUPO_ENABLED",
+        "VITE_SSO_INTENCAO_OS_GRUPO_ENABLED",
+        "VITE_SSO_QUANTIDADE_GRUPO_ENABLED",
+        "VITE_SSO_REGISTRAR_FOTO_GRUPO_ENABLED",
+        "VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED",
+        "VITE_SSO_VINCULO_OS_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ChamadoCicloPreventivo.tsx": {
+      "blob": "b6d682e43bdc77301c44bedc758a04f5387ee87d",
+      "sha256": "73eaf049520e542226fbe22e984bf56facca43ef47b5bbe4b01feed3274e6c97",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/app/permissoes-context.tsx",
+        "apps/web/src/features/pcm/components/ChamadoPainel.tsx",
+        "apps/web/src/features/pcm/application/abrir-ordem-servico.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-ordem-servico-adapter.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IncluirFilaSelecionada.tsx": {
+      "blob": "86f0f9d78947d760938e939f69dea5e37aff1b4d",
+      "sha256": "097fcab761219d13ee8aa4d9c1f99037ec851b94806e00286e3126d2bb2c03c0",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoOcorrenciaVinculada.tsx": {
+      "blob": "30cf97775bf511d6de7e578ea26d20c0bf2a2c1b",
+      "sha256": "c4cdaa0886b08c590e43e2fcaad20d232328c891b539ddf7c7291cd0756acac9",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/NaturezaAlvoAprovada.tsx": {
+      "blob": "9821cf20bbbd805ee075ed1bcf32c7cb7cd65042",
+      "sha256": "63a9014c70c29a94d72948892bccd55406a45ac7418a1e0e2ccac565950c3517",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EsforcoGrupo.tsx": {
+      "blob": "673b26274794fff557157b36616b1fa2af51bfca",
+      "sha256": "bfad75382cd5e141514499e6dc1acd861bb4b9ddde23e3a19b225d83e043e763",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ESFORCO_GRUPO_MEDIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoQuantidadeGrupo.tsx": {
+      "blob": "320779bd6e9bc9b304c10e76dfc57a34578dd13b",
+      "sha256": "db04ed64490015fc6561af15f1296329ff038fb551f9c32982c21309ec5ba804",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/QuantidadeGrupo.tsx": {
+      "blob": "3539a6b1272e58ff00c8d628fec19e4178559b7c",
+      "sha256": "2fc268c3f830141203d0776dcb09057ab037020a48c44449184403b926f8b150",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoFotoGrupo.tsx": {
+      "blob": "566c5f5c4971ace3cc96f9e1ac32d602570fd89b",
+      "sha256": "03f67c24a94a553245736551c091510bf574680dc4465e4f67462743f7c99dd8",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/useFotosGrupo.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/useFotosGrupo.ts": {
+      "blob": "aaba09b367f9fdd8db49d707c8a5e6b1a68c388b",
+      "sha256": "6ceca6a0ba89e2976c471968cfef1b2a7d28ed81de7a6a072b97393801ca76a5",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/RegistrarFotoGrupo.tsx": {
+      "blob": "dde8bb5b0594809a445988b2386b6a8c3c6b20d1",
+      "sha256": "0fab0ed993307ee327ef481b01fde4ae4d9064b949b418ceb14923d30c0c263e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/useFotosGrupo.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FotosAtestadoGrupo.tsx": {
+      "blob": "63d76e57d20a334833d92de5a20d89c9571da597",
+      "sha256": "4fa419dba45bcac4553ded655e3b471d1819165de8268fcb252092650d5dcb48",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/useFotosGrupo.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AtestadoGrupo.tsx": {
+      "blob": "f263c888365f945bf6f30bf0d5d0b7037a77bf29",
+      "sha256": "eb659c98562f484ab8e4874ec36f430b122a830959959a36872ae6fa077d9de5",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IntencaoOsGrupo.tsx": {
+      "blob": "012df0bcee21fd1e49135fd79fd5b663b2b7873a",
+      "sha256": "d02cc33d4ac62d4b3493f100d6e0a59a3fbe8c925fcacc17ac4c3ab014d632ff",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CriarOsGrupo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CRIAR_OS_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CriarOsGrupo.tsx": {
+      "blob": "fa542936f13bea207764c1b18a7d16e53b33c18e",
+      "sha256": "1ba3d62bc30bc7f30b8de4cc6d06901a7959f622aed69dcfaf2e23abf994c55e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VincularOsGrupo.tsx": {
+      "blob": "fd602d86341421ba58bca64bac87b824a3a043c1",
+      "sha256": "70da66819b06da71e6de9806c26dda44c09f2ff031008d92c5c70874bf585116",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/RetiradaRotina.tsx": {
+      "blob": "0c124699f1a21dba275d67b59990ff88023dddcb",
+      "sha256": "a52a230a96dc315151f67f1845b9876b0e3723b2b99ed839683bfe263002134a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/plano-manutencao.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/QuestionarioAprovado.tsx": {
+      "blob": "a4838f711e6811657ed33a16746455b8abe4488d",
+      "sha256": "d6a065347c5f6b17f252032fd12fefaf537a53498fc492ffe3ae80f6e129b287",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisionada.tsx": {
+      "blob": "8c9156929d2ba4952f59d924cd28297ed931c7e2",
+      "sha256": "919e8d82255a4febb494a68d68cac3afb0f5408d2c298cceedd5c9ee6bbf27ae",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoOsRevisao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IndiciosRevisaoRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoQuestionario.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoVigencias.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoImpactoOcorrencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoImpactoVisita.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_COMPARACAO_QUESTIONARIO_ENABLED",
+        "VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED",
+        "VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED",
+        "VITE_SSO_IMPACTO_REVISAO_OS_ENABLED",
+        "VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoImpactoVisita.tsx": {
+      "blob": "f560cec80988154610e6d8777f94da3f0f29dd27",
+      "sha256": "36294393dc465c5e204077fbb1a8f11b030ee50c25d69911ba4fc436aac66dfa",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoEscolhaAlteracao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaVisita.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoSelecionado.tsx",
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ALTERACAO_CICLO_ENABLED",
+        "VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoSelecionado.tsx": {
+      "blob": "7beb05ef4082d8126a78ee82635dcb1388753f3a",
+      "sha256": "f979f8447ebbfabd689978152a484ef664dd1f40759362ffcbb727709e0aee30",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaVisita.tsx": {
+      "blob": "268ff2491496bed79d3e31b3a1986427ee90a6bb",
+      "sha256": "162bfb96bf797ad7ff5db01f25bcf9a79f5250607cf1178ca44ed1fdd6d00efc",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoSelecionado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_NOVA_DATA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoEscolhaAlteracao.tsx": {
+      "blob": "c80619bf238de9783fdcba8c5ec526d15e49f855",
+      "sha256": "607d6d267ac4b69b7797d6588f4ca075c69306d20204bc85ffebfa2b48e2bf70",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ResolverRetiradaImpacto.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ALTERACAO_CICLO_ENABLED",
+        "VITE_SSO_NOVA_DATA_CICLO_ENABLED",
+        "VITE_SSO_NOVA_DATA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ResolverRetiradaImpacto.tsx": {
+      "blob": "128dfa833a55b2c57a8e8509fa92f1eb82113a5d",
+      "sha256": "550bc5fc2322582aed72ad82695c23a4025beba04990e40cf56248954b5c01ad",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_RESOLUCAO_IMPACTO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoImpactoOcorrencia.tsx": {
+      "blob": "6f14a7a5ac86c57496c024987d8aa827d2ef7730",
+      "sha256": "6bcb21eb4914b35d7d1a7194e5131f321072c648da27cd554e03b0ffdd71845e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoEscolhaAlteracao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaDataCalendario.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoSelecionado.tsx",
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ALTERACAO_CICLO_ENABLED",
+        "VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaDataCalendario.tsx": {
+      "blob": "c9839c4a235f8fd90e7650fb05fcce6634bb417d",
+      "sha256": "fe36c36841d76cf0b0919805ae27f9db841e5a01ae98d31f151c1afe5486467b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoSelecionado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_NOVA_DATA_CICLO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoVigencias.tsx": {
+      "blob": "d43cfd0bde5f411f4799bcf11fe6c96477a3f27c",
+      "sha256": "c79ed7bd171dcb39d0b2075a46a0889c321a8dec0252593db1e2713cb39cbd4c",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoQuestionario.tsx": {
+      "blob": "fbc64a799ea8da6033b6d145938c048d57da8086",
+      "sha256": "c9d2f1d3bb3dee849a4255da068cfd026172257fb6fcfa11c91af4172e35311b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IndiciosRevisaoRotina.tsx": {
+      "blob": "ffa02415dd0c44e929c4ce83a34e0b24451c06db",
+      "sha256": "2454a796560f94730e5d42d08e68a50e1bf939126ffd60aceb9beed975c3fbc4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_OCORRENCIAS_REVISAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoOsRevisao.tsx": {
+      "blob": "8d8af1db17d33e180379b1869e12e05383df8803",
+      "sha256": "11e372aae9661e78ca810abe6add26f65e814e99b1a2bf26434522d4afcc7154",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ContratoEvidencia.tsx": {
+      "blob": "47b20ae6c45d482b2fd9b9ff66bdf2b6531a1597",
+      "sha256": "d17c057b1a90fa53337f3074602a9841d02ef2e5228f02d679ae2ef35a28e1a9",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IniciarRevisaoContratos.tsx": {
+      "blob": "69db72d69a3303fd7c8031b40add6190ae427c58",
+      "sha256": "a1950f36dd48cfee0e0663f8113c888c9dc78ce09fb5c660f49b20dc783eb313",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_REVISAO_COM_EVIDENCIAS_ENABLED",
+        "VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ContratoPerguntas.tsx": {
+      "blob": "6d80831b20d2b889f209c4e32ae273f02aacb045",
+      "sha256": "295a62db8a827c4c663de0f775cfd437782a087cf1bdc775ec57c815f43b7698",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts"
+      ],
+      "flags": [
+        "VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CiclosUniformes.tsx": {
+      "blob": "42688694c20b9514b06815de12b890a9e60c2d81",
+      "sha256": "17ebcb2bf30c39cd6d6cbc4b14aab8b3b9024bd674416cb7c07564f38bff05c0",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DeclaracaoEscopoPreventivo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CICLOS_UNIFORMES_MEDIADOS_ENABLED",
+        "VITE_SSO_ESCOPO_PREVENTIVO_ENABLED",
+        "VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx": {
+      "blob": "9aeeafb4f54cb9fede4338e1a1af20c24b98a627",
+      "sha256": "01f8f143c2bdd1202789934a2a8f921626af81dd6f8f9870916e454c77c4d29d",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaPmocCiclo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_GERACAO_FUSO_SNAPSHOT_ENABLED",
+        "VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx": {
+      "blob": "522499b3b062d389c205492f77ca0ec4d51404ad",
+      "sha256": "8a0a449e5a7be330f0678e0c35b83cc1f29a8467c6822326e3aba5405fd09189",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RelacaoPlanoLegado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED",
+        "VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED",
+        "VITE_SSO_RELACAO_PLANO_LEGADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaPmocCiclo.tsx": {
+      "blob": "7b4d04f94f7e6d1f7e763cd74e620b7abef36d8b",
+      "sha256": "0daa935573cc68bfc81f72344ed9df9c16c0b78ef41fe4a63fc9d9f0bc73f361",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DeclaracaoEscopoPreventivo.tsx": {
+      "blob": "80b80880505f13be5491cb5813f5187d47d0dedc",
+      "sha256": "705e506fde386f4a61ac3f7987c9ecb57ee55a55163b961755f00910fce8558c",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ProporEncerramentoOcorrencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_PROPOSTA_ENCERRAMENTO_OCORRENCIA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ProporEncerramentoOcorrencia.tsx": {
+      "blob": "083e87d157329e87f52835fbdbe09bb58409309e",
+      "sha256": "5e6ec6dba2a9908600f870c220184f87fdb36a41c23b968846a2614fb8423a4d",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PrepararRotinasJanela.tsx": {
+      "blob": "e4e9df18592823d5ab9eaae99f9e57df4f9ceb35",
+      "sha256": "11b3d1c79c622e6821a9829644755156ddfd1ce7dc6d64b338b49e18fafa9ced",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/snapshot-exportacao.ts",
+        "apps/web/src/features/pcm/domain/calendario-contratual.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-snapshot-exportacao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaDasOcorrenciasPreparadas.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_SELECIONADA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaDasOcorrenciasPreparadas.tsx": {
+      "blob": "fe699811c66087e4b76302b548daf277c7a7f89b",
+      "sha256": "6a0772d3fcc7cf7b8df291099e16b074623f13d2054f3251d888134c0b67c398",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IncluirFilaSelecionada.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaVencimentosPlano.tsx": {
+      "blob": "9c8add88222f017205b8f4b4e85669e086314d35",
+      "sha256": "c2fe76dd272ad029ef36098c57d0252b49008e30b3fe58b49434fcb38544eb16",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/snapshot-exportacao.ts",
+        "apps/web/src/features/pcm/domain/calendario-contratual.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-snapshot-exportacao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecidirVencimento.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoOcorrenciaVinculada.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/TriagemCicloAtrasado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED",
+        "VITE_SSO_DECISAO_VENCIMENTO_ENABLED",
+        "VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED",
+        "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED",
+        "VITE_SSO_PREPARAR_CICLO_VENCIDO_ENABLED",
+        "VITE_SSO_PREVIA_VENCIMENTOS_OCORRENCIAS_ENABLED",
+        "VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/TriagemCicloAtrasado.tsx": {
+      "blob": "887855c005ea15d2a895ecf4f3270cd7405eb88b",
+      "sha256": "21422003bd38085d3271e0868be1c0bb9508cfe375d5f75a4adf9f3a7592d901",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecidirVencimento.tsx": {
+      "blob": "6af4c1026270127fbbe537e8568d7ecede425706",
+      "sha256": "25b72bef2b1a82eed2747dbae96cdf4b203923ea08c82444a659bdbfaab014cb",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaCiclos.tsx": {
+      "blob": "fc118f1ef07c928e271ba9a7cb208800e28aaadf",
+      "sha256": "be7e38cc91276345143191b21d0a7d354e61d70ab7949051bab16244117733c1",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/domain/calendario-contratual.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecidirVencimento.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarPreviaCiclos.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoPmoc.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ProximoCicloAncorado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/HistoricoCicloCanonico.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/TriagemCicloAtrasado.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoFeriadoCalendario.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarLoteCalendario.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/OrigemGeracaoRotina.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DECISAO_FERIADO_CALENDARIO_ENABLED",
+        "VITE_SSO_DECISAO_VENCIMENTO_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_PMOC_ENABLED",
+        "VITE_SSO_EXPORTAR_PREVIA_CICLOS_ENABLED",
+        "VITE_SSO_HISTORICO_CICLO_CANONICO_ENABLED",
+        "VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED",
+        "VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED",
+        "VITE_SSO_PROXIMO_CICLO_ANCORADO_ENABLED",
+        "VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/OrigemGeracaoRotina.tsx": {
+      "blob": "52cd4178be5957c0fe50b65daf2535f122d59db2",
+      "sha256": "ba25ee27cdbd242ab83096d176df2bacf296c31b6401e83803c8f86085def063",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ORIGEM_ROTINA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarLoteCalendario.tsx": {
+      "blob": "9a2396b71338184f8fffb56516b4470df0de2072",
+      "sha256": "42d568a49b0b1e0f8f3e329215a774eb3e9d0c17dc6706b6b48bd68ae5b877c2",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaAposPreparacao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED",
+        "VITE_SSO_ORIGEM_LOTE_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoFeriadoCalendario.tsx": {
+      "blob": "c7003c902b32e57f57a820e205c3489277c6c0b6",
+      "sha256": "a5f5843c169310e0f78e235d2d69668e8bd9dcba3f017d868c94eeae9b555faf",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/HistoricoCicloCanonico.tsx": {
+      "blob": "4904c771bddbe7affa792f75fdd1157181f6ed67",
+      "sha256": "e7ff8465114d4653b7c555cd445b0d1dbbc7c9c50755ee65dd20cb03e15fce7b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ProximoCicloAncorado.tsx": {
+      "blob": "b35748c86daafe39d81d0fd138cf1f38d15f9c3a",
+      "sha256": "7e4f0542e06164e8c5cb2a15f1326f2a5c79d7fd1eb5122e2dc998e1b4c47ca6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoPmoc.tsx": {
+      "blob": "b7b6f72f2f981ebbfd8e1273cdb1d8a8d6bd492a",
+      "sha256": "f815c3209662f701f1d3b433d442b40759a26850c497d5690ff69f6dcfe7e3f9",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PropostaPmoc.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_PMOC_MEDIADO_ENABLED",
+        "VITE_SSO_PROPOSTA_PMOC_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PropostaPmoc.tsx": {
+      "blob": "5235a9048b0beeda6322f7948c0f1efd7dd7bc6a",
+      "sha256": "bd4673723304eda06d61f225202846b73744e8da2020366e8bc67a0a31ccb75a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoPmoc.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DECISAO_PMOC_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoPmoc.tsx": {
+      "blob": "37b31a89aee380ffbec8b1c8402e3ddf0e827134",
+      "sha256": "bd10ca15db6835c8ab80e9a5e3f3256f285a6818acc4ac28f491e095bd2cc831",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VinculoCicloPmoc.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VinculoCicloPmoc.tsx": {
+      "blob": "7bc5a358a4b9f572187bd75422440f368ab3565e",
+      "sha256": "109d872dbafe06d90c8fcc85ff3d1cf54bf7d23565a966bbeba3095974bfe758",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_VINCULO_CICLO_PMOC_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarPreviaCiclos.tsx": {
+      "blob": "9f772bc4ea27ed4c1241b4d2f2d0f32e018c09d1",
+      "sha256": "5f52aa1de56f7b098c858e349714d977ca31eac1baaca643a344352e07787989",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/pdf/relatorio-pdf.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts"
+      ],
+      "flags": [
+        "VITE_SSO_EXPORTAR_PREVIA_CICLOS_CSV_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VincularSerieRotina.tsx": {
+      "blob": "581893cbfbf9888897b5588d2e29149dd0b121ba",
+      "sha256": "2285deace612a0ec2c73fe77f865359e0593260d8343775e8939210c0172ac0f",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VigenciaSerieRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaOcorrenciasVisita.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CiclosUniformes.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/GerarVisitaContratual.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_CICLOS_UNIFORMES_ENABLED",
+        "VITE_SSO_GERAR_VISITA_CONTRATUAL_ENABLED",
+        "VITE_SSO_PREVIA_OCORRENCIA_VISITA_ENABLED",
+        "VITE_SSO_VIGENCIA_ROTINA_SERIE_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/GerarVisitaContratual.tsx": {
+      "blob": "9bcce2e61f81a34dbfe5d8946d8971887c676fe3",
+      "sha256": "bb50bb7dbeccf5dfbfbf0f47a625a2ec8c0f751b1dd1cc920eb021359c2382f2",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaOcorrenciasVisita.tsx": {
+      "blob": "59c134139050f5523ca732eaf2b5108627d12d4f",
+      "sha256": "16263b0cd69128693f881539ac961423aa8795ed48f1b449f5958870e5df1385",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaPmocCiclo.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteOcorrenciasVisita.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/OrigemGeracaoRotina.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/conflito-preparacao-visita.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_VISITA_ENABLED",
+        "VITE_SSO_LOTE_VISITA_CANONICA_ENABLED",
+        "VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED",
+        "VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED",
+        "VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/conflito-preparacao-visita.ts": {
+      "blob": "710bbfd7649d2a5c4210d9e98a2b40d485d9687f",
+      "sha256": "0fc9a5fb65981ea68172b3cc603dbd4e5a7a3e27b398a8f22b0254ec773a40f5",
+      "alterado_base": true,
+      "imports_relativos": [],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteOcorrenciasVisita.tsx": {
+      "blob": "718f7b07b6418393c19964187c66a39c33e256ea",
+      "sha256": "40599552094127e10db453886fbd4bc8f67dc8910352ac1f407f2fbd590ecdb9",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/conflito-preparacao-visita.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VigenciaSerieRotina.tsx": {
+      "blob": "7baa80773df45323b58506500e750f57f925a52e",
+      "sha256": "5a310cdfd8c15089cf180b102036263a65631d677ad3694e63fc851221568ccb",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FusoPlanoDeclarado.tsx": {
+      "blob": "6d13f330f46284702a2dbfe4f2d1a3aac61da5db",
+      "sha256": "7e4042425c03fd647ca7db98d5bcb83f74e568f96bd5c2755cb8762569fddfb6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_FUSO_PLANO_MEDIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoModoVisita.tsx": {
+      "blob": "bbc30c929bcecc840c7dfc3eb596b87a5f411439",
+      "sha256": "fa4ac0f3ed61d8680c53bb248dbe1bb60a2107be32deb875258505de950c4179",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoNormativoAprovado.tsx": {
+      "blob": "12796b4dd1232d175ecce060b0a2b3dee6fc72a7",
+      "sha256": "7f41aa2926ac06e0b947b8df0746d7dfce49ec425a750dfdc8d0cf59e95e4a81",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExigenciaLegalRotina.tsx": {
+      "blob": "4569304aa3a702be8f945f0f053347c13e6db0fa",
+      "sha256": "782ffea692ed50244b404c24560f1f742bcc270445994846cdbcae2c0a80b0ac",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PropostaExigenciaRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED",
+        "VITE_SSO_RECIBO_EXIGENCIA_ROTINA_ENABLED",
+        "VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PropostaExigenciaRevisao.tsx": {
+      "blob": "0c811c2094182158450a0f8641fb630447a1c0c2",
+      "sha256": "53323f5293a1f06d6bc73665337fec113e950d97fa7570d1b97626e04da68689",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarCronogramaFotografia.tsx": {
+      "blob": "3af3cb6a9b7ef579278ccdd266592bde350a909a",
+      "sha256": "f47606c9e5847e04249b1439f51bb480e17b0b72856b0baf90084ef867154c95",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/exportacao-fotografia.ts",
+        "apps/web/src/features/pcm/infrastructure/exportacao-cronograma-autenticada.ts",
+        "apps/web/src/features/pcm/infrastructure/feriados-cronograma.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/SelecionarAlvoCronograma.tsx",
+        "apps/web/src/features/pcm/infrastructure/capacidade-cronograma.ts"
+      ],
+      "flags": [
+        "VITE_SSO_ALVOS_CRONOGRAMA_ENABLED",
+        "VITE_SSO_CAPACIDADE_CRONOGRAMA_ENABLED",
+        "VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/SelecionarAlvoCronograma.tsx": {
+      "blob": "c4854f4951e41eb473f8f8efbc54603ba56ac208",
+      "sha256": "466eb407e080eddbc0d3198099f34142f3656c733d2103a767999396836ba8c5",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-snapshot-exportacao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarVersaoPlano.tsx": {
+      "blob": "47951dbcfe714c2e27fd8177cac7ba796429ab2d",
+      "sha256": "cbf231dbb5f5d3abc70c12932fa7bf1fe0499838d90860efd68c8c89542d9498",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/pdf/relatorio-pdf.ts",
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/domain/exportacao-plano.ts",
+        "apps/web/src/features/pcm/infrastructure/exportacao-plano-xlsx.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts"
+      ],
+      "flags": [
+        "VITE_SSO_EXPORTAR_PLANO_CSV_ENABLED",
+        "VITE_SSO_EXPORTAR_PLANO_XLSX_ENABLED",
+        "VITE_SSO_METADADOS_EXPORTACAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/NaturezaAlvoRotina.tsx": {
+      "blob": "ca8756dc79cf5c75b6628e3169459b2bf1a53d02",
+      "sha256": "76ba4b0cc181a37ef30ed5b5359bec182824f26fa689d8c4c9c8511168e82793",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FormularioRotina.tsx": {
+      "blob": "78567e84bb76df4a39fd83810a735aefcec4d431",
+      "sha256": "d7d540716ad86ff92ef063959c9679d8408118b0a63298817a83192edfdf4c7a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoPlano.tsx": {
+      "blob": "e9e3daf7eaafc2226a3a12b5fc62a22b498194f4",
+      "sha256": "96f867b89d17bd767cc23a1346480a0e307ef2f2122be3d1179a14b231d696f4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoFusoVigencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreflightAprovacaoRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_APROVAR_REVISAO_ENABLED",
+        "VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED",
+        "VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED",
+        "VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreflightAprovacaoRevisao.tsx": {
+      "blob": "b79772f45fdf90987c44157f6caff077f453192d",
+      "sha256": "886a1eb46cb48d8bc4380719c597f117bc6e47997b1ad7ff4d61f6466268f21e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AvaliacaoImpactoRevisao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PrecondicaoImpactos.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ImpactoPmocRevisao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/InventarioPmocRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_AVALIACAO_IMPACTO_REVISAO_ENABLED",
+        "VITE_SSO_CONFERENCIA_FUSO_SERIES_ENABLED",
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED",
+        "VITE_SSO_PRECONDICAO_IMPACTOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/InventarioPmocRevisao.tsx": {
+      "blob": "824a17588069a78824a4e655ce0b7f9c69dbc801",
+      "sha256": "66324e8f32a3d47d427b43a0a037eab359e7b80ff72a58fcf5f48222af090002",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ImpactoPmocRevisao.tsx": {
+      "blob": "27a67cccd01c300e3072a5483cc050c2e1e1b36d",
+      "sha256": "394502cafefaee220add35697bcad8a3f41f06877a07cf33de10108e9fb038ca",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_IMPACTO_PMOC_REVISAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PrecondicaoImpactos.tsx": {
+      "blob": "00cbaec964e127e879c898fb96a3db21134244f6",
+      "sha256": "93582ae63805dfd142048b4898331709aaf7d8c8d5200e820bcb95785342509e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_PRECONDICAO_IMPACTO_MEDIADA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AvaliacaoImpactoRevisao.tsx": {
+      "blob": "92e38b856b5a659cf693cff6132dd1b127c5039c",
+      "sha256": "0dbd41259765e22587629e0ccc2f86923da034e86cca59667f59edb8ccc11eb5",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_AVALIACAO_IMPACTO_VISITA_ENABLED",
+        "VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED",
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoFusoVigencia.tsx": {
+      "blob": "0b08187f9806d27a1ed20072e29f4e7b90176539",
+      "sha256": "206f4d45bd2c13fdc2b8ff4c2ced4b66404f2dab8b4f1e7eb37ba0103ca879f9",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/Workspace.tsx": {
+      "blob": "f91e1f227456cde3b5f59921d31a1644a79c8089",
+      "sha256": "26206116e18c84d0cef60b1fa0269e536b7fd789f26124ae688db3c753ee98d6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/calendario-contratual.ts",
+        "apps/web/src/features/pcm/application/calendario-contratual-gateway.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoRegra.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/AlterarDiaContratual.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/FeriadosDeclarados.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ALTERAR_DIA_CONTRATUAL_ENABLED",
+        "VITE_SSO_FERIADOS_DECLARADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/FeriadosDeclarados.tsx": {
+      "blob": "02c26894bf1634084653e4cea29338a7a5f44414",
+      "sha256": "bab66043d5d04549331f7f1f69916b60e475a8e884bef343ce5a46f2e02cd708",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/calendario-contratual-gateway.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/ImpactosFeriado.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/CoincidenciasCalendario.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/SupressoesFeriado.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/RegistrarSupressao.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/HistoricoSupressaoGerador.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DECISAO_FERIADO_MEDIADA_ENABLED",
+        "VITE_SSO_FOTOGRAFIA_FERIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/HistoricoSupressaoGerador.tsx": {
+      "blob": "7a947efabc455272372b80849e1e6eed1521632c",
+      "sha256": "4662aa9f0f14a3d8afad32e5e80da711e06fc64e91935b5ff53965a5d2028ed8",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_HISTORICO_SUPRESSAO_GERADOR_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/RegistrarSupressao.tsx": {
+      "blob": "6238b42e9bc72c51ac1f81de1c1c5fa16f3b4dc6",
+      "sha256": "7d543b5c2e3a9704b00a2210130283fa29c1d3846525edcbeb9611324b1a9394",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/calendario-contratual-gateway.ts"
+      ],
+      "flags": [
+        "VITE_SSO_SUPRESSOES_FERIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/SupressoesFeriado.tsx": {
+      "blob": "ee7cb2f4654f22952fbe0e5b6559a6b71ad5add2",
+      "sha256": "8fe72e008ad80877cff69273e6b53282e6426221ec41a50fa3f28d189ee19bf7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_HISTORICO_VISITA_SUPRIMIDA_ENABLED",
+        "VITE_SSO_SUPRESSOES_FERIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/CoincidenciasCalendario.tsx": {
+      "blob": "7e5ce4278d7390c42b13c3ed408c5ee615f02368",
+      "sha256": "33998f474225a265e7e5c32c5cca02f1d099fe9290f74ea944cef4ea3739133e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/TriagemCicloAtrasado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_COINCIDENCIAS_CALENDARIO_FERIADO_ENABLED",
+        "VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/ImpactosFeriado.tsx": {
+      "blob": "4ff9452b7616deb4e0a2dab17052a6a10bed6a82",
+      "sha256": "0c363ab5deaedf98afd42de290e53ce89409892dd9a7b2b82713012b36dc6d6b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_IMPACTOS_FERIADO_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/AlterarDiaContratual.tsx": {
+      "blob": "c44bcb18a5d60edaa01e8694a4c7820b7bd83d9c",
+      "sha256": "1df1d89bfd711808a13249c2fad01547e98551d19e367dd7791867eca1fe265e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/calendario-contratual-gateway.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-calendario-contratual-adapter.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/PreviaMudancaDia.tsx",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/AlterarDiaComVisitas.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED",
+        "VITE_SSO_PREVIA_MUDANCA_DIA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/AlterarDiaComVisitas.tsx": {
+      "blob": "cd178565415fd6e4dd88774bd46c8cd1308bdb42",
+      "sha256": "e4e4610bc401164542834d66c220617b8e4ef68aca1615872f8f5a2a70a38a39",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/ExcecaoVisita.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_EXCECAO_VISITA_ENABLED",
+        "VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/ExcecaoVisita.tsx": {
+      "blob": "da474ae654f2c00c9cafe7c80f409b7128679a20",
+      "sha256": "0e7a90185fd6942955cb280e6fb03afcddf7056e2fbb7b72846e44d45c1af432",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": [
+        "VITE_SSO_EXCECAO_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/PreviaMudancaDia.tsx": {
+      "blob": "599e70495a63a7533638e9fa6281b03a904fd670",
+      "sha256": "9b9cacc957864357d8cdbdfd9f9ea387b75ee438e5246942ae8f312d4297eb12",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/OcorrenciasImpactoDia.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_IMPACTO_OCORRENCIAS_DIA_ENABLED",
+        "VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/OcorrenciasImpactoDia.tsx": {
+      "blob": "bc5fe1c2bb85f907a987bef297b51e6e5e514334",
+      "sha256": "997e0193bce76838f8f3c23d161fc08520d5e1bebffb0416b70a81a72d0629b3",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/HistoricoMovimentosOcorrencia.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_HISTORICO_MOVIMENTO_OCORRENCIA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/HistoricoMovimentosOcorrencia.tsx": {
+      "blob": "1a9c64fd3e09f944f5bf22bf0bf5c48799b771e4",
+      "sha256": "2fe9fa618880aa13e25f62cc72e397027284749b7fdedbb68a2190515069ad1f",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoRegra.tsx": {
+      "blob": "2fbdbaca9f13569f79d9a5b11149cc88c7d0a7b2",
+      "sha256": "8f1a31bc21d701dd7be9de37c1b3aee8c619294a46868286411ac5cf0a81edcd",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/calendario-contratual-gateway.ts",
+        "apps/web/src/features/pcm/domain/calendario-contratual.ts",
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoMudancaDia.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoMudancaDia.tsx": {
+      "blob": "954b18b3a824c041d5073303b17c4b69caa146cf",
+      "sha256": "8f3c1b51b360098dc930bff6c6ba2c56d6ba982116bc4da8d3f9763b7b050f01",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/domain/calendario-contratual.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AplicarRetiradasFila.tsx": {
+      "blob": "dc99bfbebecfe2603a455fa49ea1436385d16969",
+      "sha256": "9e7ab253d6d914bc42037ecf80ddf6d45cb3c4fc31766c63585c95332f0246e8",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/diagnostico-revisao-sessao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/app/HomePage.tsx": {
+      "blob": "da9401dbc77c562d70b6355b80c4a7405a5daf78",
+      "sha256": "05c8655cd1c6c696bcf8dd1fc2a89462ff237c007a3ec0ed1ca3ee3482ff77e8",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/area-cliente/pages/AreaClienteAdminPage.tsx",
+        "apps/web/src/features/atendimento/pages/AtendimentoConfigPage.tsx",
+        "apps/web/src/features/atendimento/pages/AtendimentoDashboardPage.tsx",
+        "apps/web/src/features/atendimento/pages/AtendimentoInboxPage.tsx",
+        "apps/web/src/features/comercial/components/PainelComercialCliente.tsx",
+        "apps/web/src/features/comercial/interfaces/orcamento-operacional/OrcamentosDaOs.tsx",
+        "apps/web/src/features/comercial/pages/ConfigFunilPage.tsx",
+        "apps/web/src/features/comercial/pages/ContasPage.tsx",
+        "apps/web/src/features/comercial/pages/ContratosPage.tsx",
+        "apps/web/src/features/comercial/pages/DashboardComercialPage.tsx",
+        "apps/web/src/features/comercial/pages/FunilPage.tsx",
+        "apps/web/src/features/comercial/pages/ParametrosPrecoPage.tsx",
+        "apps/web/src/features/config/pages/ConfigIaPage.tsx",
+        "apps/web/src/features/config/pages/GruposPage.tsx",
+        "apps/web/src/features/config/pages/IntegracoesPage.tsx",
+        "apps/web/src/features/config/pages/RelatorioGastoIaPage.tsx",
+        "apps/web/src/features/config/pages/UsuariosPage.tsx",
+        "apps/web/src/features/financeiro/mock/FinanceiroMockRouter.tsx",
+        "apps/web/src/features/financeiro/mock/FinanceiroMockRouter.tsx",
+        "apps/web/src/features/financeiro/pages/CategoriasPage.tsx",
+        "apps/web/src/features/financeiro/pages/CobrancaPage.tsx",
+        "apps/web/src/features/financeiro/pages/CockpitFinanceiroPage.tsx",
+        "apps/web/src/features/financeiro/pages/ContasPagarPage.tsx",
+        "apps/web/src/features/financeiro/pages/ContasPage.tsx",
+        "apps/web/src/features/financeiro/pages/ContasReceberPage.tsx",
+        "apps/web/src/features/financeiro/pages/ContratosPage.tsx",
+        "apps/web/src/features/financeiro/pages/CustosPessoalPage.tsx",
+        "apps/web/src/features/financeiro/pages/DrePage.tsx",
+        "apps/web/src/features/financeiro/pages/FechamentoPage.tsx",
+        "apps/web/src/features/financeiro/pages/FinanceiroDashboardPage.tsx",
+        "apps/web/src/features/financeiro/pages/ImportOfxPage.tsx",
+        "apps/web/src/features/financeiro/pages/ImpostosPage.tsx",
+        "apps/web/src/features/financeiro/pages/LancamentosPage.tsx",
+        "apps/web/src/features/financeiro/pages/OrcamentoPage.tsx",
+        "apps/web/src/features/financeiro/pages/RentabilidadePage.tsx",
+        "apps/web/src/features/guia/GuiaRouter.tsx",
+        "apps/web/src/features/guia/GuiaRouter.tsx",
+        "apps/web/src/features/pcm/components/NovaOrdemServicoModal.tsx",
+        "apps/web/src/features/pcm/interfaces/capacidades-sso/Workspace.tsx",
+        "apps/web/src/features/pcm/pages/AgendaTecnicoPage.tsx",
+        "apps/web/src/features/pcm/pages/ApontamentoHorasPage.tsx",
+        "apps/web/src/features/pcm/pages/AssessmentPage.tsx",
+        "apps/web/src/features/pcm/pages/CatalogoSimplesPage.tsx",
+        "apps/web/src/features/pcm/pages/ClienteGruposPage.tsx",
+        "apps/web/src/features/pcm/pages/ConfigLocalizacaoAuvoPage.tsx",
+        "apps/web/src/features/pcm/pages/ConfigPriorizacaoPage.tsx",
+        "apps/web/src/features/pcm/pages/EquipamentosPage.tsx",
+        "apps/web/src/features/pcm/pages/EquipesPage.tsx",
+        "apps/web/src/features/pcm/pages/FerramentasPage.tsx",
+        "apps/web/src/features/pcm/pages/FerramentasPorTecnicoPage.tsx",
+        "apps/web/src/features/pcm/pages/FuncionariosPage.tsx",
+        "apps/web/src/features/pcm/pages/InspecoesPage.tsx",
+        "apps/web/src/features/pcm/pages/LaudosSpdaPage.tsx",
+        "apps/web/src/features/pcm/pages/ListaClientesPage.tsx",
+        "apps/web/src/features/pcm/pages/MarcacoesClientePage.tsx",
+        "apps/web/src/features/pcm/pages/OrdensServicoPage.tsx",
+        "apps/web/src/features/pcm/pages/PcmDashboardPage.tsx",
+        "apps/web/src/features/pcm/pages/PmocPage.tsx",
+        "apps/web/src/features/pcm/pages/PreventivasPage.tsx",
+        "apps/web/src/features/pcm/pages/RelatorioClientePage.tsx",
+        "apps/web/src/features/pcm/pages/RelatorioDiarioPage.tsx",
+        "apps/web/src/features/pcm/pages/RelatorioPlanejamentoPage.tsx",
+        "apps/web/src/features/pcm/pages/SistemasPage.tsx",
+        "apps/web/src/features/pcm/pages/TiposInspecaoPage.tsx",
+        "apps/web/src/features/pcm/pages/TiposTarefaPage.tsx",
+        "apps/web/src/features/pcm/pages/VisaoClientePage.tsx",
+        "apps/web/src/app/DashboardGeral.tsx",
+        "apps/web/src/app/auth-context.tsx",
+        "apps/web/src/app/modulos.ts",
+        "apps/web/src/app/modulos.ts",
+        "apps/web/src/app/nav-guard-context.tsx",
+        "apps/web/src/app/permissoes-context.tsx",
+        "apps/web/src/app/theme-context.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/capacidades-sso/Workspace.tsx": {
+      "blob": "07237340a4e3f6401ff0ae683bc83ba99b3e2508",
+      "sha256": "48a1c13013f62e96882a35cbd732b905c7fa722d7515121dec4c885161f85a63",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/lib/supabase-client.ts",
+        "apps/web/src/features/pcm/application/capacidades-sso.ts",
+        "apps/web/src/features/pcm/application/capacidades-sso-gateway.ts",
+        "apps/web/src/features/pcm/application/capacidades-sso-queries.ts",
+        "apps/web/src/features/pcm/application/requisicoes-capacidades.ts",
+        "apps/web/src/features/pcm/domain/capacidades-sso.ts",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts"
+      ],
+      "flags": [
+        "VITE_SSO_RECIBO_CAPACIDADES_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/Workspace.test.tsx": {
+      "blob": "5247e1db81929e7edd2c7c1b66c6a397e0d3bf41",
+      "sha256": "e56caeb2ef813a51b5c71d1abf9a6aed44835dad42107c75755ead596096ef5c",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoPlano.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DetalhePlano.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaCiclos.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/Workspace.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_APROVAR_REVISAO_ENABLED",
+        "VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED",
+        "VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisao.tsx": {
+      "blob": "0bfc4df0a21626e8d2faae97f1b2cced3be92197",
+      "sha256": "8f91d53a03a21408af6e77c08b22e091b7723701c06fdb8bb5f2eec55f45033e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.ts",
+        "apps/web/src/features/pcm/application/plano-manutencao-queries.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VinculoCicloPmocConflito.test.tsx": {
+      "blob": "a186f8442149f9cfd58ab4bc5a8a8aac4ac477e1",
+      "sha256": "8bca7b2b13a832482208ead1500e947840b5228655a184a20cef19c58fec7ee6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VinculoCicloPmoc.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_VINCULO_CICLO_PMOC_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VincularSerieRotina1778.test.tsx": {
+      "blob": "168f36a3cf5a4ce06b5b6760e4f70a912f0422a9",
+      "sha256": "0d71e4c4e3541ca5572c5f9617c4612e6d0f36db91be98172cf5c5ccb8e6377b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VincularSerieRotina.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/VigenciaSerieRotina1779.test.tsx": {
+      "blob": "1c18b2c0d5ffa66b529b5bc87a30012b96d7aa0d",
+      "sha256": "540951ddef1217928454d0a07a9130cc38f6f04d1f2049bb341d5ad53670181f",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/VigenciaSerieRotina.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/TriagemCicloAtrasado.test.tsx": {
+      "blob": "bf584dd096caf2643887dc44df0515bdec6529c6",
+      "sha256": "7c19cd072dcdb94f6f667c5091d4cc0e36616e194ebd5252d8ffd7bebcac1164",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/TriagemCicloAtrasado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/TransicaoPlano1776.test.tsx": {
+      "blob": "958fb31a470827f5c85df1340da3737b841ec282",
+      "sha256": "66ef111fdf76fd3c5aec9d29b154a82e858f41d8faf5e805a4635dc4e2ca1416",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/TransicaoPlano.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_TRANSICAO_PLANO_MEDIADA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/RetiradaRotina1769.test.tsx": {
+      "blob": "b5331b76615996f2619b8e229b4b238fdb5357ff",
+      "sha256": "f95202828c03e1113419a3cf4fca2e1e5737ae0b18b63ad3cc64072c849e5b2d",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RetiradaRotina.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ResolverRetiradaImpacto.test.tsx": {
+      "blob": "8e30528c7b1f2cdd52cdd7177f1d70b0073d10b5",
+      "sha256": "95db3d9d2c4bf0a02380499c40576e0298a8a797e3e45c37fc82aec853ec8f7a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ResolverRetiradaImpacto.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_RESOLUCAO_IMPACTO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloLegado.test.tsx": {
+      "blob": "26bd30e42a851712d1469b43d67d83eb9f7f090b",
+      "sha256": "082f1dd08e7761c3f089df00ea8b966ffe8c3510a11cdb64bfd9e157168cc1a7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloFuturo.test.tsx": {
+      "blob": "08cb9b7529e1abf4988a21b1d3a29b543334e4ff",
+      "sha256": "035fb106df184fb83ff79c0cafa72be8609c5707b33c24a799e4dc27aafe7e01",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReservaCicloFuturo.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/RelacaoPlanoLegadoConflito.test.tsx": {
+      "blob": "8d7257aa2656e4f96503de102023343692328edc",
+      "sha256": "d01c064fa5945c40b8e2996aeb8aed7f04eb0ec8292e07d34263a2832702c3b4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/RelacaoPlanoLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReconciliarLegadaInerte.test.tsx": {
+      "blob": "5b53a6c38d84c021a1a8481d0a2e95df8d2713f4",
+      "sha256": "ce8630c6b3dd88b7cc0b8e830f75fbf7fba3c59de140bf182c466f86e957e83e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReconciliarLegadaInerte.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ReabrirGrupoFila.test.tsx": {
+      "blob": "04636b0ace84e5c0b6b415fb4a8643e833bcdc45",
+      "sha256": "da1372c778a56c113237b7f1455870089486399a4d65be2ae8d36858a555ef7d",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ReabrirGrupoFila.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/QuestionarioAprovado.test.tsx": {
+      "blob": "0cf03f532e0a48e22fd9219dec6d3310501992cb",
+      "sha256": "8f623a857135845e1205a3133ed1cd50c8f4354d03541c4b22dbd7f606d73f24",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/QuestionarioAprovado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaVencimentosPlano.test.tsx": {
+      "blob": "23522dad5a646d18aea5e801d251335e4319448f",
+      "sha256": "1d6a2e43345004a1b22b71195bd4c13804db5a7f455d11b6bc31749cbe9f2865",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaVencimentosPlano.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DECISAO_VENCIMENTO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisionada.test.tsx": {
+      "blob": "1a034f0d949fe1e69bead4427c1d58044c0bfe47",
+      "sha256": "d3ba91d38a364d6f237322c318e9ff912f5afa15257ccbae7843e0dc21055eff",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisionada.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisao.test.tsx": {
+      "blob": "59a0d78ca87abcebe2bd0d0f2696abe28eb7e656",
+      "sha256": "86d81566f631ad818b712895429801e99257680402540ada56004d63fd37a128",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaRevisao.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaOcorrenciasVisita.test.tsx": {
+      "blob": "46c322a0cd0f96e9d18955137d6d4000cd0bc77a",
+      "sha256": "edf2e0ee7cfe7c64cdc7dd625aba9b2a63fbf38f8c74d9d4538c365367d185a4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaOcorrenciasVisita.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_VISITA_ENABLED",
+        "VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED",
+        "VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaCiclos.test.tsx": {
+      "blob": "bd448825fb7a7229201f29b4481b4d1ecd0c37a7",
+      "sha256": "c6fde526f2a28563a195979ecc892c94753f51af57137da94b7b673fdb7c33bf",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreviaCiclos.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PrepararRotinasJanela.test.tsx": {
+      "blob": "ecd38a2304a2addc59a745590d57763fb470db03",
+      "sha256": "19eb812248da72250e4736f08117afa08233865c5bea045c47e737bec8ca2d4b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PrepararRotinasJanela.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PreflightAprovacaoRevisao.test.tsx": {
+      "blob": "84ec2ecc7f6a4df7400707ae3287b6849b26489a",
+      "sha256": "1e16c7919bd0116bafb190c413f8e0739274a8f9099f38707adcdf0b076d34fe",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PreflightAprovacaoRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CONFERENCIA_FUSO_SERIES_ENABLED",
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PrecondicaoImpactos.test.tsx": {
+      "blob": "f56cb91aa4b590d93dbf3f8b3a345f4eda4add18",
+      "sha256": "ebf8b971811b2bdf5d7f8e63e3d0f9335e850733cd33efe0aa810bb5265336c2",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PrecondicaoImpactos.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_PRECONDICAO_IMPACTO_MEDIADA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PmocPropostaConflito1765.test.tsx": {
+      "blob": "f017a6ec1d7295757a4ff035540df7077f49ef1c",
+      "sha256": "7c62875109e3c23d810fde8fa8ccb548b357add6a824f62bf737c1747ca9b76a",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/PropostaPmoc.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoPmoc.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/PmocConflito1762.test.tsx": {
+      "blob": "22a8fe3da07939f3595e3b80c7644da0a3a51fc6",
+      "sha256": "f4efae139d90a430d479e681fb28f74723d6efec6e02a695c9efec39edde4935",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ImpactoPmocRevisao.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferenciaPmocCiclo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_IMPACTO_PMOC_REVISAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/OrigemGeracaoRotina.test.tsx": {
+      "blob": "85034762cf901df6800f1bf1a29868ac24c2f645",
+      "sha256": "4b42e6f41b5723af66b196b09f980c6fff540a8edf6466a4f1cf8191ca61a33b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/OrigemGeracaoRotina.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ORIGEM_ROTINA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarVisitaLegado.test.tsx": {
+      "blob": "1893c1184806f41bfe028fcf09425037feee3906",
+      "sha256": "a6d0b5d41efcdcdc71bcf5e326fd978b354fb049b207eec55a9727cfe4af4696",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarVisitaLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloLegado.test.tsx": {
+      "blob": "c65902b2998cdd64d21364db83991cbe06c472fb",
+      "sha256": "b65f55905754b234184fab630ed601e7ad46f44a882623f87e92cfedc356ae3b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCalendario.test.tsx": {
+      "blob": "cdf54754c49fa6cebba41093db724a1ace55d6f5",
+      "sha256": "9d079f42eba1a188682db3ec9147cbe137115081c4eb63f316d60989f16a5470",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarLoteCalendario.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/LotesVisita.test.tsx": {
+      "blob": "8ade12a348d262b80afbbb6649e0661907b6a791",
+      "sha256": "1946ebdab42411c3949d821e9e1973719000ee765e89048fb5d480ecb025ae31",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteOcorrenciasVisita.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteVisitaLegado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteOcorrenciasVisita.test.tsx": {
+      "blob": "0c84d2a2f22b6e3a336a789e99bbd34e7a3ad7c0",
+      "sha256": "2a844d496f1f34b7698035736d8c544bddc2315e4bf42bb3029c1870bc7d5e9b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteOcorrenciasVisita.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteCiclosLegados.test.tsx": {
+      "blob": "c4243c48b7a2e07b0366cb49524f2e885121dcb8",
+      "sha256": "91a5436ed6a64ecd568e07302b1ebf34831c3bdb6dfa90ec70c0adc089064391",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/LoteCiclosLegados.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/JornadaCicloFila.test.tsx": {
+      "blob": "5ad06cf09771730d834fb7f9431f818a1806834d",
+      "sha256": "01db04c4532d27ee7ca837f3cc032b1d59041d80dd71aa6ff3c3861f88b4a4b7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED",
+        "VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/InventarioPmocRevisao.test.tsx": {
+      "blob": "7e6f7c680a91e0c112b49d205f68e29705647a8b",
+      "sha256": "03c2c2f7365b6498b4b3e61c73cd65eb1d735ff828e080909bdd3ec97d2015f4",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/InventarioPmocRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.test.tsx": {
+      "blob": "38a6748066a3b480378b3bef291d3a051c080a2e",
+      "sha256": "3eb698945c7ded3a3f2f23626480e6c35edd0266f9055c6cdb9a59c47b6248db",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarOrigemOcorrencia.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED",
+        "VITE_SSO_RELACAO_PLANO_LEGADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarLegadaExistente.test.tsx": {
+      "blob": "fd0dcb32ce3737fe213e9dad6b40c9330d4ef290",
+      "sha256": "9efd9e55c1d14eee27abcffd83e74f4d743e7f893fcdcd4eaa2e3ada6abf8b21",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IntegrarLegadaExistente.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/IncluirFilaSelecionada.test.tsx": {
+      "blob": "fde9608b92653338933ff7403a0afb08068ea28f",
+      "sha256": "ba9965fc658fa8a8bb17264f231f6b9240183aec366f83d5c382516330d27abf",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/IncluirFilaSelecionada.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/GerarVisitaContratual.test.tsx": {
+      "blob": "54c7d5887d5d7eacb7b1950d2cf6a7bda13df07c",
+      "sha256": "eb508e3e42d5e382afd1bf6fb1e0953b5e594be8cf924f51bb63879cf3e0a9f1",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/GerarVisitaContratual.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FormularioRotina.test.tsx": {
+      "blob": "56b507370b0a42817e88497b5e07499faf17a5d5",
+      "sha256": "130e8d976b6bdc4d02471a912e532b9b7deb39b3d70b3a7ee86ca1bcf6c03d52",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FormularioRotina.tsx",
+        "apps/web/src/features/pcm/application/plano-manutencao.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaDasOcorrenciasPreparadas.test.tsx": {
+      "blob": "54a9a6b0578b0c634046c5b5c6627d1c2ba226e5",
+      "sha256": "2513515def90f3a42326d8ebcc77e62e85de3fe0220867fbd904fc0f4dd51c36",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaDasOcorrenciasPreparadas.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaContinuidadeRecuperacao.test.tsx": {
+      "blob": "da653152ec72b3661d8d06e8d99b0ab485daf906",
+      "sha256": "092390e730b845d48e24f2203105fa1d6f87f7c8223dda95e0230d6101fcefdc",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/FilaPreventivaPcm.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarVersaoPlano.test.tsx": {
+      "blob": "e758b9a9bc79dfc9f37e2c07bc7ab02cc6557c1e",
+      "sha256": "6170477ed29b91f02c28e41a6311ca8667a4c5e71e28f0a902f3f68804efed98",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/application/plano-manutencao-gateway.ts",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarVersaoPlano.tsx",
+        "apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.ts"
+      ],
+      "flags": [
+        "VITE_SSO_EXPORTAR_PLANO_CSV_ENABLED",
+        "VITE_SSO_EXPORTAR_PLANO_XLSX_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarPreviaCiclos.test.tsx": {
+      "blob": "135fe1f8e59b310ccc56f595c10cf8ccd7a45e2e",
+      "sha256": "e4fda4703d32527dad5bea12d2841851903bb0694422e58b4eb4a1e35de77647",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarPreviaCiclos.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_EXPORTAR_PREVIA_CICLOS_CSV_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarCronogramaFotografia.test.tsx": {
+      "blob": "86ccafbd631c9424ddfd652b3a0b58a9179a1f77",
+      "sha256": "44d94a56d0cd6d144ecf15698360a45d4d9bba421cb37ca8fcd694275d66c890",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ExportarCronogramaFotografia.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ALVOS_CRONOGRAMA_ENABLED",
+        "VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoEscolhaAlteracao.test.tsx": {
+      "blob": "0cc55a8cf5e78f3920775d4c73b9e3ade7474f30",
+      "sha256": "e51b803f30545e6e9bf2314830c8b267770a8f998fc4ec9c4940a68a01221570",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EstadoEscolhaAlteracao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ALTERACAO_CICLO_ENABLED",
+        "VITE_SSO_NOVA_DATA_CICLO_ENABLED",
+        "VITE_SSO_NOVA_DATA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaData.test.tsx": {
+      "blob": "56f380dacc1dafd75e079f062ba3160c3d26f069",
+      "sha256": "eb7f476c7a51c51dc7fc68e97d6e9f15271cf33d2272562a7860a14e3796aec6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaDataCalendario.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/EscolherNovaVisita.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoSelecionado.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_NOVA_DATA_CICLO_ENABLED",
+        "VITE_SSO_NOVA_DATA_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoOsRevisao.test.tsx": {
+      "blob": "ac4ad116d87cf0a92e799c4eda33b426b0a0f17a",
+      "sha256": "90cdc5b9be5c78c62011a9896224f98d870d7ffa6418cf13399d1dcde08cf5a6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DiagnosticoOsRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoFeriadoCalendario.test.tsx": {
+      "blob": "1c37685027c9cd5547cb18018db14f3627bac90c",
+      "sha256": "c17c8703bb3f63c088110fefb642b11dd4ae4c900e3d25c4c011fe48cf82a0d9",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoFeriadoCalendario.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ContratosRevisao.test.tsx": {
+      "blob": "b149d8484482ee70e770a0667696bf49f2fbbf15",
+      "sha256": "7f483466119a93e93d39536f5741821c2856a3085e18d48bfe25974ca97751ce",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/Workspace.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED",
+        "VITE_SSO_CONTRATO_EVIDENCIA_ENABLED",
+        "VITE_SSO_CONTRATO_PERGUNTAS_ENABLED",
+        "VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferirGrupoFila.test.tsx": {
+      "blob": "402e5f6a06c280dc0682124b23af52ba63abc00e",
+      "sha256": "0513845ebfdf1ab6780e56c444fec3bd8bf92964a2fcb3cf7ea3af877efb2949",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ConferirGrupoFila.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararVisitaLegado.test.tsx": {
+      "blob": "66536c8d8befb44a985d3184df4f5c42ee44c252",
+      "sha256": "afef3dfccdb266bd010f6a9ba3d405584427341ac9870ff20eaf83879305960b",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararVisitaLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararCalendarioLegado.test.tsx": {
+      "blob": "621f256df4757496b2571cd9bd592934f6c65214",
+      "sha256": "865e8c6c034d0ce51427212cec0ddba47690a7a48bf7c4af2dbbdd341a0274c7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CompararCalendarioLegado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoQuestionario.test.tsx": {
+      "blob": "8a0403c8f2b9b1fde2c412a4cd6c5e8209957ea3",
+      "sha256": "c525bef84d54f7e58409053fd9228d4c1546e8cfb59313ace646828f26f0274e",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoQuestionario.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ComparacaoImpactoConfirmacao.test.tsx": {
+      "blob": "0df2d6e6d5c2bc4d83b87c0091e26ceaa164c286",
+      "sha256": "04c03f3a7d7dcb7c9d9b0d4a33c91b7a4dbbbd5d99bf10c682601725b0f4c013",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoImpactoOcorrencia.tsx",
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoImpactoVisita.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ALTERACAO_CICLO_ENABLED",
+        "VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ClassificarLegadoReplay.test.tsx": {
+      "blob": "85f45589a71233d7eb40c9a183a41308956212f3",
+      "sha256": "895ea543759340dc15d637e442612038c627cda48ef90a53a092efa017c8c3af",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ClassificarLegadoNaoRelacionado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/ClassificarLegadoNaoRelacionado.test.tsx": {
+      "blob": "f03a3ce0a81cfd7c1b7752c6b68b923e6fb4e206",
+      "sha256": "7062a31425f49525f1363f18efef392dbb95054f3af744cd6435f3e37cc940bd",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/ClassificarLegadoNaoRelacionado.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/CiclosUniformes.test.tsx": {
+      "blob": "c65450b4151aa3aee22ccd3104b50d24c152c75c",
+      "sha256": "e929638404566f3aadc675040c1af08ebf1b52f9756d3a0e0d49176f73bb6919",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/CiclosUniformes.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_CICLOS_UNIFORMES_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AvaliacaoImpactoRevisao.test.tsx": {
+      "blob": "53e848f0cce50d219ba87a40a13f6df868519bed",
+      "sha256": "c2b902c60de4c80945a22926ebc49b3334c073092434f006304033009e20eaf2",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AvaliacaoImpactoRevisao.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AplicarRetiradasFila.test.tsx": {
+      "blob": "90bda4b04f33328892dbc4c20f5c8dbccc6e931c",
+      "sha256": "05b43e01ecaa1d1eed7dbff4268e1554eb632229b2b65fee164d921969a40e54",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AplicarRetiradasFila.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoConcorrencia.test.tsx": {
+      "blob": "7a236f51cd65f1d87d19766881d5b1c5ada68d15",
+      "sha256": "0d88be3ffcade7b609e0e123983e41cc8b0a9f7eccdb31f95a4ad8f01053bfee",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoPlano.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_APROVAR_REVISAO_ENABLED",
+        "VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentarComponente.test.tsx": {
+      "blob": "4a4ba62341fdf73ea4a0502813b81c32b43477a4",
+      "sha256": "670fb0d80e08a1e1da69b774ab11b2db915857f618eb804da012b4547a3782b2",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentarComponente.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentacaoDetalhe.test.tsx": {
+      "blob": "baf795914451bc4e7a787c6d2d14e28d7afa11d2",
+      "sha256": "1d90d66d2669ab1e5b0ca970a559b675c035855ed74d9f7592b2f701a18eb811",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentacaoDetalhe.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.test.tsx": {
+      "blob": "51e751549887aef285544022a47e109416d842ba",
+      "sha256": "0a212690dc7b97270241d7242f5071feb3df3290c8c85a5c25de554fee198325",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx",
+        "apps/web/src/features/pcm/application/estrutura-tecnica-queries.ts"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/GruposQuantitativos.test.tsx": {
+      "blob": "7e05f3dedcd656aecfd0c6dd100b9ea8f216548e",
+      "sha256": "4a92fe04fb30e85e72aff52a1f8440ba784118ae8218c9343068fd585c95d1eb",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/GruposQuantitativos.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingAtivo.test.tsx": {
+      "blob": "89ddbcb0367d7c08f5cd351fb470627fdc24d48e",
+      "sha256": "a480b18c14ffbff94284a43f5c077344c03293ea9ef5614249d4e6edfac4639d",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosStagingAtivo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED",
+        "VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.test.tsx": {
+      "blob": "96d51486009a82fa0dd2523238fb407f2ad35415",
+      "sha256": "ad9e6f307f7bdb550939de3be584b612df36dc7ebfcaf27bdbb7ee3188eb3fa6",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/FotosGrupo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_FOTOS_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/EstadoGrupo.test.tsx": {
+      "blob": "7611ec2cdc94b7d93341c1127ad19dceb4985275",
+      "sha256": "1cba30df7229a0db874c5dc067a41504d1e6db2d83eec4b0a87b2a12d6da97d3",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/EstadoGrupo.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_ESTADO_GRUPO_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ComposicaoLocal.test.tsx": {
+      "blob": "96d9ff0f2d4d1886a6bbd8f569f952fa566a680e",
+      "sha256": "d16a0dd3b68cfab108b298976a12b2813a00fa2367a476181c6f64c0d00fa9c8",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ComposicaoLocal.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_COMPOSICAO_LOCAL_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/capacidades-sso/Workspace.test.tsx": {
+      "blob": "8a1c89da5525e305e9afd540d89067f6e9af6e8a",
+      "sha256": "eb4add0abffe2aa8302af477a33c18dfb2f0156d5046459012bffa51b8bccad7",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/capacidades-sso/Workspace.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/Workspace.test.tsx": {
+      "blob": "f368d3f3ac961aa3fcecf4ddfcae849ea94d902a",
+      "sha256": "bf4eae17c4b0a88a45ae19cbc9168780336d9b186d746cd2d128e68b69175bad",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/Workspace.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoRegra.test.tsx": {
+      "blob": "15906a34078d96ab5ee8fd4ecc21375d37de41cf",
+      "sha256": "489e9d3398ede67d4ea62c3d73debe04a01d197d1d732bb8198bef6e526038ea",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoRegra.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoMudancaDia.test.tsx": {
+      "blob": "f6d050c6540bc72adfcfdd500e5b2b5c1fc94ff0",
+      "sha256": "31247ea9d8c1d92f80b2b2622347aa25814ad9c80c622d934b361dafb26a4088",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/SimulacaoMudancaDia.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/FeriadosDeclarados.test.tsx": {
+      "blob": "f20dbdfb198a7586be8160d690526624b75e5939",
+      "sha256": "eebc955394b96f2af274dcabc92aab7e52d8bb4eec10f1f2f1072cd32ce361c0",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/FeriadosDeclarados.tsx"
+      ],
+      "flags": []
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/ExcecaoVisita.test.tsx": {
+      "blob": "9a55fb957210be640056c53e5c3ee4218f1a2b85",
+      "sha256": "72eb746af49631b2834c544b5f081556d4807bd18db2b7363c1b7780db4266cd",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/ExcecaoVisita.tsx"
+      ],
+      "flags": [
+        "VITE_SSO_EXCECAO_VISITA_ENABLED"
+      ]
+    },
+    "apps/web/src/features/pcm/interfaces/calendario-contratual/AlterarDiaComVisitas.test.tsx": {
+      "blob": "80a89006768905bc06caf9ba14079fa0221fe820",
+      "sha256": "933de562075d7641c013e68db95808f9c78af37a160a0182d632703d81e77249",
+      "alterado_base": true,
+      "imports_relativos": [
+        "apps/web/src/features/pcm/interfaces/calendario-contratual/AlterarDiaComVisitas.tsx"
+      ],
+      "flags": []
+    }
+  },
+  "limites": [
+    "Pastas amplas incluem funcionalidades de outras stories.",
+    "Imports não são fechamento certificado; não inclui exclusões, dependências dinâmicas, aliases, CSS, pacotes ou configuração.",
+    "Arquivos compartilhados exigem seleção e revisão de hunks; não copiar o arquivo inteiro automaticamente.",
+    "Nenhum segredo ou conteúdo de arquivos consta deste inventário."
+  ]
+}

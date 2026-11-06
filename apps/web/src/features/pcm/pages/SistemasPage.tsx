@@ -1,10 +1,12 @@
 // SistemasPage.tsx — E01-S76 (AC-7, AC-8): CRUD de Sistema + seletor de itens membros (N:N) +
 // status de sync Auvo (código/estado — descriptor `sistemas` nasce writeEnabled:false, dry-run).
 import { Button, ConfirmDialog, Skeleton } from "@sinergica/ui";
+import { useQuery } from "@tanstack/react-query";
 import { Clock3, Link2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { supabase } from "../../../lib/supabase-client";
 import { listarClientesEquipamento } from "../application/equipamentos";
 import {
   criarSistema,
@@ -21,6 +23,7 @@ import type { Sistema, SistemaFormData } from "../domain/sistemas";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 
 type Estado =
   | { fase: "carregando" }
@@ -38,6 +41,25 @@ const STATUS_LABEL: Record<string, { texto: string; classe: string }> = {
   synced: { texto: "Sincronizado", classe: "bg-success-soft text-success" },
   error: { texto: "Erro", classe: "bg-danger-soft text-danger" },
 };
+
+async function conferirCadastro(userId: string, clientes: string[]) {
+  const antes = await supabase.auth.getUser();
+  if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
+  for (const cliente of new Set(clientes)) {
+    if (!cliente || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", cliente) !== true) throw new Error("Permissão de cadastro indisponível.");
+  }
+  const depois = await supabase.auth.getUser();
+  if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+}
+
+function CapacidadeSistema({ userId, clienteId, temEscrita, children }: { userId: string; clienteId: string; temEscrita: boolean; children: (permitido: boolean) => ReactNode }) {
+  const habilitado = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const consulta = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
+    enabled: habilitado && temEscrita && !!userId && !!clienteId, refetchOnWindowFocus: true,
+    queryFn: async () => { await conferirCadastro(userId, [clienteId]); return true; } });
+  const permitido = temEscrita && (!habilitado || (!consulta.isFetching && !consulta.isError && consulta.data === true));
+  return <>{children(permitido)}</>;
+}
 
 export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void }) {
   const { user } = useAuth();
@@ -76,6 +98,9 @@ export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void
   async function salvar(dados: SistemaFormData) {
     if (!user) return;
     setErroAcao(null);
+    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") {
+      await conferirCadastro(user.id, modal?.modo === "editar" ? [modal.sistema.clienteId, dados.clienteId] : [dados.clienteId]);
+    }
     if (modal?.modo === "editar") {
       await editarSistema(supabaseSistemasAdapter, {
         ...dados,
@@ -100,6 +125,7 @@ export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void
   async function desativar() {
     if (!user || !sistemaParaDesativar) return;
     setErroAcao(null);
+    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") await conferirCadastro(user.id, [sistemaParaDesativar.clienteId]);
     await desativarSistema(supabaseSistemasAdapter, sistemaParaDesativar.id, user.id);
     await carregar();
   }
@@ -232,7 +258,7 @@ export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void
                     <Clock3 className="h-3.5 w-3.5" />
                     Histórico
                   </button>
-                  {temEscrita && (
+                  <CapacidadeSistema userId={user?.id ?? ""} clienteId={sistema.clienteId} temEscrita={temEscrita}>{(permitido) => permitido && (
                     <>
                       <button
                         type="button"
@@ -250,16 +276,13 @@ export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </>
-                  )}
+                  )}</CapacidadeSistema>
                 </div>
                 {membrosAbertoId === sistema.id && (
                   <div className="border-t border-line-soft px-4 py-3">
-                    <ComposicaoSistema
-                      gateway={supabaseSistemasAdapter}
-                      sistema={sistema}
-                      temEscrita={temEscrita}
-                      userId={user?.id ?? ""}
-                    />
+                    <CapacidadeSistema userId={user?.id ?? ""} clienteId={sistema.clienteId} temEscrita={temEscrita}>{(permitido) => <ComposicaoSistema
+                      gateway={supabaseSistemasAdapter} sistema={sistema} temEscrita={permitido} userId={user?.id ?? ""}
+                    />}</CapacidadeSistema>
                   </div>
                 )}
                 {historicoAbertoId === sistema.id && (

@@ -20,5 +20,6 @@
     "../web/src/app/theme-context.tsx",
     "../web/src/lib",
     "../web/src/config"
-  ]
+  ],
+  "exclude": ["../web/src/**/*.test.ts", "../web/src/**/*.test.tsx", "../web/src/**/*.spec.ts", "../web/src/**/*.spec.tsx"]
 }

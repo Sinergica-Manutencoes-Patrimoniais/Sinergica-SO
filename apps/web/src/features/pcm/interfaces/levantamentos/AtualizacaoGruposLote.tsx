@@ -1,0 +1,37 @@
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+
+const itemSchema=z.object({chave:z.string().min(1).max(200),grupoId:z.string().uuid(),grupoRevision:z.number().int().positive().safe(),
+  localId:z.string().uuid(),atributos:z.record(z.unknown()),caracteristicas:z.record(z.string()),motivo:z.string().min(1).max(2000),
+  codigoStaging:z.string().min(1).max(200).nullable(),codigoRevision:z.number().int().nonnegative().safe(),
+  revisaoSelecao:z.number().int().positive().safe(),requestId:z.string().uuid()}).strict();
+const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive().safe(),itens:z.array(itemSchema).min(1).max(50)}).strict();
+type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
+const Contexto=createContext<((item:Item)=>void)|null>(null);
+type Props={userId:string;clienteId:string;loteId:string;revisao:number;children:ReactNode};
+export function AtualizacaoGruposLote(props:Props){if(import.meta.env.VITE_SSO_ATUALIZACAO_GRUPOS_LOTE_ENABLED!=="true")return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
+function Conteudo({userId,clienteId,loteId,revisao,children}:Props){
+ const storage=`sso-atualizar-grupos-lote:${JSON.stringify([userId,clienteId,loteId])}`;const client=useQueryClient();const trava=useRef(false);
+ const [itens,setItens]=useState<Item[]>([]);const [confirmado,setConfirmado]=useState<string|null>(null);const [aviso,setAviso]=useState("");
+ const foto=JSON.stringify([userId,clienteId,loteId,revisao,itens]);
+ const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(storage);if(!raw)return null;const p=pedidoSchema.parse(JSON.parse(raw));return p.loteId===loteId?p:"invalido";}catch{return "invalido";}});
+ async function conferirSessao(){const atual=await supabase.auth.getUser();if(atual.error || atual.data.user?.id!==userId)throw new Error("Sessão alterada.");}
+ const envio=useMutation({mutationFn:async(p:Pedido)=>{
+  await conferirSessao();if(sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error("Tentativa alterada.");
+  const {data,error}=await supabase.schema("pcm").rpc("sso_atualizar_grupos_lote",{p_request_id:p.requestId,p_lote_id:p.loteId,p_expected_revision:p.revision,p_itens:p.itens});if(error)throw error;
+  const individual=z.object({aggregateId:z.string().uuid(),revision:z.number().int().positive(),requestId:z.string().uuid(),state:z.literal("pendente"),created:z.literal(false),linkedIds:z.object({entidadeId:z.string().uuid(),tipo:z.literal("grupo_quantitativo")}),warnings:z.array(z.string())}).passthrough();
+  const r=z.object({aggregateId:z.string().uuid(),revision:z.number().int(),requestId:z.string().uuid(),atomicidade:z.literal("integral"),resultados:z.array(z.object({chave:z.string(),resultado:individual}))}).parse(data);
+  if(r.aggregateId!==p.loteId || r.requestId!==p.requestId || r.revision!==p.revision+p.itens.length || r.resultados.length!==p.itens.length || r.resultados.some((x,i)=>x.chave!==p.itens[i]?.chave || x.resultado.aggregateId!==p.loteId || x.resultado.revision!==p.revision+i+1 || x.resultado.requestId!==p.itens[i]?.requestId || x.resultado.linkedIds.entidadeId!==p.itens[i]?.grupoId))throw new Error("Resposta divergente.");
+  await conferirSessao();if(sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error("Tentativa alterada.");return r;
+ },onSuccess:async(_r,p)=>{try{await client.invalidateQueries({queryKey:["levantamentos",userId,clienteId],refetchType:"none"});await client.invalidateQueries({queryKey:["estrutura-tecnica",userId,clienteId],refetchType:"none"});await conferirSessao();if(sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(storage);}catch{setAviso("Resultado confirmado; tentativa não foi removida. Consulte suporte.");return;}setPendente(null);setItens([]);setConfirmado(null);setAviso("Grupos atualizados. Confira os resultados do levantamento.");void client.refetchQueries({queryKey:["levantamentos",userId,clienteId],type:"active"});void client.refetchQueries({queryKey:["estrutura-tecnica",userId,clienteId],type:"active"});},onError:()=>setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte."),onSettled:()=>{trava.current=false;}});
+ function enviar(p:Pedido){if(trava.current)return;trava.current=true;envio.mutate(p);}
+ function adicionar(item:Item){if(pendente || itens.length>=50 || itens.some(i=>i.chave===item.chave || i.grupoId.toLowerCase()===item.grupoId.toLowerCase()) || item.revisaoSelecao!==revisao){setAviso("Linha ou Grupo repetido, limite atingido ou revisão alterada.");return;}setItens(v=>[...v,item]);setConfirmado(null);setAviso("");}
+ function iniciar(){if(pendente || !itens.length || confirmado!==foto || trava.current || itens.some(i=>i.revisaoSelecao!==revisao))return;try{const ordenados=[...itens].sort((a,b)=>a.grupoId.toLowerCase()<b.grupoId.toLowerCase()?-1:a.grupoId.toLowerCase()>b.grupoId.toLowerCase()?1:0);const p=pedidoSchema.parse({requestId:crypto.randomUUID(),loteId,revision:revisao,itens:ordenados});if(sessionStorage.getItem(storage)!==null)throw new Error();sessionStorage.setItem(storage,JSON.stringify(p));setPendente(p);enviar(p);}catch{setAviso("Não foi possível guardar a tentativa; nada foi enviado.");}}
+ return <Contexto.Provider value={adicionar}><section aria-label="Atualização de Grupos em lote"><h4>Atualizar Grupos selecionados</h4><p>Até 50 Grupos existentes; uma falha desfaz toda a seleção. Códigos são conferidos, não alterados.</p>
+  <ul>{itens.map(i=><li key={i.chave}>{i.chave} · Grupo {i.grupoId} · revisão {i.grupoRevision} · quantidade informada {String(i.atributos.quantidade ?? "não informada")} · código informado {String(i.atributos.codigoInformado ?? "não informado")} · código conferido {i.codigoStaging ?? "nenhum"} (revisão {i.codigoRevision}) · motivo {i.motivo}<details><summary>Conferir atributos e características</summary><pre>{JSON.stringify({atributos:i.atributos,caracteristicas:i.caracteristicas,localId:i.localId},null,2)}</pre></details><button type="button" disabled={!!pendente} onClick={()=>{setItens(v=>v.filter(x=>x.chave!==i.chave));setConfirmado(null);}}>Remover</button></li>)}</ul>
+  {pendente==="invalido" && <p role="alert">Tentativa ilegível. Consulte suporte.</p>}{pendente && pendente!=="invalido" ? <button type="button" disabled={envio.isPending} onClick={()=>enviar(pendente)}>Repetir mesma tentativa</button> : !pendente && <><label><input type="checkbox" checked={confirmado===foto} onChange={e=>setConfirmado(e.target.checked?foto:null)}/> Conferi os Grupos, revisões e alterações.</label><button type="button" disabled={!itens.length || confirmado!==foto || envio.isPending} onClick={iniciar}>Atualizar seleção</button></>}{aviso && <p role="status">{aviso}</p>}
+ </section>{children}</Contexto.Provider>;
+}
+export function SelecionarAtualizacaoGrupo({item,pronto}:{item:Omit<Item,"requestId">;pronto:boolean}){const adicionar=useContext(Contexto);if(!adicionar)return null;return <button type="button" disabled={!pronto} onClick={()=>{const r=itemSchema.safeParse({...item,requestId:crypto.randomUUID()});if(r.success)adicionar(r.data);}}>Selecionar atualização para lote</button>;}

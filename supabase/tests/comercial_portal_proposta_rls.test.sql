@@ -20,6 +20,15 @@ values
   ('00000000-0000-0000-0000-0000000009c2', 'Condomínio B — Teste E03-S06', true, '00000000-0000-0000-0000-000000000803')
 on conflict (id) do nothing;
 
+insert into config.usuarios (user_id, papel, nome, ativo) values
+  ('00000000-0000-0000-0000-000000000801', 'cliente-sindico', 'Síndico A S06', true),
+  ('00000000-0000-0000-0000-000000000802', 'cliente-sindico', 'Síndico B S06', true)
+on conflict (user_id) do nothing;
+insert into config.usuario_cliente (user_id, cliente_id) values
+  ('00000000-0000-0000-0000-000000000801', '00000000-0000-0000-0000-0000000009c1'),
+  ('00000000-0000-0000-0000-000000000802', '00000000-0000-0000-0000-0000000009c2')
+on conflict (user_id) do nothing;
+
 insert into comercial.etapas_funil (id, nome, ordem, cor, tipo)
 values
   ('00000000-0000-0000-0000-0000000009e1', 'Etapa Aberta Teste S06', 991, '#000000', 'aberta'),
@@ -39,6 +48,7 @@ values
   ('00000000-0000-0000-0000-0000000009a2', '00000000-0000-0000-0000-0000000009c1', '00000000-0000-0000-0000-0000000009e1', 'Oportunidade A2 — S06'),
   ('00000000-0000-0000-0000-0000000009a3', '00000000-0000-0000-0000-0000000009c1', '00000000-0000-0000-0000-0000000009e1', 'Oportunidade A3 (expirada) — S06');
 
+reset role;
 insert into comercial.propostas (id, oportunidade_id, tipo, status, custo_total_centavos, piso_centavos, preco_sugerido_centavos, preco_centavos, valido_ate)
 values
   ('00000000-0000-0000-0000-0000000009b1', '00000000-0000-0000-0000-0000000009a1', 'simples', 'enviada', 10000, 10638, 12766, 12766, current_date + 30),
@@ -48,6 +58,7 @@ values
 
 -- ─────────────────────────── AC-3/AC-4: view portal_propostas ───────────────
 
+set local role authenticated;
 -- 1) síndico da Conta certa: enxerga a proposta 'enviada'
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 select is(
@@ -85,7 +96,7 @@ select is(
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 
 select is(
-  (select status from comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null)),
+  (select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null) ->> 'status'),
   'aceita',
   'aceite muda o status da proposta pra aceita'
 );
@@ -114,7 +125,7 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","u
 
 -- AC-8: segunda decisão sobre a MESMA proposta é ignorada, sem erro, sem duplicar
 select lives_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'aceita', null) $$,
   'segunda decisao sobre proposta ja aceita NAO lanca erro (AC-8)'
 );
 select is(
@@ -126,7 +137,7 @@ select is(
 -- ─────────────────────────── AC-6: recusa com motivo ─────────────────────────
 
 select is(
-  (select status from comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b2', 'recusada', 'Preço acima do orçamento')),
+  (select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b2', 'recusada', 'Preço acima do orçamento') ->> 'status'),
   'recusada',
   'recusa muda o status da proposta pra recusada'
 );
@@ -141,7 +152,7 @@ select is(
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000801","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000009c1"}';
 select throws_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'recusada', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b1', 'recusada', null) $$,
   '23514',
   null,
   'recusar sem motivo e recusado ANTES de olhar o status da proposta (validacao de entrada primeiro)'
@@ -150,7 +161,7 @@ select throws_ok(
 -- ─────────────────────────── AC-7: proposta expirada ─────────────────────────
 
 select throws_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
   '23514',
   null,
   'aceitar proposta expirada e recusado no banco'
@@ -160,7 +171,7 @@ select throws_ok(
 
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000803","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
 select throws_ok(
-  $$ select comercial.fn_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
+  $$ select comercial.portal_decidir_proposta('00000000-0000-0000-0000-0000000009b3', 'aceita', null) $$,
   '42501',
   null,
   'usuario interno (nao cliente-sindico) nao decide proposta'

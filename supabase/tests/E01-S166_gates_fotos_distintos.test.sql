@@ -1,0 +1,13 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(7);
+select has_table('pcm','sso_foto_grupo_mediada_gate','gate S176 de fotos cadastrais existe');
+select has_table('pcm','sso_foto_atestado_grupo_mediada_gate','gate S166 de foto de atestado existe');
+select ok(not (select habilitado from pcm.sso_foto_grupo_mediada_gate where id),'gate S176 começa fechado');
+select ok(not (select leitura or escrita from pcm.sso_foto_atestado_grupo_mediada_gate where id),'leitura e escrita S166 começam fechadas');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='pcm.sso_foto_atestado_grupo_mediada_gate'::regclass),'gate S166 exige RLS');
+select ok(not has_table_privilege('authenticated','pcm.sso_foto_atestado_grupo_mediada_gate','update'),'autenticado não altera gate S166');
+select ok(not has_table_privilege('authenticated','pcm.sso_foto_grupo_mediada_gate','update'),'autenticado não altera gate S176');
+select * from finish();
+rollback;

@@ -106,3 +106,26 @@ alwaysApply: false
 | **Volante** | Modelo de precificação de contrato mensal da Sinérgica — cálculo de custo (salário + encargos + benefícios + veículo + overhead) para definir preço. | Proposta pontual | Comercial |
 | **UFC/m³** | Unidades Formadoras de Colônia por metro cúbico — medida de contaminação fúngica do ar interior. Limite legal pela ANVISA RDC 09/2003: ≤ 750 UFC/m³. Resultado da Análise Microbiológica. | % de umidade do ar | PCM/PMOC |
 | **Zé** | Agente de IA no WhatsApp que recebe chamados, coleta informações e abre OS no PCM automaticamente. Usa LLM Gemini 2.5 Flash via OpenRouter. | Técnico (humano de campo) | Atendimento |
+
+## Modelo alvo do Caderno SSO — especificado em 26/10/2026
+
+As definições abaixo governam specs E01-S165–S186. Indicam o modelo a implementar, não o estado já implantado. Quando divergirem das descrições históricas da tabela acima, prevalecem para o novo fluxo; preservar dados/códigos atuais na transição.
+
+| Termo | Definição no programa | NÃO confundir com |
+|---|---|---|
+| **Plano de Manutenção** | Escopo amplo versionado de um Cliente com várias Rotinas para Sistemas, Componentes individuais de natureza técnica equipamento/componente e Grupos Quantitativos. | Plano simples legado de alvo único. |
+| **Rotina** | Regra com alvo específico e inequívoco, modo por Visita/calendário, âncora, periodicidade, tolerâncias, questionário e versão com vigência. | Plano inteiro ou ocorrência individual. |
+| **Ocorrência preventiva** | Obrigação concreta da Rotina + alvo + ciclo; mantém vencimento e programação distintos e pode exigir várias OS. | Uma única OS/tarefa Auvo. |
+| **Pendência técnica** | Constatação atômica não resolvida com evidência/origem; PCM decide promoção. Corrigido não deixa pendência aberta. | Item de Backlog já selecionado para tratar. |
+| **Item de Backlog** | Escopo priorizado selecionado, agrupando Pendências sem apagar fontes; pode originar Chamado e receber de volta somente restante. | Registro de OS em coluna Backlog. |
+| **Chamado** | Contêiner da necessidade integral, com 1:N OS; encerramento explícito PCM depois do atendimento integral. | OS executável ou tarefa Auvo. |
+| **OS** | Unidade executável com identidade/referência própria, um Chamado, uma tarefa Auvo após envio e no máximo uma Visita vigente. | Chamado ou apontamento de jornada. |
+| **Visita** | Contêiner diário por Cliente com janela, equipe, deslocamento, várias OS, confirmação e histórico de associações. | Alocação individual legada de agenda. |
+| **Grupo Quantitativo** | Quantidade de elementos homogêneos por Local com características próprias e sem TAG por unidade. | Grupo de permissões. |
+| **Alias de código** | Código público anterior preservado após substituição administrativa; resolve o mesmo UUID do código atual. | Código reciclável ou cadastro novo. |
+| **Levantamento cadastral** | Dados/evidências recebidos por planilha, Auvo provisório ou futuro Campo, em staging até conferência/aprovação PCM. | Cadastro oficial ou levantamento comercial. |
+| **Orçamento operacional** | Proposta versionada canônica do Comercial ligada à OS/lista, com projeção pública de descrição/preço e custos internos protegidos; pode ser dispensada com registro. | Orçamento anual gerencial ou nova OS automática. |
+| **Item A Faturar** | Origem operacional única para conferência/efetivação Financeiro, com complementos/estornos explícitos. | Cobrança automática ao concluir tarefa. |
+| **Código público protegido** | Editável só em rascunho nunca usado; aprovação, sync, etiqueta ou OS travam edição comum. Exceção administrativa cria substituto + alias auditado. | Alteração manual comum com simples aviso de QR. |
+
+`externalId` auxilia reconciliação e identidade da OS; não é prova isolada de exatamente uma criação no fornecedor. Outbox, serialização e resultado incerto permanecem necessários. Política de Equipment Auvo é configurável por categoria, sem apagar vínculos antigos. Técnico continua usando Auvo nesta fase.

@@ -1,0 +1,20 @@
+-- Após os ensaios de duas sessões, somente no cluster descartável próprio.
+begin;
+set local app.auvo_sync_write='true';
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(12);
+select throws_ok($$insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,created_by,chamado_id) values ('16797000-0000-4000-8000-000000000024','16797000-0000-4000-8000-00000000000a','ignorado','OS tardia','corretiva','em_execucao','16797000-0000-4000-8000-000000000001','16797000-0000-4000-8000-000000000011')$$,'23514','chamado_encerrado_requer_reabertura_formal','não insere OS em Chamado encerrado');
+select throws_ok($$update pcm.ordens_servico set status='em_execucao' where id='16797000-0000-4000-8000-000000000022'$$,'23514','chamado_encerrado_requer_reabertura_formal','não reabre OS legada de Chamado encerrado');
+select throws_ok($$update pcm.ordens_servico set client_id='16798000-0000-4000-8000-00000000000a' where id='16797000-0000-4000-8000-000000000022'$$,'23514','chamado_encerrado_requer_reabertura_formal','não troca Cliente da OS legada encerrada');
+select throws_ok($$update pcm.ordens_servico set id='16797000-0000-4000-8000-000000000099' where id='16797000-0000-4000-8000-000000000022'$$,'23514','chamado_encerrado_requer_reabertura_formal','não altera identidade da OS legada encerrada');
+select lives_ok($$update pcm.ordens_servico set descricao='correção informativa' where id='16797000-0000-4000-8000-000000000022'$$,'permite atualização informativa sem mudar escopo');
+select throws_ok($$update pcm.ordens_servico set deleted_at=now() where id='16797000-0000-4000-8000-000000000022'$$,'23514','chamado_encerrado_requer_reabertura_formal','não exclui OS legada sem reabrir Chamado');
+select throws_ok($$delete from pcm.ordens_servico where id='16797000-0000-4000-8000-000000000022'$$,'23514','chamado_encerrado_requer_reabertura_formal','não apaga OS legada de Chamado encerrado');
+select lives_ok($$update pcm.ordens_servico set deleted_at=now() where id='16798000-0000-4000-8000-000000000023'$$,'exclusão lógica em Chamado aberto continua possível');
+select throws_ok($$update pcm.chamados set ordem_servico_id=null where id='16797000-0000-4000-8000-000000000011'$$,'23514','chamado_encerrado_requer_reabertura_formal','não altera referência singular do Chamado encerrado');
+select throws_ok($$update pcm.chamados set ordem_servico_id='16797000-0000-4000-8000-000000000022' where id='16798000-0000-4000-8000-000000000011'$$,'23514','chamado_encerrado_requer_reabertura_formal','não associa a outro Chamado OS historicamente referida por Chamado encerrado');
+select lives_ok($$update pcm.ordens_servico set deleted_at=null,status='planejamento' where id='16798000-0000-4000-8000-000000000023'$$,'OS de Chamado aberto continua editável e restaurável');
+select ok(not (select habilitado from pcm.chamado_os_gate where id) and not (select habilitado from pcm.sso_encerramento_chamado_gate where id),'gates permanecem fechados');
+select * from finish();
+rollback;

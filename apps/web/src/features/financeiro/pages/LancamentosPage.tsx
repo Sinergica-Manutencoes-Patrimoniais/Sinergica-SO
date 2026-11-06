@@ -25,9 +25,11 @@ import {
 } from "../application/lancamentos";
 import {
   anexarComprovante,
+  baixarComprovante,
   corrigirLancamento,
   estornarLancamentoRealizado,
-  urlAssinadaComprovante,
+  nomeSeguroComprovante,
+  salvarComprovante,
 } from "../application/robustez";
 import { categoriasRaiz, subcategoriasDe } from "../domain/categoria";
 import type { CategoriaItem } from "../domain/categoria";
@@ -42,6 +44,7 @@ import type {
   LancamentoTipo,
 } from "../domain/lancamento";
 import { supabaseFinanceiroAdapter } from "../infrastructure/supabase-financeiro-adapter";
+import { PublicarCobrancaPortal } from "../interfaces/faturaveis/PublicarCobrancaPortal";
 
 type Estado =
   | { fase: "carregando" }
@@ -65,11 +68,32 @@ const FILTRO_VAZIO: FiltroLancamentos = {};
 
 export function LancamentosPage() {
   const { user } = useAuth();
+  const { carregando, podeAcessar } = usePermissoes();
+  const acesso = !carregando && podeAcessar("financeiro", "leitura");
+  return (
+    <LancamentosPageContexto
+      key={`${user?.id ?? "sem-usuario"}:${user?.papel ?? "sem-papel"}:${acesso}`}
+    />
+  );
+}
+
+function LancamentosPageContexto() {
+  const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
+  const ativo = useRef(false);
+  useEffect(() => {
+    ativo.current = true;
+    return () => {
+      ativo.current = false;
+    };
+  }, []);
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [filtro, setFiltro] = useState<FiltroLancamentos>(FILTRO_VAZIO);
   const [modal, setModal] = useState<Modal>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [revalidando, setRevalidando] = useState(false);
+  const sequenciaConsulta = useRef(0);
+  const primeiraCargaFeita = useRef(false);
   const [lancamentoParaEstornar, setLancamentoParaEstornar] = useState<LancamentoItem | null>(null);
   const [lancamentoParaExcluir, setLancamentoParaExcluir] = useState<LancamentoItem | null>(null);
 
@@ -80,6 +104,8 @@ export function LancamentosPage() {
   // que foi criada — sempre recebe o filtro atual por parâmetro e usa o updater funcional do
   // setState, então funciona corretamente mesmo chamada logo após uma mutação (criar/baixar/estornar).
   const carregarTudo = useCallback(async (filtroAtual: FiltroLancamentos) => {
+    const sequencia = ++sequenciaConsulta.current;
+    setRevalidando(true);
     setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const [lancamentos, categorias, contas, clientes] = await Promise.all([
@@ -88,31 +114,43 @@ export function LancamentosPage() {
         listarContas(supabaseFinanceiroAdapter),
         listarClientesOpcoes(supabaseFinanceiroAdapter),
       ]);
-      setEstado({ fase: "pronto", lancamentos, categorias, contas, clientes });
+      if (sequencia === sequenciaConsulta.current) {
+        primeiraCargaFeita.current = true;
+        setEstado({ fase: "pronto", lancamentos, categorias, contas, clientes });
+      }
     } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Falha ao carregar lançamentos.",
-      });
+      if (sequencia === sequenciaConsulta.current)
+        setEstado({
+          fase: "erro",
+          mensagem: error instanceof Error ? error.message : "Falha ao carregar lançamentos.",
+        });
+    } finally {
+      if (sequencia === sequenciaConsulta.current) setRevalidando(false);
     }
   }, []);
 
   const recarregarLancamentos = useCallback(async (filtroAtual: FiltroLancamentos) => {
+    const sequencia = ++sequenciaConsulta.current;
+    setRevalidando(true);
     try {
       const lancamentos = await listarLancamentos(supabaseFinanceiroAdapter, filtroAtual);
-      setEstado((atual) => (atual.fase === "pronto" ? { ...atual, lancamentos } : atual));
+      if (sequencia === sequenciaConsulta.current)
+        setEstado((atual) => (atual.fase === "pronto" ? { ...atual, lancamentos } : atual));
     } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Falha ao recarregar lançamentos.");
+      if (sequencia === sequenciaConsulta.current)
+        setEstado({
+          fase: "erro",
+          mensagem: error instanceof Error ? error.message : "Falha ao recarregar lançamentos.",
+        });
+    } finally {
+      if (sequencia === sequenciaConsulta.current) setRevalidando(false);
     }
   }, []);
-
-  const primeiraCargaFeita = useRef(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: carregarTudo/recarregarLancamentos são useCallback([]), referência estável — incluir geraria loop sem mudar comportamento.
   useEffect(() => {
     if (permissoesCarregando || !temLeitura) return;
     if (!primeiraCargaFeita.current) {
-      primeiraCargaFeita.current = true;
       carregarTudo(filtro);
     } else {
       recarregarLancamentos(filtro);
@@ -239,24 +277,24 @@ export function LancamentosPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function verComprovante(path: string) {
+  async function verComprovante(lancamentoId: string) {
+    const sequencia = sequenciaConsulta.current;
+    const aindaValido = () => ativo.current && sequencia === sequenciaConsulta.current;
     try {
-      const url = await urlAssinadaComprovante(supabaseFinanceiroAdapter, path);
-      window.open(url, "_blank", "noopener,noreferrer");
+      const arquivo = await baixarComprovante(supabaseFinanceiroAdapter, lancamentoId);
+      if (!aindaValido()) return;
+      const nome = await nomeSeguroComprovante(arquivo);
+      if (!aindaValido()) return;
+      salvarComprovante(arquivo, nome);
     } catch (error) {
-      setErroAcao(error instanceof Error ? error.message : "Não foi possível abrir o comprovante.");
+      if (!aindaValido()) return;
+      setErroAcao(
+        error instanceof Error ? error.message : "Não foi possível baixar o comprovante.",
+      );
     }
   }
 
-  if (permissoesCarregando || estado.fase === "carregando")
-    return (
-      <div className="flex flex-col gap-3 p-8">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-full max-w-md" />
-        <Skeleton className="h-4 w-full max-w-sm" />
-      </div>
-    );
-  if (!temLeitura) {
+  if (!permissoesCarregando && !temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
@@ -266,6 +304,14 @@ export function LancamentosPage() {
       </div>
     );
   }
+  if (permissoesCarregando || estado.fase === "carregando" || revalidando)
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
   if (estado.fase === "erro") {
     return (
       <div className="p-12 text-center">
@@ -471,11 +517,12 @@ export function LancamentosPage() {
                       variant="ghost"
                       size="sm"
                       icon={<Paperclip className="h-3.5 w-3.5" />}
-                      onClick={() => verComprovante(lancamento.comprovantePath as string)}
+                      onClick={() => verComprovante(lancamento.id)}
                     >
-                      Ver comprovante
+                      Baixar comprovante
                     </Button>
                   )}
+                  {temEscrita && user?.id && <PublicarCobrancaPortal usuario={user.id} lancamento={lancamento} />}
                 </div>
               ),
             },

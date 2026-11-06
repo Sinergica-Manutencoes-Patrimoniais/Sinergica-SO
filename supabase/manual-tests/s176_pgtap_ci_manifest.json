@@ -1,0 +1,405 @@
+{
+  "descricao": "Seleção fixa dos testes SQL CI, validação em clone isolado; não equivale a supabase start.",
+  "arquivos": [
+    {
+      "nome": "E01-S165_plano_manutencao.test.sql",
+      "sha256": "55c9a39e6f87eaaa64e0689df608392df231afc5d0dac6f55925461851ca5235",
+      "plano": 180
+    },
+    {
+      "nome": "E01-S166_versoes_recorrencia_tolerancia.test.sql",
+      "sha256": "0dfa9949c5cb91e3820808ac9c5b9d1c51b8944590289eeb4fe8512b85ffe4d4",
+      "plano": 7
+    },
+    {
+      "nome": "E01-S170_autorizacao_modulos_1790_1795.test.sql",
+      "sha256": "ae1ebb2f81e7d1c9d61e1438ef9ed17b7a1a8d25a8cf79c5b42c8b3d1a79036b",
+      "plano": 14
+    },
+    {
+      "nome": "E01-S176_isolamento_estrutura_1810.test.sql",
+      "sha256": "205a7c20a9665b1357e80505c3b45dc44ffda8dd8a457a1a66d2e80c645c04d4",
+      "plano": 11
+    },
+    {
+      "nome": "E01-S176_vinculos_cliente_final.test.sql",
+      "sha256": "fd36e462437d579c9f79ff2c31eec3858f98c7d50a3151985cf232c636a9abb6",
+      "plano": 10
+    },
+    {
+      "nome": "agente_comercial_leads.test.sql",
+      "sha256": "0d01f05a6a918e863b6a8fdd9f9efe99c70d20796d4b9649a546faa96ddac3ec",
+      "plano": 2
+    },
+    {
+      "nome": "apontamento_horas_visualizacoes_rls.test.sql",
+      "sha256": "64674ea9bcacd9dc150c8a50313b5f5eb036aed2338ad635bbbd982e5d26fde8",
+      "plano": 4
+    },
+    {
+      "nome": "atendimento_config_runtime.test.sql",
+      "sha256": "fb017b315de7354cdf15970d31d7e9581a8235a9f650be5af041ef3ca166412a",
+      "plano": 28
+    },
+    {
+      "nome": "atendimento_conversas_rls.test.sql",
+      "sha256": "e6d3a039f1f1e7f60cde5f63dac37b6811f0cc984d8adc4f42b2509224ea0732",
+      "plano": 4
+    },
+    {
+      "nome": "atendimento_evolution_multiinstancia.test.sql",
+      "sha256": "6483f60bf05f338c88d1449e54f161724f5fe3339a6e29e6ddd0763c75d0261f",
+      "plano": 24
+    },
+    {
+      "nome": "atendimento_evolution_rls.test.sql",
+      "sha256": "9fd1f04ed9ded1a022a2713bc7ca71f3c119881d830acca7bf54e9e38a7a5cd5",
+      "plano": 6
+    },
+    {
+      "nome": "atendimento_fluxos_grafo.test.sql",
+      "sha256": "efcea0bc212fab126866a31b26381a96336246d90d403760e51b5e118779fcd4",
+      "plano": 4
+    },
+    {
+      "nome": "atendimento_fluxos_rls.test.sql",
+      "sha256": "b58984e65ec32525c7ef9691a6a6e19c529b44be3bfa0b43a8ff7fb099ed3d73",
+      "plano": 4
+    },
+    {
+      "nome": "atendimento_historico_chamado_snapshots_rls.test.sql",
+      "sha256": "12d5879727c4c3d19aabb56a5fa61728be4c394960f93faff661362147c6221c",
+      "plano": 7
+    },
+    {
+      "nome": "atendimento_inbox_rico.test.sql",
+      "sha256": "782c16d76a9599bbef755c4ebda58ba0ae1cf5bba7f52adcb909ee50be6b819a",
+      "plano": 5
+    },
+    {
+      "nome": "atendimento_mensagens_rls.test.sql",
+      "sha256": "27fdc78e60e8dd9e165b7b18d43e0e803be7a6c2ff3eb32ec9db99afd1401d51",
+      "plano": 4
+    },
+    {
+      "nome": "atendimento_personas_rls.test.sql",
+      "sha256": "a1afdbe492cf4e1c7635c234ca647c3f8090b3b2bd687ed267e218a814cd6e1e",
+      "plano": 5
+    },
+    {
+      "nome": "atendimento_registrar_mensagem_rpc.test.sql",
+      "sha256": "98e6e2e7524e22cb2f132cc2bd786d72670f599dda10814535b534c362cfbcbc",
+      "plano": 4
+    },
+    {
+      "nome": "atendimento_tags_rls.test.sql",
+      "sha256": "cd2a4cef29b744b6868305247c01a995a7f74160bc176e64dd8cc97bdfe938ed",
+      "plano": 5
+    },
+    {
+      "nome": "auvo_sync_error_details_rls.test.sql",
+      "sha256": "9cf8ebd75f30ac4661da064648968761f8348c8bdc9951e932e42a1bea218643",
+      "plano": 4
+    },
+    {
+      "nome": "auvo_sync_health_rls.test.sql",
+      "sha256": "c334d25d2ca81793d492f14050b40b941d2100e3f8c35cc33c222020f1210182",
+      "plano": 5
+    },
+    {
+      "nome": "auvo_sync_outbox_rls.test.sql",
+      "sha256": "56596142f77c552c10f54810479e6009b50261e3b664d4f2aa64af7c5e2e355e",
+      "plano": 12
+    },
+    {
+      "nome": "cliente_grupos_rls.test.sql",
+      "sha256": "75ebcbad381b291dc378f5658966bcf42a4081938e2b904c29c9b4c2e23489f2",
+      "plano": 6
+    },
+    {
+      "nome": "clientes_crud_rls.test.sql",
+      "sha256": "90fed9ed7298cbeb8438dfff7b3d10df4c329ac967660ecb97ab1bc57b2c0ebc",
+      "plano": 6
+    },
+    {
+      "nome": "clientes_marcacoes_status_rls.test.sql",
+      "sha256": "0afaceb3f00586819efb2cd58a377ae6f7b1a40d8c5e491ac2ae0d8a8f977749",
+      "plano": 9
+    },
+    {
+      "nome": "comercial_contratos_rls.test.sql",
+      "sha256": "87b449b733523fe1f498e4b5f4e69e497e84861b300f4652f87a9a875ebfa8ec",
+      "plano": 20
+    },
+    {
+      "nome": "comercial_dashboard_rls.test.sql",
+      "sha256": "32b740c28fb7bfef34e754738cb71726717478329a7b016b87918b2c7f5a200a",
+      "plano": 10
+    },
+    {
+      "nome": "comercial_fundacao_rls.test.sql",
+      "sha256": "29180bdf085e2914468e6c7f9d0bfc26462b79e610ceb6e7d9097be3ebc999fd",
+      "plano": 15
+    },
+    {
+      "nome": "comercial_leads_aposentado.test.sql",
+      "sha256": "a6ba62b35431cceb5666338452e8f0c17ad3fcbc9f0eefb952eabe3c139deead",
+      "plano": 5
+    },
+    {
+      "nome": "comercial_levantamento_rls.test.sql",
+      "sha256": "b91256999ddfccf90fe9e4a84ec4793eb7c77e0f8e48abf4194a895b802238a4",
+      "plano": 11
+    },
+    {
+      "nome": "comercial_portal_proposta_rls.test.sql",
+      "sha256": "419547138f427ab552943f7648cd965fff36a56bd6770042ef414a551d80add9",
+      "plano": 18
+    },
+    {
+      "nome": "comercial_precificacao_rls.test.sql",
+      "sha256": "ab1eabaa2b4b6a4a82020a18c7aeaa8a2ff8400d534fad263dad9cb4c4e46fe0",
+      "plano": 11
+    },
+    {
+      "nome": "comercial_proposta_rls.test.sql",
+      "sha256": "7fe7033f9c88ab1caf305a71011250a3dacdc6592f64ee0032546ebeba88b360",
+      "plano": 15
+    },
+    {
+      "nome": "comercial_registrar_oportunidade.test.sql",
+      "sha256": "8da7b2cd99fb95247db9f25e36ca3abe3cf025d1982f26932c188a510a3685d5",
+      "plano": 9
+    },
+    {
+      "nome": "config_ia_titulo_os_rls.test.sql",
+      "sha256": "cb6ce6021ef91ac6ab5968bc15740a414540eacd39232462ebc9fe683311d75b",
+      "plano": 4
+    },
+    {
+      "nome": "config_preferencia_colunas_kanban_rls.test.sql",
+      "sha256": "9dc75d9bb95105a2164d3ae4b5028fb7f354ff71d9c9d773fca64dcbfdc9d17d",
+      "plano": 5
+    },
+    {
+      "nome": "config_priorizacao_gutd_rls.test.sql",
+      "sha256": "71447c9963cb0f81b928e213b037c3e63f8e215bd7f5114ec0e97cd7e8774b99",
+      "plano": 6
+    },
+    {
+      "nome": "e00-s05_rbac.test.sql",
+      "sha256": "672dc9f43c0d036030c8ecb7a683b6398eb60b23dfe3448aa67671911101e89f",
+      "plano": 28
+    },
+    {
+      "nome": "equipamentos_rls.test.sql",
+      "sha256": "744c98a6fa88408b1af226fb11165d023d9f016e6fbcb34fe96b95f57232cce6",
+      "plano": 6
+    },
+    {
+      "nome": "equipes_rls.test.sql",
+      "sha256": "4dae3a358525f9fb91b74e18d274c9d8494ac65f08b7ed97ffb909b86bd4d7a0",
+      "plano": 6
+    },
+    {
+      "nome": "ferramenta_alocacoes_rls.test.sql",
+      "sha256": "bf37dd66caf0548a10b13976d796b03fd69ef4d6f4c5f16d4b895690276a6d61",
+      "plano": 5
+    },
+    {
+      "nome": "ferramenta_reservas_rls.test.sql",
+      "sha256": "5caf1fe8d7c7f373fff4d0b3b5cd0134e346b6cf9823c2adbe08da886e77d33a",
+      "plano": 7
+    },
+    {
+      "nome": "ferramenta_unidades_rls.test.sql",
+      "sha256": "a5b7cf2a449fbc742f9ba120e9da6cd455452da1fb43539be7b72c54084247a6",
+      "plano": 11
+    },
+    {
+      "nome": "ferramentas_rls.test.sql",
+      "sha256": "593975d9de58fb70e71b6b43d70ddc801226bef00f2e1a51d9fd5de45ab82476",
+      "plano": 6
+    },
+    {
+      "nome": "financeiro_cobranca_mercadopago_rls.test.sql",
+      "sha256": "fb2d8ee5caebf796f7aed38fc4a2d8306414cd4449232d13fc4ee985555f9d74",
+      "plano": 6
+    },
+    {
+      "nome": "financeiro_contratos_recebiveis.test.sql",
+      "sha256": "d069529de829aaaa2da7f68ff44d785cc67379469f5bce8be45c30675b01ab85",
+      "plano": 6
+    },
+    {
+      "nome": "financeiro_dre_orcamento_rls.test.sql",
+      "sha256": "df2857ad9d2e497c7c3d2f3c28aba90132390142c8dcf51cd75d55cf2b893623",
+      "plano": 6
+    },
+    {
+      "nome": "financeiro_extrato_ofx_rls.test.sql",
+      "sha256": "45f4a7541bf66c32a838fe0f2e5635dabd08dab3a6e2301ed68984be8372d516",
+      "plano": 5
+    },
+    {
+      "nome": "financeiro_fechamento_mensal_rls.test.sql",
+      "sha256": "76761b6fdb1fe38fa4247ed81f5f1f3ee8a2f581de6e4643d9135e556de698ac",
+      "plano": 8
+    },
+    {
+      "nome": "financeiro_fundacao_rls.test.sql",
+      "sha256": "2c2fbcf9b686b3fa476752bcec9ce39ac60753edf4e549d2e8bbcacf7be3bb58",
+      "plano": 10
+    },
+    {
+      "nome": "financeiro_impostos_rls.test.sql",
+      "sha256": "99345ef706abb69b85c09a8924039820065d21367aad7ede0a5e80a449e8be7c",
+      "plano": 7
+    },
+    {
+      "nome": "financeiro_recorrencias_projecao.test.sql",
+      "sha256": "b2ece7aa9e2eb2127791b208d3c92459dc188fd08d913a4f3cb743150bfc47b0",
+      "plano": 5
+    },
+    {
+      "nome": "financeiro_regua_cobranca_rls.test.sql",
+      "sha256": "452ea689d4db5f823154106f416f47d7be5d9b95c1f8f56c85592ed19ff69e20",
+      "plano": 8
+    },
+    {
+      "nome": "financeiro_rentabilidade_rls.test.sql",
+      "sha256": "b8eb2e0deb0277633aca2f091f4e9281c5942652fb64bca92048b819a9898477",
+      "plano": 6
+    },
+    {
+      "nome": "financeiro_robustez_rls.test.sql",
+      "sha256": "be518acdf73ded268c35a27a433d9472dcb338a9fe2b14dd2b7f58e90a76c5e4",
+      "plano": 10
+    },
+    {
+      "nome": "funcionarios_rls.test.sql",
+      "sha256": "bf8f662d8684b7d6f7ff93c6eb8ce53d8a4768f87132963251b832d96c315176",
+      "plano": 6
+    },
+    {
+      "nome": "hierarquia_localizacao_rls.test.sql",
+      "sha256": "3a34152e8edbf83e7e6e46680af17d80e9e2bb490afd9a4e9960d5a367f1f195",
+      "plano": 17
+    },
+    {
+      "nome": "inspecoes_abnt_rls.test.sql",
+      "sha256": "cfb362dd12057236e3b4efd50e816921cad42530718ab2390c81be8c31aa6656",
+      "plano": 11
+    },
+    {
+      "nome": "kits_atomicidade.test.sql",
+      "sha256": "d4e4bf334c3399bdb762b5518f00fd2562f48381a726b3490df0e9a833b50e01",
+      "plano": 8
+    },
+    {
+      "nome": "pcm_backlog_observacao_rls.test.sql",
+      "sha256": "219826af6bd0a729788e937a79f4e1683d4f2f9da4abc5e36a6fe20ac8379484",
+      "plano": 5
+    },
+    {
+      "nome": "pcm_categoria_ativo.test.sql",
+      "sha256": "46bd2f2f88106425a9e84618a7e3fb471afe54194b17ca5896afadf83aa4b925",
+      "plano": 13
+    },
+    {
+      "nome": "pcm_chamados_rls.test.sql",
+      "sha256": "651c72e641b6ee3b79737d921702365802ca71534eaa921e02e2df65fd807d29",
+      "plano": 10
+    },
+    {
+      "nome": "pcm_descricao_auvo.test.sql",
+      "sha256": "b4324b780924adf309093475f22ee6ce95874ec5311ab73ee91a03a996224dd5",
+      "plano": 14
+    },
+    {
+      "nome": "pcm_equipment_mirror.test.sql",
+      "sha256": "40562a8fec59f89b5bc536a8d4f1f88459111fa6bf69b9c74c4a0fc03b590556",
+      "plano": 11
+    },
+    {
+      "nome": "pcm_identificador_ativo.test.sql",
+      "sha256": "14b2ce361605995ac61823c8c59b295e5d9f27a78918b197d9066f978b01814c",
+      "plano": 16
+    },
+    {
+      "nome": "pcm_inspecao_assessment.test.sql",
+      "sha256": "e2250b17fe74cfd9b2aa9e940fe8ebb7063067fc7d5ff4192e358f11e17a8e37",
+      "plano": 8
+    },
+    {
+      "nome": "pcm_localizacao_auvo_hierarquica.test.sql",
+      "sha256": "091739d780bd54b4c41ad26be4d678f64a8c9f835d18ff2a8fd60b36c663cac3",
+      "plano": 10
+    },
+    {
+      "nome": "pcm_operacao_performance.test.sql",
+      "sha256": "f0a8c543ff1ba5f2302d569c2582c180a6c27cc72607f50a8e6157722dcf6a6b",
+      "plano": 17
+    },
+    {
+      "nome": "pcm_portal_orcamentos_servico.test.sql",
+      "sha256": "4af469ecdf7064e0787639206b74faef1407ee5d7d57cce3774351e3c58dd706",
+      "plano": 6
+    },
+    {
+      "nome": "pcm_posicao_flexivel.test.sql",
+      "sha256": "6bb305c16ebef290710fff1e301088c0fcf5f173c548f57bc8419c00b178b6a0",
+      "plano": 11
+    },
+    {
+      "nome": "pcm_satisfacao_inativa.test.sql",
+      "sha256": "a71896f51ddcae7f732a5b3c15fdb0c1e2285ebde9f1fa3920d708287b2afa0e",
+      "plano": 4
+    },
+    {
+      "nome": "pcm_sistema_itens_unico.test.sql",
+      "sha256": "fa662d4815b3b8e7a7505f6475da8d39d0e3ec38e44a7d6a360d38ba8a813f3b",
+      "plano": 3
+    },
+    {
+      "nome": "portal_cliente_isolamento.test.sql",
+      "sha256": "5a300ecddd0aa8aa4bd81acd84b936a7fe9e0339da68f9f0b3f66fb089c6a401",
+      "plano": 17
+    },
+    {
+      "nome": "preventivas_rls.test.sql",
+      "sha256": "088b92285891c8970eba30dec4835c59ca21d927724c27a2929abc9b8ca20b28",
+      "plano": 17
+    },
+    {
+      "nome": "relacionamento_contatos_timeline.test.sql",
+      "sha256": "e14f558d2a2d3d07f91277367890464face51aec6dbdc79c6855d7ecb9f7fb0b",
+      "plano": 8
+    },
+    {
+      "nome": "relatorios_cliente_publicados_rls.test.sql",
+      "sha256": "7e03088148aa49a00e4f7b48f6d08f670ab029b63e6916b6b0248a3890276c1d",
+      "plano": 3
+    },
+    {
+      "nome": "servicos_rls.test.sql",
+      "sha256": "c92519772bc7ae68d4c0b773cd334bfd50b8324823eb69d1b9789cd3f9237e61",
+      "plano": 7
+    },
+    {
+      "nome": "tecnicos_equipamentos_cache_rls.test.sql",
+      "sha256": "c15632f30843c02409338ba2994b5c27614e401ae25fca6d03f0777c58cbac51",
+      "plano": 9
+    },
+    {
+      "nome": "tickets_rls.test.sql",
+      "sha256": "c7ef75fc50973dcc28c9f36caddff412382611ba28536cf97b5b2e3a348ecb93",
+      "plano": 6
+    },
+    {
+      "nome": "remote_promotion_smoke.sql",
+      "sha256": "f6e85ee7d2223945d2337f7dbf49f6fa7403bb7b3691c3068eb7f9be00d911f7",
+      "plano": 1
+    }
+  ]
+}
