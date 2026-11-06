@@ -7,7 +7,7 @@
 ## Ordem de leitura
 
 1. CLAUDE.md, AGENTS.md, constituição e linhas da story escolhida no ROADMAP.
-2. [Caderno Técnico v1](../../../Caderno_Tecnico_Implementacao_SSO_v1.docx) — origem recebida, base 23/10/2026.
+2. Caderno Técnico v1 — origem recebida em anexo externo, base 23/10/2026; o arquivo original não está versionado neste repositório.
 3. [Definições posteriores do Fabrício](definicoes-fabricio-caderno-v1.md), que encerram as quatro dúvidas e P01/P02/P03.
 4. [Programa/stories/dependências](programa-sso-terra.md), [contratos compartilhados](contratos-programa.md) e ADR0026/27/28 em docs/adr.
 5. [Matriz SSO/CT/AUT/RF](matriz-rastreabilidade.md), [guia Terra](guia-execucao-terra.md), [validação documental](validacao-documental.md).
