@@ -51,10 +51,15 @@ def executar(container, arquivos, sql, query, watchdog):
     for nome, dados, total in arquivos:
         if watchdog.is_set():
             raise RuntimeError("Monitor interrompeu o ensaio")
+        entrada = dados
+        if nome == "comercial_contratos_rls.test.sql":
+            # Checkpoints fixos por linha, sem reproduzir SQL ou parâmetros.
+            linhas_sql = dados.splitlines(keepends=True)
+            entrada = b"".join((f"\\echo SSO_CHECKPOINT_{i}\n".encode() if re.match(rb"^(?:select |insert |update |set local |reset role|rollback;)", linha, re.I) else b"") + linha for i, linha in enumerate(linhas_sql, 1))
         try:
             resultado = subprocess.run(
                 ["rtk", "proxy", "docker", "exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-qAt"],
-                input=b"\\set VERBOSITY verbose\nset search_path=public,extensions;\n" + dados, capture_output=True, timeout=180,
+                input=b"\\set VERBOSITY verbose\nset search_path=public,extensions;\n" + entrada, capture_output=True, timeout=180,
             )
         except subprocess.TimeoutExpired:
             raise RuntimeError("Prazo excedido na fixture " + nome) from None
@@ -65,13 +70,18 @@ def executar(container, arquivos, sql, query, watchdog):
             codigo = estado.group(1) if estado else "não identificado"
             categorias = {"23502": "campo obrigatório", "23503": "referência", "23505": "duplicidade", "23514": "regra de integridade", "42501": "permissão", "42702": "coluna ambígua", "42703": "coluna ausente", "42883": "função ausente", "42P01": "relação ausente", "P0001": "exceção SQL"}
             categoria = categorias.get(codigo, "não classificada")
+            if codigo == "P0002":
+                if re.search(r"(?i)proposta [^\r\n]* não encontrada", erro): categoria = "proposta não encontrada"
+                elif re.search(r"(?i)contrato [^\r\n]* não encontrado", erro): categoria = "contrato não encontrado"
+            checkpoints = re.findall(r"(?m)^SSO_CHECKPOINT_(\d+)$", resultado.stdout.decode(errors="replace"))
+            checkpoint = checkpoints[-1] if checkpoints else "nenhum"
             pontos = re.findall(r"(?m)^(?:not )?ok\s+(\d+)\b", resultado.stdout.decode(errors="replace"))
             ultimo = pontos[-1] if pontos else "nenhum"
             funcoes = ("fn_criar_contrato", "fn_ativar_contrato", "fn_encerrar_contrato", "fn_criar_plano_faturamento")
             funcao = next((f for f in funcoes if re.search(r"(?i)PL/pgSQL function (?:comercial|financeiro)\." + re.escape(f) + r"\(", erro)), "não classificada")
             raise RuntimeError("Erro SQL na fixture " + nome + "; SQLSTATE " + codigo
                 + "; linha " + (linha.group(1) if linha else "não identificada") + "; categoria " + categoria
-                + "; último TAP " + ultimo + "; função " + funcao)
+                + "; último TAP " + ultimo + "; função " + funcao + "; checkpoint " + checkpoint)
         linhas = resultado.stdout.decode(errors="replace").splitlines()
         planos = [linha for linha in linhas if re.fullmatch(r"1\.\.\d+", linha)]
         testes = [linha for linha in linhas if re.match(r"^(?:not )?ok\b", linha)]
