@@ -8,7 +8,7 @@ alwaysApply: false
 
 **Data:** 2026-11-06  
 **Branch:** `codex/handoff-plano-manutencao`  
-**Estado:** implementação do lote escrita; suíte SQL automatizada local anterior passou e revisões adversariais locais não encontraram achados reproduzidos. Alterações S166/S170/S176 registradas abaixo ainda não foram validadas. T016 permanece aberto; workflow GitHub, E2E visual, medição de capacidade, aprovação formal dos ADRs e homologação bloqueiam merge.
+**Estado:** implementação do lote escrita; suíte SQL automatizada local anterior passou e revisões adversariais locais não encontraram achados reproduzidos. No candidato `0a28657b`, E2E isolado S165/S166/S176 passou; S170 segue em correção do locator. T016 permanece aberto; CI completa com `db-tests`, medição de capacidade, aprovação formal dos ADRs e homologação bloqueiam merge.
 
 ## Atualização após correções integradas — 2026-11-06
 
@@ -105,3 +105,10 @@ Os quatro checklists mantêm T016 aberto. Implementação escrita e testes focad
 - Revisão adversarial da 1828 identificou ordem de lock herdada da 1821 que podia formar ciclo com um escritor de composição caso o gate S171 fosse habilitado. A 1828 agora lê o gate sob `FOR SHARE` e toma os locks de composição em ordem de Visita antes dos locks de tabela/linha. A fixture integrada passou novamente com o gate S171 habilitado: **250 assertions pgTAP**, incluindo 501 Visitas. Isso valida a execução serial com a nova ordem, mas não a concorrência em duas sessões nem a capacidade temporal; o gate V2 continua fechado até essas medições.
 - Nenhum deploy, merge, operação em produção ou chamada real ao Auvo ocorreu. O banco Supabase local continua sem reset completo por falha histórica na migration 1274 (`LOCK TABLE can only be used in transaction blocks`).
 - Estado atual: implementação das quatro stories registrada; **T016 continua aberto nas quatro**. Para liberar merge, faltam resolver os gates globais do `ci:local`, executar E2E e `db-tests` no GitHub, medir capacidade e concorrência de S166, e concluir revisão formal/homologação.
+
+## E2E isolado conjunto — commit `0a28657b`
+
+- S165 passou no [run 42279514625](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42279514625); S166 passou no [run 42279514855](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42279514855); S176 passou no [run 42279515409](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42279515409). Os três executaram no mesmo commit e em clones descartáveis.
+- S170 falhou no [run 42279514982](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42279514982). A consulta de alvos respondeu HTTP 200 com uma linha, mas `getByLabel("Alvo da Rotina")` no escopo da região encontrou zero controles. Primeira tentativa de espera por opções não corrigiu o locator.
+- O commit `06fd1388` localiza o `<select>` pelo label renderizado, aguarda uma opção não vazia no mesmo controle e registra seu próprio estado em falha. Ainda sem resultado de execução para este commit; repetir somente o workflow S170 após atualizar o registro.
+- Esse ensaio não substitui `db-tests`, CI completa, concorrência em duas sessões, medição de capacidade, aprovação formal, homologação ou produção. Nenhum deploy nem tarefa real no Auvo foi executado.
