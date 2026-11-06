@@ -400,6 +400,10 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("selecionar alvo da Rotina");
     const seletorAlvo = formulario.getByLabel("Alvo da Rotina", { exact: true });
     try {
+      await expect(seletorAlvo).toBeEnabled({ timeout: 15_000 });
+      await expect(seletorAlvo.locator('option:not([value=""])')).toHaveCount(1, {
+        timeout: 15_000,
+      });
       const alvos = await seletorAlvo.locator("option").evaluateAll((opcoes) =>
         opcoes
           .map((opcao) => ({
@@ -412,7 +416,6 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
       expect(alvos[0]?.nome).toBe("Sistema sintético");
       const alvoId = alvos[0]?.id;
       if (!alvoId) throw new Error("Opção sintética sem identificador.");
-      await expect(seletorAlvo).toBeEnabled({ timeout: 15_000 });
       await seletorAlvo.selectOption(alvoId, { timeout: 15_000 });
       await expect(seletorAlvo).toHaveValue(alvoId);
     } catch (erro) {
