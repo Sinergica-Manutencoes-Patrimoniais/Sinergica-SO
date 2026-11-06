@@ -47,16 +47,19 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   const clienteB = `[TESTE E2E] S176 Cliente B ${sufixo}`;
   const nomeGrupo = `[TESTE E2E] 20 luminárias ${sufixo}`;
   const falhasApi: string[] = [];
+  const endpointsEstrutura = new Set(["areas", "locais", "local_tipos", "equipamentos", "clientes", "sistemas", "sistema_itens", "equipamento_categorias"]);
   page.on("response", async (response) => {
     const url = new URL(response.url());
-    if (!url.pathname.startsWith("/rest/v1/") || response.status() < 400) return;
+    const relacao = url.pathname.split("/").pop() ?? "";
+    if (!url.pathname.startsWith("/rest/v1/") || !endpointsEstrutura.has(relacao) || response.status() < 400) return;
     let codigo = "erro";
     try { codigo = String(JSON.parse(await response.text())?.code ?? "erro").slice(0, 24); } catch { /* só status */ }
-    falhasApi.push(`${response.request().method()}:${url.pathname.split("/").pop()}:${response.status()}:${codigo}`);
+    falhasApi.push(`${response.request().method()}:${relacao}:${response.status()}:${codigo}`);
   });
   page.on("requestfailed", (request) => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/rest/v1/")) falhasApi.push(`${request.method()}:${url.pathname.split("/").pop()}:falha-rede`);
+    const relacao = url.pathname.split("/").pop() ?? "";
+    if (url.pathname.startsWith("/rest/v1/") && endpointsEstrutura.has(relacao)) falhasApi.push(`${request.method()}:${relacao}:falha-rede`);
   });
   // A etapa negativa abaixo prova a reação da interface à permissão negada.
   // A autorização no banco deve continuar coberta por pgTAP com JWT/RLS reais.
@@ -87,7 +90,8 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   try {
     await expect(page.getByText(nomeArea, { exact: true })).toBeVisible({ timeout: 10_000 });
   } catch {
-    throw new Error(`POST_AREAS=${respostaArea}; ESTRUTURA_API=${falhasApi.join(",") || "sem-falhas-http"}`);
+    const erroCarregar = await page.getByText("Não foi possível carregar a estrutura do cliente.", { exact: true }).isVisible().catch(() => false);
+    throw new Error(`POST_AREAS=${respostaArea}; ERRO_CARREGAR=${erroCarregar}; ESTRUTURA_API=${falhasApi.join(",") || "sem-falhas-http"}`);
   }
   await page.getByRole("button", { name: "Local", exact: true }).click();
   await page.getByLabel("Nome *").fill(nomeLocal);

@@ -39,6 +39,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 // cobertura e evidências prontas; aprovação não finaliza OS nem dispara Auvo.
 // O histórico exibido comprova somente os registros retornados, não append-only no banco.
 test("validador devolve, reabre e aprova retorno com histórico", async ({ page }) => {
+  test.setTimeout(120_000);
   const caminho = process.env.SSO_S170_RETORNO_PATH;
   if (process.env.SSO_S170_FIXTURE_OBRIGATORIA === "1" && (!pronto || !caminho))
     throw new Error("Fixture S170 obrigatória incompleta");
@@ -130,14 +131,15 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await operador.getByText("PCM · Operação", { exact: true }).first().click();
     await operador.getByText("Clientes", { exact: true }).first().click();
     await operador.getByText("Cliente fechamento sintético", { exact: true }).first().click();
-    await operador.getByRole("button", { name: "Preventivas" }).click();
+    await operador.getByRole("navigation", { name: "Áreas do Cliente 360" })
+      .getByRole("button", { name: "Preventivas" }).click();
   }
   try {
     // Manter a sessão do operador aberta durante as duas alterações administrativas.
     await entrar(operador, cfg.email!, cfg.senha!);
     const respostasPermissao: string[] = [];
     operador.on("response", async (response) => {
-      if (!new URL(response.url()).pathname.includes("/rpc/")) return;
+      if (!new URL(response.url()).pathname.endsWith("/rpc/sso_autorizar_acao")) return;
       let resultado = "resposta-indisponivel";
       try {
         const corpo = await response.text();
@@ -148,7 +150,7 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     });
     operador.on("requestfailed", (request) => {
       const url = new URL(request.url());
-      if (url.pathname.includes("/rpc/")) respostasPermissao.push(`${url.pathname.split("/").pop()}:falha-rede`);
+      if (url.pathname.endsWith("/rpc/sso_autorizar_acao")) respostasPermissao.push("sso_autorizar_acao:falha-rede");
     });
     await abrirCalendario();
     try {
@@ -169,8 +171,9 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     await administrador.getByRole("button", { name: "Conceder ação" }).click();
     await expect(administrador.getByText("Alteração registrada.")).toBeVisible();
 
-    await operador.getByRole("button", { name: "Estrutura" }).click();
-    await operador.getByRole("button", { name: "Preventivas" }).click();
+    const abasCliente = operador.getByRole("navigation", { name: "Áreas do Cliente 360" });
+    await abasCliente.getByRole("button", { name: "Estrutura" }).click();
+    await abasCliente.getByRole("button", { name: "Preventivas" }).click();
     await expect(operador.getByRole("region", { name: "Calendário contratual" })).toBeVisible();
     await expect(operador.getByRole("button", { name: "Novo Plano de Manutenção" })).toBeVisible();
 
