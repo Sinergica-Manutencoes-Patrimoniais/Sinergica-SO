@@ -1,5 +1,5 @@
 {
-  "descricao": "Sele\u00e7\u00e3o fixa dos testes SQL CI, valida\u00e7\u00e3o em clone isolado; n\u00e3o equivale a supabase start.",
+  "descricao": "Seleção fixa dos testes SQL CI, validação em clone isolado; não equivale a supabase start.",
   "arquivos": [
     {
       "nome": "E01-S165_plano_manutencao.test.sql",
@@ -128,7 +128,7 @@
     },
     {
       "nome": "comercial_contratos_rls.test.sql",
-      "sha256": "c9a1f0e6a3409e3cee99a2c511827b6f02d5d9764d9d0bf5dc3bd5db31b07c68",
+      "sha256": "87b449b733523fe1f498e4b5f4e69e497e84861b300f4652f87a9a875ebfa8ec",
       "plano": 20
     },
     {
