@@ -4,7 +4,7 @@ import json
 import re
 
 MANIFESTO = "supabase/manual-tests/s176_pgtap_ci_manifest.json"
-SHA256 = "d6bea937442301048f1c36074660d1c4734fc848b85ceaf7c3f3664860919d8d"
+SHA256 = "26e007ccbecac1750467ac889bd394059acf5c542523a6963f4ceedbadaac112"
 
 def preparar(root):
     dados = (root / MANIFESTO).read_bytes()

@@ -444,7 +444,7 @@ def main(opcoes):
         if not opcoes.integracao_candidata or not opcoes.diagnostico_ac5 or not opcoes.isolamento_1810 or not opcoes.gates_1816 or opcoes.fixtures_pgtap:
             raise RuntimeError("pgTAP CI exige integração, AC5, isolamento 1810 e gates 1816, sem fixtures duplicadas")
         driver = ROOT / "supabase/manual-tests/s176_pgtap_ci_isolada.py"
-        if hashlib.sha256(driver.read_bytes()).hexdigest() != "c1d91ad5452c6cd353775ce857f20e4c6fa297763242492b7b973d62eb3a8b5e":
+        if hashlib.sha256(driver.read_bytes()).hexdigest() != "837e00c049c4c06938f34d5aaa2f46028025a3dea3a43e56bde401e82fda0bd8":
             raise RuntimeError("Driver pgTAP CI divergente")
         runner = ROOT / "supabase/manual-tests/s176_runner_pgtap.py"
         if hashlib.sha256(runner.read_bytes()).hexdigest() != "e45aa2d096c02920bc6b6bf8f186679247ad423db8532ba553989c1e681ecab4":

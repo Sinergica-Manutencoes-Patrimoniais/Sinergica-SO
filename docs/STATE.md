@@ -10,6 +10,11 @@ alwaysApply: true
 > `docs/state-historico/` (índice: [INDEX.md](state-historico/INDEX.md)) — arquivado, não
 > carregado por padrão. Regra de rotação em `.claude/skills/handoff/SKILL.md`.
 
+## Pendência comercial S184 — criação de proposta
+
+- A função histórica `comercial.fn_criar_proposta` retorna a linha com custos e sua criação por colaborador é afetada pela política restritiva de leitura S184. O fluxo Comercial é externo ao lote S165/S166/S170/S176.
+- Não há protocolo novo pronto: um rascunho privilegiado foi descartado por não demonstrar preservação das políticas adicionais do destino. Avaliar fronteira que respeite RLS efetiva ou atestação transacional completa, autorização atual, escopo, recibo sem custos e repetição segura. O editor e o gateway atuais exigem campos de custo; criação isolada não entrega o fluxo completo. Validar em clone antes de qualquer ativação.
+
 ## 2026-10-01 — Handoff E01-S53/T11, Preventivas na Visão 360 (Codex)
 
 - Branch `feat/preventivas-pcm-auvo`, base de Preventivas no commit local `d8453e5`.

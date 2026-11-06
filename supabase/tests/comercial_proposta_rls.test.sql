@@ -4,7 +4,8 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(14);
+set local app.auvo_sync_write='true';
+select plan(15);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
@@ -13,6 +14,16 @@ values
   ('00000000-0000-0000-0000-000000000603', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prop-escrita-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now()),
   ('00000000-0000-0000-0000-000000000604', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prop-superadmin-s04@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+-- S184 exige atores e permissões atuais, não apenas claims sintéticas.
+insert into config.usuarios(user_id,papel,nome,ativo) values
+ ('00000000-0000-0000-0000-000000000601','colaborador','Sem módulo S04',true),
+ ('00000000-0000-0000-0000-000000000602','colaborador','Leitura S04',true),
+ ('00000000-0000-0000-0000-000000000603','colaborador','Escrita S04',true),
+ ('00000000-0000-0000-0000-000000000604','superadmin','Admin S04',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values
+ ('00000000-0000-0000-0000-000000000602','comercial','leitura'),
+ ('00000000-0000-0000-0000-000000000603','comercial','escrita');
 
 insert into pcm.clientes (id, nome, ativo, created_by)
 values ('00000000-0000-0000-0000-0000000006c1', 'Condomínio Teste E03-S04', true, '00000000-0000-0000-0000-000000000601')
@@ -39,19 +50,24 @@ select is(
   'sem modulo comercial: select de propostas retorna zero linhas'
 );
 
--- 2) leitura: enxerga, mas não escreve
+-- 2) leitura operacional não pode acessar a composição privada.
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000602","user_role":"colaborador","user_modulos":{"comercial":"leitura"}}';
 select is(
   (select count(*)::int from comercial.propostas where id = '00000000-0000-0000-0000-0000000006b1'),
+  0,
+  'leitura comercial não visualiza a composição privada'
+);
+select is(
+  (select count(*)::int from comercial.propostas_sem_custos where id = '00000000-0000-0000-0000-0000000006b1'),
   1,
-  'leitura comercial: select enxerga a proposta'
+  'leitura comercial enxerga projeção sem custos'
 );
 -- UPDATE sob RLS não lança erro quando a policy USING filtra a linha (diferente de INSERT, cujo
 -- WITH CHECK lança 42501) — vira "0 linhas afetadas" silencioso. Confirma pelo status inalterado.
 update comercial.propostas set status = 'em_revisao'
    where id = '00000000-0000-0000-0000-0000000006b1';
 select is(
-  (select status from comercial.propostas where id = '00000000-0000-0000-0000-0000000006b1'),
+  (select status from comercial.propostas_sem_custos where id = '00000000-0000-0000-0000-0000000006b1'),
   'rascunho',
   'leitura comercial NAO atualiza proposta (status segue rascunho)'
 );

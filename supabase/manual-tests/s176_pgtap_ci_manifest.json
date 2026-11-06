@@ -163,8 +163,8 @@
     },
     {
       "nome": "comercial_proposta_rls.test.sql",
-      "sha256": "25eab081e3e911f2cffb5c26a4913011afc2796253d8cd71074a9481caf93aac",
-      "plano": 14
+      "sha256": "7fe7033f9c88ab1caf305a71011250a3dacdc6592f64ee0032546ebeba88b360",
+      "plano": 15
     },
     {
       "nome": "comercial_registrar_oportunidade.test.sql",
