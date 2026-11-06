@@ -1,6 +1,6 @@
 # Tasks — E01-S165: Plano multialvo, versões de Rotina e questionários referenciados
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** implementação concluída; suíte web completa e pgTAP integrado (183 assertions) passaram. T016 permanece aberto para CI completa com db-tests, E2E visual, revisão formal e homologação.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** implementação concluída; suíte web completa, pgTAP integrado (183 assertions) e E2E visual isolado (run 42279514625) passaram. T016 permanece aberto para CI completa com db-tests, revisão formal e homologação.
 
 ## Phase 1 — Setup
 
@@ -34,8 +34,8 @@
 ## Phase 5 — Integration and Gates
 
 - [X] T014 Escrever testes de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-plano-manutencao-adapter.test.ts`, incluindo rollback e concorrência; executar em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
-- [X] T015 Escrever a jornada E2E crítica e acesso negado entre dois Clientes em `apps/web/e2e/plano-manutencao.spec.ts`, incluindo consumidores globais/Cliente360; executar em T016 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
-- [ ] T016 Executar quickstart, testes focados (incluindo classificação manter/alterar/retirar), eval:spec com seleção conferida, ci:local e revisão adversarial; registrar resultados/ressalvas e futura CI com db-tests habilitado antes do PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions no clone descartável; a CI local integrada ainda falhou em gates globais e testes. T016 fica aberto para E2E, CI GitHub, demais gates de integração e homologação.
+- [X] T015 Escrever a jornada E2E crítica e acesso negado entre dois Clientes em `apps/web/e2e/plano-manutencao.spec.ts`, incluindo consumidores globais/Cliente360; a jornada visual isolada passou no run 42279514625 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7).
+- [ ] T016 Executar quickstart, testes focados (incluindo classificação manter/alterar/retirar), eval:spec com seleção conferida, ci:local e revisão adversarial; registrar resultados/ressalvas e futura CI com db-tests habilitado antes do PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): pgTAP candidata (250 assertions) e E2E visual isolado (run 42279514625) passaram no clone descartável; a CI local integrada ainda falhou em gates globais e testes. T016 fica aberto para CI GitHub/db-tests, demais gates de integração, revisão formal e homologação.
 
 ### Evidência escrita ainda não executada
 

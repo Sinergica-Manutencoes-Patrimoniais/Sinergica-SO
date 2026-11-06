@@ -1,7 +1,7 @@
 # Implementation Plan: E01-S176 — Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos
 
 **Branch de documentação:** `codex/handoff-plano-manutencao` | **Date:** 2026-10-26 | **Spec:** [spec.md](spec.md)
-**Status:** implementação concluída; suíte web completa e pgTAP integrado (21 assertions combinadas) passaram. CI completa, E2E visual, revisão formal e homologação permanecem pendentes em T016.
+**Status:** implementação concluída; suíte web completa, pgTAP integrado (21 assertions combinadas) e E2E visual isolado (run 42279515409) passaram. CI completa com db-tests, revisão formal e homologação permanecem pendentes em T016.
 
 ## Summary
 

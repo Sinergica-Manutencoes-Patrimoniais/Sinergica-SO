@@ -1,6 +1,6 @@
 # Tasks — E01-S170: Permissões por ação e governança configurável do programa
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** implementação e pgTAP (12 assertions) passaram no clone isolado integrado; T018 para refetch do formulário e preservação do Plano em edição foi implementado. T019 estabiliza a seleção do alvo após a consulta carregar; aguarda validação integrada. T016 permanece aberto para E2E, CI completa com db-tests, revisão formal e homologação; código escrito não equivale a PASS.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** implementação, pgTAP (12 assertions) e E2E visual isolado passaram no clone integrado. T018 preserva o formulário durante refetch; T019 estabiliza seleção de alvo e navegação do Cliente 360. T016 permanece aberto para CI completa com db-tests, revisão formal e homologação; código escrito não equivale a PASS.
 
 ### Estado da evidência no candidato
 
@@ -40,11 +40,11 @@
 ## Phase 5 — Integration and Gates
 
 - [X] T014 Escrever teste de adapter e integração entre US em `apps/web/src/features/pcm/infrastructure/supabase-capacidades-sso-adapter.test.ts`. Executar integração, rollback e concorrência em duas sessões durante T016; mocks não comprovam esses pontos (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
-- [X] T015 Escrever E2E isolado de validação do retorno, concessão/revogação durante sessão aberta e autoaprovação do Plano pelo seu criador após concessão individual; Cliente cruzado continua coberto por pgTAP em `apps/web/e2e/capacidades-sso.spec.ts` (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Os cenários estão escritos e aguardam execução em T016.
-- [ ] T016 Executar `specs/E01-S170-governanca-plano/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions no clone descartável; a CI local integrada ainda falhou em gates globais e testes. E2E, CI GitHub e homologação permanecem pendentes.
+- [X] T015 Escrever E2E isolado de validação do retorno, concessão/revogação durante sessão aberta e autoaprovação do Plano pelo seu criador após concessão individual; Cliente cruzado continua coberto por pgTAP em `apps/web/e2e/capacidades-sso.spec.ts`. A jornada visual passou no run 42283953852 (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
+- [ ] T016 Executar `specs/E01-S170-governanca-plano/quickstart.md`, testes focados, eval:spec com seleção conferida, ci:local e revisão adversarial; registrar comandos/resultados/ressalvas e futura CI com db-tests não pulado no mesmo roteiro antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Ver [registro integrado do lote](../../docs/planejamento/plano-manutencao/validacao-lote-s165-s166-s170-s176.md): a seleção pgTAP candidata passou 250 assertions e o E2E visual isolado passou no run 42283953852; a CI local integrada ainda falhou em gates globais e testes. CI GitHub/db-tests e homologação permanecem pendentes.
 - [X] T017 Corrigir consultas mediadas 1825–1827 para qualificar colunas `id`, cobrir listagens com regressão pgTAP e incluí-las no clone E2E descartável; tornar exato seletor acessível de alvo e atualizar pins. Execução fica em T016.
 - [X] T018 Preservar seletor de Alvo com opções já carregadas durante refetch da mesma chave e manter visível somente o Plano ativo enquanto a consulta da lista atualiza; cobrir seletor e workspace sem executar testes até validação final integrada (AC-1, AC-4). Confirmação de permissão/revisão no salvamento permanece obrigatória.
-- [X] T019 No E2E de governança, localizar o único `<select required>` do formulário de Rotina; aguardar opção não vazia nesse controle, ler seu `value` e selecionar. Escopar retorno do operador nas abas do Cliente 360 para evitar colisão com a navegação lateral; registrar estado do seletor em falha e validar no ensaio integrado (AC-1, AC-4).
+- [X] T019 No E2E de governança, localizar o único `<select required>` do formulário de Rotina; aguardar opção não vazia nesse controle, ler seu `value` e selecionar. Escopar retorno do operador nas abas do Cliente 360 para evitar colisão com a navegação lateral; cenário passou no run 42283953852 (AC-1, AC-4).
 
 ## Dependencies & Execution Order
 

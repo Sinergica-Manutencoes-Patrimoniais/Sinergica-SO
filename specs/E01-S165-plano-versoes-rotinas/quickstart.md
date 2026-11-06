@@ -1,6 +1,6 @@
 # Quickstart — E01-S165
 
-**Estado:** validação integrada do lote passou em clone descartável; suíte web completa também passou. T016 continua aberto para CI completa com db-tests, E2E visual, revisão formal e homologação.
+**Estado:** validação integrada do lote passou em clone descartável; suíte web completa e E2E visual isolado (run 42279514625) também passaram. T016 continua aberto para CI completa com db-tests, revisão formal e homologação.
 
 ## Prerequisites
 

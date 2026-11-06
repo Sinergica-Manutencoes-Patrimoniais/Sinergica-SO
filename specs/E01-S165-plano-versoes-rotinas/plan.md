@@ -1,7 +1,7 @@
 # Implementation Plan: E01-S165 — Plano multialvo, versões de Rotina e questionários referenciados
 
 **Branch de documentação:** `codex/handoff-plano-manutencao` | **Date:** 2026-10-26 | **Spec:** [spec.md](spec.md)
-**Status:** implementação e verificação integrada concluídas na branch, incluindo aplicação das migrations candidatas e 183 assertions pgTAP. CI completa, E2E visual, revisão formal e homologação permanecem em T016. Não declarar PASS.
+**Status:** implementação e verificação integrada concluídas na branch, incluindo aplicação das migrations candidatas, 183 assertions pgTAP e E2E visual isolado (run 42279514625). CI completa com db-tests, revisão formal e homologação permanecem em T016. Não declarar PASS.
 
 ## Summary
 

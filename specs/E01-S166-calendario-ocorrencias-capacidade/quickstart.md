@@ -1,6 +1,6 @@
 # Quickstart — E01-S166
 
-**Estado:** implementação de todas as stories do lote concluída; pgTAP integrado passou incluindo AC-8 V2 com 501 visitas. T016 segue aberto para medição de capacidade, E2E visual, CI completa, revisão formal e homologação.
+**Estado:** implementação de todas as stories do lote concluída; pgTAP integrado e E2E visual isolado (run 42279514855) passaram, incluindo jornada V2 com 501 visitas. T016 segue aberto para medição de capacidade, concorrência real, CI completa, revisão formal e homologação.
 
 ## Prerequisites
 

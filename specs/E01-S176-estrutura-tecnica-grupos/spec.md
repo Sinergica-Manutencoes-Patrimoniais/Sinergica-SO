@@ -2,7 +2,7 @@
 
 **Story:** E01-S176 · **Owner:** Terra · **Created:** 2026-10-26  
 **Feature Branch:** `codex/handoff-plano-manutencao`
-**Status:** Implementação concluída; pgTAP integrado (21 assertions combinadas) e suíte web completa passaram. T016 permanece aberto para CI completa com db-tests, E2E visual, revisão formal e homologação. Não declarar PASS.
+**Status:** Implementação concluída; pgTAP integrado (21 assertions combinadas), suíte web completa e E2E visual isolado (run 42279515409) passaram. T016 permanece aberto para CI completa com db-tests, revisão formal e homologação. Não declarar PASS.
 
 **Input:** Caderno Técnico v1 (SSO-010) e definições do Fabrício posteriores ao caderno.
 

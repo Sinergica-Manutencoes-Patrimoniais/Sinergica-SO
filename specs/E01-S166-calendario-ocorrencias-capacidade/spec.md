@@ -2,7 +2,7 @@
 
 **Story:** E01-S166 · **Owner:** Terra · **Created:** 2026-10-26  
 **Feature Branch:** `codex/handoff-plano-manutencao`
-**Status:** T001–T015 implementados; pgTAP integrado, inclusive o fluxo V2 com 501 visitas, passou em clone descartável. Medição de capacidade, E2E, CI e homologação seguem em T016; gates de produção continuam fechados. Código escrito não constitui PASS.
+**Status:** T001–T015 implementados; pgTAP integrado, fluxo V2 com 501 visitas e E2E visual isolado (run 42279514855) passaram em clone descartável. Medição de capacidade, concorrência real, CI e homologação seguem em T016; gates de produção continuam fechados. Código escrito não constitui PASS.
 
 **Input:** Caderno Técnico v1 (SSO-005, SSO-006) e definições do Fabrício posteriores ao caderno.
 

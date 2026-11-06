@@ -1,7 +1,7 @@
 # Implementation Plan: E01-S170 — Permissões por ação e governança configurável do programa
 
 **Branch de documentação:** `codex/handoff-plano-manutencao` | **Date:** 2026-10-26 | **Spec:** [spec.md](spec.md)
-**Status:** implementação e validação pgTAP integrada (12 assertions) concluídas; suíte web completa também passou. CI completa, E2E visual, revisão formal e homologação continuam pendentes em T016; não declarar PASS.
+**Status:** implementação e validação pgTAP integrada (12 assertions), suíte web completa e E2E visual isolado (run 42283953852) passaram. CI completa com db-tests, revisão formal e homologação continuam pendentes em T016; não declarar PASS.
 
 ## Summary
 
