@@ -6,6 +6,13 @@ alwaysApply: true
 
 # STATE — Memória viva do projeto
 
+## 2026-11-05 — ensaio remoto da Edge documental (Codex)
+
+- O [ensaio 42137060929](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42137060929) passou na branch isolada `codex/validacao-documento-isolado`: clone sintético com Auth, PostgREST, Storage e Edge Runtime, rede interna, 228 migrations base e 702 candidatas; recursos exclusivos removidos ao final. Os gates e a flag da Edge documental foram habilitados apenas no clone para o cenário.
+- A rota documental devolveu os bytes exatos de um PDF sintético gravado na API Storage, recusou Cliente diferente e respondeu 401 após a sessão sintética ser revogada durante a barreira de download. O ensaio não prova identidade dos bytes diante de alteração privilegiada no Storage, revogação após a última checagem nem ACL/owners do destino; não habilita gates ou flag para rollout.
+- Também passaram 220 asserções pgTAP, fixtures 1804–1808 e 1811–1816, quatro ordens de concorrência 1810 e jornada HTTP parcial AC5. Alguns setups S165 usam `replica`, supressão de outbox ou anti-loop, e a jornada AC5 não comprova Edge nem origem real Auvo. O módulo `tslib` usado apenas no ensaio é fixado ao hash do lock, com licença e import map restrito; demais dependências mantêm lock congelado.
+- É evidência diagnóstica, não CI integral, homologação nem autorização de release. Permanecem necessárias revisão de segurança e rollout, verificações de destino, Squawk, CI integral e solução S166 para mais de 500 visitas. Nenhum deploy ou tarefa real Auvo foi disparado.
+
 ## 2026-11-05 — ensaio remoto sintético AC5 (Codex)
 
 - O [ensaio 42134160058](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42134160058) concluiu com sucesso na branch dedicada `codex/validacao-lote-isolado`: Auth, PostgREST e Storage oficiais em clone descartável, 228 migrations base e 702 candidatas, gates AC5 listados fechados e recursos exclusivos removidos. É diagnóstico, não autorização de release ou aplicação no destino.
