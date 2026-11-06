@@ -16,6 +16,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -30,12 +31,15 @@ IMAGE = "public.ecr.aws/supabase/postgres:17.6.1.141"
 AUTH_IMAGE = "public.ecr.aws/supabase/gotrue:v2.197.0"
 REST_IMAGE = "public.ecr.aws/supabase/postgrest:v14.5"
 STORAGE_IMAGE = "public.ecr.aws/supabase/storage-api:v1.77.5"
+EDGE_IMAGE = "supabase/edge-runtime:v1.77.4"
 IDENT = secrets.token_hex(6)
 NETWORK = "sso-recorte-" + IDENT
 CONTAINER = NETWORK + "-db"
 AUTH_CONTAINER = NETWORK + "-auth"
 REST_CONTAINER = NETWORK + "-rest"
 STORAGE_CONTAINER = NETWORK + "-storage"
+GATEWAY_CONTAINER = NETWORK + "-gateway"
+EDGE_CONTAINER = NETWORK + "-edge"
 created_net = created_container = False
 initial_volumes = None
 space_before = None
@@ -214,6 +218,15 @@ def main(opcoes):
     if opcoes.github_hosted:
         docker_raiz_github = preparar_github_hosted()
         print('Modo GitHub opt-in: reserva hipotética de 20 GiB; efemeridade não atestada.', flush=True)
+    if opcoes.edge_documento_http and (not opcoes.jornada_ac5_http or not opcoes.gates_1816):
+        raise RuntimeError("Edge documento exige jornada AC5 e gates 1816 em clone descartável")
+    if opcoes.edge_documento_http:
+        for nome, digest in (
+            ("apps/web/e2e/s178-documento-isolado/gateway.ts", "796c0f5bf7cae7248eecd9949cc7b524dfd05b7a73456b62a1b2143fcefa3e8e"),
+            ("apps/web/e2e/s178-documento-isolado/jornada.py", "a883b107ea639cd02a2cd693421f10c5a365473ce7dfd3118b6935b37abe6050"),
+        ):
+            if hashlib.sha256((ROOT / nome).read_bytes()).hexdigest() != digest:
+                raise RuntimeError("Arquivo de ensaio Edge divergente: " + nome)
     fixtures = None
     isolamento_1810 = None
     upload_1811 = None
@@ -615,9 +628,11 @@ def main(opcoes):
         raise RuntimeError("Diagnóstico exige exatamente uma migration 0415")
     numeros = [Path(p).name[:4] for p in base_files + names]
     if len(numeros) != len(set(numeros)): raise RuntimeError("Número de migration duplicado entre base e candidatas")
-    for imagem in (IMAGE, AUTH_IMAGE, REST_IMAGE, STORAGE_IMAGE):
+    for imagem in (IMAGE, AUTH_IMAGE, REST_IMAGE, STORAGE_IMAGE) + ((EDGE_IMAGE,) if opcoes.edge_documento_http else ()):
         image = json.loads(docker("image", "inspect", imagem))[0]
         if image["Config"].get("Volumes"): raise RuntimeError("Imagem declara volumes implícitos")
+        if imagem == EDGE_IMAGE and "supabase/edge-runtime@sha256:ad45164b7548bf5820ed7be714789c17ac2865edce79a09cfb4c3756c3d365a8" not in (image.get("RepoDigests") or []):
+            raise RuntimeError("Digest da imagem Edge divergente")
     initial_volumes = set(docker("volume", "ls", "-q").splitlines())
     # A base só é consultada para dimensionamento. Não são lidos/copied dados dela.
     source_container = "sso-validacao-isolada-20261104"
@@ -712,10 +727,11 @@ def main(opcoes):
         body = enc(json.dumps({"role": role, "iss": "supabase", "iat": int(time.time()), "exp": int(time.time()) + 3600}, separators=(",", ":")).encode())
         return (head + b"." + body + b"." + enc(hmac.new(jwt_secret.encode(), head + b"." + body, hashlib.sha256).digest())).decode()
 
-    def iniciar_plataforma(nome, imagem, env):
+    def iniciar_plataforma(nome, imagem, env, comando=None, arquivo=None):
         args = ["create", "--name", nome, "--network", NETWORK, "--label", "sso.recorte=" + IDENT]
         for key, value in env.items(): args += ["--env", key + "=" + value]
-        docker(*args, imagem)
+        docker(*args, imagem, *(comando or []))
+        if arquivo is not None: docker("cp", str(arquivo), nome + ":/tmp/index.ts")
         obj = inspect("container", nome)
         if obj["Mounts"] or obj["HostConfig"].get("Privileged") or obj["HostConfig"].get("NetworkMode") != NETWORK or obj["HostConfig"].get("PortBindings"):
             raise RuntimeError("Serviço de plataforma fora do isolamento")
@@ -861,7 +877,7 @@ end; $$;"""
                 raise RuntimeError("Identidade PostgREST divergente")
             docker("rm", "-f", anterior["Id"])
             del platform_container_ids[REST_CONTAINER]
-        rest_env["PGRST_DB_SCHEMAS"] = "public,pcm"
+        rest_env["PGRST_DB_SCHEMAS"] = "public,pcm,atendimento" if opcoes.edge_documento_http else "public,pcm"
         iniciar_plataforma(REST_CONTAINER, REST_IMAGE, rest_env)
         for _ in range(45):
             if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu o ensaio")
@@ -893,6 +909,47 @@ end; $$;"""
             except (ValueError, TypeError): raise RuntimeError("Resposta HTTP inválida") from None
         jornada.executar(sql, query, requisitar, "http://" + AUTH_CONTAINER + ":9999", "http://" + REST_CONTAINER + ":3000", "http://" + STORAGE_CONTAINER + ":5000", chave("anon"), watchdog_triggered)
         print("Jornada HTTP parcial concluída; não comprova Edge nem origem real.", flush=True)
+        if opcoes.edge_documento_http:
+            if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu ensaio Edge")
+            segredo_barreira = secrets.token_hex(32)
+            gateway_env = {"AUTH_ORIGIN": "http://" + AUTH_CONTAINER + ":9999", "REST_ORIGIN": "http://" + REST_CONTAINER + ":3000", "STORAGE_ORIGIN": "http://" + STORAGE_CONTAINER + ":5000", "BARRIER_SECRET": segredo_barreira}
+            gateway_path = ROOT / "apps/web/e2e/s178-documento-isolado/gateway.ts"
+            driver_path = ROOT / "apps/web/e2e/s178-documento-isolado/jornada.py"
+            with tempfile.TemporaryDirectory(prefix="sso-documento-bundle-") as temporario:
+                bundle = Path(temporario) / "index.ts"
+                try:
+                    compilacao = subprocess.run(["deno", "bundle", "--deny-import", "--frozen", "--lock", str(ROOT / "deno.lock"), "--node-modules-dir=none", "-o", str(bundle), str(ROOT / "supabase/functions/pcm-documento-staging-ativo-seguro/index.ts")], capture_output=True, timeout=120)
+                except subprocess.TimeoutExpired: raise RuntimeError("Prazo de compilação Edge excedido") from None
+                if compilacao.returncode or not bundle.is_file(): raise RuntimeError("Bundle Edge indisponível sem rede")
+                iniciar_plataforma(GATEWAY_CONTAINER, EDGE_IMAGE, gateway_env, ["start", "--main-service", "/tmp", "--port", "9000"], gateway_path)
+                edge_env = {"SUPABASE_URL": "http://" + GATEWAY_CONTAINER + ":9000", "SUPABASE_ANON_KEY": chave("anon"), "SUPABASE_SERVICE_ROLE_KEY": chave("service_role"), "SSO_DOCUMENTO_ATIVO_MEDIADO_ENABLED": "true"}
+                iniciar_plataforma(EDGE_CONTAINER, EDGE_IMAGE, edge_env, ["start", "--main-service", "/tmp", "--port", "9000"], bundle)
+                for nome in (GATEWAY_CONTAINER, EDGE_CONTAINER):
+                    for _ in range(30):
+                        if watchdog_triggered.is_set(): raise RuntimeError("Monitor interrompeu Edge")
+                        try:
+                            if docker("exec", CONTAINER, "curl", "--silent", "--max-time", "2", "--output", "/dev/null", "--write-out", "%{http_code}", "http://" + nome + ":9000/") in ("404", "405"): break
+                        except Exception: pass
+                        time.sleep(1)
+                    else: raise RuntimeError("Serviço Edge sintético indisponível")
+                spec = importlib.util.spec_from_file_location("s178_documento_http", driver_path)
+                if spec is None or spec.loader is None: raise RuntimeError("Driver de documento indisponível")
+                modulo = importlib.util.module_from_spec(spec); spec.loader.exec_module(modulo)
+                def requisitar_edge(url, metodo, headers, corpo):
+                    if url.startswith("http://" + GATEWAY_CONTAINER + ":9000/") or url.startswith("http://" + EDGE_CONTAINER + ":9000/"):
+                        cmd = ["rtk", "proxy", "docker", "exec", "-i", CONTAINER, "curl", "--silent", "--show-error", "--max-time", "35", "--request", metodo, "--output", "-", "--write-out", "\n%{http_code}"]
+                        for k, v in headers.items(): cmd += ["--header", k + ": " + v]
+                        cmd += ["--data-binary", "@-", url]
+                        try: resposta = subprocess.run(cmd, input=corpo, capture_output=True, timeout=40)
+                        except subprocess.TimeoutExpired: raise RuntimeError("Prazo HTTP Edge excedido") from None
+                        if resposta.returncode: raise RuntimeError("Transporte Edge interno falhou")
+                        try:
+                            conteudo, codigo = resposta.stdout.rsplit(b"\n", 1)
+                            return int(codigo), conteudo
+                        except (ValueError, TypeError): raise RuntimeError("Resposta Edge inválida") from None
+                    return requisitar(url, metodo, headers, corpo)
+                modulo.executar(sql, query, requisitar_edge, "http://" + AUTH_CONTAINER + ":9999", "http://" + STORAGE_CONTAINER + ":5000", "http://" + EDGE_CONTAINER + ":9000", "http://" + GATEWAY_CONTAINER + ":9000", chave("anon"), chave("service_role"), segredo_barreira, watchdog_triggered)
+
     if concorrencia_1807 is not None:
         s165_concorrencia_1807_isolada.executar(CONTAINER, concorrencia_1807, watchdog_triggered)
     if concorrencia_1805:
@@ -916,6 +973,7 @@ end; $$;"""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--edge-documento-http", action="store_true", help="Valida Edge documental com Auth/Storage e revogação em clone; exige jornada AC5 e 1816.")
     parser.add_argument("--github-hosted", action="store_true", help="Modo opt-in Linux/CI; reserva hipotética de 20 GiB, não atesta efemeridade.")
     grupo = parser.add_mutually_exclusive_group()
     grupo.add_argument("--diagnostico-0415", action="store_true", help="Antecipa duas ações somente no clone; resultado não prova recorte implantável.")
@@ -963,7 +1021,7 @@ if __name__ == "__main__":
             containers = docker("ps", "-a", "--filter", "label=sso.recorte=" + IDENT, "--format", "{{.ID}}").splitlines()
             for container_id in containers:
                 c = inspect("container", container_id)
-                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
+                if c["Name"] not in ("/" + CONTAINER, "/" + AUTH_CONTAINER, "/" + REST_CONTAINER, "/" + STORAGE_CONTAINER, "/" + GATEWAY_CONTAINER, "/" + EDGE_CONTAINER) or c["Config"].get("Labels", {}).get("sso.recorte") != IDENT:
                     raise RuntimeError("identidade do container divergente")
                 volumes = {m["Name"] for m in c["Mounts"] if m.get("Type") == "volume"}
                 if volumes and (initial_volumes is None or volumes.intersection(initial_volumes)):
