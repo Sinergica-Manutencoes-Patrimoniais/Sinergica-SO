@@ -10,15 +10,17 @@ do $$ begin
 end $$;
 
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,
+ confirmation_token,recovery_token,email_change,email_change_token_new,
  raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values('16591000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000',
  'authenticated','authenticated','s165-e2e-sintetico@example.test',crypt(:'s165_senha',gen_salt('bf')),
- now(),'{}','{}',now(),now());
+ now(),'','','','', '{}','{}',now(),now());
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,
+ confirmation_token,recovery_token,email_change,email_change_token_new,
  raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values('16591000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000',
  'authenticated','authenticated','s165-e2e-sintetico-b@example.test',crypt(:'s165_senha',gen_salt('bf')),
- now(),'{}','{}',now(),now());
+ now(),'','','','', '{}','{}',now(),now());
 insert into config.usuarios(user_id,papel,nome,ativo)
 values
  ('16591000-0000-4000-8000-000000000001','colaborador','Operador sintético S165 A',true),

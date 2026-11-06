@@ -430,13 +430,13 @@ def main(opcoes):
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "50df57a248c38df7fcc0472101dc7872279d68c2898039dff00935a4cd73b9cf":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "d2874f8a29b69935a5f4525b6184fb8e55f332d54905c3d78a47520760911754":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "d31352146fd27e552955db54846cc95dc436ca732b91da9b63d6443e7a021f0f":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "62efcc1c185ed5fda323833139d69e583e7c7c0e16e4404087656adf6364645d":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
@@ -450,7 +450,7 @@ def main(opcoes):
         if not opcoes.integracao_candidata or any(getattr(opcoes, x) for x in proibidas_s165):
             raise RuntimeError("Fixture S165 exige integração sem fixtures externas ou atalhos")
         driver_s165 = ROOT / "supabase/manual-tests/s165_e2e_clientes_isolada.py"
-        if hashlib.sha256(driver_s165.read_bytes()).hexdigest() != "a87a78b2929f7b4bd3c04d08f83c3b61076ee67b101296da60ff987ce28b4bf8":
+        if hashlib.sha256(driver_s165.read_bytes()).hexdigest() != "17bcfde20120c9529b5d12f797c8ba1840ed6b07d16c0c725422cd87531b2c51":
             raise RuntimeError("Driver S165 divergente")
         import s165_e2e_clientes_isolada
         fixture_s165 = s165_e2e_clientes_isolada.preparar(ROOT)
@@ -801,8 +801,15 @@ def main(opcoes):
     if migracoes_s170_ui:
         for caminho, dados in migracoes_s170_ui:
             numero = Path(caminho).name[:4]
-            if any(Path(p).name[:4] == numero for p in base_files + names):
-                raise RuntimeError("Migration UI S170 duplicada: " + numero)
+            existentes = [(p, blob) for p, blob in blobs if Path(p).name[:4] == numero]
+            if caminho in base_files:
+                if git("show", base + ":" + caminho) != dados:
+                    raise RuntimeError("Migration base UI S170 divergente: " + numero)
+                continue
+            if existentes:
+                if existentes != [(caminho, dados)]:
+                    raise RuntimeError("Migration UI S170 duplicada: " + numero)
+                continue
             blobs.append((caminho, dados))
         blobs.sort(key=lambda item: item[0])
         names = [p for p, _ in blobs]

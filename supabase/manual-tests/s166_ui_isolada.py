@@ -214,6 +214,7 @@ Promise.all([bloqueado('198.51.100.1',443),bloqueado('2001:db8::1',443),interno(
     docker("exec", "-d", "--env", "SSO_RECORTE_ID=" + ident, nome, "node", "/tmp/s165-proxy.cjs")
     env += ["--env", "SSO_RECORTE_ID=" + ident, "--env", "SSO_S166_E2E_ISOLADO=true",
             "--env", "SSO_S166_APP_URL=http://127.0.0.1:5189", "--env", "SSO_S166_SUPABASE_URL=http://127.0.0.1:5189",
+            "--env", "S166_SUPABASE_URL=http://127.0.0.1:5189", "--env", "S166_SUPABASE_ANON_KEY=" + anon,
             "--env", "VITE_SUPABASE_URL=http://127.0.0.1:5189", "--env", "SSO_S166_ANON_KEY=" + anon,
             "--env", "SSO_S166_EMAIL_A=" + credenciais["emailA"], "--env", "SSO_S166_EMAIL_B=" + credenciais["emailB"],
             "--env", "SSO_S166_SENHA_A=" + credenciais["senha"], "--env", "SSO_S166_SENHA_B=" + credenciais["senha"],
