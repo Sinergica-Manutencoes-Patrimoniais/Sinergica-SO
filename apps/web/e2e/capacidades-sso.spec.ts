@@ -400,8 +400,18 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
     marcarEtapaS170("selecionar alvo da Rotina");
     const seletorAlvo = formulario.getByLabel("Alvo da Rotina", { exact: true });
     try {
-      await seletorAlvo.selectOption({ label: "Sistema sintético" }, { timeout: 15_000 });
-    } catch {
+      const opcaoSintetica = seletorAlvo.locator("option").filter({ hasText: "Sistema sintético" });
+      await expect(opcaoSintetica).toHaveCount(1, { timeout: 15_000 });
+      const alvoId = await opcaoSintetica.getAttribute("value");
+      if (!alvoId) throw new Error("Opção sintética sem identificador.");
+      await expect(seletorAlvo).toBeEnabled({ timeout: 15_000 });
+      await seletorAlvo.selectOption(alvoId, { timeout: 15_000 });
+      await expect(seletorAlvo).toHaveValue(alvoId);
+    } catch (erro) {
+      const causaSelecao = (erro instanceof Error ? erro.message : String(erro))
+        .split(/\r?\n/, 1)[0]
+        .replace(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi, "<id>")
+        .slice(0, 120);
       const estadoAlvo = await operador.evaluate(() => {
         const secao = document.querySelector('section[aria-label="Nova Rotina"]');
         const rotulo = Array.from(secao?.querySelectorAll("label") ?? []).find((item) =>
@@ -413,21 +423,17 @@ test("administrador concede e revoga plano.gerir e operador com sessão aberta r
           seletor: select
             ? {
                 desabilitado: select.disabled,
-                opcoes: Array.from(select.options)
-                  .map((opcao) => opcao.textContent?.trim())
-                  .slice(0, 4),
+                quantidadeOpcoes: select.options.length,
               }
             : null,
-          alertas: Array.from(secao?.querySelectorAll('[role="alert"]') ?? [])
-            .map((item) => item.textContent?.trim())
-            .slice(0, 2),
+          alertaPresente: Boolean(secao?.querySelector('[role="alert"]')),
         };
       });
       marcarDiagnosticoS170(
         "s170-rpc",
         `ALVOS=${respostasAlvo.slice(-4).join(",")}; UI=${JSON.stringify(estadoAlvo)}`,
       );
-      throw new Error("S170_TARGET_SELECT_FAILED");
+      throw new Error(`S170_TARGET_SELECT_FAILED:${causaSelecao}`);
     }
     marcarEtapaS170("selecionar modo de recorrência");
     await formulario.getByLabel("Modo").selectOption("calendario", { timeout: 15_000 });

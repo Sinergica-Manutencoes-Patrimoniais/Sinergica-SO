@@ -1,4 +1,4 @@
--- ADR-1683: reduzir consultas repetidas sem alterar atomicidade, contrato ou gates.
+-- ADR-1683/1684: reduzir consultas repetidas sem alterar atomicidade, contrato ou gates.
 do $$ begin
  if not has_function_privilege(current_user,'pcm.sso_lock_escritor_composicao(uuid,uuid)','EXECUTE')
    or not has_table_privilege(current_user,'pcm.visita_composicao_conferencia_gate','SELECT')
@@ -48,10 +48,16 @@ begin
    from pcm.visita_composicao_conferencia_gate where id for share;
  if not found then raise exception 'composicao_gate_indisponivel' using errcode='55000'; end if;
  if v_composicao_habilitada then
-   for v_item in select i.visita_id from pcm.sso_mudanca_dia_v2_itens i
-     where i.mudanca_id=p_mudanca_id order by i.visita_id loop
-     perform pcm.sso_lock_escritor_composicao(gen_random_uuid(),v_item.visita_id);
-   end loop;
+   -- Lock the operation request once, then lock each Visit scope in stable order.
+   -- The original wrapper repeated a gate read and created a request lock per Visit.
+   perform pg_catalog.pg_advisory_xact_lock(
+     pg_catalog.hashtextextended('visita-request:'||v_head.request_id::text,0)
+   );
+   perform pg_catalog.pg_advisory_xact_lock(
+     pg_catalog.hashtextextended('visita-composicao-scope:'||i.visita_id::text,0)
+   )
+   from pcm.sso_mudanca_dia_v2_itens i
+   where i.mudanca_id=p_mudanca_id order by i.visita_id;
  end if;
  -- Match 1525's relation-lock order. NOWAIT means a writer already holding
  -- RowExclusive aborts this attempt before any source row or operational write.
