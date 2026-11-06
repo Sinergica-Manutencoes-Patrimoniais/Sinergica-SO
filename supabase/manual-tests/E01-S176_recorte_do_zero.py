@@ -223,13 +223,13 @@ def main(opcoes):
         raise RuntimeError("Fotos Edge exigem documento Edge sintético")
     if opcoes.edge_fotos_http:
         arquivo = ROOT / "apps/web/e2e/s178-documento-isolado/jornada_fotos.py"
-        if hashlib.sha256(arquivo.read_bytes()).hexdigest() != "9d3cf0eb51f50ec5680891f3626cdb0a9dc499bc397fee0ca1584429a58ea4c9":
+        if hashlib.sha256(arquivo.read_bytes()).hexdigest() != "72be4136ee9b9cc7e551871ee56ef04908677e4795e3ea51aa17ecba482bdea9":
             raise RuntimeError("Driver de fotos Edge divergente")
     if opcoes.edge_documento_http and (not opcoes.jornada_ac5_http or not opcoes.gates_1816):
         raise RuntimeError("Edge documento exige jornada AC5 e gates 1816 em clone descartável")
     if opcoes.edge_documento_http:
         for nome, digest in (
-            ("apps/web/e2e/s178-documento-isolado/gateway.ts", "7666745c64aed92305fa4dde57eb60d7ecaba6a034c472b7648e22839de0ad25"),
+            ("apps/web/e2e/s178-documento-isolado/gateway.ts", "59d5bee63e89a16b09112b60236fd666b28def19824f74d66b24efea8fd594a6"),
             ("apps/web/e2e/s178-documento-isolado/jornada.py", "7466b5fb72712e3b1e373c2ba26fbfaf4c324348c918f66d9b044729061eec7f"),
             ("apps/web/e2e/s178-documento-isolado/import-map.json", "de336bac6a7a07a2eb903a185b1004951714134a20cea543e2f35cea4aabde06"),
             ("apps/web/e2e/s178-documento-isolado/vendor/tslib-2.8.1.mjs", "c38da5dd6da6281964435002ce204cd586634fe3bdfb24a0ee116f48cf3292e9"),

@@ -66,9 +66,12 @@ def executar(sql, query, request, auth, storage, edges, gateway, anon, service, 
         try:
             for _ in range(100):
                 if watchdog.is_set():raise RuntimeError("Monitor interrompeu fotos")
-                if request(gateway+"/__barreira/status","POST",control,b"")[0]==204:break
+                status_barreira=request(gateway+"/__barreira/status","POST",control,b"")[0]
+                if status_barreira==204:break
+                if result: raise RuntimeError("Foto encerrou antes da barreira: "+tipo+" HTTP "+str(result[0][0]))
+                if errors: raise RuntimeError("Transporte falhou antes da barreira: "+tipo)
                 time.sleep(.1)
-            else:raise RuntimeError("Foto não atingiu barreira")
+            else:raise RuntimeError("Foto não atingiu barreira: "+tipo+" status "+str(status_barreira))
             sql(("delete from auth.sessions where user_id='"+A+"';").encode(),"revogação foto sintética")
             if query("select count(*) from auth.sessions where user_id='"+A+"'").strip()!="0":raise RuntimeError("Sessão foto não revogada")
         finally:
