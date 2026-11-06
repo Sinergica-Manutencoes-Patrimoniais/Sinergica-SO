@@ -50,12 +50,19 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
   const clienteB = `[TESTE E2E] S176 Cliente B ${sufixo}`;
   const nomeGrupo = `[TESTE E2E] 20 luminárias ${sufixo}`;
   const falhasApi: string[] = [];
+  const respostasPermissao: string[] = [];
   let areaCriada: { id: string; cliente_id: string; nome: string } | null = null;
   let consultaArea = "sem-consulta";
   const endpointsEstrutura = new Set(["areas", "locais", "local_tipos", "equipamentos", "clientes", "sistemas", "sistema_itens", "equipamento_categorias"]);
   page.on("response", async (response) => {
     const url = new URL(response.url());
     const relacao = url.pathname.split("/").pop() ?? "";
+    if (relacao === "sso_autorizar_acao") {
+      try {
+        const acao = JSON.parse(response.request().postData() ?? "{}").p_acao;
+        respostasPermissao.push(`${acao}:${response.status()}:${await response.text()}`);
+      } catch { respostasPermissao.push(`sso_autorizar_acao:${response.status()}:resposta-invalida`); }
+    }
     if (relacao === "areas" && response.request().method() === "POST" && response.ok()) {
       try {
         const corpo = await response.json();
@@ -130,16 +137,26 @@ test("cadastra um Grupo Quantitativo por Local e mantém a lista isolada por Cli
 
   const grupos = page.getByRole("region", { name: "Grupos Quantitativos" });
   marcarEtapa("criar grupo quantitativo");
-  await grupos.getByRole("button", { name: "Novo grupo" }).click();
+  const novoGrupo = grupos.getByRole("button", { name: "Novo grupo" });
+  try {
+    await expect(novoGrupo).toBeVisible({ timeout: 5_000 });
+  } catch {
+    const texto = (await grupos.innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+    throw new Error(`S176_NOVO_GRUPO=${texto}; AUTORIZAÇÃO=${respostasPermissao.slice(-6).join(",") || "sem-resposta"}`);
+  }
+  await novoGrupo.click({ timeout: 5_000 });
+  marcarEtapa("formulário de grupo aberto");
   await grupos.getByLabel("Nome do grupo").fill(nomeGrupo);
   await grupos.getByLabel("Quantidade").fill("20");
   await grupos.getByLabel("Local").selectOption({ label: nomeLocal });
+  marcarEtapa("carregar categorias do grupo");
   const categoria = grupos.getByLabel("Categoria");
   await expect.poll(async () => categoria.locator('option:not([value=""])').count()).toBeGreaterThan(0);
   const categoriaId = await categoria.locator('option:not([value=""])').first().getAttribute("value");
   if (!categoriaId) throw new Error("A fixture não encontrou uma Categoria ativa para o Grupo.");
   await categoria.selectOption(categoriaId);
   await grupos.getByRole("button", { name: "Salvar grupo" }).click();
+  marcarEtapa("salvar grupo");
   await expect(grupos.getByText(`${nomeGrupo} — 20 unidades`, { exact: false })).toBeVisible({ timeout: 10_000 });
 
   // O grupo permanece como uma entidade com quantidade, não se desdobra em 20 Componentes.

@@ -217,7 +217,7 @@ Promise.all([bloqueado('198.51.100.1',443),bloqueado('2001:db8::1',443),interno(
         _copiar_arvore(root, "packages/" + pacote + "/node_modules", nome, watchdog)
     comando(prefixo + ["-i", nome, "sh", "-c", "cat > /tmp/s165-proxy.cjs"], data=proxy)
     env = ["--env", "HOME=/tmp/s165-home", "--env", "CI=1", "--env", "VITE_SUPABASE_URL=http://127.0.0.1:5189", "--env", "VITE_SUPABASE_ANON_KEY=" + anon]
-    env += ["--env", "VITE_SSO_ALTERAR_DIA_CONTRATUAL_ENABLED=true", "--env", "VITE_SSO_MUDANCA_DIA_V2_UI_ENABLED=true", "--env", "VITE_SSO_MUDANCA_DIA_V2_ENABLED=true"]
+    env += ["--env", "VITE_SSO_ALTERAR_DIA_CONTRATUAL_ENABLED=true", "--env", "VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED=true", "--env", "VITE_SSO_MUDANCA_DIA_V2_UI_ENABLED=true", "--env", "VITE_SSO_MUDANCA_DIA_V2_ENABLED=true"]
     comando(prefixo + env + ["--workdir", "/tmp/s165-src/apps/web", nome, "./node_modules/.bin/vite", "build", "--outDir", "/tmp/s165-dist", "--emptyOutDir"], timeout=300)
     if watchdog.is_set(): raise RuntimeError("Monitor interrompeu build UI S166")
     docker("exec", "-d", "--env", "SSO_RECORTE_ID=" + ident, nome, "node", "/tmp/s165-proxy.cjs")

@@ -353,6 +353,7 @@ def main(opcoes):
             ("supabase/migrations/1803_E01-S176_ingestao_foto_cadastral_grupo.sql", "cf0228021475f55810bed334dd6b60918a58ace3c68e944bb9abbb01f4171747"),
             ("supabase/migrations/1804_E01-S165_aprovacao_versao_esperada.sql", "dc22888e1da288fcb28dbfead1a71cb637215c9fe7a1d2be967863e1e86bd9ac"),
             ("supabase/migrations/1825_E01-S170_consultas_retorno_mediado.sql", "c0f3253f2b1d1988f8dd06d28de0bea2f91911c897ca5e24797cd6d64a6ad10f"),
+            ("supabase/migrations/1826_E01-S170_conferencias_cobertura_ambigua.sql", "c0d62c72d2dd5fdf631d52dc480a2c6d591496fe965a1bc93d8b5494dd3d666e"),
         ):
             dados = (ROOT / caminho).read_bytes()
             if hashlib.sha256(dados).hexdigest() != digest:
@@ -431,13 +432,13 @@ def main(opcoes):
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "867cc4fd7e4bf1e4534e2404c9221f41e278d324210aa0c191faf517775e6e9b":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "e062d90301dbb3aa630bd1d9a51a5ea765e560a5cf65414388d9b45ad2bbb08e":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "78ddc11116ef56903bd865d732fcda41c59e347ed2cc2ffebcaeade4c3fad91b":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "6df74a83e1eec21350650435f8e1f670950d66936af431139470c5d44250a018":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
