@@ -77,7 +77,13 @@ def _resumo_playwright(saida):
                     if any(resultado.get("status") in {"failed", "timedOut", "interrupted"}
                            for teste in testes for resultado in teste.get("results", [])):
                         titulo = str(spec.get("title", "teste sem título"))
-                        falhas.append("".join(c for c in titulo if c.isalnum() or c in " _-.")[:100])
+                        local = next((resultado.get("error", {}).get("location", {})
+                                      for teste in testes for resultado in teste.get("results", [])
+                                      if resultado.get("status") in {"failed", "timedOut", "interrupted"}), {})
+                        arquivo = str(local.get("file", "")).split("/")[-1]
+                        linha = local.get("line", "?")
+                        falhas.append("".join(c for c in titulo if c.isalnum() or c in " _-.")[:100]
+                                      + (" (" + arquivo + ":" + str(linha) + ")" if arquivo else ""))
                 visitar(suite.get("suites", []))
         visitar(relatorio.get("suites", []))
         contagens = "expected=" + str(stats.get("expected", "?")) + ", unexpected=" + str(stats.get("unexpected", "?"))

@@ -54,8 +54,34 @@ def _comando(args, *, data=None, timeout=180, watchdog=None):
         encerrado.set()
         vigia.join(timeout=2)
     if processo.returncode or (watchdog is not None and watchdog.is_set()):
-        raise RuntimeError("Bootstrap UI S165 falhou")
+        etapa = "jornada Playwright" if any("playwright" in str(arg) for arg in args) else "build do app" if any("vite" in str(arg) for arg in args) else "outra etapa"
+        detalhe = _resumo_playwright(saida) if etapa == "jornada Playwright" else ""
+        raise RuntimeError("Bootstrap UI S165 falhou na etapa " + etapa + ("; " + detalhe if detalhe else ""))
     return saida
+
+
+def _resumo_playwright(saida):
+    """Exibe contagens e localização do teste fixo; nunca erros ou valores."""
+    try:
+        relatorio = json.loads(saida)
+        stats = relatorio.get("stats", {})
+        falhas = []
+        def visitar(suites):
+            for suite in suites or []:
+                for spec in suite.get("specs", []):
+                    testes = spec.get("tests", [])
+                    resultados = [resultado for teste in testes for resultado in teste.get("results", [])
+                                  if resultado.get("status") in {"failed", "timedOut", "interrupted"}]
+                    if resultados:
+                        local = resultados[0].get("error", {}).get("location", {})
+                        arquivo = str(local.get("file", "")).split("/")[-1]
+                        titulo = "".join(c for c in str(spec.get("title", "teste")) if c.isalnum() or c in " _-.")[:100]
+                        falhas.append(titulo + (" (" + arquivo + ":" + str(local.get("line", "?")) + ")" if arquivo else ""))
+                visitar(suite.get("suites", []))
+        visitar(relatorio.get("suites", []))
+        return "Playwright expected=" + str(stats.get("expected", "?")) + ", unexpected=" + str(stats.get("unexpected", "?")) + ("; falhas: " + ", ".join(falhas[:5]) if falhas else "")
+    except (ValueError, TypeError, AttributeError):
+        return "Playwright retornou relatório inválido"
 
 
 def _copiar_arvore(root, relativo, nome, watchdog):

@@ -301,6 +301,7 @@ def main(opcoes):
     proxy_s166 = None
     proxy_s170 = None
     fixture_s170 = None
+    migracoes_s170_ui = []
     proxy_s176 = None
     migracoes_s165_ui = []
     migracoes_s176_ui = []
@@ -346,6 +347,16 @@ def main(opcoes):
         if hashlib.sha256(arquivo.read_bytes()).hexdigest() != "2d1c29207f1d080171785f6ca6e9f3423b1a1dbc86c8960cb47d80aa1d3f5e53":
             raise RuntimeError("Fixture UI S176 divergente")
         import s176_fixture_ui_isolada
+    if opcoes.ui_s170_e2e:
+        for caminho, digest in (
+            ("supabase/migrations/1802_E01-S176_foto_cadastral_grupo_mediada.sql", "7756cb70c7491583b1a279b0ad5dcfee24244df3b5bcf9f284533f8a07374e24"),
+            ("supabase/migrations/1803_E01-S176_ingestao_foto_cadastral_grupo.sql", "cf0228021475f55810bed334dd6b60918a58ace3c68e944bb9abbb01f4171747"),
+            ("supabase/migrations/1804_E01-S165_aprovacao_versao_esperada.sql", "dc22888e1da288fcb28dbfead1a71cb637215c9fe7a1d2be967863e1e86bd9ac"),
+        ):
+            dados = (ROOT / caminho).read_bytes()
+            if hashlib.sha256(dados).hexdigest() != digest:
+                raise RuntimeError("Migration UI S170 divergente: " + Path(caminho).name[:4])
+            migracoes_s170_ui.append((caminho, dados))
     if opcoes.fixture_s166_e2e:
         if not opcoes.github_hosted or not opcoes.integracao_candidata:
             raise RuntimeError("Fixture S166 exige candidato de integração em clone GitHub descartável")
@@ -407,25 +418,25 @@ def main(opcoes):
             arquivo.write(IDENT + "\n")
         if opcoes.ui_s165_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s165_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "36c83d8fa60a37d94b17458a3c63e96fc467659d43e5020c319fc065c4b674bc":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "0cc91d8103bc888f037daf67aa56f5b534c88bd205c712f09f54132533ae6ea5":
                 raise RuntimeError("Driver UI S165 divergente")
             import s165_ui_isolada
             proxy_s165 = s165_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s170_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s170_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "6a63b362f6ccf7ce7e4d2b219c27483f3e0cc81f55af731e711d62899a20db20":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "6ea4077e8b9823ea1d39711dfd8640a4a77aeacd42fad31100e0c413050b6afc":
                 raise RuntimeError("Driver UI S170 divergente")
             import s170_ui_isolada
             proxy_s170 = s170_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s166_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s166_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "633838886cc895f60ba0bb96a590f6f00f360960ae1e6fb78131ed9f83326055":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "50df57a248c38df7fcc0472101dc7872279d68c2898039dff00935a4cd73b9cf":
                 raise RuntimeError("Driver UI S166 divergente")
             import s166_ui_isolada
             proxy_s166 = s166_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
         if opcoes.ui_s176_e2e:
             driver_ui = ROOT / "supabase/manual-tests/s176_ui_isolada.py"
-            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "7101209c55384523186575ab2c0cd81f05aee3133f149c632aa5d914d32732d9":
+            if hashlib.sha256(driver_ui.read_bytes()).hexdigest() != "d31352146fd27e552955db54846cc95dc436ca732b91da9b63d6443e7a021f0f":
                 raise RuntimeError("Driver UI S176 divergente")
             import s176_ui_isolada
             proxy_s176 = s176_ui_isolada.preparar(ROOT, "490c542dae9190bee628e8145c7c6172e188ffbac99e673003e8afc704b9bfe1")
@@ -787,6 +798,17 @@ def main(opcoes):
             if numeros_integracao.count(posterior) != 1 or numeros_integracao.index(anterior) >= numeros_integracao.index(posterior):
                 raise RuntimeError("Consumidor de integração ausente ou fora de ordem: " + posterior)
         print("INTEGRAÇÃO CANDIDATA: migrations originais sem seeds artificiais; resultado NÃO autoriza release.", flush=True)
+    if migracoes_s170_ui:
+        for caminho, dados in migracoes_s170_ui:
+            numero = Path(caminho).name[:4]
+            if any(Path(p).name[:4] == numero for p in base_files + names):
+                raise RuntimeError("Migration UI S170 duplicada: " + numero)
+            blobs.append((caminho, dados))
+        blobs.sort(key=lambda item: item[0])
+        names = [p for p, _ in blobs]
+        numeros = [Path(p).name[:4] for p in base_files + names]
+        if len(numeros) != len(set(numeros)) or base_files[-1] >= names[0]:
+            raise RuntimeError("Ordem ou duplicidade de migration UI S170")
     if opcoes.diagnostico_ac5:
         if not OVERLAY_AC5.is_file():
             raise RuntimeError("Manifesto diagnóstico AC5 ainda não está disponível")
