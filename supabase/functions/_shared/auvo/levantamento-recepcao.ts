@@ -1,4 +1,4 @@
-import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
+import { z } from "npm:zod@4.6.7";
 
 const atributoSchema = z.enum(["nome", "observacoes", "quantidade", "codigoInformado", "referenciaPai", "sistemaProvisorio", "localProvisorio", "classificacao"]);
 const tipoSchema = z.enum(["area", "local", "sublocal", "sistema", "equipamento", "componente", "grupo_quantitativo"]);
@@ -6,18 +6,18 @@ const idExterno = z.string().min(1).max(200).refine((valor) => valor.trim() === 
 const contratoSchema = z.object({
   questionarioId: idExterno,
   versao: idExterno,
-  campos: z.record(atributoSchema),
+  campos: z.record(z.string(), atributoSchema),
 }).strict();
 const entradaSchema = z.object({
-  envelopeId: z.string().uuid(),
-  clienteId: z.string().uuid(),
-  osId: z.string().uuid(),
+  envelopeId: z.string().guid(),
+  clienteId: z.string().guid(),
+  osId: z.string().guid(),
   taskId: z.string().regex(/^[1-9][0-9]{0,18}$/),
   questionarioId: idExterno,
   versao: idExterno,
   linhas: z.array(z.object({
     chave: z.string().trim().min(1).max(200), tipo: tipoSchema,
-    respostas: z.record(z.unknown()),
+    respostas: z.record(z.string(), z.unknown()),
     fotos: z.array(idExterno).max(100),
   }).strict()).min(1).max(1000),
 }).strict();

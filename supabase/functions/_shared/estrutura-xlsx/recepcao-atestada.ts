@@ -1,11 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.108.2";
-import { z } from "npm:zod@3.25.76";
+import { z } from "npm:zod@4.6.7";
 import { assinarEstruturaXlsx } from "./atestado.ts";
 import { processarEstruturaXlsxIsolada } from "./isolado.ts";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const linha = z.object({ chave: z.string().min(1).max(200), tipo: z.enum(["area", "local", "sublocal", "sistema", "equipamento", "componente", "grupo_quantitativo"]),
-  atributos: z.record(z.string().max(4000)) }).strict();
+  atributos: z.record(z.string(), z.string().max(4000)) }).strict();
 const diagnostico = z.object({ numero: z.number().int().min(2).max(1001), chave: z.string().max(200), tipo: z.string().max(200),
   celulas: z.array(z.string().max(4000)).min(1).max(10), erros: z.array(z.string().min(1).max(500)).max(30),
   alertas: z.array(z.string().min(1).max(500)).max(30), linha: linha.nullable() }).strict();
@@ -65,11 +65,11 @@ export function criarRecepcaoEstruturaXlsx(url: string, chavePublica: string, ch
     if (signal) comando = comando.abortSignal(signal);
     const { data, error } = await comando;
     if (error) throw new Error("Resultado de recepção não confirmado.");
-    const recibo = z.object({ requestId: z.string().uuid(), destino: z.enum(["lote", "quarentena"]), oficialAlterado: z.literal(false), recibo: z.unknown() }).strict().parse(data);
+    const recibo = z.object({ requestId: z.string().guid(), destino: z.enum(["lote", "quarentena"]), oficialAlterado: z.literal(false), recibo: z.unknown() }).strict().parse(data);
     if (recibo.requestId !== pedido || recibo.destino !== destino) throw new Error("Recibo divergente.");
     const id = destino === "lote"
-      ? z.object({ aggregateId: z.string().uuid(), requestId: z.literal(pedido), state: z.literal("pendente") }).passthrough().parse(recibo.recibo).aggregateId
-      : z.object({ quarentenaId: z.string().uuid(), requestId: z.literal(pedido), quantidade: z.literal(linhas.length), oficialAlterado: z.literal(false) }).strict().parse(recibo.recibo).quarentenaId;
+      ? z.object({ aggregateId: z.string().guid(), requestId: z.literal(pedido), state: z.literal("pendente") }).passthrough().parse(recibo.recibo).aggregateId
+      : z.object({ quarentenaId: z.string().guid(), requestId: z.literal(pedido), quantidade: z.literal(linhas.length), oficialAlterado: z.literal(false) }).strict().parse(recibo.recibo).quarentenaId;
     return { destino, id };
   };
 }
