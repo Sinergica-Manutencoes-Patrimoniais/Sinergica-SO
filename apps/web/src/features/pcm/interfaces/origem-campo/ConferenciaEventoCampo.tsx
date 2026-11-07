@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DataTable } from "@sinergica/ui";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
@@ -66,7 +67,7 @@ function Conteudo({ userId, clienteId, osId }: Props) {
       {previa.isFetching && <output>Consultando dados…</output>}{previa.isError && <p role="alert">Conferência indisponível. <button type="button" onClick={() => void previa.refetch()}>Tentar novamente</button></p>}
       {previa.data && !previa.isFetching && !previa.isError && <><p>Evento {previa.data.ordemExterna} · revisão da OS {previa.data.revisao}</p>
         <p>{previa.data.aplicacaoAutomatica ? "Atualizações futuras seguem as regras de proteção contra edição da OS." : "Esta OS já existia; atualizações de campo exigem conferência PCM."}</p>
-        <table><thead><tr><th>Campo</th><th>Atual na OS</th><th>Declarado em campo</th></tr></thead><tbody>{rotulos.map(([campo, rotulo]) => <tr key={campo}><th scope="row">{rotulo}</th><td>{previa.data.atual[campo] ?? "Não informado"}</td><td>{previa.data.declarado[campo] ?? "Não informado"}</td></tr>)}</tbody></table>
+        <DataTable<(typeof rotulos)[number]> itens={rotulos} chaveLinha={(item) => item[0]} vazio="Nenhum campo para comparar." colunas={[{ chave: "campo", cabecalho: "Campo", cabecalhoLinha: true, render: (item) => item[1] }, { chave: "atual", cabecalho: "Atual na OS", render: (item) => previa.data?.atual[item[0]] ?? "Não informado" }, { chave: "declarado", cabecalho: "Declarado em campo", render: (item) => previa.data?.declarado[item[0]] ?? "Não informado" }]} />
         <p>Técnico vinculado atualmente: {previa.data.tecnicoAtualId ?? "não informado"}. Técnico encontrado para a declaração: {previa.data.tecnicoDeclaradoId ?? "não encontrado"}.</p>
         {previa.data.tecnicoAmbiguo && <p role="alert">Mais de um técnico corresponde à declaração; corrija o cadastro antes de confirmar.</p>}
         {!previa.data.aplicavel && <p>Não há evento posterior disponível para aplicar.</p>}

@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DataTable } from "@sinergica/ui";
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { aplicarReprocessamentoCronograma, listarPropostasReprocessamento, prepararImportacaoCronograma, proporReprocessamentoCronograma, type PedidoAplicacaoReprocessamento, type PedidoPropostaReprocessamento } from "../../infrastructure/supabase-importacao-plano-adapter";
@@ -40,7 +41,7 @@ export function ReprocessarLinha({ userId, clienteId, loteId, planoId }: { userI
     {linhas.hasNextPage && <button type="button" onClick={() => void linhas.fetchNextPage()}>Mais linhas</button>}
     {propostas.isError && <p role="alert">Não foi possível consultar propostas. <button type="button" onClick={() => void propostas.refetch()}>Tentar novamente</button></p>}
     {propostas.data && !propostas.isFetching && !propostas.isError && <ul>{propostas.data.pages.flat().map((p) => <li key={p.id}>Linha {p.chave_linha} · Rotina {p.rotina_id} · revisões lote {p.revisao_lote}, Plano {p.revisao_plano} · {p.aplicada ? "aplicada" : "pendente"}<p>Motivo: {p.justificativa}</p>
-      <table><thead><tr><th>Campo</th><th>Atual na proposta</th><th>Proposto</th></tr></thead><tbody>{Object.keys(p.antes).map((k) => <tr key={k}><th>{k}</th><td>{String(p.antes[k] ?? "—")}</td><td>{String(p.depois[k] ?? "—")}</td></tr>)}</tbody></table>
+      <DataTable<string> itens={Object.keys(p.antes)} chaveLinha={(k) => k} vazio="Nenhum campo para comparar." colunas={[{ chave: "campo", cabecalho: "Campo", cabecalhoLinha: true, render: (k) => k }, { chave: "atual", cabecalho: "Atual na proposta", render: (k) => String(p.antes[k] ?? "—") }, { chave: "proposto", cabecalho: "Proposto", render: (k) => String(p.depois[k] ?? "—") }]} />
       {!p.aplicada && <><label><input type="checkbox" checked={confirmado === JSON.stringify(p)} onChange={(e) => setConfirmado(e.target.checked ? JSON.stringify(p) : "")} /> Conferi os valores e autorizo esta alteração da Rotina rascunho</label>{" "}
       <button type="button" disabled={confirmado !== JSON.stringify(p) || !!pendente || envio.isPending || propostas.isFetching || propostas.isError} onClick={() => enviar({ tipo: "aplicacao", pedido: { requestId: crypto.randomUUID(), clienteId, propostaId: p.id } })}>Aplicar proposta</button></>}</li>)}</ul>}
     {propostas.hasNextPage && <button type="button" onClick={() => void propostas.fetchNextPage()}>Mais propostas</button>}
