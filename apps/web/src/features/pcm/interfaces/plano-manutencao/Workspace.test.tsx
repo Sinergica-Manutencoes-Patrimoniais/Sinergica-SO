@@ -374,7 +374,7 @@ it("não informa ausência de Rotinas durante atualização de versões", async 
   void client.invalidateQueries({
     queryKey: planoManutencaoKeys.versoes("usuario", clienteId, planoId),
   });
-  await screen.findByText("Carregando versões...");
+  await screen.findByText("Carregando versões…");
   expect(screen.queryByText("Nenhuma Rotina cadastrada neste Plano.")).toBeNull();
   await act(async () => {
     concluir([
