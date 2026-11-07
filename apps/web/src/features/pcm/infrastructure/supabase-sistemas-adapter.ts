@@ -150,6 +150,7 @@ export const supabaseSistemasAdapter: SistemasGateway = {
   },
 
   async editar(input: EditarSistemaCommand) {
+    if (input.alterarIdentificador) throw new Error("Alteração de código deve usar a jornada de códigos públicos.");
     const { data, error } = await supabase
       .schema("pcm")
       .from("sistemas")
@@ -157,7 +158,6 @@ export const supabaseSistemasAdapter: SistemasGateway = {
         area_id: input.localId ? null : input.areaId,
         local_id: input.localId,
         nome: input.nome,
-        ...(input.alterarIdentificador ? { codigo: input.codigo } : {}),
         categoria_id: input.categoriaId,
         categoria: input.categoria,
         tipo: input.tipo,
@@ -305,41 +305,66 @@ export const supabaseSistemasAdapter: SistemasGateway = {
     // AC-2: duas fontes — OS vinculadas ao Sistema em si (E01-S76/S85 — sobe como Equipment) e OS
     // vinculadas a qualquer um dos seus Componentes/Itens membros. `agregarHistoricoSistema`
     // (domínio) junta e deduplica — a mesma OS pode aparecer nas duas fontes.
-    const [sistemaRes, membrosRes] = await Promise.all([
+    const [sistemaRes, itemIds] = await Promise.all([
       supabase
         .schema("pcm")
         .from("sistemas")
-        .select("auvo_equipment_id")
+        .select("auvo_equipment_id,cliente_id")
         .eq("id", sistemaId)
         .maybeSingle(),
-      supabase.schema("pcm").from("sistema_itens").select("item_id").eq("sistema_id", sistemaId),
+      listarIdsHistoricoSistema(sistemaId),
     ]);
     if (sistemaRes.error) throw sistemaRes.error;
-    if (membrosRes.error) throw membrosRes.error;
+    const clienteId = sistemaRes.data?.cliente_id as string | null | undefined;
+    if (!clienteId) throw new Error("Sistema indisponível ou sem Cliente definido.");
 
-    const itemIds = (membrosRes.data ?? []).map((row) => row.item_id as string);
     let auvoEquipmentIdsComponentes: number[] = [];
-    if (itemIds.length > 0) {
+    for (let inicio = 0; inicio < itemIds.length; inicio += 200) {
       const { data: itens, error: itensErro } = await supabase
         .schema("pcm")
         .from("equipamentos")
         .select("auvo_equipment_id")
-        .in("id", itemIds);
+        .eq("client_id", clienteId)
+        .in("id", itemIds.slice(inicio, inicio + 200));
       if (itensErro) throw itensErro;
-      auvoEquipmentIdsComponentes = (itens ?? [])
+      auvoEquipmentIdsComponentes.push(...(itens ?? [])
         .map((row) => row.auvo_equipment_id as number | null)
-        .filter((id): id is number => id != null);
+        .filter((id): id is number => id != null));
     }
     const auvoEquipmentIdSistema =
       (sistemaRes.data?.auvo_equipment_id as number | null | undefined) ?? null;
 
     const [historicoSistema, historicoComponentes] = await Promise.all([
-      buscarHistoricoPorAuvoIds(auvoEquipmentIdSistema == null ? [] : [auvoEquipmentIdSistema]),
-      buscarHistoricoPorAuvoIds(auvoEquipmentIdsComponentes),
+      buscarHistoricoPorAuvoIds(auvoEquipmentIdSistema == null ? [] : [auvoEquipmentIdSistema], clienteId),
+      buscarHistoricoPorAuvoIds(auvoEquipmentIdsComponentes, clienteId),
     ]);
     return agregarHistoricoSistema([historicoSistema, historicoComponentes]);
   },
 };
+
+async function listarIdsHistoricoSistema(sistemaId: string): Promise<string[]> {
+  const itens: string[] = [];
+  let cursor: string | null = null;
+  let total: number | null = null;
+  for (;;) {
+    let consulta = supabase.schema("pcm").from("sistema_itens").select("item_id", { count: "exact" })
+      .eq("sistema_id", sistemaId).order("item_id").limit(500);
+    if (cursor) consulta = consulta.gt("item_id", cursor);
+    const { data, error, count } = await consulta;
+    if (error) throw error;
+    if (count === null || count > 50_000) throw new Error("Lista de Componentes excede o limite de consulta.");
+    if (total === null) total = count;
+    const pagina = data ?? [];
+    for (const item of pagina) {
+      if (typeof item.item_id !== "string" || (cursor !== null && item.item_id <= cursor)) throw new Error("Lista de Componentes inconsistente.");
+      cursor = item.item_id; itens.push(item.item_id);
+    }
+    if (itens.length > total || itens.length > 50_000) throw new Error("Lista de Componentes alterada durante a consulta.");
+    if (pagina.length < 500) break;
+  }
+  if (itens.length !== total) throw new Error("Lista de Componentes alterada durante a consulta.");
+  return itens;
+}
 
 async function buscarCliente(id: string): Promise<{ id: string; auvoId: number | null } | null> {
   const { data, error } = await supabase
@@ -353,37 +378,60 @@ async function buscarCliente(id: string): Promise<{ id: string; auvoId: number |
   return { id: data.id as string, auvoId: (data.auvo_id as number | null) ?? null };
 }
 
-async function buscarHistoricoPorAuvoIds(auvoEquipmentIds: number[]): Promise<OsHistoricoItem[]> {
+export async function buscarHistoricoPorAuvoIds(auvoEquipmentIds: number[], clienteId: string): Promise<OsHistoricoItem[]> {
   const ids = [...new Set(auvoEquipmentIds)];
   if (ids.length === 0) return [];
 
-  const { data: vinculos, error: vincErro } = await supabase
-    .schema("pcm")
-    .from("os_equipamentos_auvo")
-    .select("ordem_servico_id")
-    .in("auvo_equipment_id", ids);
-  if (vincErro) throw vincErro;
-  const osIds = [...new Set((vinculos ?? []).map((v) => v.ordem_servico_id as string))];
+  const osEncontradas = new Set<string>();
+  const limite = 50_000;
+  let totalVinculos = 0;
+  for (let inicio = 0; inicio < ids.length; inicio += 200) {
+    const lote = ids.slice(inicio, inicio + 200);
+    let cursor: string | null = null;
+    let total: number | null = null;
+    let lidos = 0;
+    do {
+      let consulta = supabase.schema("pcm").from("os_equipamentos_auvo")
+        .select("id,ordem_servico_id", { count: "exact" }).in("auvo_equipment_id", lote).order("id").limit(500);
+      if (cursor) consulta = consulta.gt("id", cursor);
+      const { data, error, count } = await consulta;
+      if (error) throw error;
+      if (count === null || count > limite || (cursor === null && count + totalVinculos > limite)) throw new Error("Histórico de OS excede o limite de consulta.");
+      if (cursor === null) total = count;
+      const pagina = data ?? [];
+      for (const item of pagina) {
+        if (typeof item.id !== "string" || typeof item.ordem_servico_id !== "string" || (cursor !== null && item.id <= cursor)) throw new Error("Histórico de OS inconsistente.");
+        cursor = item.id;
+        osEncontradas.add(item.ordem_servico_id);
+        lidos++;
+      }
+      if (lidos > limite || lidos > (total ?? 0)) throw new Error("Histórico de OS alterado durante a consulta.");
+      if (pagina.length < 500) break;
+    } while (true);
+    if (lidos !== total) throw new Error("Histórico de OS alterado durante a consulta.");
+    totalVinculos += lidos;
+  }
+  const osIds = [...osEncontradas];
   if (osIds.length === 0) return [];
 
-  const { data: ordens, error: osErro } = await supabase
-    .schema("pcm")
-    .from("ordens_servico")
-    .select("id,numero,categoria,status,data_agendada,created_at")
-    .in("id", osIds)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-  if (osErro) throw osErro;
-  return (
-    (ordens ?? []) as Array<{
+  const ordens: Array<{
       id: string;
       numero: string;
       categoria: string | null;
       status: string | null;
       data_agendada: string | null;
       created_at: string | null;
-    }>
-  ).map((o) => ({
+    }> = [];
+  for (let inicio = 0; inicio < osIds.length; inicio += 200) {
+    const { data, error } = await supabase.schema("pcm").from("ordens_servico")
+      .select("id,numero,categoria,status,data_agendada,created_at")
+      .eq("client_id", clienteId).in("id", osIds.slice(inicio, inicio + 200)).is("deleted_at", null);
+    if (error) throw error;
+    ordens.push(...(data ?? []));
+  }
+  ordens.sort((a, b) => (b.created_at ? Date.parse(b.created_at) : Number.NEGATIVE_INFINITY) -
+    (a.created_at ? Date.parse(a.created_at) : Number.NEGATIVE_INFINITY) || a.id.localeCompare(b.id));
+  return ordens.map((o) => ({
     osId: o.id,
     numero: o.numero,
     categoria: o.categoria,

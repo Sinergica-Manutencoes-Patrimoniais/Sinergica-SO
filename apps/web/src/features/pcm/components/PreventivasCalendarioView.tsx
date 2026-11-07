@@ -10,11 +10,12 @@ export type ItemCalendarioPreventiva = {
   nomePlano: string;
   vencimento: string;
   visitaEm: string | null;
-  estado: "prevista" | "atrasada" | "agendada" | "auvo_disponivel" | "concluida";
+  estado: "prevista" | "atrasada" | "agendada" | "auvo_disponivel" | "concluida" | "conferencia";
   resultado?: "pendente" | "ok" | "nao_ok";
 };
 
 const ESTADO: Record<ItemCalendarioPreventiva["estado"], { rotulo: string; classe: string }> = {
+  conferencia: { rotulo: "Conferir ordens", classe: "bg-orange-soft text-orange hover:bg-orange hover:text-white" },
   prevista: {
     rotulo: "Prevista",
     classe: "bg-line-soft text-ink-2 hover:bg-ink-2 hover:text-white",

@@ -1,0 +1,9 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+export function PendenciasSemParcela({userId,clienteId,composicaoId}:{userId:string;clienteId:string;composicaoId:string}){
+  const ativo=import.meta.env.VITE_SSO_PENDENCIAS_SEM_PARCELA_ENABLED==="true";
+  const q=useInfiniteQuery({queryKey:["backlog-vinculo",userId,clienteId,composicaoId,"sem-parcela"],enabled:ativo,gcTime:0,initialPageParam:null as string|null,queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_listar_pendencias_sem_parcela",{p_composicao_id:composicaoId,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(z.object({pendencia_id:z.string().guid(),pergunta:z.string(),estado:z.string(),revisao_atual:z.number().int().positive(),revisao_origem:z.number().int().positive(),situacao:z.enum(["sem_parcela","estado_nao_aberto","revisao_alterada"])}).strict()).max(20).parse(data);},getNextPageParam:p=>p.length===20 ? p.at(-1)?.pendencia_id : undefined});
+  if(!ativo)return null;
+  return <section aria-label="Pendências sem parcela"><h4>Pendências sem parcela</h4><p>Lista diagnóstica; não cria vínculos nem garante elegibilidade.</p>{q.isPending && <output>Consultando…</output>}{q.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={()=>void q.refetch()}>Tentar novamente</button></p>}{q.data && <><ul>{q.data.pages.flat().map(p=><li key={p.pendencia_id}>{p.pergunta} · {p.estado} · revisão atual {p.revisao_atual}, origem {p.revisao_origem} · {p.situacao}</li>)}</ul>{q.data.pages.flat().length===0 && <p>Nenhuma pendência sem parcela encontrada.</p>}</>}{q.hasNextPage && <button type="button" disabled={q.isFetching} onClick={()=>void q.fetchNextPage()}>Mais pendências</button>}</section>;
+}

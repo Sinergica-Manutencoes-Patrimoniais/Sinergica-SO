@@ -1,0 +1,26 @@
+-- Somente banco diagnóstico; dados sintéticos e rollback.
+begin;
+set local app.auvo_sync_write='true';
+select plan(9);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('17982000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','observa-foto@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('17982000-0000-0000-0000-000000000001','colaborador','Observa foto',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values ('17982000-0000-0000-0000-000000000001','pcm','escrita');
+insert into pcm.clientes(id,nome,ativo,created_by) values ('17982000-0000-0000-0000-00000000000a','Cliente observação',true,'17982000-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('17982000-0000-0000-0000-000000000001','cadastro.aprovar','17982000-0000-0000-0000-00000000000a');
+insert into pcm.sso_levantamentos(id,cliente_id,origem,chave_origem,conteudo,criado_por) values ('17982000-0000-0000-0000-000000000021','17982000-0000-0000-0000-00000000000a','manual','observa-foto','[]','17982000-0000-0000-0000-000000000001');
+insert into pcm.sso_levantamento_linhas(lote_id,chave,tipo,atributos) values ('17982000-0000-0000-0000-000000000021','a','sistema','{}');
+select throws_ok($$select pcm.sso_observar_ingestao_pendente_servico('17982000-0000-0000-0000-000000000001','17982000-0000-0000-0000-000000000041','17982000-0000-0000-0000-000000000021','a',repeat('a',64))$$,'55000',null,'gate impede observação');
+select ok(not has_function_privilege('authenticated','pcm.sso_observar_ingestao_pendente_servico(uuid,uuid,uuid,text,text)','EXECUTE'),'authenticated não executa observação de serviço');
+update pcm.sso_ingestao_foto_gate set habilitado=true where id;
+update pcm.sso_fotos_levantamento_gate set habilitado=true where id;
+select pcm.sso_ingestao_foto_servico('reservar','17982000-0000-0000-0000-000000000001','17982000-0000-0000-0000-000000000041','17982000-0000-0000-0000-000000000021','a',repeat('a',64),null);
+select is(pcm.sso_observar_ingestao_pendente_servico('17982000-0000-0000-0000-000000000001','17982000-0000-0000-0000-000000000041','17982000-0000-0000-0000-000000000021','a',repeat('a',64))->>'registrado','true','observação gravada');
+select is(pcm.sso_observar_ingestao_pendente_servico('17982000-0000-0000-0000-000000000001','17982000-0000-0000-0000-000000000041','17982000-0000-0000-0000-000000000021','a',repeat('a',64))->>'registrado','true','retry idempotente');
+select is((select count(*)::int from pcm.sso_ingestao_foto_observacoes where request_id='17982000-0000-0000-0000-000000000041'),1,'uma observação preservada');
+select is((select count(*)::int from audit.events where action='levantamento.ingestao_foto_observada' and payload->>'requestId'='17982000-0000-0000-0000-000000000041'),1,'um evento auditável na repetição');
+select is((select objeto_catalogado from pcm.sso_ingestao_foto_observacoes where request_id='17982000-0000-0000-0000-000000000041'),false,'observação captura ausência no instante sem concluir upload');
+select is((select count(*)::int from pcm.sso_fotos_levantamento where request_id='17982000-0000-0000-0000-000000000041'),0,'não cria foto nem confirma');
+update config.sso_concessoes set ativa=false where usuario_id='17982000-0000-0000-0000-000000000001';
+select throws_ok($$select pcm.sso_observar_ingestao_pendente_servico('17982000-0000-0000-0000-000000000001','17982000-0000-0000-0000-000000000041','17982000-0000-0000-0000-000000000021','a',repeat('a',64))$$,'42501',null,'revogação bloqueia repetição');
+select * from finish();
+rollback;

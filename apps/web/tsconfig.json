@@ -3,6 +3,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "types": ["vitest/globals", "node", "vite/client", "@testing-library/jest-dom"],
     "paths": {
       "@sinergica/shared": ["../../packages/shared/src/index.ts"],

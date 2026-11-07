@@ -1,0 +1,11 @@
+---
+name: "docs-adr-0532-alocacoes-marcador-aditivo-md"
+description: "Documento Sinérgica SO: ADR-0532 — parcelas adicionais na tabela canônica"
+alwaysApply: false
+---
+
+# ADR-0532 — parcelas adicionais na tabela canônica
+
+Status: proposto; não aplicado nem homologado. Um marcador distingue a primeira alocação do par item/documento das adicionais. A restrição original é substituída por índice único parcial para a primeira; com gate desligado o gatilho força novas linhas a serem primeiras, preservando a proibição legada sem lock adicional de item. Com gate ligado, o gatilho bloqueia o item e marca como adicional somente uma inserção posterior à primeira. `id` e `request_id` permanecem únicos; os comandos canônicos existentes continuam responsáveis por saldos, autorização e auditoria.
+
+Alteração de identidade ou marcador é proibida; remoção da primeira é bloqueada enquanto existirem adicionais, preservando a âncora ao desligar o gate. Desligar não apaga parcelas existentes. Uma transação iniciada antes da mudança de gate pode ver estado antigo; ativação/desativação exige drenagem. A troca de restrição requer DDL e testes de concorrência, alterações privilegiadas, estorno, fechamento e regressão; gatilhos desabilitados ou rotas externas não são cobertos. A proposta não permite liberar o gate sem revisão adversarial e testes completos. Não cria emissão fiscal ou cobrança.

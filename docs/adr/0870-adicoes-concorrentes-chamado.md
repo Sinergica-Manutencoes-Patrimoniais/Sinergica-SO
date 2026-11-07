@@ -1,0 +1,15 @@
+---
+name: "docs-adr-0870-adicoes-concorrentes-chamado-md"
+description: "Documento Sinérgica SO: ADR 0870 — Criações concorrentes de OS e revisão do Chamado"
+alwaysApply: false
+---
+
+# ADR 0870 — Criações concorrentes de OS e revisão do Chamado
+
+S167 exige três comandos distintos concorrentes, mas o contrato genérico afirma que toda revisão obsoleta retorna conflito. O ensaio `E01-S167_tripla_os_resultados.md` demonstrou que as duas exigências entram em conflito quando três operadores partem da mesma revisão: apenas uma criação é aceita.
+
+**SPEC_DEVIATION:** preparar uma exceção restrita ao comando integral de criação de OS: aceitar revisão anterior somente se, sob lock da linha do Chamado, cada revisão intermediária for comprovada por exatamente um comando integral bem-sucedido daquele Chamado e Cliente, com OS correspondente ainda vinculada e ativa. Cada atualização de Chamado deve continuar incrementando a revisão por trigger; se esse mecanismo não puder ser confirmado, ou houver intervalo ausente, duplicado, revisão futura ou mais de 100 revisões, recusar como conflito. Qualquer edição de Chamado ou outra transição entre as revisões deve permanecer conflito. A revisão solicitada continua no payload idempotente; replay usa o resultado original e um payload divergente é recusado.
+
+Esta exceção atende à intenção de AC-1 sem retirar a revisão otimista de outras ações. Ainda precisa de reconciliação formal do contrato genérico, demonstração de todos os escritores de `pcm.chamados`, efeitos de alterações em OS/escopo que não incrementem essa revisão, concorrência entre três sessões, revogação, migração/rollback, CI e revisão adversarial. Não habilitar gates antes dessas provas. A mudança não transforma texto da OS em composição formal de escopo e não libera Auvo ou integração real.
+
+Um teste posterior mostrou que a primeira proposta aceitava reconciliação mesmo após editar uma OS intermediária. Para recusá-la, guardar no registro privado do comando uma fotografia integral da OS criada e sua versão física PostgreSQL; antes de reconciliar, travar as OS existentes, reconsultar em READ COMMITTED e exigir ambas iguais. Comandos anteriores sem fotografia devem falhar fechados. A fotografia não sai na resposta pública e a nova coluna é aditiva. Esta proteção não cobre ainda todas as tabelas de escopo ou escritas que não respeitem a ordem de locks; revisar concorrência, custo, compatibilidade e governança antes de qualquer implantação.

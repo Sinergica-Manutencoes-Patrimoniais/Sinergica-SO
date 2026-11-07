@@ -410,6 +410,7 @@ async function criarChamadosConfirmados(
       .insert({
         client_id: clientId,
         chamado_id: chamadoAutomatico.id,
+        numero: chamadoAutomatico.numero,
         titulo: chamadoExtraido.titulo,
         descricao: chamadoExtraido.descricao,
         categoria: chamadoExtraido.categoria,
@@ -432,7 +433,9 @@ async function criarChamadosConfirmados(
     if (!chamadoExtraido.titulo?.trim() || chamadoExtraido.titulo.trim() === "Chamado via Zé") {
       await tentarMelhorarTituloOs(db, os.id as string, chamadoExtraido.descricao ?? contexto);
     }
-    numeros.push(os.numero as string);
+    // A confirmação promete números de Chamado; a OS pode ter código próprio.
+    // Preserva a mensagem legada enquanto ambos coincidirem, sem depender disso.
+    numeros.push(chamadoAutomatico.numero);
     ultimaOsId = os.id as string;
   }
 

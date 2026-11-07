@@ -49,6 +49,8 @@ export interface MudarStatusCommand {
 export interface VincularAssessmentCommand {
   propostaId: string;
   assessmentId: string;
+  /** Obrigatório no fluxo mediado; preserva compatibilidade dos clientes legados. */
+  clienteId?: string;
 }
 
 export interface ForcarPrecoCommand {

@@ -43,4 +43,13 @@ describe("visões de preventivas — E01-S163", () => {
       "Bombas",
     );
   });
+
+  it("sinaliza conferência em vez de atribuir conclusão a uma ocorrência com várias OS", () => {
+    const itens = [{ ...ocorrencias[0]!, estado: "conferencia" as const }];
+    const lista = render(<PreventivasListaView ocorrencias={itens} onSelecionar={vi.fn()} />);
+    expect(screen.getByText(/Conferir ordens/)).toBeInTheDocument();
+    lista.unmount();
+    render(<PreventivasTimelineView ocorrencias={itens} onSelecionar={vi.fn()} />);
+    expect(screen.getByText(/Conferir ordens/)).toBeInTheDocument();
+  });
 });

@@ -1,0 +1,19 @@
+---
+name: "docs-adr-0864-numeracao-escritor-auvo-md"
+description: "Documento Sinérgica SO: ADR 0864 — Número explícito no escritor Auvo"
+alwaysApply: false
+---
+
+# ADR 0864 — Número explícito no escritor Auvo
+
+Os escritores Auvo criam um Chamado novo por tarefa e inserem OS sem número, dependendo do trigger legado. Como a transição 1:N exige substituí-lo, passarão a enviar explicitamente o número já atribuído ao próprio Chamado recém-criado. Enquanto o trigger existir ele reescreve o mesmo valor; quando não existir, o INSERT continuará tendo número válido. Nenhum código histórico é alterado e esse caminho não cria múltiplas OS para um Chamado existente.
+
+O lote deve associar IDs aos números retornados, sem pressupor ordem do resultado da inserção. Uma ausência, duplicidade ou divergência deve interromper o processamento, sem adivinhar vínculo. Mudança não remove trigger ou índice e não libera gate. Antes de qualquer rollout continuam obrigatórios inventário dos demais escritores, compatibilidade com números novos `CH…-OS-UUID`, testes integrados, revisão adversarial e CI. Não disparar tarefas Auvo para testar.
+
+Limites: a associação ao número evita pareamento incorreto, mas não torna atômica a importação legada, cujas chamadas de Chamado/evento/OS são separadas. O adapter web de OS, `pcm-ze-agent`, `pcm-preventivas-confirmar` e `pcm-preventivas-enviar-backlog` também criam OS e precisam ser analisados; o adapter web explicitamente depende do trigger inclusive para gerar `PRE-...` sem Chamado. O teste de banco exerce apenas dois INSERTs sintéticos com e sem trigger em transação revertida, com anti-sync, e não testa chamadas externas nem prova a migração inteira.
+
+Na abertura web legada, preparar o UUID antes do INSERT permite reproduzir `PRE-` com os oito primeiros caracteres quando não há Chamado. Para Chamado existente, consultar número e Cliente antes de inserir; para automático, reutilizar o número já retornado na criação. Isso preserva a regra de primeiro vínculo sem renumerar dados. A geração de OS adicional ainda usa o comando 1047 e permanece bloqueada; o adapter legado não passa a tratar várias OS nem retry idempotente. Uma leitura extra pode falhar e deve impedir o INSERT.
+
+Os escritores preventivos sem Chamado também preparam UUID e `PRE-` com a regra atual antes do INSERT; o escritor Zé usa o número do Chamado que ele próprio acabou de criar. Essas mudanças não tornam seus fluxos transacionais nem autorizam enviar tarefas ou mensagens externas. O trigger e o índice seguem ativos até revisão de todos os escritores e consumidores.
+
+Inventário parcial do catálogo reconstruído encontrou `pcm.portal_decidir_orcamento`, que já envia número explícito do Chamado, e `pcm.sso_criar_os_chamado`, que já constrói sufixo mas mantém barreira legada. Essa busca não comprova ausência de SQL dinâmico, funções fora dos schemas consultados ou versões implantadas diferentes. Testes de chamadas remotas Zé e preventivas, compatibilidade 1:N dos leitores e contratos Auvo permanecem pendentes.

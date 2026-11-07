@@ -1,0 +1,9 @@
+---
+name: "docs-adr-0572-uso-autorizacao-complemento-md"
+description: "Documento Sinérgica SO: ADR-0572 — autorização interna na conferência"
+alwaysApply: false
+---
+
+# ADR-0572 — autorização interna na conferência
+
+Status: proposto; gates fechados, não aplicado nem homologado. Com gate próprio ativo, a conferência de complemento de proposta exige autorização interna vigente para a mesma revisão, proposta, modo e valor final. Ela não é aceite do Cliente nem substitui aprovação contratual. Retentativas concluídas permanecem idempotentes; o fluxo de origem 0793 é mantido. A listagem comercial mostra somente complementos associados ao Cliente/proposta e exige `orcamento.emitir`; a escrita também depende de `faturavel.efetivar` pela consulta de modo vigente. Essa combinação de alçadas exige revisão de negócio/segurança, assim como revogação, segregação e testes antes de ativar.

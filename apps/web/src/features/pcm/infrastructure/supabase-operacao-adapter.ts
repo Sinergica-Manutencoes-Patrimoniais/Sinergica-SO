@@ -1,4 +1,5 @@
 import { supabase } from "../../../lib/supabase-client";
+import { z } from "zod";
 import type {
   ConsultaOperacao,
   CursorOperacao,
@@ -54,6 +55,22 @@ const COLUNAS_RESUMO =
   "item_id,item_tipo,ordem_servico_id,chamado_id,cliente_id,cliente_nome,numero,titulo,categoria,origem,status,prioridade,gravidade,urgencia,tendencia,dor_cliente,score_pcm,origem_inspecao_item_id,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,tecnico_funcionario_id,tecnico_nome,data_agendada,check_in_at,check_out_at,tipo_os,pmoc_schedule_id,orientacao" as const;
 
 const PREFIXO_CHAMADO = "chamado-aberto:";
+
+/** Resumo pontual limitado por Cliente; RLS da view permanece a autoridade. */
+export async function obterResumoOsDoCliente(clienteId: string, osId: string, signal?: AbortSignal): Promise<ItemOperacaoResumo | null> {
+  if (!z.string().guid().safeParse(clienteId).success || !z.string().guid().safeParse(osId).success)
+    throw new Error("Contexto inválido.");
+  let consulta = supabase.schema("pcm").from("operacao_itens").select(COLUNAS_RESUMO)
+    .eq("item_tipo", "ordem_servico").eq("cliente_id", clienteId).eq("ordem_servico_id", osId);
+  if (signal) consulta = consulta.abortSignal(signal);
+  const { data, error } = await consulta.maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const row = data as unknown as OperacaoRow;
+  if (row.cliente_id !== clienteId || row.ordem_servico_id !== osId || row.item_id !== osId || row.item_tipo !== "ordem_servico")
+    throw new Error("Resumo de OS incompatível com o contexto.");
+  return mapearResumo(row);
+}
 
 function mapearResumo(row: OperacaoRow): ItemOperacaoResumo {
   return {

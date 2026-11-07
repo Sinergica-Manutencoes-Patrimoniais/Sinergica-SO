@@ -39,6 +39,10 @@ on conflict (id) do nothing;
 insert into pcm.clientes (id, nome, ativo, created_by)
 values ('00000000-0000-0000-0000-0000000e0301', 'Cliente Teste S12 pgTAP', true, '00000000-0000-0000-0000-0000000e0300')
 on conflict (id) do nothing;
+insert into config.usuarios (user_id, papel, nome, ativo) values ('00000000-0000-0000-0000-0000000e0300', 'cliente-sindico', 'Síndico S12', true)
+on conflict (user_id) do nothing;
+insert into config.usuario_cliente (user_id, cliente_id) values ('00000000-0000-0000-0000-0000000e0300', '00000000-0000-0000-0000-0000000e0301')
+on conflict (user_id) do nothing;
 insert into pcm.requisicoes_servico (id, cliente_id, titulo, status)
 values ('00000000-0000-0000-0000-0000000e0302', '00000000-0000-0000-0000-0000000e0301', 'Requisição Teste S12', 'em_orcamento')
 on conflict (id) do nothing;
@@ -48,7 +52,7 @@ on conflict (id) do nothing;
 
 -- AC-3: síndico da Conta certa vê pela view
 set local role authenticated;
-set local request.jwt.claims = '{"role":"authenticated","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000e0301"}';
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000e0300","role":"authenticated","user_role":"cliente-sindico","cliente_id":"00000000-0000-0000-0000-0000000e0301"}';
 select is(
   (select count(*)::int from pcm.portal_orcamentos_servico where id = '00000000-0000-0000-0000-0000000e0303'),
   1,

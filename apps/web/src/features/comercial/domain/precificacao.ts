@@ -31,13 +31,13 @@ export class PrecificacaoInvalidaError extends Error {}
  * negativo. Erro de domínio explícito em vez de deixar o JS devolver `Infinity`/`NaN` silencioso
  * (AC-7). */
 function validarEntrada({ custoTotalCentavos, margem, aliquota }: EntradaPrecificacao): void {
-  if (!Number.isInteger(custoTotalCentavos) || custoTotalCentavos < 0) {
+  if (!Number.isSafeInteger(custoTotalCentavos) || custoTotalCentavos < 0) {
     throw new PrecificacaoInvalidaError("Custo total deve ser um valor em centavos, não negativo.");
   }
-  if (margem < 0) {
-    throw new PrecificacaoInvalidaError("Margem não pode ser negativa.");
+  if (!Number.isFinite(margem) || margem < 0) {
+    throw new PrecificacaoInvalidaError("Margem deve ser finita e não negativa.");
   }
-  if (aliquota < 0 || aliquota >= 1) {
+  if (!Number.isFinite(aliquota) || aliquota < 0 || aliquota >= 1) {
     throw new PrecificacaoInvalidaError(
       `Alíquota inválida (${(aliquota * 100).toFixed(2)}%) — precisa estar entre 0% e 100% (exclusive).`,
     );
@@ -55,6 +55,9 @@ export function calcularPrecificacao(entrada: EntradaPrecificacao): ResultadoPre
 
   const pisoCentavos = Math.round(custoTotalCentavos / (1 - aliquota));
   const precoCentavos = Math.round((custoTotalCentavos * (1 + margem)) / (1 - aliquota));
+  if (!Number.isSafeInteger(pisoCentavos) || !Number.isSafeInteger(precoCentavos)) {
+    throw new PrecificacaoInvalidaError("Preço ou piso fora da precisão segura.");
+  }
   // Margem 0 faz preço = piso — desconto máximo 0, válido (não é erro, é caso de borda da spec).
   const descontoMaximo = precoCentavos > 0 ? 1 - pisoCentavos / precoCentavos : 0;
 
@@ -80,13 +83,16 @@ export function precoVendaMaterial({
   custoReferenciaCentavos,
   markupPct,
 }: EntradaCustoMaterial): number {
-  if (!Number.isInteger(custoReferenciaCentavos) || custoReferenciaCentavos < 0) {
+  if (!Number.isSafeInteger(custoReferenciaCentavos) || custoReferenciaCentavos < 0) {
     throw new PrecificacaoInvalidaError("Custo de referência deve ser centavos, não negativo.");
   }
-  if (markupPct < 0) {
-    throw new PrecificacaoInvalidaError("Markup não pode ser negativo.");
+  if (!Number.isFinite(markupPct) || markupPct < 0) {
+    throw new PrecificacaoInvalidaError("Markup deve ser finito e não negativo.");
   }
-  return Math.round(custoReferenciaCentavos * (1 + markupPct / 100));
+  const preco = Math.round(custoReferenciaCentavos * (1 + markupPct / 100));
+  if (!Number.isSafeInteger(preco))
+    throw new PrecificacaoInvalidaError("Preço fora da precisão segura.");
+  return preco;
 }
 
 /** Origem do custo de MO usado no cálculo — a UI mostra isto para o AC-4 nunca virar número

@@ -1,0 +1,15 @@
+---
+name: "docs-adr-0868-seletor-componentes-conversao-autorizado-md"
+description: "Documento Sinérgica SO: ADR 0868 — Seleção de Componentes na conversão de Chamado"
+alwaysApply: false
+---
+
+# ADR 0868 — Seleção de Componentes na conversão de Chamado
+
+O seletor experimental de S167 não deve consultar diretamente `pcm.equipamentos`: a RLS legada permite leitura pelo módulo PCM, independentemente da concessão por Cliente. O ensaio `E01-S167_componentes_leitura_escopo.sql` demonstrou a exposição em banco diagnóstico com usuário autenticado e concessão apenas para outro Cliente.
+
+Preparar uma RPC específica, com gate da mediação integral fechado por padrão, sessão e capacidade `chamado.os.criar` para o Cliente, e conferência do vínculo Cliente/Chamado. Retornar somente ID e nome em páginas por ID, sem acessar o núcleo de escrita. Interface experimental usará apenas a RPC; erro não autoriza fallback à tabela legada. A RPC não revoga a leitura legada direta nem corrige outras telas ou a política global; esse risco exige revisão própria de compatibilidade e segurança antes de liberação.
+
+A consulta e sua autorização precisam de testes com dois Clientes, revogação e paginação; gate desligado e fronteira de permissões devem ser testados. Concorrência de revogação, HTTP, RLS legada, atualização entre páginas, performance e rollout permanecem pendentes. Não aplicar em produção nem abrir o gate antes de revisão adversarial e CI. Rollback operacional: manter gate fechado; remover a função em migration futura somente após confirmar ausência de clientes que dependam dela.
+
+Para evitar retorno durante alteração concorrente de autorização, a leitura segue o protocolo existente da conversão: aceita apenas READ COMMITTED, tenta a trava compartilhada de autorização e segura o registro do gate até terminar a transação, relendo-o antes de consultar. Falha de contenção é explícita, sem resultado parcial. Cada página revalida o acesso; a composição de várias páginas não é snapshot transacional. Esta fronteira não corrige a RLS legada nem cobre concorrência de outras fontes, que permanece sujeita a ensaios e revisão.

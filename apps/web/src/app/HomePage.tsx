@@ -59,6 +59,7 @@ import { AtendimentoConfigPage } from "../features/atendimento/pages/Atendimento
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
 import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
 import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
+import { OrcamentosDaOs } from "../features/comercial/interfaces/orcamento-operacional/OrcamentosDaOs";
 import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
 import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
 import { ContratosPage as ComercialContratosPage } from "../features/comercial/pages/ContratosPage";
@@ -91,6 +92,7 @@ import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/fi
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { CapacidadesWorkspace } from "../features/pcm/interfaces/capacidades-sso/Workspace";
 import { AgendaTecnicoPage } from "../features/pcm/pages/AgendaTecnicoPage";
 import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
 import { AssessmentPage } from "../features/pcm/pages/AssessmentPage";
@@ -244,6 +246,7 @@ const CONFIG_NAV: Array<{
   id:
     | "grupos"
     | "usuarios"
+    | "capacidades"
     | "integracoes"
     | "ia"
     | "gasto-ia"
@@ -254,6 +257,7 @@ const CONFIG_NAV: Array<{
 }> = [
   { id: "grupos", label: "Grupos", icon: Users },
   { id: "usuarios", label: "Usuários", icon: UserCog },
+  { id: "capacidades", label: "Capacidades", icon: UserCog },
   { id: "integracoes", label: "Integrações", icon: KeyRound },
   { id: "ia", label: "IA", icon: Sparkles },
   { id: "gasto-ia", label: "Gasto de IA", icon: DollarSign },
@@ -426,7 +430,14 @@ export function HomePage() {
     new URLSearchParams(window.location.search).get("guia") === "pcm" ? "guia" : "inicio",
   );
   const [configTab, setConfigTab] = useState<
-    "grupos" | "usuarios" | "integracoes" | "ia" | "gasto-ia" | "priorizacao" | "localizacao-auvo"
+    | "grupos"
+    | "usuarios"
+    | "capacidades"
+    | "integracoes"
+    | "ia"
+    | "gasto-ia"
+    | "priorizacao"
+    | "localizacao-auvo"
   >("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -655,7 +666,9 @@ export function HomePage() {
                   CONFIGURAÇÕES
                 </p>
               )}
-              {CONFIG_NAV.map((item) => {
+              {CONFIG_NAV.filter(
+                (item) => item.id !== "capacidades" || user?.papel === "superadmin",
+              ).map((item) => {
                 const Icon = item.icon;
                 const isActive = item.id === configTab;
                 return (
@@ -1040,6 +1053,13 @@ export function HomePage() {
                     clienteId={clienteSelecionado}
                     onAbrirOs={abrirOsDoCliente}
                     periodo={clientePeriodo ?? undefined}
+                    painelOrcamentoOs={
+                      user?.id && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                        ? (ordemServicoId) => (
+                            <OrcamentosDaOs usuario={user?.id ?? ""} cliente={clienteSelecionado} ordemServico={ordemServicoId} />
+                          )
+                        : undefined
+                    }
                     // E03-S01 AC-9: o shell injeta a aba Comercial. `features/pcm` não importa
                     // `features/comercial` (fronteira do CLAUDE.md) — quem compõe é o app.
                     // Sem o módulo, nada é injetado e a aba não aparece.
@@ -1127,6 +1147,11 @@ export function HomePage() {
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
                   }
+                  painelOrcamentoOs={user?.id && osDeepLink?.origemClienteId && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                    ? (ordemServicoId) => ordemServicoId === osDeepLink?.osId
+                      ? <OrcamentosDaOs usuario={user?.id ?? ""} cliente={osDeepLink?.origemClienteId ?? ""} ordemServico={ordemServicoId} />
+                      : null
+                    : undefined}
                   filtrosIniciais={
                     ordensFiltrosPreset
                       ? {
@@ -1167,6 +1192,8 @@ export function HomePage() {
               <GruposPage />
             ) : configTab === "usuarios" ? (
               <UsuariosPage />
+            ) : configTab === "capacidades" && user?.papel === "superadmin" ? (
+              <CapacidadesWorkspace userId={user.id} />
             ) : configTab === "ia" ? (
               <ConfigIaPage />
             ) : configTab === "gasto-ia" ? (

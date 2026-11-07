@@ -17,6 +17,7 @@ import {
 } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 import { taskTemQuestionario } from "../_shared/auvo/task.ts";
+import { envioLegadoBloqueado } from "../_shared/auvo/trava-envio-legado.ts";
 
 const Input = z.object({
   clienteId: z.string().uuid(),
@@ -246,6 +247,9 @@ if (import.meta.main) {
         );
       }
       const input = Input.parse(await req.json());
+      if (envioLegadoBloqueado(Deno.env.get("SSO_BLOQUEAR_ENVIO_LEGADO_AUVO"))) {
+        throw new HttpError(409, "Validação externa legada bloqueada durante a transição Auvo.");
+      }
       if (
         new Date(input.visitaEm).getTime() <= Date.now()
       ) {

@@ -1,0 +1,11 @@
+---
+name: "docs-adr-0498-vinculo-visita-legado-existente-md"
+description: "Documento Sinérgica SO: ADR-0498 — Vínculo de ocorrência por Visita a legado existente"
+alwaysApply: false
+---
+
+# ADR-0498 — Vínculo de ocorrência por Visita a legado existente
+
+Status: preparado, gate fechado, não aplicado nem homologado. A associação exige ocorrência preparada por Visita, origem contratual, Plano SSO ativo, relação humana atual, mesmo Cliente/alvo/data/questionário e ocorrência legada existente sem OS ou tarefa. Não inventa Plano legado, não cria ocorrência, OS ou tarefa. O vínculo é idempotente, único e auditado.
+
+Um trigger impede que uma ocorrência legada já vinculada por Visita seja também vinculada por calendário, usando lock da ocorrência; o comando de Visita verifica ponte de calendário sob o mesmo lock. A proteção de vínculos já existentes permanece mesmo se o gate de criação for desligado. Persistem riscos de ativação concorrente do gate, criadores legados, feriados posteriormente declarados e ordem de locks. O retorno 0354 e a fila oficial ainda usam a ponte de calendário: esta tabela não os integra automaticamente e não permite alegar materialização operacional completa. Testes e revisão adversarial obrigatórios.

@@ -1,0 +1,24 @@
+-- Apenas schema reconstruído em cluster descartável sem cron ou serviços externos. ROLLBACK integral.
+begin;
+set local app.auvo_sync_write='true';
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(7);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('16797002-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s167-efeitos@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into pcm.clientes(id,nome,created_by) values ('16797002-0000-4000-8000-00000000000a','Cliente A','16797002-0000-4000-8000-000000000001'),('16797002-0000-4000-8000-00000000000b','Cliente B','16797002-0000-4000-8000-000000000001');
+insert into pcm.equipamentos(id,client_id,nome) values ('16797002-0000-4000-8000-000000000031','16797002-0000-4000-8000-00000000000b','Equipamento de B');
+insert into pcm.inspecoes(id,client_id,titulo,created_by) values ('16797002-0000-4000-8000-000000000041','16797002-0000-4000-8000-00000000000b','Inspeção B','16797002-0000-4000-8000-000000000001');
+insert into pcm.inspecao_itens(id,client_id,inspecao_id,descricao,sistema,created_by) values ('16797002-0000-4000-8000-000000000042','16797002-0000-4000-8000-00000000000b','16797002-0000-4000-8000-000000000041','Item B','eletrico','16797002-0000-4000-8000-000000000001');
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,origem,created_by,equipamento_id,origem_inspecao_item_id) values ('16797002-0000-4000-8000-000000000021','16797002-0000-4000-8000-00000000000a','OS-EFEITOS-A','OS sequencial','corretiva','solicitacao','manual','16797002-0000-4000-8000-000000000001','16797002-0000-4000-8000-000000000031','16797002-0000-4000-8000-000000000042');
+update pcm.ordens_servico set status='corretiva',updated_by='16797002-0000-4000-8000-000000000001' where id='16797002-0000-4000-8000-000000000021';
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,origem,created_by) values ('16797002-0000-4000-8000-000000000022','16797002-0000-4000-8000-00000000000a','OS-EFEITOS-B','OS direta','corretiva','corretiva','manual','16797002-0000-4000-8000-000000000001');
+select is((select count(*)::int from pcm.os_status_eventos where ordem_servico_id='16797002-0000-4000-8000-000000000021'),2,'INSERT e UPDATE registram dois eventos');
+select is((select count(*)::int from pcm.os_status_eventos where ordem_servico_id='16797002-0000-4000-8000-000000000022'),1,'INSERT no estado final registra somente um evento');
+select ok(exists(select 1 from pcm.os_status_eventos where ordem_servico_id='16797002-0000-4000-8000-000000000021' and status_anterior='solicitacao' and status_novo='corretiva'),'transição mantém estado anterior');
+select ok(exists(select 1 from pcm.ordens_servico o join pcm.equipamentos e on e.id=o.equipamento_id where o.id='16797002-0000-4000-8000-000000000021' and o.client_id<>e.client_id),'FK simples permite equipamento de Cliente divergente');
+select ok(exists(select 1 from pcm.ordens_servico o join pcm.inspecao_itens i on i.id=o.origem_inspecao_item_id where o.id='16797002-0000-4000-8000-000000000021' and o.client_id<>i.client_id),'FK simples permite item de inspeção de Cliente divergente');
+do $$ begin begin insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,origem,created_by) values ('16797002-0000-4000-8000-000000000023','16797002-0000-4000-8000-00000000000a','OS-EFEITOS-C','OS revertida','corretiva','solicitacao','manual','16797002-0000-4000-8000-000000000001'); raise exception 'rollback_sintetico'; exception when raise_exception then null; end; end $$;
+select is((select count(*)::int from pcm.os_status_eventos where ordem_servico_id='16797002-0000-4000-8000-000000000023'),0,'rollback reverte evento e OS');
+select is((select count(*)::int from pcm.auvo_sync_outbox where row_id in ('16797002-0000-4000-8000-000000000021','16797002-0000-4000-8000-000000000022','16797002-0000-4000-8000-000000000023','16797002-0000-4000-8000-000000000031')),0,'fixtures não geram outbox');
+select * from finish();
+rollback;

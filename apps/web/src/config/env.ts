@@ -22,7 +22,7 @@ const schema = z.object({
   // OpenRouter (LLM — Gemini p/ Zé, Claude p/ laudo/proposta)
   OPENROUTER_API_KEY: z.string().min(1).optional(),
   OPENROUTER_ZE_MODEL: z.string().min(1).optional(),
-  ZE_SYSTEM_USER_ID: z.string().uuid().optional(),
+  ZE_SYSTEM_USER_ID: z.string().guid().optional(),
   // Auvo (app de campo)
   AUVO_API_KEY: z.string().min(1).optional(),
   AUVO_USER_TOKEN: z.string().min(1).optional(),

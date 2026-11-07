@@ -60,6 +60,12 @@ describe("rotuloNumeroOrdem", () => {
   it("mantém CH-XXXX", () => {
     expect(rotuloNumeroOrdem({ numero: "CH-0041", auvoTaskId: 999 })).toBe("CH-0041");
   });
+  it("preserva os números distintos das OS vinculadas ao mesmo Chamado", () => {
+    const os1 = "CH-0041-OS-16795000-0000-4000-8000-000000000021";
+    const os2 = "CH-0041-OS-16795000-0000-4000-8000-000000000022";
+    expect(rotuloNumeroOrdem({ numero: os1, auvoTaskId: 101 })).toBe(os1);
+    expect(rotuloNumeroOrdem({ numero: os2, auvoTaskId: 102 })).toBe(os2);
+  });
   it("troca OS-XXXX pelo ID do Auvo quando há task", () => {
     expect(rotuloNumeroOrdem({ numero: "OS-0067", auvoTaskId: 12345 })).toBe("Auvo #12345");
   });

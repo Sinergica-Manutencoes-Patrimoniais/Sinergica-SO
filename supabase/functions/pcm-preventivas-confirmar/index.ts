@@ -16,7 +16,9 @@ import {
 } from "../_shared/auvo/client.ts";
 import { toAuvoJsonPatch } from "../_shared/auvo/json-patch.ts";
 import { taskTemQuestionario } from "../_shared/auvo/task.ts";
-import { classificarFalhaEnvioPreventiva } from "../_shared/preventivas/confirmacao.ts";
+import { envioLegadoBloqueado } from "../_shared/auvo/trava-envio-legado.ts";
+import { identidadeOsProvisoria } from "../_shared/numero-os.ts";
+import { classificarFalhaEnvioPreventiva, origemPreventivaLegada } from "../_shared/preventivas/confirmacao.ts";
 
 const FN = "pcm-preventivas-confirmar";
 const Input = z.object({
@@ -122,6 +124,9 @@ serve(async (req) => {
       .from("ocorrencias_preventivas").select("*").eq("id", input.ocorrenciaId)
       .single();
     if (ocorrenciaErro) throw ocorrenciaErro;
+    if (!origemPreventivaLegada(ocorrencia)) {
+      throw new HttpError(409, "Origem da ocorrência incompatível com o fluxo preventivo legado.");
+    }
     if (
       ocorrencia.envio_estado === "disponivel" &&
       ocorrencia.auvo_task_id != null
@@ -139,6 +144,10 @@ serve(async (req) => {
       );
     }
 
+    if (envioLegadoBloqueado(Deno.env.get("SSO_BLOQUEAR_ENVIO_LEGADO_AUVO"))) {
+      throw new HttpError(409, "Confirmação preventiva legada bloqueada durante a transição Auvo.");
+    }
+
     const { data: tomada, error: tomadaErro } = await db.schema("pcm").from(
       "ocorrencias_preventivas",
     )
@@ -149,7 +158,7 @@ serve(async (req) => {
         erro_envio: null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", input.ocorrenciaId).in("envio_estado", ["prevista", "falha"])
+      .eq("id", input.ocorrenciaId).eq("origem", "legado").in("envio_estado", ["prevista", "falha"])
       .select("id");
     if (tomadaErro) throw tomadaErro;
     if (!tomada?.length) {
@@ -227,6 +236,7 @@ serve(async (req) => {
       }
       const os = osExistente ??
         (await db.schema("pcm").from("ordens_servico").insert({
+          ...identidadeOsProvisoria(crypto.randomUUID()),
           client_id: plano.cliente_id,
           titulo,
           descricao:
@@ -313,7 +323,7 @@ serve(async (req) => {
             },
             questionario_auvo_id: questionario.auvo_id,
             updated_at: agora,
-          }).eq("id", ocorrencia.id),
+          }).eq("id", ocorrencia.id).eq("origem", "legado"),
         ]);
       if (osUpdateErro ?? ocorrenciaUpdateErro) {
         throw osUpdateErro ?? ocorrenciaUpdateErro;
@@ -335,7 +345,7 @@ serve(async (req) => {
         erro_envio: mensagem.slice(0, 500),
         auvo_task_id: taskIdRemota,
         updated_at: agora,
-      }).eq("id", input.ocorrenciaId);
+      }).eq("id", input.ocorrenciaId).eq("origem", "legado");
       if (osId && taskIdRemota != null) {
         await db.schema("pcm").from("ordens_servico").update({
           auvo_task_id: taskIdRemota,

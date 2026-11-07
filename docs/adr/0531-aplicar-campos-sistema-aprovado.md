@@ -1,0 +1,9 @@
+---
+name: "docs-adr-0531-aplicar-campos-sistema-aprovado-md"
+description: "Documento Sinérgica SO: ADR-0531 — Aplicar campos canônicos de Sistema"
+alwaysApply: false
+---
+
+# ADR-0531 — Aplicar campos canônicos de Sistema
+
+Após conferência explícita do retrato canônico e aprovação do lote, comando transacional atualiza Sistema existente com snapshot otimista, validação de Cliente, hierarquia e categoria, revisão e auditoria. Preserva código e identidade; campos omitidos não são alterados e nulos são explícitos. Trilha de autorização interna, restrita à transação, libera somente a linha correspondente da trava 0748. Atualização suprime enqueue Auvo com mecanismo transacional legado; não envia tarefa ou sincroniza automaticamente. Confirmação, referência de pai e atributos não suportados falham fechados. Gate desligado; revisão adversarial, testes e aplicação pendentes.

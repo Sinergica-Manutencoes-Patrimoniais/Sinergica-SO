@@ -1,0 +1,3 @@
+-- ADR-0603: reserva sequencial intencionalmente sem efeito.
+-- Sem identidade canônica de execução e prova de exclusividade entre origens,
+-- nenhuma função de criação de candidato ou efeito financeiro é habilitada.

@@ -19,6 +19,7 @@ import type {
   PortalVisita,
 } from "../application/portal-gateway";
 import { statusConformidade } from "../domain/conformidade";
+import { projetarItensOrcamentoPublico } from "../domain/itens-orcamento-publico";
 
 function falha(error: { message?: string } | null, contexto: string) {
   if (error) throw new Error(`${contexto}: ${error.message ?? "erro desconhecido"}`);
@@ -310,7 +311,7 @@ export const supabasePortalAdapter: PortalGateway = {
       id: row.id,
       numero: row.numero,
       titulo: row.titulo,
-      itens: Array.isArray(row.itens) ? row.itens : [],
+      itens: projetarItensOrcamentoPublico(row.itens),
       valorCentavos: row.valor_total_centavos,
       status: row.status,
       validoAte: row.valido_ate,
@@ -474,7 +475,7 @@ export const supabasePortalAdapter: PortalGateway = {
   },
 
   async decidirOrcamento(id, decisao, motivo) {
-    const { error } = await supabase.schema("pcm").rpc("portal_decidir_orcamento", {
+    const { error } = await supabase.schema("pcm").rpc("portal_decidir_orcamento_seguro", {
       p_orcamento_id: id,
       p_decisao: decisao,
       p_motivo: motivo?.trim() || null,
@@ -483,7 +484,7 @@ export const supabasePortalAdapter: PortalGateway = {
   },
 
   async decidirProposta(id, decisao, motivo) {
-    const { error } = await supabase.schema("comercial").rpc("fn_decidir_proposta", {
+    const { error } = await supabase.schema("comercial").rpc("portal_decidir_proposta", {
       p_proposta_id: id,
       p_decisao: decisao,
       p_motivo: motivo?.trim() || null,
@@ -492,6 +493,10 @@ export const supabasePortalAdapter: PortalGateway = {
   },
 
   async urlAssinada(bucket, path) {
+    // Defesa de interface: a política do Storage é a fronteira de segurança.
+    if (bucket === "os-anexos" && import.meta.env.VITE_SSO_BLOQUEAR_URL_OS_ANEXOS_ENABLED === "true") {
+      throw new Error("Anexos de OS exigem acesso mediado.");
+    }
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
     falha(error, "Falha ao gerar link temporário");
     if (!data?.signedUrl) throw new Error("Link temporário indisponível.");

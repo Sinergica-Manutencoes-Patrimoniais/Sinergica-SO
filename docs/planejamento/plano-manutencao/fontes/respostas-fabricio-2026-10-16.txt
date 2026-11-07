@@ -1,0 +1,244 @@
+Lucas, seguem as respostas consolidadas, já com os ajustes das regras:
+
+**1A — Abrangência do novo fluxo**
+
+O novo fluxo será utilizado em preventivas, corretivas, PMOC e chamados manuais.
+
+Todos esses serviços convergem para o planejamento da Visita, que poderá conter várias OS. Cada OS deverá gerar uma tarefa própria no Auvo.
+
+---
+
+**2 — Regra desejada para preventiva em feriado**
+
+O Plano de Manutenção deve considerar previamente o calendário contratual de Visitas do cliente.
+
+Quando o dia fixo da Visita cair em feriado:
+
+- não será gerada Visita naquela semana;
+- não será gerada ocorrência preventiva para essa Visita;
+- essa semana não será contabilizada como Visita prevista, pendente, atrasada, dispensada ou executada;
+- não haverá reposição automática;
+- o calendário poderá registrar que a semana foi suprimida por feriado apenas para auditoria;
+- a próxima ocorrência será calculada considerando a próxima Visita válida.
+
+Se o dia fixo da Visita for alterado, por exemplo, de sexta-feira para terça-feira:
+
+- a alteração terá uma data de vigência;
+- o calendário futuro de Visitas será recalculado;
+- o Plano de Manutenção e suas ocorrências futuras ainda não confirmadas serão atualizados;
+- a regra de feriados passará a considerar o novo dia;
+- Visitas e ocorrências passadas permanecerão inalteradas;
+- Visitas extras, exceções e reprogramações já aprovadas serão preservadas;
+- tarefas já criadas no Auvo não serão duplicadas e, quando necessário, seguirão o fluxo de reprogramação.
+
+Portanto, o Plano não deve gerar uma manutenção para uma semana em que não haverá Visita por causa de feriado. As ocorrências serão geradas somente sobre Visitas válidas do calendário vigente.
+
+---
+
+**3A — Validação e encerramento, separando OS e Chamado**
+
+Cada OS poderá ser validada e encerrada individualmente pelo PCM quando sua execução e suas evidências estiverem completas. O encerramento da OS não encerra automaticamente o Chamado.
+
+Após o retorno do Auvo:
+
+1. a tarefa fica concluída no Auvo;
+2. a OS correspondente fica como “Concluída em campo — aguardando validação” no SSO;
+3. o PCM valida a execução e as evidências;
+4. se estiver correta, o PCM encerra aquela OS;
+5. se ainda houver trabalho restante, o Chamado permanece aberto e uma nova OS de continuação poderá ser criada;
+6. o tempo executado permanece na OS encerrada;
+7. a nova OS recebe somente o escopo e a estimativa restantes.
+
+Um Chamado poderá ter, ao mesmo tempo:
+
+- uma ou mais OS encerradas;
+- OS aguardando validação;
+- OS aguardando planejamento;
+- necessidade de criação de nova OS.
+
+Quando todas as OS estiverem encerradas e o escopo total tiver sido atendido, o SSO deverá marcar o Chamado como “Apto para encerramento”. O encerramento final do Chamado continuará dependendo da validação do PCM.
+
+Portanto:
+
+- a OS pode ser encerrada individualmente;
+- o Chamado permanece aberto enquanto a solicitação não estiver integralmente resolvida;
+- a ocorrência preventiva registra o resultado da manutenção executada;
+- a pendência técnica somente é encerrada quando sua condição de origem estiver efetivamente resolvida;
+- a conclusão da tarefa no Auvo não encerra automaticamente as entidades gerenciais do SSO.
+
+---
+
+**4A — Preventiva executada com resultado “Não OK”**
+
+A preventiva deve ser concluída com resultado “Não OK”, preservando o registro de que a inspeção ou manutenção prevista foi efetivamente realizada.
+
+O resultado deve gerar uma pendência ou necessidade corretiva vinculada a:
+
+- ocorrência preventiva;
+- ativo, componente ou grupo;
+- Local;
+- Sistema;
+- checklist;
+- evidências;
+- técnico executor;
+- data da identificação.
+
+A preventiva não permanece aberta esperando a correção. A falha encontrada segue em um fluxo corretivo próprio e rastreável.
+
+---
+
+**5B — Estimativa da OS de continuação**
+
+O técnico informa o trabalho restante e pode sugerir uma estimativa de horas. O PCM revisa e valida essas informações antes de realizar o novo planejamento.
+
+Regras:
+
+- as horas já executadas permanecem no histórico da OS anterior;
+- a OS anterior pode ser encerrada após validação;
+- a nova OS recebe somente o escopo restante;
+- a capacidade futura considera apenas o esforço ainda necessário;
+- o PCM pode alterar a estimativa informada pelo técnico;
+- a relação entre as OS de continuação deve permanecer visível no Chamado.
+
+---
+
+**6 — Regra desejada para ciência do cliente e confirmação da Visita**
+
+Por padrão, somente a confirmação do PCM autoriza o envio das tarefas ao Auvo, respeitando a janela T−24.
+
+Não será obrigatório registrar ciência ou confirmação do cliente no SSO para todas as Visitas.
+
+O controle de ciência ou aprovação do cliente será habilitado apenas em casos específicos, definidos por cliente, contrato ou Visita.
+
+Cada cliente poderá ter uma das seguintes configurações:
+
+- não controlar ciência do cliente no SSO;
+- registrar ciência apenas como informação, sem bloquear o envio;
+- exigir confirmação do cliente antes do envio ao Auvo.
+
+A configuração padrão será:
+
+```text
+Confirmação do PCM: obrigatória
+Ciência do cliente no SSO: não exigida
+Bloqueio por falta de confirmação do cliente: não
+```
+
+Quando um contrato exigir confirmação do cliente, o SSO apresentará essa etapa somente para aquele cliente. Nesse caso, poderão ser registrados data, responsável, canal e observação.
+
+O objetivo é manter o controle disponível sem criar burocracia para a operação normal.
+
+---
+
+**7B — Rotinas executadas por terceiros, com regra complementar**
+
+As atividades executadas por terceiros deverão aparecer no cronograma, mostrando separadamente:
+
+- demanda e horas do terceiro;
+- horas de acompanhamento da Sinérgica;
+- responsável interno;
+- empresa terceira;
+- Local e serviço;
+- período previsto.
+
+Para o cálculo da capacidade interna, somente serão consideradas as horas da equipe Sinérgica destinadas a acompanhamento, fiscalização, apoio, acesso ou liberação.
+
+As horas de execução do terceiro serão apresentadas no cronograma, mas não consumirão a capacidade produtiva dos técnicos da Sinérgica.
+
+---
+
+**8C — Despesas da Visita**
+
+O SSO deverá registrar:
+
+- previsão de despesas;
+- valores realizados;
+- comprovantes;
+- categoria da despesa;
+- técnico ou equipe;
+- cliente;
+- Visita;
+- data;
+- vínculo com os registros do Financeiro.
+
+Categorias iniciais:
+
+- quilometragem;
+- combustível;
+- pedágio;
+- estacionamento;
+- hospedagem;
+- alimentação;
+- transporte;
+- materiais emergenciais;
+- outras despesas.
+
+Se for necessário dividir a implementação em etapas, o modelo de dados já deverá nascer preparado para o fluxo completo.
+
+O Auvo não será o controlador oficial das despesas. A gestão ficará no SSO.
+
+---
+
+**9P — Quem pode aprovar, suspender ou encerrar planos e autorizar cancelamentos**
+
+Definição reservada ao Fabrício.
+
+A implementação deve utilizar permissões configuráveis, evitando deixar nomes fixos diretamente no código.
+
+---
+
+**10P — O planejador pode aprovar o próprio plano?**
+
+Definição reservada ao Fabrício.
+
+A estrutura deve permitir configurar se a aprovação pelo próprio planejador será aceita ou se haverá segregação obrigatória.
+
+---
+
+**11B — Quem pode validar as execuções**
+
+Qualquer supervisor ou operador PCM que possua a permissão específica de validação poderá validar as execuções.
+
+A validação deverá registrar:
+
+- usuário responsável;
+- data e hora;
+- decisão;
+- observação;
+- evidências verificadas;
+- devolução para correção, quando houver;
+- motivo de rejeição ou reabertura.
+
+A permissão deve ser atribuída por perfil ou individualmente, sem nomes fixos no código.
+
+---
+
+**Regras gerais que devem ser preservadas**
+
+- Um Chamado pode possuir várias OS.
+- Cada OS gera uma tarefa própria no Auvo.
+- A Visita é o contêiner de cliente, data, equipe, horários e várias OS.
+- Uma OS pode ser encerrada sem encerrar o Chamado.
+- A conclusão no Auvo representa conclusão em campo.
+- O PCM valida e encerra a OS no SSO.
+- O Chamado somente é encerrado quando sua solicitação estiver integralmente resolvida.
+- Preventiva “Não OK” é uma preventiva executada que gera necessidade corretiva.
+- Feriado elimina a Visita daquela semana e não gera reposição automática.
+- Mudança no dia fixo da Visita atualiza o calendário e o Plano a partir da data de vigência.
+- Reprogramação deve atualizar a tarefa Auvo existente quando ela já tiver sido criada, sem gerar duplicidade.
+- A confirmação do PCM é a autorização padrão para o envio ao Auvo.
+- Confirmação do cliente somente será controlada quando necessária para aquele cliente ou contrato.
+
+Também vamos separar e encaminhar as planilhas vigentes do Rimini e do I Home.
+
+Essas planilhas deverão ser utilizadas como amostras reais para:
+
+- migração;
+- homologação das rotinas e periodicidades;
+- geração das ocorrências;
+- montagem das Visitas;
+- cálculo de capacidade;
+- conferência dos cronogramas;
+- testes de aceite.
+
+As planilhas servem como referência operacional e massa de homologação, sem substituir as regras aprovadas no Playbook.

@@ -117,17 +117,26 @@ function topClientesPorEquipamento(
     .slice(0, 5);
 }
 
+function validarContagemSync(valor: unknown): number {
+  if (typeof valor !== "number" && !(typeof valor === "string" && /^\d+$/.test(valor)))
+    throw new Error("Dados de saúde da sincronização incompletos.");
+  const numero = Number(valor);
+  if (!Number.isSafeInteger(numero) || numero < 0)
+    throw new Error("Dados de saúde da sincronização incompletos.");
+  return numero;
+}
+
 export const supabaseDashboardPcmAdapter = {
   async obterSaudeSync(): Promise<AuvoSyncHealthItem[]> {
     const { data, error } = await supabase
       .schema("pcm")
       .from("auvo_sync_health")
       .select(
-        "entity,write_enabled,last_push_ok_at,last_pull_ok_at,last_error_at,last_error,push_pending_count,push_error_count",
+        "entity,write_enabled,last_push_ok_at,last_pull_ok_at,last_error_at,push_pending_count,push_error_count",
       )
       .order("entity");
     if (error) {
-      if (isTabelaCampoAusente(error)) return [];
+      if (isTabelaCampoAusente(error)) throw new Error("Saúde da sincronização indisponível.");
       throw error;
     }
     return (data ?? []).map((row) => ({
@@ -136,9 +145,11 @@ export const supabaseDashboardPcmAdapter = {
       lastPushOkAt: row.last_push_ok_at as string | null,
       lastPullOkAt: row.last_pull_ok_at as string | null,
       lastErrorAt: row.last_error_at as string | null,
-      lastError: row.last_error as string | null,
-      pendingCount: Number(row.push_pending_count ?? 0),
-      errorCount: Number(row.push_error_count ?? 0),
+      lastError: row.last_error_at
+        ? "Falha registrada. Consulte os detalhes de sincronização."
+        : null,
+      pendingCount: validarContagemSync(row.push_pending_count),
+      errorCount: validarContagemSync(row.push_error_count),
     }));
   },
 

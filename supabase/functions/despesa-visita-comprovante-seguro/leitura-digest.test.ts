@@ -1,0 +1,11 @@
+import { criarLeituraDigest, type Dependencias } from "./leitura-digest.ts";
+const usuario="18090000-0000-4000-8000-000000000001", despesa="18090000-0000-4000-8000-000000000002", objeto="18090000-0000-4000-8000-000000000003";
+const bytes=new Uint8Array([37,80,68,70,45,49]);
+const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),x=>x.toString(16).padStart(2,"0")).join("");
+const req=()=>new Request("http://localhost",{method:"POST",headers:{"x-despesa-id":despesa}});
+const deps=():Dependencias=>({autenticar:async()=>({usuario}),habilitado:async()=>true,limitar:async()=>true,resolver:async()=>({objetoId:objeto,digest}),baixar:async()=>bytes});
+const assert=(v:boolean)=>{if(!v)throw new Error("Asserção falhou");};
+Deno.test("entrega exatamente os bytes cujo digest foi autorizado",async()=>{const r=await criarLeituraDigest(deps())(req());assert(r.status===200);assert(new Uint8Array(await r.arrayBuffer()).every((v,i)=>v===bytes[i]));});
+Deno.test("bytes alterados não são expostos",async()=>{const d=deps();d.baixar=async()=>new Uint8Array([37,80,68,70,45,50]);assert((await criarLeituraDigest(d)(req())).status===409);});
+Deno.test("revogação ou troca de referência durante leitura não expõe bytes",async()=>{const d=deps();let n=0;d.resolver=async()=>++n===1?{objetoId:objeto,digest}:null;assert((await criarLeituraDigest(d)(req())).status===404);});
+Deno.test("digest ausente, gate fechado e arquivo excessivo falham fechados",async()=>{const d=deps();d.resolver=async()=>({objetoId:objeto,digest:""});assert((await criarLeituraDigest(d)(req())).status===503);d.habilitado=async()=>false;assert((await criarLeituraDigest(d)(req())).status===503);d.habilitado=async()=>true;d.resolver=async()=>({objetoId:objeto,digest});d.baixar=async()=>new Uint8Array(10485761);assert((await criarLeituraDigest(d)(req())).status===413);});

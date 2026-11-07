@@ -7,6 +7,7 @@ import { useAuth } from "../../../app/auth-context";
 import { obterPesosGutdConfig, salvarPesosGutd } from "../application/priorizacao-gutd";
 import { PESOS_GUTD_PADRAO, type PesosGutd } from "../domain/priorizacao-backlog";
 import { supabasePriorizacaoGutdAdapter } from "../infrastructure/supabase-priorizacao-gutd-adapter";
+import { PesosGutdAuditados } from "../interfaces/pendencias-tecnicas/PesosGutdAuditados";
 
 const CAMPOS: Array<{ key: keyof PesosGutd; label: string }> = [
   { key: "gravidade", label: "Gravidade" },
@@ -44,6 +45,15 @@ export function ConfigPriorizacaoPage() {
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
         <p className="mt-1 text-body text-ink-3">Só superadmin configura a priorização.</p>
+      </div>
+    );
+  }
+
+  if (import.meta.env.VITE_SSO_PESOS_GUTD_AUDITADOS_ENABLED === "true") {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-heading font-semibold text-ink">Priorização (GUTD)</h1>
+        <PesosGutdAuditados userId={user.id} />
       </div>
     );
   }

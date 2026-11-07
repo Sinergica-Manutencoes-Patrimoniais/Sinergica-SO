@@ -1,0 +1,67 @@
+import { z } from "zod";
+import { ACOES_INDIVIDUAIS, ACOES_SSO } from "../domain/capacidades-sso";
+import type {
+  CapacidadesSsoGateway,
+  DefinirConcessaoCommand,
+  DefinirPerfilCommand,
+  DefinirVinculoPerfilCommand,
+} from "./capacidades-sso-gateway";
+
+const envelope = {
+  requestId: z.string().guid(),
+  expectedRevision: z.number().int().nonnegative(),
+  motivo: z.string().trim().min(1).max(1000),
+};
+export const concessaoSchema = z
+  .object({
+    ...envelope,
+    usuarioId: z.string().guid().nullable(),
+    perfilId: z.string().guid().nullable(),
+    acao: z.enum(ACOES_SSO),
+    clienteId: z.string().guid().nullable(),
+    ativa: z.boolean(),
+  })
+  .strict()
+  .superRefine((valor, ctx) => {
+    if ((valor.usuarioId === null) === (valor.perfilId === null)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe usuário ou perfil." });
+    }
+    if (ACOES_INDIVIDUAIS.includes(valor.acao) && valor.perfilId !== null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Esta ação exige concessão individual.",
+      });
+    }
+  });
+export const perfilSchema = z
+  .object({
+    ...envelope,
+    perfilId: z.string().guid(),
+    nome: z.string().trim().min(1).max(120),
+    ativo: z.boolean(),
+  })
+  .strict();
+export const vinculoSchema = z
+  .object({
+    ...envelope,
+    usuarioId: z.string().guid(),
+    perfilId: z.string().guid(),
+    ativo: z.boolean(),
+  })
+  .strict();
+
+export async function definirConcessao(
+  gateway: CapacidadesSsoGateway,
+  input: DefinirConcessaoCommand,
+) {
+  return gateway.definirConcessao(concessaoSchema.parse(input));
+}
+export async function definirPerfil(gateway: CapacidadesSsoGateway, input: DefinirPerfilCommand) {
+  return gateway.definirPerfil(perfilSchema.parse(input));
+}
+export async function definirVinculoPerfil(
+  gateway: CapacidadesSsoGateway,
+  input: DefinirVinculoPerfilCommand,
+) {
+  return gateway.definirVinculoPerfil(vinculoSchema.parse(input));
+}

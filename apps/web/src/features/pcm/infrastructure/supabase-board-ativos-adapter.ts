@@ -1,6 +1,7 @@
 import { supabase } from "../../../lib/supabase-client";
 import type { BoardAtivosGateway, OsHistoricoItem } from "../application/board-ativos-gateway";
 import type { EquipamentoItem, ItemTipo } from "../domain/equipamentos";
+import { buscarHistoricoPorAuvoIds } from "./supabase-sistemas-adapter";
 
 interface ItemRow {
   id: string;
@@ -54,26 +55,33 @@ function mapItem(row: ItemRow): EquipamentoItem {
   };
 }
 
-interface OsRow {
-  id: string;
-  numero: string;
-  categoria: string | null;
-  status: string | null;
-  data_agendada: string | null;
-  created_at: string | null;
-}
-
 export const supabaseBoardAtivosAdapter: BoardAtivosGateway = {
   async listarItensDoCliente(clienteId: string): Promise<EquipamentoItem[]> {
-    const { data, error } = await supabase
-      .schema("pcm")
-      .from("equipamentos")
-      .select(ITEM_COLS)
-      .eq("client_id", clienteId)
-      .is("deleted_at", null)
-      .order("nome", { ascending: true });
-    if (error) throw error;
-    return ((data ?? []) as ItemRow[]).map(mapItem);
+    const itens: ItemRow[] = [];
+    const vistos = new Set<string>();
+    let esperado: number | null = null;
+    const tamanhoPagina = 500;
+    const limite = 50_000;
+    for (;;) {
+      const { data, error, count } = await supabase.schema("pcm").from("equipamentos")
+        .select(ITEM_COLS, { count: "exact" }).eq("client_id", clienteId).is("deleted_at", null)
+        .order("nome", { ascending: true }).order("id", { ascending: true })
+        .range(itens.length, itens.length + tamanhoPagina - 1);
+      if (error) throw error;
+      if (count === null || count > limite) throw new Error("Lista de ativos excede o limite de consulta.");
+      if (esperado !== null && esperado !== count) throw new Error("Lista de ativos alterada durante a consulta.");
+      esperado = count;
+      const pagina = (data ?? []) as ItemRow[];
+      for (const item of pagina) {
+        const id = item.id.toLowerCase();
+        if (item.client_id?.toLowerCase() !== clienteId.toLowerCase() || vistos.has(id)) throw new Error("Lista de ativos inconsistente.");
+        vistos.add(id); itens.push(item);
+      }
+      if (itens.length > esperado || itens.length > limite) throw new Error("Lista de ativos inconsistente.");
+      if (pagina.length < tamanhoPagina) break;
+    }
+    if (itens.length !== esperado) throw new Error("Lista de ativos alterada durante a consulta.");
+    return itens.map(mapItem);
   },
 
   async listarHistoricoOsItem(itemId: string): Promise<OsHistoricoItem[]> {
@@ -81,38 +89,15 @@ export const supabaseBoardAtivosAdapter: BoardAtivosGateway = {
     const { data: item, error: itemErro } = await supabase
       .schema("pcm")
       .from("equipamentos")
-      .select("auvo_equipment_id")
+      .select("auvo_equipment_id,client_id")
       .eq("id", itemId)
       .maybeSingle();
     if (itemErro) throw itemErro;
+    if (!item?.client_id) throw new Error("Ativo indisponível ou sem Cliente definido.");
     const auvoEquipmentId = (item?.auvo_equipment_id as number | null) ?? null;
     if (auvoEquipmentId == null) return []; // sem chave — ativo sem OS vinculável, não é erro
 
-    // 2) OS vinculadas a esse equipamento no Auvo.
-    const { data: vinculos, error: vincErro } = await supabase
-      .schema("pcm")
-      .from("os_equipamentos_auvo")
-      .select("ordem_servico_id")
-      .eq("auvo_equipment_id", auvoEquipmentId);
-    if (vincErro) throw vincErro;
-    const osIds = [...new Set((vinculos ?? []).map((v) => v.ordem_servico_id as string))];
-    if (osIds.length === 0) return [];
-
-    // 3) dados das OS, mais recente primeiro.
-    const { data: ordens, error: osErro } = await supabase
-      .schema("pcm")
-      .from("ordens_servico")
-      .select("id,numero,categoria,status,data_agendada,created_at")
-      .in("id", osIds)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
-    if (osErro) throw osErro;
-    return ((ordens ?? []) as OsRow[]).map((o) => ({
-      osId: o.id,
-      numero: o.numero,
-      categoria: o.categoria,
-      status: o.status,
-      data: o.data_agendada ?? o.created_at,
-    }));
+    // Compartilha a leitura paginada usada pelo histórico dos Sistemas.
+    return buscarHistoricoPorAuvoIds([auvoEquipmentId], item.client_id as string);
   },
 };

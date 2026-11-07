@@ -24,6 +24,7 @@ export type PlanoPreventivo = {
 export type OcorrenciaPreventiva = {
   id: string;
   plano_id: string;
+  reconciliacao_legada?: "normal" | "substituida";
   vencimento: string;
   visita_em: string | null;
   envio_estado: "prevista" | "enviando" | "falha" | "incerto" | "disponivel";
@@ -38,6 +39,7 @@ export type OcorrenciaPreventiva = {
   os_concluida_em?: string | null;
   tecnico_nome?: string | null;
   auvo_task_url?: string | null;
+  ordens_vinculadas?: Array<{ id: string; numero: string; status: string }>;
 };
 
 export type AvaliacaoPreventiva = {

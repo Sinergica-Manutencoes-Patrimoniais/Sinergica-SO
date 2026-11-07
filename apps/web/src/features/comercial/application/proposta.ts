@@ -7,6 +7,16 @@
 import { importarItensDoAssessment } from "../domain/importacao-levantamento";
 import type { ItemAssessmentParaImportar } from "../domain/importacao-levantamento";
 import { calcularPrecificacao } from "../domain/precificacao";
+
+/** Proteção visual; o servidor ainda deve validar Cliente e autorização do vínculo. */
+export function podeVincularLevantamentoAtual(
+  id: string,
+  opcoes: readonly { id: string }[],
+  carregando: boolean,
+  falhou: boolean,
+): boolean {
+  return Boolean(id) && !carregando && !falhou && opcoes.some((opcao) => opcao.id === id);
+}
 import { calcularTotalItem, somarCustoItens } from "../domain/proposta";
 import type { ItemCommand, SalvarComposicaoCommand } from "./proposta-gateway";
 
@@ -45,6 +55,9 @@ export function montarComandoSalvarComposicao(
   });
 
   const precoCentavos = input.precoFinalCentavos ?? precoSugeridoCentavos;
+  if (!Number.isSafeInteger(precoCentavos) || precoCentavos < 0) {
+    throw new Error("Preço final deve ser um valor válido em centavos.");
+  }
 
   return {
     propostaId: input.propostaId,

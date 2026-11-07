@@ -12,6 +12,7 @@ function dataBr(valor: string): string {
 }
 
 function rotuloEstado(estado: ItemCalendarioPreventiva["estado"]): string {
+  if (estado === "conferencia") return "Conferir ordens";
   if (estado === "atrasada") return "Atrasada";
   if (estado === "agendada") return "Visita agendada";
   if (estado === "auvo_disponivel") return "Disponível no Auvo";

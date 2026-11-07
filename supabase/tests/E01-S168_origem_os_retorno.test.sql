@@ -1,0 +1,33 @@
+-- Apenas fixture sintética; gate e alterações são revertidos.
+begin;
+\ir E01-S173_retorno_aprovado_fixture.sql
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(14);
+insert into pcm.clientes(id,nome,ativo,created_by) values ('16891000-0000-4000-8000-000000000063','Outro Cliente sintético',true,'16891000-0000-4000-8000-000000000001');
+insert into pcm.equipamentos(id,nome,client_id,created_by) values ('16891000-0000-4000-8000-000000000064','Equipamento sintético','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000001');
+insert into pcm.ocorrencias_preventivas(id,plano_id,indice,vencimento,chave_externa) values ('16891000-0000-4000-8000-000000000061','16891000-0000-4000-8000-000000000013',1,'2026-02-01','s168-fixture-livre');
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,prioridade,origem,created_by) values ('16891000-0000-4000-8000-000000000062','16891000-0000-4000-8000-000000000002','OS-S168-LIVRE','OS sem retorno','preventiva','em_execucao','media','manual','16891000-0000-4000-8000-000000000001');
+set local request.jwt.claims='{"sub":"16891000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+select is((select habilitado from pcm.sso_origem_os_retorno_gate where id),false,'gate de origem começa fechado');
+set local role authenticated;
+select lives_ok($$update pcm.ordens_servico set ocorrencia_preventiva_id=null where id='16891000-0000-4000-8000-000000000017'$$,'com gate fechado preserva comportamento anterior');
+select lives_ok($$update pcm.ordens_servico set ocorrencia_preventiva_id='16891000-0000-4000-8000-000000000014' where id='16891000-0000-4000-8000-000000000017'$$,'restaura origem da fixture');
+select results_eq($$update pcm.ordens_servico set auvo_task_id=168910099 where id='16891000-0000-4000-8000-000000000017' returning id$$,array['16891000-0000-4000-8000-000000000017'::uuid],'gate fechado permite alterar ID externo');
+select results_eq($$update pcm.ordens_servico set sistema_id='16891000-0000-4000-8000-000000000020' where id='16891000-0000-4000-8000-000000000017' returning id$$,array['16891000-0000-4000-8000-000000000017'::uuid],'gate fechado permite alterar Sistema');
+select results_eq($$update pcm.ordens_servico set equipamento_id='16891000-0000-4000-8000-000000000064' where id='16891000-0000-4000-8000-000000000017' returning id$$,array['16891000-0000-4000-8000-000000000017'::uuid],'gate fechado permite alterar Equipamento');
+select results_eq($$update pcm.ordens_servico set client_id='16891000-0000-4000-8000-000000000063' where id='16891000-0000-4000-8000-000000000017' returning id$$,array['16891000-0000-4000-8000-000000000017'::uuid],'gate fechado permite alterar Cliente');
+reset role;
+update pcm.ordens_servico set client_id='16891000-0000-4000-8000-000000000002',auvo_task_id=null,sistema_id=null,equipamento_id=null where id='16891000-0000-4000-8000-000000000017';
+update pcm.sso_origem_os_retorno_gate set habilitado=true where id;
+set local role authenticated;
+select throws_ok($$update pcm.ordens_servico set ocorrencia_preventiva_id=null where id='16891000-0000-4000-8000-000000000017'$$,'23514','os_com_retorno_origem_imutavel','impede trocar origem da OS com retorno');
+select lives_ok($$update pcm.ordens_servico set ocorrencia_preventiva_id=ocorrencia_preventiva_id where id='16891000-0000-4000-8000-000000000017'$$,'update sem mudança da origem permanece permitido');
+select lives_ok($$update pcm.ordens_servico set ocorrencia_preventiva_id='16891000-0000-4000-8000-000000000061' where id='16891000-0000-4000-8000-000000000062'$$,'OS sem retorno pode receber ocorrência');
+select throws_ok($$update pcm.ordens_servico set client_id='16891000-0000-4000-8000-000000000063' where id='16891000-0000-4000-8000-000000000017'$$,'23514','os_com_retorno_origem_imutavel','impede mudar Cliente de OS com retorno');
+select throws_ok($$update pcm.ordens_servico set auvo_task_id=168910099 where id='16891000-0000-4000-8000-000000000017'$$,'23514','os_com_retorno_origem_imutavel','impede mudar identidade externa da OS com retorno');
+select throws_ok($$update pcm.ordens_servico set sistema_id='16891000-0000-4000-8000-000000000020' where id='16891000-0000-4000-8000-000000000017'$$,'23514','os_com_retorno_origem_imutavel','impede mudar Sistema da OS com retorno');
+select throws_ok($$update pcm.ordens_servico set equipamento_id='16891000-0000-4000-8000-000000000064' where id='16891000-0000-4000-8000-000000000017'$$,'23514','os_com_retorno_origem_imutavel','impede mudar Equipamento da OS com retorno');
+reset role;
+select * from finish();
+rollback;

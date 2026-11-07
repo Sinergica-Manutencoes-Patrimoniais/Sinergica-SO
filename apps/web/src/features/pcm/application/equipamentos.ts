@@ -72,12 +72,12 @@ export async function criarEquipamento(
         `O identificador ${primeiro.identificador} já existe. Mude o número no nome ou edite o identificador.`,
       );
     }
-    const segundo = await resolverIdentificadorNaCriacao(
-      opcoesIdentificador.identificador,
-      entradaIdentificador,
-      { ...opcoesIdentificador, userId: input.userId },
-    );
     try {
+      const segundo = await resolverIdentificadorNaCriacao(
+        opcoesIdentificador.identificador,
+        entradaIdentificador,
+        { ...opcoesIdentificador, userId: input.userId },
+      );
       return await gateway.criar({
         ...validado,
         identificador: segundo.identificador,
@@ -97,44 +97,15 @@ export async function criarEquipamento(
 export async function editarEquipamento(
   gateway: EquipamentosGateway,
   input: EditarEquipamentoCommand,
-  opcoesIdentificador?: CriarComIdentificadorOpcoes,
+  _opcoesIdentificador?: CriarComIdentificadorOpcoes,
 ) {
   const validado = validarEquipamento(input);
+  if (validado.alterarIdentificador) throw new Error("Alteração de código deve usar a jornada de códigos públicos.");
   if (validado.parentItemId) {
     const pai = await gateway.obterItem(validado.parentItemId);
     validarParentItem(validado.clientId ?? null, pai);
   }
-  if (
-    !opcoesIdentificador ||
-    !validado.alterarIdentificador ||
-    opcoesIdentificador.identificadorManual !== null
-  ) {
-    return gateway.editar({ ...validado, id: input.id, userId: input.userId });
-  }
-
-  const preparado = await prepararIdentificadorNaCriacao(
-    opcoesIdentificador.identificador,
-    {
-      clienteId: validado.clientId as string,
-      areaId: validado.areaId ?? null,
-      localId: validado.localId ?? null,
-      categoriaId: validado.categoriaId as string,
-      nomeAtivo: validado.nome,
-    },
-    { ...opcoesIdentificador, userId: input.userId },
-  );
-  try {
-    return await gateway.editar({
-      ...validado,
-      id: input.id,
-      identificador: preparado.identificador,
-      alterarIdentificador: true,
-      userId: input.userId,
-    });
-  } catch (erro) {
-    await preparado.desfazer();
-    throw erro;
-  }
+  return gateway.editar({ ...validado, id: input.id, userId: input.userId });
 }
 
 /** AC-6 — resolve o caminho de instalação (Cliente>Área>Local) + Sistemas do Item, pra tela de

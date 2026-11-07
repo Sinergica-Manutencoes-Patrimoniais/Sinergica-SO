@@ -8,6 +8,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
 import { resolveAuvoPriority } from "../_shared/auvo/priority-map.ts";
 import { resolveAuvoTaskTypeId } from "../_shared/auvo/task-type-map.ts";
+import { envioLegadoBloqueado } from "../_shared/auvo/trava-envio-legado.ts";
 
 const FN = "pcm-auvo-open-task";
 const InputSchema = z.object({ osId: z.string().uuid(), dryRun: z.boolean() });
@@ -68,6 +69,8 @@ serve(async (req) => {
     taskTypeId ??= resolveAuvoTaskTypeId(os.categoria);
     const pendencias: string[] = [];
     if (taskTypeId === undefined) pendencias.push("Tipo de tarefa Auvo não configurado para esta categoria.");
+    if (os.auvo_task_id == null && envioLegadoBloqueado(Deno.env.get("SSO_BLOQUEAR_ENVIO_LEGADO_AUVO")))
+      pendencias.push("Abertura legada bloqueada durante a transição Auvo.");
     const preview = {
       jaAberta: os.auvo_task_id != null,
       taskIdExistente: os.auvo_task_id,

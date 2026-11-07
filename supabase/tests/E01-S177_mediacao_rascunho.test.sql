@@ -1,0 +1,43 @@
+-- Transação sintética: não executar contra serviços externos ou dados reais.
+begin;
+set local app.auvo_sync_write='true';
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+values('17799500-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s177-mediacao@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values('17799500-0000-0000-0000-000000000001','superadmin','Código sintético',true);
+insert into pcm.clientes(id,nome,ativo,created_by) values('17799500-0000-0000-0000-00000000000a','Cliente código sintético',true,'17799500-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values('17799500-0000-0000-0000-000000000001','cadastro.gerir','17799500-0000-0000-0000-00000000000a');
+insert into pcm.sistemas(id,cliente_id,nome,codigo) values('17799500-0000-0000-0000-000000000011','17799500-0000-0000-0000-00000000000a','Sistema referenciado','S177-RACE-OLD-0995');
+insert into pcm.sso_codigo_ciclo(tipo,ativo_id,cliente_id) values('sistema','17799500-0000-0000-0000-000000000011','17799500-0000-0000-0000-00000000000a');
+insert into pcm.ordens_servico(id,client_id,sistema_id,numero,titulo,categoria,created_by)
+values('17799500-0000-0000-0000-000000000012','17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000011','S177-TESTE-OS','OS sintética','preventiva','17799500-0000-0000-0000-000000000001');
+select plan(13);
+insert into pcm.sistemas(id,cliente_id,nome,codigo) values ('17799500-0000-0000-0000-000000000015','17799500-0000-0000-0000-00000000000a','S177 medição transitória','S177-MED-OLD-1001');
+insert into pcm.sso_codigo_ciclo(tipo,ativo_id,cliente_id) values ('sistema','17799500-0000-0000-0000-000000000015','17799500-0000-0000-0000-00000000000a');
+select throws_ok($$select * from pcm.sso_mediar_consulta_codigo_rascunho('17799500-0000-0000-0000-00000000000a','sistema','17799500-0000-0000-0000-000000000011')$$,'55000','mediacao_codigo_desabilitada','gate fechado por padrão');
+update pcm.sso_mediacao_codigo_rascunho_gate set habilitado=true where id;
+update pcm.sso_codigo_marcos_gate set habilitado=true where chave;
+update pcm.sso_codigo_rascunho_gate set habilitado=true where chave;
+update pcm.sso_codigo_rascunho_sem_sync_gate set habilitado=true where id;
+set local request.jwt.claims = '{"sub":"17799500-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';
+set local role authenticated;
+select is((select count(*) from pcm.sso_mediar_consulta_codigo_rascunho('17799500-0000-0000-0000-00000000000a','sistema','17799500-0000-0000-0000-000000000011')),1::bigint,'consulta autorizada');
+select throws_ok($$select * from pcm.sso_mediar_consulta_codigo_rascunho('17799500-0000-0000-0000-000000000099','sistema','17799500-0000-0000-0000-000000000011')$$,'42501',null,'Cliente errado negado');
+select throws_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-000000000099','17799500-0000-0000-0000-000000000039','sistema','17799500-0000-0000-0000-000000000011',1,'S177-RACE-OLD-0995','S177-OTHER-0995')$$,'42501',null,'comando Cliente errado negado');
+select throws_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000039','sistema','17799500-0000-0000-0000-000000000011',1,'S177-RACE-OLD-0995','S177-OTHER-0995')$$,'23514','codigo_publico_protegido','OS previamente registrada impede edição');
+select ok(not has_function_privilege('authenticated','pcm.sso_editar_codigo_rascunho(uuid,text,uuid,integer,text,text)','EXECUTE'),'wrapper interno permanece privado');
+select ok(not has_function_privilege('authenticated','pcm.sso_consultar_ciclo_codigo(text,uuid)','EXECUTE'),'consulta interna permanece privada');
+select lives_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000040','sistema','17799500-0000-0000-0000-000000000015',1,'S177-MED-OLD-1001','S177-MED-NEW-1001')$$,'edição de rascunho autorizada');
+select lives_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000040','sistema','17799500-0000-0000-0000-000000000015',1,'S177-MED-OLD-1001','S177-MED-NEW-1001')$$,'replay idêntico');
+select throws_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000040','sistema','17799500-0000-0000-0000-000000000015',1,'S177-MED-OLD-1001','S177-MED-OTHER-1001')$$,'23505',null,'replay divergente negado');
+reset role;
+select is((select count(*) from audit.events where action='codigo.rascunho_editado' and entity_id='17799500-0000-0000-0000-000000000015'),1::bigint,'replay não duplica auditoria');
+update config.sso_concessoes set ativa=false where usuario_id='17799500-0000-0000-0000-000000000001' and acao='cadastro.gerir' and cliente_id='17799500-0000-0000-0000-00000000000a';
+set local role authenticated;
+select throws_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000040','sistema','17799500-0000-0000-0000-000000000015',1,'S177-MED-OLD-1001','S177-MED-NEW-1001')$$,'42501',null,'revogação impede replay');
+reset role;
+update pcm.sso_codigo_marcos_gate set habilitado=false where chave;
+set local role authenticated;
+select throws_ok($$select pcm.sso_mediar_edicao_codigo_rascunho('17799500-0000-0000-0000-00000000000a','17799500-0000-0000-0000-000000000040','sistema','17799500-0000-0000-0000-000000000015',1,'S177-MED-OLD-1001','S177-MED-NEW-1001')$$,'55000','marcos_codigo_desabilitados','marcos desligados impedem comando');
+reset role;
+select * from finish();
+rollback;

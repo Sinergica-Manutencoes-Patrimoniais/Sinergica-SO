@@ -1,15 +1,27 @@
 import type { PortalSection } from "@sinergica/portal-core";
+import { formatarPropostaPublica } from "@sinergica/shared";
 import { Button } from "@sinergica/ui";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useId, useState } from "react";
 import { useAuth } from "../../app/auth-context";
 import { criarRelatorioPdf } from "../../lib/pdf/relatorio-pdf";
-// E03-S06: o portal reusa o domínio de proposta do Comercial (formatação de PDF + expiração),
+// E03-S06: o portal reusa a regra de expiração de proposta do Comercial,
 // mesmo padrão já estabelecido de `formatarTextoRelatorioCliente` (E01-S135, importado do PCM
 // logo abaixo) — o portal é o ponto de composição entre módulos, não os módulos entre si.
 import { estaExpirada } from "../comercial/domain/proposta";
-import { type PropostaPdfPayload, formatarTextoProposta } from "../comercial/domain/proposta-pdf";
 import type { PortalSnapshot } from "./application/portal-gateway";
 import { supabasePortalAdapter } from "./infrastructure/supabase-portal-adapter";
+import { MateriaisOsPortal } from "./components/MateriaisOsPortal";
+import { PropostasOsPortal } from "./components/PropostasOsPortal";
+import { CobrancasOsPortal } from "./components/CobrancasOsPortal";
+import { TimelineOsPortal } from "./components/TimelineOsPortal";
+import { AnexosOsPortal } from "./components/AnexosOsPortal";
+import { AnexosPropriosOs } from "./components/AnexosPropriosOs";
+import { VisitasOsPortal } from "./components/VisitasOsPortal";
+import { CalendarioVisitasPortal } from "./components/CalendarioVisitasPortal";
+import { SituacaoOsPortal } from "./components/SituacaoOsPortal";
+import { PendenciasOsPortal } from "./components/PendenciasOsPortal";
+import { FilaComunicacoes } from "./components/FilaComunicacoes";
 
 type Secao = PortalSection;
 
@@ -29,25 +41,22 @@ const SECOES: Array<{ id: Secao; label: string }> = [
 export function PortalShell() {
   const { user, logout } = useAuth();
   const [secao, setSecao] = useState<Secao>("painel");
-  const [snapshot, setSnapshot] = useState<PortalSnapshot | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(true);
-
+  const consulta = useQuery({
+    queryKey: ["portal", user?.id],
+    queryFn: () => supabasePortalAdapter.carregar(),
+    enabled: !!user?.id,
+    retry: false,
+  });
+  const carregando = consulta.isFetching || (!!user && consulta.isPending);
+  const erro = consulta.isError
+    ? consulta.error instanceof Error
+      ? consulta.error.message
+      : "Não foi possível carregar o portal."
+    : null;
+  const snapshot = user && !carregando && !erro ? (consulta.data ?? null) : null;
   const recarregar = useCallback(async () => {
-    setCarregando(true);
-    setErro(null);
-    try {
-      setSnapshot(await supabasePortalAdapter.carregar());
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível carregar o portal.");
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void recarregar();
-  }, [recarregar]);
+    await consulta.refetch();
+  }, [consulta.refetch]);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -325,6 +334,8 @@ function OrdensServico({
   onAtualizar,
 }: { data: PortalSnapshot; onAtualizar: () => Promise<void> }) {
   const [notas, setNotas] = useState<Record<string, string>>({});
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [arquivos, setArquivos] = useState<Record<string, File | undefined>>({});
   if (!data.os.length) return <Vazio texto="Nenhuma ordem de serviço." />;
   return (
@@ -340,8 +351,18 @@ function OrdensServico({
                 {os.categoria} · aberta em {dataPt(os.createdAt)}
               </p>
             </div>
-            <Badge texto={os.status} />
+            {import.meta.env.VITE_SSO_PORTAL_SITUACAO_OS_ENABLED === "true" && user?.id
+              ? <SituacaoOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+              : <Badge texto={os.status} />}
           </div>
+          {user?.id && <MateriaisOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && <PropostasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} clienteNome={data.cliente.nome} />}
+          {user?.id && <CobrancasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && <TimelineOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && <AnexosOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && <AnexosPropriosOs userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && <VisitasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && <PendenciasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
           {data.osNotas.some((item) => item.referenciaId === os.id) && (
             <div className="mt-4 rounded-lg bg-paper px-3">
               {data.osNotas
@@ -380,6 +401,7 @@ function OrdensServico({
                 );
                 setNotas((v) => ({ ...v, [os.id]: "" }));
                 setArquivos((v) => ({ ...v, [os.id]: undefined }));
+                if (user?.id) await queryClient.invalidateQueries({ queryKey: ["portal-anexos-proprios", user.id, data.cliente.id, os.id] });
                 await onAtualizar();
               }}
               className="rounded-lg border border-orange px-3 py-2 text-body font-semibold text-orange disabled:opacity-50"
@@ -450,8 +472,10 @@ function baixarTexto(titulo: string, conteudo: string) {
 }
 
 function Cronograma({ data }: { data: PortalSnapshot }) {
+  const { user } = useAuth();
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      {user?.id && <CalendarioVisitasPortal userId={user.id} clienteId={data.cliente.id} />}
       <section className="rounded-xl border border-line bg-card p-5">
         <h2 className="font-semibold">Preventivas</h2>
         {data.visitas.length ? (
@@ -489,10 +513,13 @@ function Notificacoes({
   data,
   onAtualizar,
 }: { data: PortalSnapshot; onAtualizar: () => Promise<void> }) {
-  if (!data.notificacoes.length && !data.osAguardandoAvaliacao.length)
+  const { user } = useAuth();
+  const filaAtiva = import.meta.env.VITE_SSO_PORTAL_COMUNICACOES_ENABLED === "true" && !!user?.id;
+  if (!data.notificacoes.length && !data.osAguardandoAvaliacao.length && !filaAtiva)
     return <Vazio texto="Nenhuma notificação." />;
   return (
     <div className="grid gap-4">
+      {filaAtiva && user?.id && <FilaComunicacoes userId={user.id} clienteId={data.cliente.id} />}
       {data.osAguardandoAvaliacao.map((os) => (
         <Pesquisa key={os.id} osId={os.id} titulo={os.titulo} onAtualizar={onAtualizar} />
       ))}
@@ -649,7 +676,7 @@ async function baixarPdfProposta(payload: unknown, versaoAtual: number, contaNom
     titulo: "Proposta Comercial",
     subtitulo: `${contaNome} · v${versaoAtual}`,
   });
-  pdf.escreverTexto(formatarTextoProposta((payload ?? {}) as PropostaPdfPayload, contaNome));
+  pdf.escreverTexto(formatarPropostaPublica(payload, contaNome));
   const bytes = await pdf.finalizar();
   const url = URL.createObjectURL(
     new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),

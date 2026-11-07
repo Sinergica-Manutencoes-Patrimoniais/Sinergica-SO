@@ -3,7 +3,7 @@
 // E01-S79: passa a permitir editar o ativo direto do drawer (antes só visualização).
 import { Skeleton } from "@sinergica/ui";
 import { Pencil, Puzzle, Wrench, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { obterDetalheAtivo } from "../application/board-ativos";
@@ -21,6 +21,13 @@ import type {
 import { ultimaManutencao } from "../domain/historico-ativo";
 import { supabaseBoardAtivosAdapter } from "../infrastructure/supabase-board-ativos-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
+import { EdicaoRascunhoCodigo } from "../interfaces/codigos-publicos/EdicaoRascunho";
+import { DocumentosStagingAtivo } from "../interfaces/estrutura-tecnica/DocumentosStagingAtivo";
+import { FotosStagingAtivo } from "../interfaces/estrutura-tecnica/FotosStagingAtivo";
+import { PlanosDoAlvo } from "../interfaces/estrutura-tecnica/PlanosDoAlvo";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
+import { PendenciasDoAlvo } from "../interfaces/pendencias-tecnicas/PendenciasDoAlvo";
+import { ResultadosDoAlvo } from "../interfaces/pendencias-tecnicas/ResultadosAtivo";
 import { EquipamentoModal } from "./EquipamentoModal";
 
 type Estado =
@@ -52,6 +59,8 @@ export function DrawerDetalheAtivo({
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [editando, setEditando] = useState(false);
   const [opcoes, setOpcoes] = useState<OpcoesEdicao | null>(null);
+  const itemIdAtual = useRef(itemId);
+  itemIdAtual.current = itemId;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -63,7 +72,9 @@ export function DrawerDetalheAtivo({
 
   useEffect(() => {
     let vivo = true;
-    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
+    setEstado({ fase: "carregando" });
+    setEditando(false);
+    setOpcoes(null);
     obterDetalheAtivo(supabaseEquipamentosAdapter, supabaseBoardAtivosAdapter, itemId)
       .then((detalhe) => {
         if (vivo) setEstado({ fase: "pronto", detalhe });
@@ -77,34 +88,61 @@ export function DrawerDetalheAtivo({
   }, [itemId]);
 
   async function abrirEdicao() {
+    const itemDaAbertura = itemId;
     setEditando(true);
     if (!opcoes) {
       const [clientes, equipamentos] = await Promise.all([
         listarClientesEquipamento(supabaseEquipamentosAdapter),
         listarEquipamentos(supabaseEquipamentosAdapter),
       ]);
-      setOpcoes({ clientes, equipamentos });
+      if (itemIdAtual.current === itemDaAbertura) setOpcoes({ clientes, equipamentos });
     }
   }
 
   async function salvarEdicao(input: EquipamentoFormData) {
-    if (!user || estado.fase !== "pronto" || !estado.detalhe.contexto) return;
+    if (!user || estado.fase !== "pronto" || estado.detalhe.contexto?.item.id !== itemId) return;
     await editarEquipamento(supabaseEquipamentosAdapter, {
       ...input,
       id: estado.detalhe.contexto.item.id,
       userId: user.id,
     });
+    if (itemIdAtual.current !== itemId) return;
     setEditando(false);
     const detalhe = await obterDetalheAtivo(
       supabaseEquipamentosAdapter,
       supabaseBoardAtivosAdapter,
       itemId,
     );
-    setEstado({ fase: "pronto", detalhe });
-    onAtualizado?.();
+    if (itemIdAtual.current === itemId) {
+      setEstado({ fase: "pronto", detalhe });
+      onAtualizado?.();
+    }
   }
 
-  const item = estado.fase === "pronto" ? estado.detalhe.contexto?.item : null;
+  async function atualizarDetalheCodigo() {
+    const id = itemId;
+    try {
+      const detalhe = await obterDetalheAtivo(
+        supabaseEquipamentosAdapter,
+        supabaseBoardAtivosAdapter,
+        id,
+      );
+      if (itemIdAtual.current === id) {
+        setEstado({ fase: "pronto", detalhe });
+        onAtualizado?.();
+      }
+    } catch {
+      if (itemIdAtual.current === id)
+        setEstado({
+          fase: "erro",
+          mensagem: "Código alterado; não foi possível atualizar o detalhe. Abra novamente.",
+        });
+    }
+  }
+
+  const detalheAtual =
+    estado.fase === "pronto" && estado.detalhe.contexto?.item.id === itemId ? estado.detalhe : null;
+  const item = detalheAtual?.contexto?.item ?? null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -146,7 +184,74 @@ export function DrawerDetalheAtivo({
         {estado.fase === "erro" && (
           <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>
         )}
-        {estado.fase === "pronto" && <Conteudo detalhe={estado.detalhe} />}
+        {detalheAtual && <Conteudo detalhe={detalheAtual} />}
+        {user &&
+          item &&
+          (item.tipo === "componente" || item.tipo === "equipamento") &&
+          item.clientId && (
+            <EdicaoRascunhoCodigo
+              userId={user.id}
+              clienteId={item.clientId}
+              tipo="componente"
+              ativoId={item.id}
+              onAtualizado={() => {
+                void atualizarDetalheCodigo();
+              }}
+            />
+          )}
+        {estado.fase === "pronto" && !estado.detalhe.contexto && (
+          <Conteudo detalhe={estado.detalhe} />
+        )}
+        {user && item && item.clientId && (
+          <ResultadosDoAlvo
+            userId={user.id}
+            clienteId={item.clientId}
+            tipo="componente"
+            id={item.id}
+            nome={item.nome}
+          />
+        )}
+        {user && item && item.clientId && (
+          <PendenciasDoAlvo
+            userId={user.id}
+            clienteId={item.clientId}
+            tipo="componente"
+            id={item.id}
+          />
+        )}
+        {user && item && item.clientId && (
+          <PlanosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />
+        )}
+        {user &&
+          item &&
+          (item.tipo === "componente" || item.tipo === "equipamento") &&
+          item.clientId && (
+            <FotosStagingAtivo
+              userId={user.id}
+              clienteId={item.clientId}
+              tipo={item.tipo}
+              entidadeId={item.id}
+            />
+          )}
+        {user && item?.tipo === "componente" && item.clientId && (
+          <DocumentosStagingAtivo
+            userId={user.id}
+            clienteId={item.clientId}
+            tipo="componente"
+            entidadeId={item.id}
+          />
+        )}
+        {user &&
+          item &&
+          (item.tipo === "componente" || item.tipo === "equipamento") &&
+          item.clientId && (
+            <HistoricoCadastroLevantamento
+              userId={user.id}
+              clienteId={item.clientId}
+              tipo={item.tipo}
+              entidadeId={item.id}
+            />
+          )}
       </div>
 
       {editando && item && opcoes && (
@@ -190,7 +295,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
         <div className="min-w-0">
           <h4 className="truncate text-body font-semibold text-ink">{item.nome}</h4>
           <p className="text-caption text-ink-3">
-            {item.tipo === "componente" ? "Subcomponente (legado)" : "Principal"}
+            {item.tipo === "componente" ? "Componente" : "Equipamento"}
             {!item.ativo && " · inativo"}
           </p>
         </div>
@@ -202,6 +307,26 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 
       <Secao titulo="Nome completo (Auvo)">
         <p className="text-body text-ink-2">{item.auvoDescricao ?? "—"}</p>
+      </Secao>
+
+      <Secao titulo="Identificação e atributos técnicos">
+        <dl className="space-y-1 text-caption text-ink-2">
+          <div>
+            <dt className="inline font-semibold">Código: </dt>
+            <dd className="inline">{item.identificador || "Não informado"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">Categoria: </dt>
+            <dd className="inline">{item.categoria || "Não informada"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">Observações: </dt>
+            <dd className="inline">{item.observacoes || "Não informadas"}</dd>
+          </div>
+        </dl>
+        <p className="mt-2 text-caption text-ink-3">
+          Criticidade e completude não estão disponíveis nesta fonte.
+        </p>
       </Secao>
 
       <Secao titulo="Sistemas">
@@ -223,7 +348,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
       </Secao>
 
       {componentesFilhos.length > 0 && (
-        <Secao titulo="Subcomponentes (legado)">
+        <Secao titulo="Componentes vinculados">
           <ul className="flex flex-col gap-1">
             {componentesFilhos.map((c) => (
               <li key={c.id} className="flex items-center gap-2 text-caption text-ink-2">

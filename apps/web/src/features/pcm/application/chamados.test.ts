@@ -175,6 +175,19 @@ describe("chamados (use case)", () => {
       expect(gatewayOs.criarOrdemServico).not.toHaveBeenCalled();
     });
 
+    it("interrompe conversão legada diante de múltiplas OS, sem gravar ou escolher uma", async () => {
+      const gatewayChamados = gatewayChamadosFake();
+      const gatewayOs = gatewayOsFake();
+      gatewayOs.obterPorChamado = vi.fn(async () => { throw new Error("Este Chamado possui mais de uma OS"); });
+      await expect(gerarOsDoChamado(gatewayChamados, gatewayOs, CHAMADO_ABERTO, {
+        categoria: "corretiva", prioridade: "media", gravidade: 3, urgencia: 3, tendencia: 3,
+        dorCliente: null, observacao: null, localDescricao: null, solicitante: null,
+        origem: "manual", tecnicoId: null, tipoTarefaId: "tipo-1", dataPrevista: null,
+      }, "user-1", "convertido_os")).rejects.toThrow("mais de uma OS");
+      expect(gatewayOs.criarOrdemServico).not.toHaveBeenCalled();
+      expect(gatewayChamados.marcarStatusComOs).not.toHaveBeenCalled();
+    });
+
     it("E01-S129: recupera OS existente sem duplicar após falha entre as escritas", async () => {
       const gatewayChamados = gatewayChamadosFake();
       const gatewayOs = gatewayOsFake();
@@ -209,6 +222,20 @@ describe("chamados (use case)", () => {
         "os-existente",
         "user-1",
       );
+    });
+
+    it("caracteriza risco legado: erro de criação adota OS encontrada sem identificar o comando", async () => {
+      const gatewayChamados = gatewayChamadosFake();
+      const gatewayOs = gatewayOsFake();
+      gatewayOs.obterPorChamado = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "os-outra", numero: "CH-0001" });
+      gatewayOs.criarOrdemServico = vi.fn().mockRejectedValue(new Error("falha de transporte"));
+      const resultado = await gerarOsDoChamado(gatewayChamados, gatewayOs, CHAMADO_ABERTO, {
+        categoria: "corretiva", prioridade: "media", gravidade: 3, urgencia: 3, tendencia: 3,
+        dorCliente: null, observacao: null, localDescricao: null, solicitante: null,
+        origem: "manual", tecnicoId: null, tipoTarefaId: "tipo-1", dataPrevista: null,
+      }, "user-1", "convertido_os");
+      expect(resultado.id).toBe("os-outra");
+      expect(gatewayChamados.marcarStatusComOs).toHaveBeenCalledWith("cha-1", "convertido_os", "os-outra", "user-1");
     });
 
     it("E01-S124 AC-1: após converter, move a OS para a coluna de destino", async () => {

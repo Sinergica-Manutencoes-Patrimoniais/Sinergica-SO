@@ -6,9 +6,12 @@
  * RPC. O preview e o salvo podem divergir por um instante (parâmetros mudaram enquanto editava);
  * isso é aceitável porque salvar sempre recalcula de novo no servidor com os valores atuais. */
 
+import { formatarPropostaPublica } from "@sinergica/shared";
 import { Badge, Button, Card, EmptyState, Field, Input, Select, Skeleton } from "@sinergica/ui";
 import { ArrowLeft, Download, FileSearch, Plus, Send, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "../../../app/auth-context";
+import { AutorizacaoComplemento } from "./AutorizacaoComplemento";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { useCriarContrato } from "../application/contrato-queries";
@@ -18,8 +21,11 @@ import {
   useNiveisTecnico,
   useParametrosPreco,
 } from "../application/precificacao-queries";
-import { montarItensImportadosDoLevantamento } from "../application/proposta";
-import type { ItemCommand } from "../application/proposta-gateway";
+import {
+  montarItensImportadosDoLevantamento,
+  podeVincularLevantamentoAtual,
+} from "../application/proposta";
+import type { ItemCommand, VersaoProposta } from "../application/proposta-gateway";
 import {
   useCriarProposta,
   useDuplicarProposta,
@@ -42,11 +48,15 @@ import {
   somarCustoItens,
   transicaoStatusInvalida,
 } from "../domain/proposta";
-import { type PropostaPdfPayload, formatarTextoProposta } from "../domain/proposta-pdf";
 import { supabaseContratoAdapter } from "../infrastructure/supabase-contrato-adapter";
 import { supabaseLevantamentoAdapter } from "../infrastructure/supabase-levantamento-adapter";
 import { supabasePrecificacaoAdapter } from "../infrastructure/supabase-precificacao-adapter";
-import { supabasePropostaAdapter } from "../infrastructure/supabase-proposta-adapter";
+import {
+  confirmarAcessoVersaoPdf,
+  observarMudancaSessaoPdf,
+  supabasePropostaAdapter,
+} from "../infrastructure/supabase-proposta-adapter";
+import { PropostasSemCustos } from "./PropostasSemCustos";
 
 const TIPO_LABEL: Record<Proposta["tipo"], string> = {
   levantamento: "Levantamento",
@@ -83,26 +93,60 @@ interface ItemRascunho extends ItemCommand {
   chave: string;
 }
 
-export function PropostaEditorPage({
+type PropostaEditorProps = {
+  oportunidadeId: string;
+  clienteId: string;
+  clienteNome?: string;
+  onVoltar: () => void;
+};
+
+export function PropostaEditorPage(props: PropostaEditorProps) {
+  const { user } = useAuth();
+  if (user?.papel !== "superadmin") {
+    return (
+      <PropostasSemCustos
+        userId={user?.id ?? ""}
+        clienteId={props.clienteId}
+        oportunidadeId={props.oportunidadeId}
+        onVoltar={props.onVoltar}
+      />
+    );
+  }
+  return <PropostaEditorCompleto {...props} />;
+}
+
+function PropostaEditorCompleto({
   oportunidadeId,
   clienteId,
   clienteNome,
   onVoltar,
-}: {
-  oportunidadeId: string;
-  /** E03-S05: a Conta da oportunidade — só pra listar os levantamentos DELA (AC-4 exige "mesma
-   * Conta"; a RPC também reforça isso no banco, este prop é só o filtro do picker). */
-  clienteId: string;
-  /** E03-S06 AC-1: só pro cabeçalho do PDF — a proposta em si não sabe o nome da Conta. */
-  clienteNome?: string;
-  onVoltar: () => void;
-}) {
+}: PropostaEditorProps) {
+  const { user } = useAuth();
+  const contextoPdf = useRef({
+    ativo: false,
+    geracao: 0,
+    usuarioId: user?.id,
+    propostaId: null as string | null,
+  });
   const { podeAcessar } = usePermissoes();
   const temEscrita = podeAcessar("comercial", "escrita");
   const superadmin = podeAcessar("comercial", "escrita"); // gate real de força é no banco; UI só oferece
 
   const propostasQuery = usePropostasDaOportunidade(supabasePropostaAdapter, oportunidadeId);
   const [propostaId, setPropostaId] = useState<string | null>(null);
+  contextoPdf.current.usuarioId = user?.id;
+  contextoPdf.current.propostaId = propostaId;
+  useEffect(() => {
+    contextoPdf.current.ativo = true;
+    const cancelarObservacao = observarMudancaSessaoPdf(() => {
+      contextoPdf.current.geracao++;
+    });
+    return () => {
+      contextoPdf.current.ativo = false;
+      contextoPdf.current.geracao++;
+      cancelarObservacao();
+    };
+  }, []);
   const [erro, setErro] = useState<string | null>(null);
   const [novoTipo, setNovoTipo] = useState<Proposta["tipo"]>("simples");
 
@@ -125,7 +169,13 @@ export function PropostaEditorPage({
   // E03-S05, AC-4/AC-7: levantamentos da mesma Conta — alimenta o seletor de vínculo e também
   // mostra se o levantamento vinculado está "em andamento" (AC-6) ou indisponível (edge case).
   const levantamentosQuery = useLevantamentosDaConta(supabaseLevantamentoAdapter, clienteId);
-  const [levantamentoEscolhido, setLevantamentoEscolhido] = useState("");
+  const [selecaoLevantamento, setSelecaoLevantamento] = useState<{
+    usuarioId: string | undefined; clienteId: string; oportunidadeId: string; propostaId: string | null; assessmentId: string;
+  } | null>(null);
+  const travaVinculo = useRef(false);
+  const levantamentoEscolhido = selecaoLevantamento && selecaoLevantamento.usuarioId === user?.id &&
+    selecaoLevantamento.clienteId === clienteId && selecaoLevantamento.oportunidadeId === oportunidadeId &&
+    selecaoLevantamento.propostaId === propostaId ? selecaoLevantamento.assessmentId : "";
   const [importandoLevantamento, setImportandoLevantamento] = useState(false);
   const [avisoImportacao, setAvisoImportacao] = useState<string | null>(null);
   const [gerandoPdf, setGerandoPdf] = useState(false);
@@ -135,6 +185,21 @@ export function PropostaEditorPage({
   const [precoManual, setPrecoManual] = useState("");
 
   const propostaSelecionada = (propostasQuery.data ?? []).find((p) => p.id === propostaId) ?? null;
+  const vinculoDisponivel = Boolean(
+    clienteId &&
+      propostaSelecionada &&
+      temEscrita &&
+      podeEditar(propostaSelecionada.status) &&
+      !propostaSelecionada.assessmentId &&
+      !propostasQuery.isFetching &&
+      !propostasQuery.isError &&
+      podeVincularLevantamentoAtual(
+        levantamentoEscolhido,
+        levantamentosQuery.data ?? [],
+        Boolean(levantamentosQuery.isFetching),
+        Boolean(levantamentosQuery.isError),
+      ),
+  );
 
   // AC-6: o levantamento vinculado pode não estar na lista (excluído/arquivado depois de
   // vinculado) — `undefined` aqui é o sinal de "vínculo indisponível", tratado sem quebrar a tela.
@@ -219,16 +284,21 @@ export function PropostaEditorPage({
   }
 
   async function vincularLevantamento() {
-    if (!propostaSelecionada || !levantamentoEscolhido) return;
+    if (!propostaSelecionada || !clienteId || !vinculoDisponivel || travaVinculo.current) return;
+    const selecaoEnviada = selecaoLevantamento;
+    travaVinculo.current = true;
     setErro(null);
     try {
       await vincularAssessment.mutateAsync({
         propostaId: propostaSelecionada.id,
         assessmentId: levantamentoEscolhido,
+        clienteId,
       });
-      setLevantamentoEscolhido("");
+      setSelecaoLevantamento((atual) => atual === selecaoEnviada ? null : atual);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao vincular levantamento.");
+    } finally {
+      travaVinculo.current = false;
     }
   }
 
@@ -282,32 +352,51 @@ export function PropostaEditorPage({
   // dos itens ao vivo na tela — reflete exatamente o que foi salvo, mesmo que a composição em
   // edição tenha mudanças ainda não persistidas. `versoesQuery` já vem ordenada desc (versao),
   // então o índice 0 é sempre a mais recente.
-  async function baixarPdf() {
-    if (!propostaSelecionada) return;
-    const versao = (versoesQuery.data ?? [])[0];
+  async function baixarPdf(versaoSelecionada?: VersaoProposta) {
+    if (!propostaSelecionada || versoesQuery.isFetching || versoesQuery.isError) return;
+    const versao = versaoSelecionada ?? (versoesQuery.data ?? [])[0];
     if (!versao) {
       setErro("Nenhuma versão salva ainda — salve a composição antes de gerar o PDF.");
       return;
     }
+    if (versao.propostaId !== propostaSelecionada.id || !(versoesQuery.data ?? []).includes(versao))
+      return;
+    if (!user || user.papel !== "superadmin") return;
+    const usuarioId = user.id;
+    const propostaAtual = propostaSelecionada.id;
+    const geracaoAtual = contextoPdf.current.geracao;
+    const permitido = () =>
+      contextoPdf.current.ativo &&
+      contextoPdf.current.geracao === geracaoAtual &&
+      contextoPdf.current.usuarioId === usuarioId &&
+      contextoPdf.current.propostaId === propostaAtual;
     setGerandoPdf(true);
     setErro(null);
     try {
-      const pdf = await criarRelatorioPdf({
-        titulo: "Proposta Comercial",
-        subtitulo: `${clienteNome ?? "Conta"} · v${versao.versao}`,
+      const entregue = await gerarPdfComAcessoAtual({
+        permitido,
+        verificarServidor: () => confirmarAcessoVersaoPdf(usuarioId, propostaAtual, versao.id),
+        gerar: async () => {
+          const pdf = await criarRelatorioPdf({
+            titulo: "Proposta Comercial",
+            subtitulo: `${clienteNome ?? "Conta"} · v${versao.versao}`,
+          });
+          pdf.escreverTexto(formatarPropostaPublica(versao.payload, clienteNome ?? "Conta"));
+          return pdf.finalizar();
+        },
+        entregar: (bytes) => {
+          const url = URL.createObjectURL(
+            new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
+          );
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `proposta-${(clienteNome ?? "conta").toLowerCase().replaceAll(/[^a-z0-9]+/gi, "-")}-v${versao.versao}.pdf`;
+          link.click();
+          URL.revokeObjectURL(url);
+        },
       });
-      pdf.escreverTexto(
-        formatarTextoProposta(versao.payload as PropostaPdfPayload, clienteNome ?? "Conta"),
-      );
-      const bytes = await pdf.finalizar();
-      const url = URL.createObjectURL(
-        new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
-      );
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `proposta-${(clienteNome ?? "conta").toLowerCase().replaceAll(/[^a-z0-9]+/gi, "-")}-v${versao.versao}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+      if (!entregue && permitido())
+        setErro("Acesso à versão indisponível. Atualize a página e tente novamente.");
     } catch {
       setErro("Não foi possível gerar o PDF da proposta.");
     } finally {
@@ -331,9 +420,7 @@ export function PropostaEditorPage({
         titulo: "Proposta Comercial",
         subtitulo: `${clienteNome ?? "Conta"} · v${versao.versao}`,
       });
-      pdf.escreverTexto(
-        formatarTextoProposta(versao.payload as PropostaPdfPayload, clienteNome ?? "Conta"),
-      );
+      pdf.escreverTexto(formatarPropostaPublica(versao.payload, clienteNome ?? "Conta"));
       await pdf.finalizar(); // se isto lançar, o catch abaixo pega — mudarStatus nunca roda.
       await mudarStatus.mutateAsync({ propostaId: propostaSelecionada.id, status: "enviada" });
     } catch (e) {
@@ -463,6 +550,7 @@ export function PropostaEditorPage({
         <ArrowLeft className="size-4" aria-hidden />
         Voltar às propostas
       </Button>
+      {import.meta.env.VITE_SSO_AUTORIZACAO_COMPLEMENTO_ENABLED === "true" && user && <AutorizacaoComplemento key={propostaSelecionada.id} usuario={user.id} clienteId={clienteId} propostaId={propostaSelecionada.id} />}
 
       {erro && (
         <Card>
@@ -586,7 +674,7 @@ export function PropostaEditorPage({
                       <Select
                         {...props}
                         value={levantamentoEscolhido}
-                        onChange={(e) => setLevantamentoEscolhido(e.target.value)}
+                        onChange={(e) => setSelecaoLevantamento({ usuarioId: user?.id, clienteId, oportunidadeId, propostaId, assessmentId: e.target.value })}
                       >
                         <option value="">Selecione…</option>
                         {(levantamentosQuery.data ?? []).map((l) => (
@@ -601,7 +689,7 @@ export function PropostaEditorPage({
                 </div>
                 <Button
                   size="sm"
-                  disabled={!levantamentoEscolhido || vincularAssessment.isPending}
+                  disabled={!vinculoDisponivel || vincularAssessment.isPending}
                   onClick={vincularLevantamento}
                 >
                   Vincular
@@ -846,7 +934,12 @@ export function PropostaEditorPage({
             independente do status: quem decide se está pronto pra baixar é quem trabalha nela. */}
         {(versoesQuery.data ?? []).length > 0 && (
           <div className="flex items-center gap-2 border-b border-line p-3">
-            <Button variant="ghost" size="sm" onClick={baixarPdf} disabled={gerandoPdf}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void baixarPdf()}
+              disabled={gerandoPdf || versoesQuery.isFetching || versoesQuery.isError}
+            >
               <Download className="size-4" aria-hidden />
               {gerandoPdf ? "Gerando PDF…" : "Baixar PDF"}
             </Button>
@@ -938,16 +1031,64 @@ export function PropostaEditorPage({
         {/* Histórico de versões */}
         <div className="p-3">
           <h3 className="mb-2 text-body font-semibold text-ink">Histórico de versões</h3>
-          <ul className="space-y-1 text-caption text-ink-2">
-            {(versoesQuery.data ?? []).map((versao) => (
-              <li key={versao.id}>
-                v{versao.versao} — {new Date(versao.criadoEm).toLocaleString("pt-BR")}
-              </li>
-            ))}
-          </ul>
+          {versoesQuery.isError ? (
+            <p role="alert">Não foi possível consultar as versões.</p>
+          ) : (
+            <HistoricoVersoesProposta
+              versoes={versoesQuery.isFetching ? [] : (versoesQuery.data ?? [])}
+              gerandoPdf={gerandoPdf}
+              onBaixar={(versao) => void baixarPdf(versao)}
+            />
+          )}
         </div>
       </Card>
     </div>
+  );
+}
+
+export async function gerarPdfComAcessoAtual({
+  gerar,
+  permitido,
+  verificarServidor,
+  entregar,
+}: {
+  gerar: () => Promise<Uint8Array>;
+  permitido: () => boolean;
+  verificarServidor: () => Promise<boolean>;
+  entregar: (bytes: Uint8Array) => void;
+}): Promise<boolean> {
+  const bytes = await gerar();
+  if (!permitido() || !(await verificarServidor()) || !permitido()) return false;
+  entregar(bytes);
+  return true;
+}
+
+export function HistoricoVersoesProposta({
+  versoes,
+  gerandoPdf,
+  onBaixar,
+}: {
+  versoes: VersaoProposta[];
+  gerandoPdf: boolean;
+  onBaixar: (versao: VersaoProposta) => void;
+}) {
+  return (
+    <ul className="space-y-1 text-caption text-ink-2">
+      {versoes.map((versao) => (
+        <li key={versao.id}>
+          v{versao.versao} — {new Date(versao.criadoEm).toLocaleString("pt-BR")}{" "}
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={gerandoPdf}
+            aria-label={`Baixar PDF da versão ${versao.versao}`}
+            onClick={() => onBaixar(versao)}
+          >
+            Baixar PDF
+          </Button>
+        </li>
+      ))}
+    </ul>
   );
 }
 

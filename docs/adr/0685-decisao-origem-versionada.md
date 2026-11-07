@@ -1,0 +1,11 @@
+---
+name: "docs-adr-0685-decisao-origem-versionada-md"
+description: "Documento Sinérgica SO: ADR-0685 — Decisão interna versionada por origem"
+alwaysApply: false
+---
+
+# ADR-0685 — Decisão interna versionada por origem
+
+Decisões PCM são registradas em agregado aditivo por proposta, versão e origem, separado de `proposta_decisoes` (única por proposta). Uma decisão PCM não altera `propostas.status`, não ocupa a decisão legada do Cliente, não cria OS e não registra aceite do Portal. A referência é declaração humana não autenticada. A versão deve estar publicada, enviada e vigente na OS/Cliente; permissões, prazo e revisão são verificados server-side.
+
+Essa decisão interna isolada não equivale a aprovação pública ou autorização de faturamento. Leitores e consumidores atuais continuam usando suas fontes anteriores; adaptação da política de decisão/faturamento por origem e leitura pública permanece pendente. Gate fechado, função sem grants; validar alçadas, transações, coexistência com aceite Portal, RLS, migrações e concorrência antes de ativar. A barreira anterior é substituída apenas pelo registro interno: a função privada de 0908 continua revogada e não é chamada.

@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFPage } from "pdf-lib";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { criarRelatorioPdf } from "./relatorio-pdf";
 
@@ -59,5 +59,17 @@ describe("criarRelatorioPdf", () => {
     const bytes = await builder.finalizar();
 
     expect(String.fromCharCode(...bytes.slice(0, 4))).toBe("%PDF");
+  });
+
+  it("preserva palavras maiores que uma linha sem truncá-las", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+    const desenho = vi.spyOn(PDFPage.prototype, "drawText");
+    try {
+      const builder = await criarRelatorioPdf({ titulo: "Teste" });
+      builder.escreverTexto("X".repeat(200));
+      await builder.finalizar();
+      const texto = desenho.mock.calls.map(([value]) => value).filter((value) => /^X+$/.test(value)).join("");
+      expect(texto).toBe("X".repeat(200));
+    } finally { desenho.mockRestore(); }
   });
 });

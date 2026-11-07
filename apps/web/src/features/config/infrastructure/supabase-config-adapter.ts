@@ -66,7 +66,40 @@ export const supabaseConfigAdapter: ConfigGateway = {
     }));
   },
 
-  async criarGrupo(nome, descricao, permissoes): Promise<Grupo> {
+  async criarGrupo(nome, descricao, permissoes, atorEsperado): Promise<Grupo> {
+    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED === "true") {
+      const identidade = await supabase.auth.getUser();
+      if (identidade.error || !identidade.data.user?.id || identidade.data.user.id !== atorEsperado) throw new Error("Sessão alterada. Nenhum grupo foi enviado.");
+      const usuarioId = identidade.data.user.id;
+      const chave = `sso-criacao-grupo:${usuarioId}`;
+      const salvo = sessionStorage.getItem(chave);
+      let id: string;
+      if (salvo !== null) {
+        let anterior: unknown;
+        try { anterior = JSON.parse(salvo); } catch { throw new Error("Tentativa anterior ilegível. Consulte suporte antes de criar outro grupo."); }
+        if (!anterior || typeof anterior !== "object" || Array.isArray(anterior) || !("id" in anterior) || typeof anterior.id !== "string" ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(anterior.id) ||
+          JSON.stringify(anterior) !== JSON.stringify({ id: anterior.id, nome, descricao, permissoes }))
+          throw new Error("Há outra criação pendente nesta sessão. Confira o resultado e consulte suporte.");
+        id = anterior.id;
+      } else {
+        id = crypto.randomUUID();
+      }
+      const tentativa = JSON.stringify({ id, nome, descricao, permissoes });
+      if (salvo === null) sessionStorage.setItem(chave, tentativa);
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== usuarioId || sessionStorage.getItem(chave) !== tentativa)
+        throw new Error("Sessão ou tentativa alterada. Confira o grupo antes de continuar.");
+      const { error } = await supabase.schema("config").rpc("sso_criar_grupo_atomico", {
+        p_id: id, p_nome: nome, p_descricao: descricao, p_permissoes: permissoes, p_ator_esperado: usuarioId,
+      });
+      if (error) throw new Error("Criação não confirmada. Repita com os mesmos dados ou consulte suporte.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== usuarioId || sessionStorage.getItem(chave) !== tentativa)
+        throw new Error("Grupo enviado, mas sessão ou tentativa mudou. Confira o resultado antes de continuar.");
+      sessionStorage.removeItem(chave);
+      return { id, nome, descricao, ativo: true, permissoes };
+    }
     const { data: grupo, error } = await supabase
       .schema("config")
       .from("grupos")
@@ -103,6 +136,46 @@ export const supabaseConfigAdapter: ConfigGateway = {
     if (patch.descricao !== undefined) campos.descricao = patch.descricao;
     if (patch.ativo !== undefined) campos.ativo = patch.ativo;
 
+    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED === "true") {
+      if (!patch.estadoEsperado || patch.estadoEsperado.id !== id || !patch.atorEsperado) throw new Error("Estado anterior ou sessão do grupo indisponível; recarregue antes de editar.");
+      const anterior = patch.estadoEsperado;
+      const ator = patch.atorEsperado;
+      const identidade = await supabase.auth.getUser();
+      if (identidade.error || identidade.data.user?.id !== ator) throw new Error("Sessão alterada. Nenhuma edição foi enviada.");
+      const estado = { nome: anterior.nome, descricao: anterior.descricao, ativo: anterior.ativo,
+        permissoes: [...anterior.permissoes].sort((a, b) => a.modulo < b.modulo ? -1 : a.modulo > b.modulo ? 1 : 0) };
+      const conteudo = { id, campos, permissoes: patch.permissoes ?? null, estado, ator };
+      const chave = `sso-edicao-grupo:${ator}:${id}`;
+      const salvo = sessionStorage.getItem(chave);
+      let requestId: string;
+      if (salvo !== null) {
+        let tentativaAnterior: unknown;
+        try { tentativaAnterior = JSON.parse(salvo); } catch { throw new Error("Edição anterior ilegível. Consulte suporte antes de continuar."); }
+        if (!tentativaAnterior || typeof tentativaAnterior !== "object" || Array.isArray(tentativaAnterior) ||
+          !("requestId" in tentativaAnterior) || typeof tentativaAnterior.requestId !== "string" ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tentativaAnterior.requestId) ||
+          JSON.stringify(tentativaAnterior) !== JSON.stringify({ requestId: tentativaAnterior.requestId, ...conteudo }))
+          throw new Error("Há outra edição pendente nesta sessão. Confira o resultado e consulte suporte.");
+        requestId = tentativaAnterior.requestId;
+      } else requestId = crypto.randomUUID();
+      const tentativa = JSON.stringify({ requestId, ...conteudo });
+      if (salvo === null) sessionStorage.setItem(chave, tentativa);
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== ator || sessionStorage.getItem(chave) !== tentativa)
+        throw new Error("Sessão ou tentativa alterada. Confira o grupo antes de continuar.");
+      const { error } = await supabase.schema("config").rpc("sso_editar_grupo_idempotente", {
+        p_request_id: requestId, p_id: id, p_patch: campos, p_permissoes: conteudo.permissoes,
+        p_ator_esperado: ator, p_estado_esperado: estado,
+      });
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== ator || sessionStorage.getItem(chave) !== tentativa)
+        throw new Error("Resultado não confirmado para esta sessão. Confira o grupo antes de continuar.");
+      if (error) {
+        if (error.code === "40001") sessionStorage.removeItem(chave);
+        throw error;
+      }
+      sessionStorage.removeItem(chave);
+    } else {
     if (Object.keys(campos).length > 0) {
       const { error } = await supabase.schema("config").from("grupos").update(campos).eq("id", id);
       if (error) throw error;
@@ -125,6 +198,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
           );
         if (insertError) throw insertError;
       }
+    }
     }
 
     const { data: grupo, error: fetchError } = await supabase

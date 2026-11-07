@@ -1,0 +1,35 @@
+begin;
+\ir E01-S172_snapshot_capacidade_fixture.sql
+select plan(15);
+select has_table('pcm','sso_escopo_origem_declaracoes','escopo versionado existe');
+select ok(coalesce((select relrowsecurity and relforcerowsecurity from pg_class where oid=to_regclass('pcm.sso_escopo_origem_declaracoes')),false),'RLS obrigatória');
+select ok(coalesce(not has_table_privilege('authenticated',to_regclass('pcm.sso_escopo_origem_declaracoes'),'INSERT'),false),'escrita direta negada');
+select throws_ok($$select pcm.sso_declarar_escopo_origem(null,null,null,null,null,null,null)$$,'55000','escopo_origem_bloqueado','gate fechado impede gravação');
+set local app.auvo_sync_write='true';
+insert into pcm.planos_manutencao(id,cliente_id,nome,created_by) values ('17296000-0000-4000-8000-000000000050','16896000-0000-4000-8000-000000000002','Plano escopo sintético','16896000-0000-4000-8000-000000000001');
+insert into pcm.plano_versoes(id,plano_id,numero,estado,snapshot,created_by) values ('17296000-0000-4000-8000-000000000051','17296000-0000-4000-8000-000000000050',1,'aprovado',
+ '{"rotinas":[{"id":"17296000-0000-4000-8000-000000000052","rotina_logica_id":"17296000-0000-4000-8000-000000000053","modo":"calendario","alvo_tipo":"sistema","sistema_id":"16896000-0000-4000-8000-000000000020"}]}'::jsonb,'16896000-0000-4000-8000-000000000001');
+insert into pcm.rotinas_manutencao(id,rotina_logica_id,plano_id,versao_id,nome,alvo_tipo,sistema_id,modo,created_by) values ('17296000-0000-4000-8000-000000000052','17296000-0000-4000-8000-000000000053','17296000-0000-4000-8000-000000000050','17296000-0000-4000-8000-000000000051','Rotina sintética','sistema','16896000-0000-4000-8000-000000000020','calendario','16896000-0000-4000-8000-000000000001');
+insert into pcm.ocorrencias_preventivas(id,plano_id,indice,vencimento,chave_externa) values ('17296000-0000-4000-8000-000000000054','16896000-0000-4000-8000-000000000013',1,'2026-02-01','s172-escopo-fixture');
+insert into pcm.ocorrencias_rotina_preparadas(id,plano_id,versao_id,rotina_id,rotina_logica_id,alvo_tipo,alvo_id,ciclo,vencimento_original,tolerancia_antes,tolerancia_depois,created_by) values ('17296000-0000-4000-8000-000000000055','17296000-0000-4000-8000-000000000050','17296000-0000-4000-8000-000000000051','17296000-0000-4000-8000-000000000052','17296000-0000-4000-8000-000000000053','sistema','16896000-0000-4000-8000-000000000020',1,'2026-02-01',0,0,'16896000-0000-4000-8000-000000000001');
+insert into pcm.ciclos_rotina_identidades(id,rotina_logica_id,alvo_tipo,alvo_id,created_by) values ('17296000-0000-4000-8000-000000000056','17296000-0000-4000-8000-000000000053','sistema','16896000-0000-4000-8000-000000000020','16896000-0000-4000-8000-000000000001');
+insert into pcm.ocorrencias_rotina_vinculos(ocorrencia_preparada_id,ciclo_id,ocorrencia_legada_id,created_by) values ('17296000-0000-4000-8000-000000000055','17296000-0000-4000-8000-000000000056','17296000-0000-4000-8000-000000000054','16896000-0000-4000-8000-000000000001');
+insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,prioridade,origem,created_by,ocorrencia_preventiva_id) values ('17296000-0000-4000-8000-000000000057','16896000-0000-4000-8000-000000000002','OS-S172-ESCOPO','OS sintética','preventiva','em_execucao','media','manual','16896000-0000-4000-8000-000000000001','17296000-0000-4000-8000-000000000054');
+update pcm.sso_escopo_origem_gate set habilitado=true where id;
+update pcm.sso_origem_execucao_unificada_gate set habilitado=true where id;
+set local request.jwt.claims = '{"sub":"16896000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+select is(pcm.sso_declarar_escopo_origem('17296000-0000-4000-8000-000000000058','16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057',0,'inspeção declarada','resta ajuste','fonte humana')->>'revision','1','primeira declaração versionada');
+select is(pcm.sso_declarar_escopo_origem('17296000-0000-4000-8000-000000000058','16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057',0,'inspeção declarada','resta ajuste','fonte humana')->>'execucaoComprovada','false','retry não afirma execução comprovada');
+select is((select origem->>'preparadaId' from pcm.sso_escopo_origem_declaracoes where request_id='17296000-0000-4000-8000-000000000058'),'17296000-0000-4000-8000-000000000055','origem do resolvedor preservada');
+select throws_ok($$select pcm.sso_declarar_escopo_origem('17296000-0000-4000-8000-000000000059','16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057',0,'outro',null,'fonte')$$,'40001','revisao_obsoleta','revisão concorrente antiga recusada');
+select throws_ok($$select pcm.sso_declarar_escopo_origem('17296000-0000-4000-8000-000000000058','16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057',0,'outro',null,'fonte')$$,'23505','request_id_conflitante','request divergente recusado');
+select throws_ok($$select pcm.sso_declarar_escopo_origem('17296000-0000-4000-8000-000000000060','16896000-0000-4000-8000-000000000002','16895000-0000-4000-8000-000000000017',0,'outro',null,'fonte')$$,'23514','origem_indisponivel','OS de outro Cliente recusada');
+select throws_ok($$update pcm.sso_escopo_origem_declaracoes set restante_declarado='x' where request_id='17296000-0000-4000-8000-000000000058'$$,'23514',null,'histórico imutável');
+select is((select status from pcm.ordens_servico where id='17296000-0000-4000-8000-000000000057'),'em_execucao','declaração não altera estado da OS');
+set local role authenticated;
+select is(pcm.sso_consultar_escopo_autorizado('16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057')->>'restanteDeclarado','resta ajuste','leitura mediada devolve escopo declarado');
+select is(pcm.sso_mediar_escopo_origem('17296000-0000-4000-8000-000000000061','16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057',1,null,'novo restante','revisão')->>'revision','2','escrita mediada cria próxima revisão');
+select is(pcm.sso_consultar_escopo_autorizado('16896000-0000-4000-8000-000000000002','17296000-0000-4000-8000-000000000057')->>'execucaoComprovada','false','mediação não afirma execução');
+reset role;
+select * from finish();
+rollback;

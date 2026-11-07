@@ -1,0 +1,102 @@
+name: Ensaio UI S166 isolado (branch dedicada)
+
+on:
+  push:
+    branches: [codex/validacao-s166-e2e-isolado]
+
+permissions:
+  contents: read
+
+jobs:
+  ensaio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Conferir commits imutáveis necessários
+        shell: bash
+        run: |
+          set -euo pipefail
+          for commit in 22aca3918224bc45175e80c6ec88b957fdb604aa 84c9fcf8fc7ec32bda5399872ad30192c1587ed6 40e3c9f75c8f0eee28ccae0808d8031a6a025b32 f94282991911ee02d6ed50365ff5f78513ea34f3; do
+            git cat-file -e "${commit}^{commit}"
+          done
+      - name: Instalar RTK fixado e verificado
+        shell: bash
+        run: |
+          set -euo pipefail
+          arquivo="$RUNNER_TEMP/rtk.tar.gz"
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 120 \
+            https://github.com/rtk-ai/rtk/releases/download/v0.43.0/rtk-x86_64-unknown-linux-musl.tar.gz -o "$arquivo"
+          printf '%s  %s\n' ff8a1e7766496e175291a85aeca1dc97c9ff6df33e51e5893d1fbc78fea2a609 "$arquivo" | sha256sum --check --status
+          mkdir -p "$RUNNER_TEMP/rtk-bin"
+          tar -xzf "$arquivo" -C "$RUNNER_TEMP/rtk-bin"
+          test -x "$RUNNER_TEMP/rtk-bin/rtk"
+          printf '%s\n' "$RUNNER_TEMP/rtk-bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+      - name: Preparar dependências sem scripts de instalação
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node --version | cut -d. -f1 | tr -d v)" -ge 22
+          corepack enable
+          corepack prepare pnpm@9.0.0 --activate
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Preparar imagens imutáveis
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker context show)" = default
+          test "$(docker context inspect default --format '{{.Endpoints.docker.Host}}')" = unix:///var/run/docker.sock
+          raiz="$(docker info --format '{{.DockerRootDir}}')"
+          test -d "$raiz"
+          espaco() {
+            test "$(df -Pk "$GITHUB_WORKSPACE" | awk 'NR==2 {print $4}')" -ge 20971520
+            test "$(df -Pk "$raiz" | awk 'NR==2 {print $4}')" -ge 20971520
+          }
+          espaco
+          umask 077
+          erro="$(mktemp "$RUNNER_TEMP/sso-pull-erro.XXXXXXXX")"
+          trap 'rm -f "$erro"' EXIT
+          while read -r imagem digest tag; do
+            baixada=false
+            for tentativa in 1 2 3; do
+              espaco
+              if timeout 180 docker pull "${imagem}@sha256:${digest}" > /dev/null 2> "$erro"; then
+                baixada=true
+                break
+              fi
+              if ! grep -Eiq '(^|[^a-z])(too many requests|toomanyrequests)([^a-z]|$)|http(/[0-9.]+)?[[:space:]]+429([^0-9]|$)|status( code)?[ :=]+429([^0-9]|$)' "$erro"; then
+                echo "Falha ao baixar imagem fixada; erro não classificado como limite de requisições." >&2
+                exit 1
+              fi
+              if [ "$tentativa" -eq 3 ]; then
+                echo "Limite de requisições persistiu após três tentativas." >&2
+                exit 1
+              fi
+              echo "Limite de requisições; aguardando antes de repetir a imagem fixada."
+              if [ "$tentativa" -eq 1 ]; then sleep 30; else sleep 45; sleep 45; fi
+            done
+            test "$baixada" = true
+            docker tag "${imagem}@sha256:${digest}" "${imagem}:${tag}"
+            espaco
+          done <<'IMAGENS'
+          public.ecr.aws/supabase/postgres ba10e934f0a59990379f78ab9ed93926f1c291dd61a12fe4026f4202f1b89770 17.6.1.141
+          public.ecr.aws/supabase/gotrue 1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b v2.197.0
+          public.ecr.aws/supabase/postgrest b574528fe109c8343c1247155734d03df8c34b462f342dca0ccc20244fc36ef9 v14.5
+          public.ecr.aws/supabase/storage-api 4ae1890ba0c6fd24d975c34f3aa201a01d410171c8ba6eddeb675ef92341a62d v1.77.5
+          mcr.microsoft.com/playwright 5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48 v1.61.1-noble
+          IMAGENS
+      - name: Executar somente no clone isolado
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 supabase/manual-tests/E01-S176_recorte_do_zero.py \
+            --github-hosted --integracao-candidata --fixture-s166-e2e --ui-s166-e2e
+      - name: Conferir limpeza dos recursos identificados
+        if: always()
+        run: python3 supabase/manual-tests/s165_limpeza_runner.py

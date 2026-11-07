@@ -1,6 +1,7 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useAuth } from "../../../app/auth-context";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 import { cliente360QueryKeys } from "../application/cliente-360-query-keys";
@@ -10,6 +11,9 @@ import type { StatusOrdemServico } from "../domain/ordens-servico";
 import { rotuloStatusOs } from "../domain/ordens-servico";
 import { supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { WorkspaceListasMateriais } from "../interfaces/listas-materiais/Workspace";
+import { RelatorioOsDespesas } from "../interfaces/despesas-visita/RelatorioOsDespesas";
+import { PublicarAnexo } from "../interfaces/anexos-os/PublicarAnexo";
 import { ChamadoPainel } from "./ChamadoPainel";
 import { Cliente360Drawer } from "./Cliente360Drawer";
 
@@ -32,6 +36,7 @@ export function OrdemServicoDetalheDrawer({
   originElementId,
   onFechar,
   onMutada,
+  painelOrcamento,
 }: {
   ordem: OrdemServicoResumo;
   clienteId: string;
@@ -40,7 +45,9 @@ export function OrdemServicoDetalheDrawer({
   originElementId?: string;
   onFechar: () => void;
   onMutada: () => Promise<void>;
+  painelOrcamento?: ReactNode;
 }) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [statusAtual, setStatusAtual] = useState(ordem.status);
   const detalhe = useQuery({
@@ -138,6 +145,16 @@ export function OrdemServicoDetalheDrawer({
             />
             <Campo titulo="Origem" valor={detalhe.data?.origem ?? "—"} />
           </dl>
+          {aberto && user?.id && import.meta.env.VITE_SSO_LISTAS_MATERIAIS_ENABLED === "true" && (
+            <WorkspaceListasMateriais
+              usuario={user.id}
+              cliente={clienteId}
+              ordemServico={ordem.id}
+            />
+          )}
+          {aberto && painelOrcamento}
+          {aberto && user?.id && <RelatorioOsDespesas userId={user.id} clienteId={clienteId} osId={ordem.id} />}
+          {aberto && user?.id && <PublicarAnexo usuario={user.id} cliente={clienteId} ordemServico={ordem.id} />}
           {temEscrita && (
             <label className="text-caption font-semibold text-ink-2">
               Alterar status

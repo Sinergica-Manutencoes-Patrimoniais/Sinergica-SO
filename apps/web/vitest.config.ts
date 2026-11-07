@@ -8,7 +8,7 @@ export default defineConfig({
     // e2e/ é Playwright (specs .spec.ts contra Supabase de produção) — nunca vitest.
     // Componente que precisa de DOM real declara `// @vitest-environment jsdom` no topo do
     // arquivo (Vitest troca o ambiente por arquivo) — mantém o resto da suíte em "node", rápido.
-    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
+    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**", "e2e-isolado/**"],
     coverage: {
       provider: "v8",
       all: true,
