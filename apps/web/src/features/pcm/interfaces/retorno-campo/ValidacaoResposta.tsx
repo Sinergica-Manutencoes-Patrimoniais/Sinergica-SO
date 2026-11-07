@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; respostaId: string; evidenciaId: string; decisaoRevision: number; uploadsRevision: number; decisao: "aceita_pcm" | "rejeitada_pcm"; justificativa: string };
-const pedidoSchema=z.object({requestId:z.string().uuid(),clienteId:z.string().uuid(),retornoId:z.string().uuid(),respostaId:z.string().uuid(),evidenciaId:z.string().uuid(),decisaoRevision:z.number().int().nonnegative().safe(),uploadsRevision:z.number().int().positive().safe(),decisao:z.enum(["aceita_pcm","rejeitada_pcm"]),justificativa:z.string().trim().min(1).max(2000)}).strict();
-const historicoSchema = z.object({ id: z.string().uuid(), evidencia_id: z.string().uuid(), revisao: z.number().int().positive().safe(), revisao_uploads: z.number().int().positive().safe(), decisao: z.enum(["aceita_pcm", "rejeitada_pcm"]), justificativa: z.string(), ator_id: z.string().uuid(), criado_em: z.string() }).strict();
+const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),retornoId:z.string().guid(),respostaId:z.string().guid(),evidenciaId:z.string().guid(),decisaoRevision:z.number().int().nonnegative().safe(),uploadsRevision:z.number().int().positive().safe(),decisao:z.enum(["aceita_pcm","rejeitada_pcm"]),justificativa:z.string().trim().min(1).max(2000)}).strict();
+const historicoSchema = z.object({ id: z.string().guid(), evidencia_id: z.string().guid(), revisao: z.number().int().positive().safe(), revisao_uploads: z.number().int().positive().safe(), decisao: z.enum(["aceita_pcm", "rejeitada_pcm"]), justificativa: z.string(), ator_id: z.string().guid(), criado_em: z.string() }).strict();
 
 export function ValidacaoResposta(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.respostaId, props.evidenciaId])} {...props} />; }
 function Conteudo({ userId, clienteId, retornoId, respostaId, evidenciaId, uploadsRevision }: { userId: string; clienteId: string; retornoId: string; respostaId: string; evidenciaId: string; uploadsRevision: number }) {
@@ -24,7 +24,7 @@ function Conteudo({ userId, clienteId, retornoId, respostaId, evidenciaId, uploa
     const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || !montado.current || sessionStorage.getItem(storageKey) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa divergente.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_validar_resposta_evidencia_mediada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_retorno_id: p.retornoId, p_resposta_id: p.respostaId, p_evidencia_id: p.evidenciaId, p_expected_decisao: p.decisaoRevision, p_expected_uploads: p.uploadsRevision, p_decisao: p.decisao, p_justificativa: p.justificativa });
     if (error) throw error;
-    const recibo = z.object({ validacaoId: z.string().uuid(), revision: z.number().int().positive().safe(), requestId: z.string().uuid(), conteudoAutenticado: z.literal(false) }).strict().parse(data);
+    const recibo = z.object({ validacaoId: z.string().guid(), revision: z.number().int().positive().safe(), requestId: z.string().guid(), conteudoAutenticado: z.literal(false) }).strict().parse(data);
     if (recibo.requestId !== p.requestId || recibo.revision !== p.decisaoRevision + 1) throw new Error("Recibo divergente.");
     const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId)throw new Error("Sessão alterada.");
   }, onSuccess: async (_resultado, p) => {

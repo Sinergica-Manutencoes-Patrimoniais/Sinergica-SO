@@ -17,23 +17,23 @@ import { PlanosDoAlvo } from "./PlanosDoAlvo";
 
 type Props = { userId: string; clienteId: string; localId: string; caminho: string[] };
 const item = z.object({
-  id: z.string().uuid(),
+  id: z.string().guid(),
   nome: z.string(),
   tipo: z.enum(["equipamento", "componente"]),
   identificador: z.string().nullish(),
-  parent_item_id: z.string().uuid().nullish(),
+  parent_item_id: z.string().guid().nullish(),
   categoria: z.string().nullish(),
 });
 const grupo = z.object({
-  id: z.string().uuid(),
+  id: z.string().guid(),
   nome: z.string(),
   quantidade: z.number().int().positive().safe(),
-  categoria_id: z.string().uuid(),
-  sistema_id: z.string().uuid().nullable(),
+  categoria_id: z.string().guid(),
+  sistema_id: z.string().guid().nullable(),
 });
 const vinculo = z.object({
-  item_id: z.string().uuid(),
-  sistema_id: z.string().uuid(),
+  item_id: z.string().guid(),
+  sistema_id: z.string().guid(),
   sistemas: z.object({ nome: z.string(), ativo: z.boolean() }),
 });
 
@@ -103,7 +103,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     queryFn: async ({ pageParam, signal }) => {
       const data = await lerComposicao176(userId, clienteId, "sistemas", pageParam, signal, null, null, false);
       return z
-        .array(z.object({ id: z.string().uuid(), nome: z.string(), ativo: z.boolean() }))
+        .array(z.object({ id: z.string().guid(), nome: z.string(), ativo: z.boolean() }))
         .max(50)
         .parse(data);
     },
@@ -117,7 +117,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     queryFn: async ({ pageParam, signal }) => {
       const data = await lerComposicao176(userId, clienteId, "categorias", pageParam, signal, null, null, false);
       return z
-        .array(z.object({ id: z.string().uuid(), nome: z.string() }))
+        .array(z.object({ id: z.string().guid(), nome: z.string() }))
         .max(50)
         .parse(data);
     },

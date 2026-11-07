@@ -15,7 +15,7 @@ type Tentativa =
   | { tipo: "triagem"; chave: string; texto: string; pedido: z.infer<typeof pedidoTriagemChamadoCampoSchema> }
   | { tipo: "uniao"; chave: string; texto: string; pedido: z.infer<typeof pedidoUniaoChamadoCampoSchema> }
   | { tipo: "cancelamento"; chave: string; texto: string; pedido: z.infer<typeof pedidoCancelamentoChamadoCampoSchema> };
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 
 export function RecuperarAcoesChamadoCampo({ userId }: { userId: string }) {
   if (import.meta.env.VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED !== "true" && import.meta.env.VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED !== "true" && import.meta.env.VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED !== "true") return null;

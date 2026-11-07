@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const pendencia = z.object({ id: z.string().uuid(), alvo: z.string(), descricao: z.string(), estado: z.enum(["aberta", "risco_aceito", "dispensada", "duplicada", "resolvida"]), publicado_em: z.string() }).strict();
+const pendencia = z.object({ id: z.string().guid(), alvo: z.string(), descricao: z.string(), estado: z.enum(["aberta", "risco_aceito", "dispensada", "duplicada", "resolvida"]), publicado_em: z.string() }).strict();
 const estados: Record<z.infer<typeof pendencia>["estado"], string> = { aberta: "Aberta", risco_aceito: "Risco aceito", dispensada: "Dispensada", duplicada: "Duplicada", resolvida: "Resolvida" };
 export function PendenciasOsPortal(props: { userId: string; clienteId: string; osId: string }) {
   if (import.meta.env.VITE_SSO_PORTAL_PENDENCIAS_ENABLED !== "true") return null;

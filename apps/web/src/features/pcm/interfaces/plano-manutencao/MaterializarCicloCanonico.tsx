@@ -76,9 +76,9 @@ function ComOrigem(props: Props) {
       if (error) throw error;
       const r = z
         .object({
-          planoId: z.string().uuid(),
-          versaoId: z.string().uuid(),
-          rotinaId: z.string().uuid(),
+          planoId: z.string().guid(),
+          versaoId: z.string().guid(),
+          rotinaId: z.string().guid(),
           revisao: z.number().int().positive(),
           ciclo: z.number().int().nonnegative(),
           vencimento: z.string().date(),
@@ -90,7 +90,7 @@ function ComOrigem(props: Props) {
             "conflito",
             "origem_pendente",
           ]),
-          agendamentoId: z.string().uuid().nullable(),
+          agendamentoId: z.string().guid().nullable(),
           fontesCompletas: z.literal(false),
           exclusividadeGlobalComprovada: z.literal(false),
         })
@@ -256,8 +256,8 @@ function MaterializarCicloSessao({
         data.tarefaAuvoCriada !== false
       )
         throw new Error("Resultado inválido.");
-      const preparadaId = z.string().uuid().parse(data.preparadaId);
-      z.string().uuid().parse(data.cicloCanonicoId);
+      const preparadaId = z.string().guid().parse(data.preparadaId);
+      z.string().guid().parse(data.cicloCanonicoId);
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
       return { criada: data.criada as boolean, preparadaId };

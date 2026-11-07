@@ -17,18 +17,18 @@ type Candidato = {
 };
 const itemSchema = z
   .object({
-    visitaId: z.string().uuid(),
-    ocorrenciaId: z.string().uuid(),
+    visitaId: z.string().guid(),
+    ocorrenciaId: z.string().guid(),
     fonteDiaUtil: z.string().min(1).max(500),
   })
   .strict();
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
-    clienteId: z.string().uuid(),
-    planoId: z.string().uuid(),
-    versaoId: z.string().uuid(),
-    rotinaId: z.string().uuid(),
+    requestId: z.string().guid(),
+    clienteId: z.string().guid(),
+    planoId: z.string().guid(),
+    versaoId: z.string().guid(),
+    rotinaId: z.string().guid(),
     revision: z.number().int().positive(),
     itens: z.array(itemSchema).min(1).max(25),
   })
@@ -122,14 +122,14 @@ function Conteudo({
       if (error) throw error;
       const r = z
         .object({
-          requestId: z.string().uuid(),
+          requestId: z.string().guid(),
           itens: z.array(
             z
               .object({
-                requestId: z.string().uuid(),
-                ocorrenciaId: z.string().uuid(),
-                cicloVisitaId: z.string().uuid(),
-                visitaId: z.string().uuid(),
+                requestId: z.string().guid(),
+                ocorrenciaId: z.string().guid(),
+                cicloVisitaId: z.string().guid(),
+                visitaId: z.string().guid(),
                 criada: z.boolean(),
                 osCriada: z.literal(false),
                 tarefaAuvoCriada: z.literal(false),

@@ -4,9 +4,9 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const resposta = z.discriminatedUnion("motivo", [
-  z.object({ preparadaId: z.string().uuid(), estado: z.literal("indeterminado"), motivo: z.literal("sem_vinculo"), completude: z.literal("parcial") }).strict(),
-  z.object({ preparadaId: z.string().uuid(), estado: z.literal("indeterminado"), motivo: z.literal("vinculo_divergente"), completude: z.literal("parcial") }).strict(),
-  z.object({ preparadaId: z.string().uuid(), estado: z.enum(["indeterminado", "resultado_registrado", "candidata_aguardando"]), motivo: z.literal("fonte_legada"),
+  z.object({ preparadaId: z.string().guid(), estado: z.literal("indeterminado"), motivo: z.literal("sem_vinculo"), completude: z.literal("parcial") }).strict(),
+  z.object({ preparadaId: z.string().guid(), estado: z.literal("indeterminado"), motivo: z.literal("vinculo_divergente"), completude: z.literal("parcial") }).strict(),
+  z.object({ preparadaId: z.string().guid(), estado: z.enum(["indeterminado", "resultado_registrado", "candidata_aguardando"]), motivo: z.literal("fonte_legada"),
     resultadoPreventivo: z.enum(["pendente", "ok", "nao_ok"]), ordensAtivas: z.number().int().nonnegative().safe(),
     ordensFinalizadas: z.number().int().nonnegative().safe(), completude: z.literal("parcial") }).strict(),
 ]);

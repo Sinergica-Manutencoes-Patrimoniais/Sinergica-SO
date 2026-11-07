@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { ResolverConflitoWebhook } from "./ResolverConflitoWebhook";
 
 const conflitoSchema = z.object({
-  id: z.string().uuid(), task_id: z.string().regex(/^\d+$/),
+  id: z.string().guid(), task_id: z.string().regex(/^\d+$/),
   status_remoto: z.enum(["solicitacao", "corretiva", "backlog", "planejamento", "em_execucao", "cancelado"]),
   criado_em: z.string().datetime({ offset: true }), resolvido_em: z.string().datetime({ offset: true }).nullable(),
 }).strict();

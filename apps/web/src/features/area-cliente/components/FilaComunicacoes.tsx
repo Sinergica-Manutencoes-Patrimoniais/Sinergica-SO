@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { DetalheComunicacao } from "./DetalheComunicacao";
 
-const item = z.object({ id: z.string().uuid(), tipo: z.enum(["visita", "pendencia"]), os_id: z.string().uuid(), publicado_em: z.string(), descricao: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), tipo: z.enum(["visita", "pendencia"]), os_id: z.string().guid(), publicado_em: z.string(), descricao: z.string() }).strict();
 export function FilaComunicacoes({ userId, clienteId }: { userId: string; clienteId: string }) {
   const lista = useInfiniteQuery({ queryKey: ["portal-comunicacoes", userId, clienteId], gcTime: 0, staleTime: 0, retry: false,
     refetchOnWindowFocus: true, initialPageParam: null as { data: string; tipo: "visita" | "pendencia"; id: string } | null,

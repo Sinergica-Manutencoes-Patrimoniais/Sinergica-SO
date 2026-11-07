@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const dataIso = z.string().date();
 const itemSchema = z
   .object({

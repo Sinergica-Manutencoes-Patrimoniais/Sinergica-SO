@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { InicioProcessamento } from "./InicioProcessamento";
 
-const resultado = z.object({ outboxId: z.string().uuid(), estadoFila: z.enum(["pending", "processing", "error", "sent"]), tentativas: z.number().int().nonnegative(), falhaRegistrada: z.boolean(), detalheInternoExistente: z.boolean(), classificacao: z.enum(["falha_sem_detalhes", "processando_resultado_incerto", "pendente", "enviado_nao_confirmado"]), estadoRemoto: z.literal("desconhecido"), autorizaRetry: z.literal(false) }).strict();
+const resultado = z.object({ outboxId: z.string().guid(), estadoFila: z.enum(["pending", "processing", "error", "sent"]), tentativas: z.number().int().nonnegative(), falhaRegistrada: z.boolean(), detalheInternoExistente: z.boolean(), classificacao: z.enum(["falha_sem_detalhes", "processando_resultado_incerto", "pendente", "enviado_nao_confirmado"]), estadoRemoto: z.literal("desconhecido"), autorizaRetry: z.literal(false) }).strict();
 export function DiagnosticoFalhaFila({ userId, clienteId, outboxId }: { userId: string; clienteId: string; outboxId: string }) {
   const consulta = useQuery({ queryKey: ["reconciliacao-falha-fila", userId, clienteId, outboxId], gcTime: 0, staleTime: 0, retry: false,
     queryFn: async ({ signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_diagnostico_falha_fila", { p_cliente_id: clienteId, p_outbox_id: outboxId }).abortSignal(signal); if (error) throw error; const r = resultado.parse(data); if (r.outboxId !== outboxId) throw new Error("Item divergente"); return r; } });

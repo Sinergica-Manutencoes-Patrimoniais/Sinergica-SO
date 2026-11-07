@@ -4,7 +4,7 @@ import { supabase } from "../../../lib/supabase-client";
 
 const diagnostico = z.object({ habilitado: z.boolean(), intervaloMinutos: z.number().int().min(5).max(10080),
   ultimaConclusao: z.string().datetime({ offset: true }).nullable(), efeitoRemotoComprovado: z.literal(false),
-  execucaoAtual: z.object({ id: z.string().uuid(), estado: z.string().min(1).max(100), revisao: z.number().int().nonnegative(),
+  execucaoAtual: z.object({ id: z.string().guid(), estado: z.string().min(1).max(100), revisao: z.number().int().nonnegative(),
     considerados: z.number().int().nonnegative().safe(), alterados: z.number().int().nonnegative().safe(),
     criadaEm: z.string().datetime({ offset: true }), atualizadaEm: z.string().datetime({ offset: true }) }).strict().nullable() }).strict();
 

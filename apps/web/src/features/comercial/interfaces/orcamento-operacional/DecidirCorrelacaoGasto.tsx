@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ request_id: uuid, fonte_id: uuid, despesa_id: uuid, vinculo_id: uuid,
   despesa_revisao: z.number().int().positive(), rateio_revisao: z.number().int().positive(),
   criado_em: z.string().datetime({ offset: true }), decisao_revisao: z.number().int().nonnegative(),

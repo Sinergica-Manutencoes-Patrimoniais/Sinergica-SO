@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid(); const revisao = z.number().int().positive(); const hash = z.string().regex(/^[a-f0-9]{64}$/);
+const id = z.string().guid(); const revisao = z.number().int().positive(); const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const estadoSchema = z.object({ clienteId: id, cicloId: id, parcelaId: id, propostaId: id, cicloEstado: z.enum(["em_tratamento", "devolvido", "concluido"]),
   cicloRevision: revisao, parcelaSituacao: z.string(), osId: id, osStatus: z.string(), propostaSituacao: z.string(), possuiOsContinuacao: z.boolean(),
   descricaoRestante: z.string().min(1).max(4000), minutosRestantes: revisao, propostaSha256: hash, vinculoRequestId: id.nullable(),

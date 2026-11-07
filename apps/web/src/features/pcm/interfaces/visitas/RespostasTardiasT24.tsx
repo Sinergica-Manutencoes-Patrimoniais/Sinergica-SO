@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha=z.object({request_id:z.string().uuid(),fence:z.number().int().safe().positive(),tarefa_observada:z.string().min(1).max(200).nullable(),motivo:z.string().regex(/^[a-z0-9_]{1,120}$/),criado_em:z.string().datetime({offset:true})}).strict();
+const linha=z.object({request_id:z.string().guid(),fence:z.number().int().safe().positive(),tarefa_observada:z.string().min(1).max(200).nullable(),motivo:z.string().regex(/^[a-z0-9_]{1,120}$/),criado_em:z.string().datetime({offset:true})}).strict();
 type Props={userId:string;clienteId:string;visitaId:string;osId:string;tentativaId:string};
 export function RespostasTardiasT24(props:Props){return <Conteudo key={JSON.stringify(Object.values(props))} {...props}/>;}
 function Conteudo({userId,clienteId,visitaId,osId,tentativaId}:Props){

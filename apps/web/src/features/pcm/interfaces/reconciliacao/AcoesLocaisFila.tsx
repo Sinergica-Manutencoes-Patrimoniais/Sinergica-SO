@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const resultado = z.object({ outboxId: z.string().uuid(), acoesLocais: z.array(z.enum(["consultar_historico", "registrar_anotacao"])), acoesBloqueadas: z.array(z.enum(["retry_externo", "confirmar_vinculo_remoto", "resolver_integracao"])), situacaoRemota: z.literal("desconhecida"), revalidarNaExecucao: z.literal(true) }).strict();
+const resultado = z.object({ outboxId: z.string().guid(), acoesLocais: z.array(z.enum(["consultar_historico", "registrar_anotacao"])), acoesBloqueadas: z.array(z.enum(["retry_externo", "confirmar_vinculo_remoto", "resolver_integracao"])), situacaoRemota: z.literal("desconhecida"), revalidarNaExecucao: z.literal(true) }).strict();
 export function AcoesLocaisFila({ userId, clienteId, outboxId }: { userId: string; clienteId: string; outboxId: string }) {
   const consulta = useQuery({ queryKey: ["reconciliacao-acoes-locais", userId, clienteId, outboxId], gcTime: 0, staleTime: 0, retry: false,
     queryFn: async ({ signal }) => {

@@ -5,8 +5,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import { useAreasDoCliente, useLocaisDoCliente } from "../../application/ativos-cliente-queries";
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
 
-export const pedidoVinculoLocalizacaoSchema = z.object({ requestId: z.string().uuid(), loteId: z.string().uuid(), chave: z.string().min(1).max(200), revisao: z.number().int().positive(),
-  tipo: z.enum(["area", "local", "sublocal"]), entidadeId: z.string().uuid(), snapshot: z.record(z.string(), z.unknown()), motivo: z.string().trim().min(1).max(2000) }).strict();
+export const pedidoVinculoLocalizacaoSchema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200), revisao: z.number().int().positive(),
+  tipo: z.enum(["area", "local", "sublocal"]), entidadeId: z.string().guid(), snapshot: z.record(z.string(), z.unknown()), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoVinculoLocalizacaoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
 
@@ -38,8 +38,8 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo }: Props) {
     const { data, error } = await supabase.schema("pcm").rpc("sso_vincular_localizacao_existente", { p_request_id: p.requestId, p_lote_id: p.loteId,
       p_expected_revision: p.revisao, p_chave: p.chave, p_entidade_id: p.entidadeId, p_snapshot: p.snapshot, p_motivo: p.motivo });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.literal(false),
-      linkedIds: z.object({ entidadeId: z.string().uuid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.literal(false),
+      linkedIds: z.object({ entidadeId: z.string().guid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.aggregateId !== p.loteId || r.revision !== p.revisao + 1 || r.linkedIds.entidadeId !== p.entidadeId || r.linkedIds.tipo !== p.tipo) throw new Error("Resposta divergente.");
     await conferirSessao();
   }, onSuccess: async (_r, p) => { try {
@@ -60,8 +60,8 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo }: Props) {
         p_ator_id: userId, p_cliente_id: clienteId, p_request_id: p.requestId, p_lote_id: p.loteId, p_chave: p.chave, p_payload: payload,
       });
       if (error) throw error;
-      const r = z.object({ requestId: z.string().uuid(), aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.literal(false),
-        linkedIds: z.object({ entidadeId: z.string().uuid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict().parse(data);
+      const r = z.object({ requestId: z.string().guid(), aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.literal(false),
+        linkedIds: z.object({ entidadeId: z.string().guid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict().parse(data);
       if (r.requestId !== p.requestId || r.aggregateId !== p.loteId || r.revision !== p.revisao + 1 || r.linkedIds.entidadeId !== p.entidadeId || r.linkedIds.tipo !== p.tipo) throw new Error("Recibo divergente.");
       await cache.invalidateQueries({ queryKey: ["levantamentos", userId, clienteId], refetchType: "none" }); await conferirSessao();
       if (sessionStorage.getItem(storage) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");

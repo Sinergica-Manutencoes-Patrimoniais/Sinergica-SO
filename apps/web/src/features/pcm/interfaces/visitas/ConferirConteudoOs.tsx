@@ -5,12 +5,12 @@ import { supabase } from "../../../../lib/supabase-client";
 import { DiagnosticoConteudoOs } from "./DiagnosticoConteudoOs";
 import { RevalidarVinculoConteudo } from "./RevalidarVinculoConteudo";
 
-const snapshot = z.object({ id: z.string().uuid(), clienteId: z.string().uuid(), numero: z.string(), titulo: z.string(), descricao: z.string().nullable(),
+const snapshot = z.object({ id: z.string().guid(), clienteId: z.string().guid(), numero: z.string(), titulo: z.string(), descricao: z.string().nullable(),
   categoria: z.string(), status: z.string(), prioridade: z.string(), localDescricao: z.string().nullable(), excluidaEm: z.string().nullable(),
-  equipamentoId:z.string().uuid().nullable().optional(),tipoTarefaId:z.string().uuid().nullable().optional(),tecnicoFuncionarioId:z.string().uuid().nullable().optional(),
-  sistemaId:z.string().uuid().nullable().optional(),questionarioId:z.string().uuid().nullable().optional() }).strict();
-const previa = z.object({ visitaId: z.string().uuid(), visitaRevision: z.number().int().positive(), osId: z.string().uuid(), geracao: z.number().int().positive().safe(), snapshot }).strict();
-const pedido = previa.extend({ requestId: z.string().uuid() }).strict();
+  equipamentoId:z.string().guid().nullable().optional(),tipoTarefaId:z.string().guid().nullable().optional(),tecnicoFuncionarioId:z.string().guid().nullable().optional(),
+  sistemaId:z.string().guid().nullable().optional(),questionarioId:z.string().guid().nullable().optional() }).strict();
+const previa = z.object({ visitaId: z.string().guid(), visitaRevision: z.number().int().positive(), osId: z.string().guid(), geracao: z.number().int().positive().safe(), snapshot }).strict();
+const pedido = previa.extend({ requestId: z.string().guid() }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function ConferirConteudoOs({ userId, clienteId, visitaId, osId, revisao, bloqueado }: { userId: string; clienteId: string; visitaId: string; osId: string; revisao: number; bloqueado: boolean }) {
   const chave = `sso-conferir-conteudo-os:${JSON.stringify([userId, clienteId, visitaId, osId, revisao])}`;
@@ -26,7 +26,7 @@ export function ConferirConteudoOs({ userId, clienteId, visitaId, osId, revisao,
   const comando = useMutation({ mutationFn: async (p: Pedido) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou pedido alterado.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_conferir_conteudo_os", {
     p_request_id: p.requestId, p_cliente_id: clienteId, p_visita_id: p.visitaId, p_os_id: p.osId, p_visita_revision: p.visitaRevision, p_geracao: p.geracao, p_snapshot: p.snapshot });
-    if (error) throw error; const r = z.object({ requestId: z.string().uuid(), geracao: z.number().int().positive(), visitaRevision: z.number().int().positive(), state: z.literal("conferida_basica") }).strict().parse(data);
+    if (error) throw error; const r = z.object({ requestId: z.string().guid(), geracao: z.number().int().positive(), visitaRevision: z.number().int().positive(), state: z.literal("conferida_basica") }).strict().parse(data);
     if (r.requestId !== p.requestId || r.geracao !== p.geracao || r.visitaRevision !== p.visitaRevision) throw new Error("Resposta divergente");
     const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId)throw new Error("Sessão alterada.");
   }, onSuccess: async (_r, p) => { try { await cache.invalidateQueries({queryKey:["visitas",userId,clienteId,visitaId,"conteudo-os",osId]});

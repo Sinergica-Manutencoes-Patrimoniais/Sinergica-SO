@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { RetificacaoClassificacao } from "./RetificacaoClassificacao";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ linha_id: uuid, descricao: z.string(), classificacao_id: uuid.nullable(), tipo: z.enum(["servico", "material"]).nullable(), autor_id: uuid.nullable(), decisao: z.enum(["aceita", "rejeitada"]).nullable() }).strict();
 const pedido = z.object({ requestId: uuid, cliente: uuid, proposta: uuid, versao: z.number().int().positive(), acao: z.enum(["declarar", "revisar"]), linha: uuid, classificacao: uuid.nullable(), valor: z.enum(["servico", "material", "aceita", "rejeitada"]), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;

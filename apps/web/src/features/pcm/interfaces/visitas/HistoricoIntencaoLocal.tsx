@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ request_id: z.string().uuid(), os_id: z.string().uuid(), revisao: z.number().int().positive(), elegivel_em: z.string(), criado_em: z.string() }).strict();
+const linha = z.object({ request_id: z.string().guid(), os_id: z.string().guid(), revisao: z.number().int().positive(), elegivel_em: z.string(), criado_em: z.string() }).strict();
 export function HistoricoIntencaoLocal({ userId, clienteId, visitaId }: { userId: string; clienteId: string; visitaId: string }) {
   const [aberto, setAberto] = useState(false);
   const lista = useInfiniteQuery({ queryKey: ["visitas", userId, clienteId, visitaId, "intencoes-locais"], enabled: aberto,

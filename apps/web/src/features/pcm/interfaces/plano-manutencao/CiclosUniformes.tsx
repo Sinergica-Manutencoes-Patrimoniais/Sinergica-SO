@@ -8,7 +8,7 @@ import { MaterializarCicloCanonico } from "./MaterializarCicloCanonico";
 const dataCivil=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((s)=>{const t=Date.parse(`${s}T00:00:00Z`);return !s.startsWith("0000") && Number.isFinite(t) && new Date(t).toISOString().slice(0,10)===s;});
 const ciclo=z.discriminatedUnion("origem",[
   z.object({origem:z.literal("calendario"),chave:z.string().regex(/^(0|[1-9]\d*)$/).refine((s)=>Number.isSafeInteger(Number(s))),vencimento:dataCivil,tolerancia_antes:z.number().int().nonnegative(),tolerancia_depois:z.number().int().nonnegative(),semana_origem:z.null(),estado_visita:z.null(),feriado:z.literal("indeterminado"),vigencia_declarada:z.null(),ocorrencia_preparada:z.null(),fonte_incompleta:z.literal(true)}).strict(),
-  z.object({origem:z.literal("visita"),chave:z.string().uuid(),vencimento:dataCivil,tolerancia_antes:z.null(),tolerancia_depois:z.null(),semana_origem:dataCivil,estado_visita:z.string().min(1),feriado:z.enum(["declarado","indeterminado"]),vigencia_declarada:z.boolean(),ocorrencia_preparada:z.boolean(),fonte_incompleta:z.literal(true)}).strict(),
+  z.object({origem:z.literal("visita"),chave:z.string().guid(),vencimento:dataCivil,tolerancia_antes:z.null(),tolerancia_depois:z.null(),semana_origem:dataCivil,estado_visita:z.string().min(1),feriado:z.enum(["declarado","indeterminado"]),vigencia_declarada:z.boolean(),ocorrencia_preparada:z.boolean(),fonte_incompleta:z.literal(true)}).strict(),
 ]);
 type Props={ userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; serieId?: string; revisaoPlano?: number };
 export function CiclosUniformes(props:Props) {

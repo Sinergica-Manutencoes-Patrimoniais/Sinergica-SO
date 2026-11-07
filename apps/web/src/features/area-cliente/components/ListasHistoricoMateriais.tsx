@@ -14,7 +14,7 @@ function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: stri
     queryFn: async ({ pageParam, signal }) => { await conferirSessaoMateriais(userId, signal);const parametros={p_cliente_id:clienteId,p_os_id:osId,p_apos:pageParam};
       const requisicao=import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED==="true"?supabase.schema("pcm").rpc("sso_portal_listas_historico_materiais_mediado",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_listas_historico_materiais",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
-      if (error) throw error; const pagina = z.array(z.object({ lista_id: z.string().uuid() }).strict()).max(20).parse(data);
+      if (error) throw error; const pagina = z.array(z.object({ lista_id: z.string().guid() }).strict()).max(20).parse(data);
       let anterior = pageParam?.toLowerCase() ?? null; for (const item of pagina) { const id = item.lista_id.toLowerCase(); if (anterior !== null && id <= anterior) throw new Error("Página divergente."); anterior = id; } await conferirSessaoMateriais(userId, signal); return pagina; },
     getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.lista_id : undefined });
   return <section aria-label="Histórico anterior de materiais"><h4>Histórico anterior de materiais</h4>

@@ -5,15 +5,15 @@ import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 const count = z.number().int().nonnegative().safe();
-const os = z.object({ osId: z.string().uuid(), status: z.string(), atualizadaEm: z.string() }).strict();
+const os = z.object({ osId: z.string().guid(), status: z.string(), atualizadaEm: z.string() }).strict();
 const item = z.object({
   chave: z.string(),
   modo: z.enum(["calendario", "visita"]),
-  ocorrenciaId: z.string().uuid(),
-  rotinaLogicaId: z.string().uuid(),
-  rotinaAnteriorId: z.string().uuid(),
-  alvoAnterior: z.object({ tipo: z.string(), id: z.string().uuid() }).strict(),
-  alvoNovo: z.object({ tipo: z.string(), id: z.string().uuid().nullable() }).strict().nullable(),
+  ocorrenciaId: z.string().guid(),
+  rotinaLogicaId: z.string().guid(),
+  rotinaAnteriorId: z.string().guid(),
+  alvoAnterior: z.object({ tipo: z.string(), id: z.string().guid() }).strict(),
+  alvoNovo: z.object({ tipo: z.string(), id: z.string().guid().nullable() }).strict().nullable(),
   ciclo: count.nullable(),
   semanaOrigem: z.string().date(),
   vencimentoOriginal: z.string().date(),
@@ -21,15 +21,15 @@ const item = z.object({
   estadoQuestionario: z.enum(["sem_questionario", "comparacao_questionario_bloqueada", "conteudo_integral_igual", "conteudo_integral_diferente", "referencia_alterada", "historico_indeterminado", "fonte_atual_indisponivel", "nao_comparavel"]),
   classificacao: z.enum(["manter", "alterar", "retirar", "indeterminada"]),
   ponteLegadaComprovada: z.boolean(),
-  ocorrenciaLegadaId: z.string().uuid().nullable(),
+  ocorrenciaLegadaId: z.string().guid().nullable(),
   osAbertasComPonteComprovada: z.array(os).max(101),
   fontesDesconhecidas: z.boolean(),
   osClienteDivergente: z.boolean(),
 }).strict();
 const receipt = z.object({
   revision: z.number().int().positive(),
-  versaoAnteriorId: z.string().uuid(),
-  versaoRascunhoId: z.string().uuid(),
+  versaoAnteriorId: z.string().guid(),
+  versaoRascunhoId: z.string().guid(),
   nextCursor: z.string().nullable(),
   limite: z.number().int().positive(),
   ocorrencias: z.array(item).max(50),

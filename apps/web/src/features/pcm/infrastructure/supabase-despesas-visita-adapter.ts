@@ -42,18 +42,18 @@ export interface DespesaVisitaListada {
 }
 
 const realizarDespesaSchema = z.object({
-  requestId: z.string().uuid(),
-  despesaId: z.string().uuid(),
-  visitaId: z.string().uuid(),
+  requestId: z.string().guid(),
+  despesaId: z.string().guid(),
+  visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(),
   realizadoCentavos: z.number().int().nonnegative().safe(),
-  comprovanteObjetoId: z.string().uuid(),
+  comprovanteObjetoId: z.string().guid(),
 }).strict();
 export type RealizarDespesa = z.infer<typeof realizarDespesaSchema>;
 export const validarRealizarDespesa = (v: unknown) => realizarDespesaSchema.parse(v);
 export async function resolverComprovanteUpload(caminho: string): Promise<string> {
   const { data, error } = await supabase.schema("pcm").rpc("sso_resolver_comprovante_upload", { p_nome: caminho });
-  if (error || typeof data !== "string" || !z.string().uuid().safeParse(data).success) throw error ?? new Error("Upload não confirmado.");
+  if (error || typeof data !== "string" || !z.string().guid().safeParse(data).success) throw error ?? new Error("Upload não confirmado.");
   return data;
 }
 export async function enviarComprovanteDespesa(caminho: string, arquivo: File, exigirRespostaUpload = false): Promise<string> {
@@ -69,16 +69,16 @@ export async function enviarComprovanteDespesa(caminho: string, arquivo: File, e
   catch (error) { throw uploadError ?? error; }
 }
 export async function ingerirComprovanteDespesa(requestId: string, despesaId: string, arquivo: File): Promise<string> {
-  z.string().uuid().parse(requestId); z.string().uuid().parse(despesaId);
+  z.string().guid().parse(requestId); z.string().guid().parse(despesaId);
   if (arquivo.size <= 0 || arquivo.size > 10 * 1024 * 1024 || !["application/pdf", "image/jpeg", "image/png"].includes(arquivo.type)) throw new Error("Arquivo inválido.");
   const { data, error } = await supabase.functions.invoke("pcm-comprovante-ingestao", { body: arquivo, headers: { "x-request-id": requestId, "x-despesa-id": despesaId } });
   if (error) throw error;
-  const resposta = z.object({ requestId: z.string().uuid(), objetoId: z.string().uuid() }).strict().parse(data);
+  const resposta = z.object({ requestId: z.string().guid(), objetoId: z.string().guid() }).strict().parse(data);
   if (resposta.requestId !== requestId) throw new Error("Resposta de ingestão divergente.");
   return resposta.objetoId;
 }
 export async function baixarComprovanteDespesa(despesaId: string): Promise<Blob> {
-  z.string().uuid().parse(despesaId);
+  z.string().guid().parse(despesaId);
   const unificada = import.meta.env.VITE_SSO_LEITURA_COMPROVANTE_UNIFICADA_ENABLED === "true";
   const { data, error } = unificada
     ? await supabase.functions.invoke<Blob>("despesa-visita-comprovante-unificado", { body: {}, headers: { "x-despesa-id": despesaId } })
@@ -88,9 +88,9 @@ export async function baixarComprovanteDespesa(despesaId: string): Promise<Blob>
   return data;
 }
 const rateioSchema = z.object({
-  requestId: z.string().uuid(), despesaId: z.string().uuid(), visitaId: z.string().uuid(),
+  requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(),
-  parcelas: z.array(z.object({ vinculoId: z.string().uuid(), valorCentavos: z.number().int().nonnegative().safe() }).strict()).max(100),
+  parcelas: z.array(z.object({ vinculoId: z.string().guid(), valorCentavos: z.number().int().nonnegative().safe() }).strict()).max(100),
 }).strict().refine((v) => new Set(v.parcelas.map((p) => p.vinculoId.toLowerCase())).size === v.parcelas.length);
 export type RatearDespesa = z.infer<typeof rateioSchema>;
 export const validarRateioDespesa = (v: unknown) => rateioSchema.parse(v);
@@ -108,8 +108,8 @@ export async function ratearDespesa(input: RatearDespesa) {
 export async function consultarRateio(despesaId: string) {
   const { data, error } = await supabase.schema("pcm").rpc("sso_consultar_rateio_despesa", { p_despesa_id: despesaId });
   if (error) throw error;
-  return z.array(z.object({ revisao: z.number().int().positive(), vinculo_id: z.string().uuid(),
-    os_id: z.string().uuid(), valor_centavos: z.number().int().nonnegative().safe(), vinculo_vigente: z.boolean() })).parse(data);
+  return z.array(z.object({ revisao: z.number().int().positive(), vinculo_id: z.string().guid(),
+    os_id: z.string().guid(), valor_centavos: z.number().int().nonnegative().safe(), vinculo_vigente: z.boolean() })).parse(data);
 }
 export async function consultarOsParaRateio(clienteId: string, visitaId: string, cursor?: { sequencia: number; id: string } | null, signal?: AbortSignal) {
   let consulta = supabase.schema("pcm").rpc("sso_listar_os_visita", {
@@ -119,7 +119,7 @@ export async function consultarOsParaRateio(clienteId: string, visitaId: string,
   if (signal) consulta = consulta.abortSignal(signal);
   const { data, error } = await consulta;
   if (error) throw error;
-  const itens = z.array(z.object({ id: z.string().uuid(), numero: z.string(), titulo: z.string(), sequencia: z.number().int().positive() }).passthrough()).max(100).parse(data);
+  const itens = z.array(z.object({ id: z.string().guid(), numero: z.string(), titulo: z.string(), sequencia: z.number().int().positive() }).passthrough()).max(100).parse(data);
   let anterior = cursor ?? null;
   for (const item of itens) {
     if (anterior && (item.sequencia < anterior.sequencia || (item.sequencia === anterior.sequencia && item.id.toLowerCase() <= anterior.id.toLowerCase()))) throw new Error("Página de OS inválida.");
@@ -144,8 +144,8 @@ export async function realizarDespesa(input: RealizarDespesa, modo: "legado" | "
 }
 
 const declararRepasseSchema = z.object({
-  requestId: z.string().uuid(),
-  despesaId: z.string().uuid(),
+  requestId: z.string().guid(),
+  despesaId: z.string().guid(),
   expectedRevision: z.number().int().positive(),
   competencia: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/),
   regraContratual: z.string().trim().min(1).max(500),
@@ -174,9 +174,9 @@ export async function declararRepasse(input: DeclararRepasse) {
 
 const editarPrevisaoSchema = z
   .object({
-    requestId: z.string().uuid(),
-    despesaId: z.string().uuid(),
-    visitaId: z.string().uuid(),
+    requestId: z.string().guid(),
+    despesaId: z.string().guid(),
+    visitaId: z.string().guid(),
     expectedRevision: z.number().int().positive(),
     acao: z.enum(["alterar", "cancelar"]),
     data: z
@@ -230,7 +230,7 @@ export async function listarCategoriasDespesa(
   aposId: string | null,
   signal?: AbortSignal,
 ): Promise<Array<{ id: string; nome: string }>> {
-  if (aposId !== null && !z.string().uuid().safeParse(aposId).success)
+  if (aposId !== null && !z.string().guid().safeParse(aposId).success)
     throw new Error("Cursor de categorias inválido.");
   let consulta = supabase
     .schema("pcm")
@@ -245,7 +245,7 @@ export async function listarCategoriasDespesa(
   if (!Array.isArray(data) || data.length > 100) throw new Error("Categorias indisponíveis.");
   let anterior = aposId?.toLowerCase() ?? null;
   return data.map((row) => {
-    if (typeof row.id !== "string" || !z.string().uuid().safeParse(row.id).success || typeof row.nome !== "string" || (anterior !== null && row.id.toLowerCase() <= anterior))
+    if (typeof row.id !== "string" || !z.string().guid().safeParse(row.id).success || typeof row.nome !== "string" || (anterior !== null && row.id.toLowerCase() <= anterior))
       throw new Error("Categorias inválidas.");
     anterior = row.id.toLowerCase();
     return { id: row.id, nome: row.nome };

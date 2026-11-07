@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema = z.object({ visitaId: z.string().uuid(), osId: z.string().uuid(), revision: z.number().int().positive(),
+const schema = z.object({ visitaId: z.string().guid(), osId: z.string().guid(), revision: z.number().int().positive(),
   alvo: z.enum(["desconhecido", "referencia_sistema_nao_comprovada"]), questionario: z.enum(["aplicabilidade_desconhecida", "referencia_nao_comprovada"]),
   escopo: z.enum(["indisponivel", "sem_atribuicao_conhecida", "atribuicoes_parciais"]), atribuicoes: z.number().int().nonnegative().nullable(),
   revisaoCompleta: z.literal(false), autorizaEnvio: z.literal(false) }).strict();

@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { EntradaLevantamentos } from "../levantamentos/Conectado";
 
-const contextoSchema = z.object({ clienteId: z.string().uuid(), osId: z.string().uuid(), envelopeId: z.string().uuid(),
-  taskId: z.string().regex(/^[1-9]\d{0,18}$/), requestId: z.string().uuid() }).strict();
+const contextoSchema = z.object({ clienteId: z.string().guid(), osId: z.string().guid(), envelopeId: z.string().guid(),
+  taskId: z.string().regex(/^[1-9]\d{0,18}$/), requestId: z.string().guid() }).strict();
 export const pedidoEstruturadoSchema = z.object({ confirmado: z.literal(true), contexto: contextoSchema, entrada: z.unknown(), contrato: z.unknown() }).strict();
 const pedidoSchema = pedidoEstruturadoSchema;
 export type PedidoEstruturado = z.infer<typeof pedidoEstruturadoSchema>;
@@ -95,7 +95,7 @@ function Conteudo({ userId, clienteId, osId, envelopeId, disponivel }: Props) {
       if (antes.error || antes.data.user?.id !== userId || !montado.current || !disponivelAtual.current) throw new Error();
       const { data, error } = await supabase.functions.invoke("pcm-receber-levantamento-estruturado", { body: { ...p, acao: "prever" } });
       if (error) throw error;
-      const r = z.object({ estado: z.literal("preparado"), origem: z.object({ envelopeId: z.string().uuid(), clienteId: z.string().uuid(), osId: z.string().uuid(), taskId: z.string(), questionarioId: z.string(), versao: z.string() }).strict(),
+      const r = z.object({ estado: z.literal("preparado"), origem: z.object({ envelopeId: z.string().guid(), clienteId: z.string().guid(), osId: z.string().guid(), taskId: z.string(), questionarioId: z.string(), versao: z.string() }).strict(),
         linhas: z.array(z.object({ chave: z.string(), tipo: z.string(), atributos: z.record(z.string(), z.union([z.string(), z.number()])) }).strict()).min(1).max(1000),
         fotos: z.array(z.object({ chaveLinha: z.string(), referencia: z.string() }).strict()).max(10000) }).strict().parse(data);
       if (r.origem.envelopeId !== envelopeId || r.origem.clienteId !== clienteId || r.origem.osId !== osId || r.origem.taskId !== p.contexto.taskId) throw new Error();
@@ -114,7 +114,7 @@ function Conteudo({ userId, clienteId, osId, envelopeId, disponivel }: Props) {
       if (antes.error || antes.data.user?.id !== userId || !montado.current || !disponivelAtual.current || sessionStorage.getItem(chave) !== JSON.stringify(p) || sessionStorage.getItem(chaveManual)) throw new Error();
       const { data, error } = await supabase.functions.invoke("pcm-receber-levantamento-estruturado", { body: p });
       if (error) throw error;
-      const recibo = z.object({ estado: z.literal("recebido"), requestId: z.string().uuid(), loteId: z.string().uuid(),
+      const recibo = z.object({ estado: z.literal("recebido"), requestId: z.string().guid(), loteId: z.string().guid(),
         origemComprovada: z.literal(false), fotosImportadas: z.literal(false), cadastrosIncorporados: z.literal(false) }).strict().parse(data);
       if (recibo.requestId !== p.contexto.requestId) throw new Error();
       await cache.invalidateQueries({ queryKey: ["levantamentos", userId, clienteId, "lotes"], refetchType: "none" });

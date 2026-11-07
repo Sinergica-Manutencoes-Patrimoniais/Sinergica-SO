@@ -4,15 +4,15 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const pedidoSchema = z.object({
-  requestId: z.string().uuid(), clienteId: z.string().uuid(), chamadoId: z.string().uuid(),
-  osId: z.string().uuid(), revisao: z.number().int().positive().safe(), motivo: z.string().min(1).max(2000),
+  requestId: z.string().guid(), clienteId: z.string().guid(), chamadoId: z.string().guid(),
+  osId: z.string().guid(), revisao: z.number().int().positive().safe(), motivo: z.string().min(1).max(2000),
 }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-const chamadoSchema = z.object({ id: z.string().uuid(), cliente_id: z.string().uuid(), numero: z.string(),
-  ordem_servico_id: z.string().uuid().nullable(), sso_revisao: z.number().int().positive().safe() });
-const osSchema = z.object({ id: z.string().uuid(), client_id: z.string().uuid(), chamado_id: z.string().uuid().nullable(), numero: z.string(), titulo: z.string() });
-const respostaSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(),
-  chamadoId: z.string().uuid(), osId: z.string().uuid(), numeroOs: z.string() });
+const chamadoSchema = z.object({ id: z.string().guid(), cliente_id: z.string().guid(), numero: z.string(),
+  ordem_servico_id: z.string().guid().nullable(), sso_revisao: z.number().int().positive().safe() });
+const osSchema = z.object({ id: z.string().guid(), client_id: z.string().guid(), chamado_id: z.string().guid().nullable(), numero: z.string(), titulo: z.string() });
+const respostaSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(),
+  chamadoId: z.string().guid(), osId: z.string().guid(), numeroOs: z.string() });
 
 export function CanonicalizarVinculoLegado(props: { usuario: string; cliente: string; chamado: string }) {
   if (import.meta.env.VITE_SSO_CANONICALIZAR_CHAMADO_ENABLED !== "true") return null;

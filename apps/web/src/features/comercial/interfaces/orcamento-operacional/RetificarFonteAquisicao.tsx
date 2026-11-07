@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { centavosParaEntradaReais, valorReaisParaCentavos } from "../../domain/valor-em-reais";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const tipoSchema = z.enum(["material", "retirada_exclusiva"]);
 const pedidoSchema = z.object({ atorId: uuid, clienteId: uuid, requestId: uuid, fonteAnteriorId: uuid, fonteNovaId: uuid,
   listaId: uuid, listaRevision: z.number().int().positive(), tipo: tipoSchema, descricao: z.string().trim().min(1).max(1000),

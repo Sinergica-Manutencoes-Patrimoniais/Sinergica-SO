@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const centavos = z.number().int().nonnegative().safe();
 const itemSchema = z
   .object({

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DecidirCorrelacaoGasto } from "./DecidirCorrelacaoGasto";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({ atorId: uuid, clienteId: uuid, listaId: uuid, requestId: uuid, fonteId: uuid, despesaId: uuid, vinculoId: uuid,
   despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(), motivo: z.string().trim().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;

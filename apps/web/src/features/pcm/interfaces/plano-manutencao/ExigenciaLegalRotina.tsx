@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PropostaExigenciaRevisao } from "./PropostaExigenciaRevisao";
-const itemHistorico = z.object({ request_id:z.string().uuid(), revisao:z.number().int().positive().safe(), classificacao:z.enum(["legal_normativa","nao_classificada"]), referencia:z.string().nullable(), justificativa:z.string(), ator_id:z.string().uuid(), criado_em:z.string().datetime({offset:true}), modo:z.string(), tolerancia_antes:z.number().int().nonnegative().nullable(), tolerancia_depois:z.number().int().nonnegative().nullable() }).strict();
+const itemHistorico = z.object({ request_id:z.string().guid(), revisao:z.number().int().positive().safe(), classificacao:z.enum(["legal_normativa","nao_classificada"]), referencia:z.string().nullable(), justificativa:z.string(), ator_id:z.string().guid(), criado_em:z.string().datetime({offset:true}), modo:z.string(), tolerancia_antes:z.number().int().nonnegative().nullable(), tolerancia_depois:z.number().int().nonnegative().nullable() }).strict();
 type Pedido = { requestId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; planoRevision: number; declaracaoRevision: number; classificacao: "legal_normativa" | "nao_classificada"; referencia: string; justificativa: string };
 
 export function ExigenciaLegalRotina({ userId, clienteId, planoId, versaoId, rotinaId, planoRevision, modo }: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; planoRevision: number; modo: string }) {

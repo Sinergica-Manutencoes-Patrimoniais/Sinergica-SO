@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ pendencia_id: z.string().uuid(), alvo_tipo: z.string(), alvo_id: z.string().uuid(), pergunta: z.string(), revisao: z.number().int().positive(), criticidade: z.string().nullable(), situacao_criticidade: z.enum(["informada", "nao_informada"]) }).strict();
+const linha = z.object({ pendencia_id: z.string().guid(), alvo_tipo: z.string(), alvo_id: z.string().guid(), pergunta: z.string(), revisao: z.number().int().positive(), criticidade: z.string().nullable(), situacao_criticidade: z.enum(["informada", "nao_informada"]) }).strict();
 type Props = { userId: string; clienteId: string };
 export function FiltroCriticidade(props: Props) {
   if (import.meta.env.VITE_SSO_FILTRO_CRITICIDADE_ENABLED !== "true") return null;

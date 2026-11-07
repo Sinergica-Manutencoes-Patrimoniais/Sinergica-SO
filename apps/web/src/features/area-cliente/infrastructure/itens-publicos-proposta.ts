@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const item = z.object({ id: z.string().uuid(), descricao: z.string().min(1), quantidade: z.number().int().positive(),
+const item = z.object({ id: z.string().guid(), descricao: z.string().min(1), quantidade: z.number().int().positive(),
   precoUnitarioCentavos: z.number().int().nonnegative().safe() }).strict();
 const schema = z.object({ estruturado: z.boolean(), itens: z.array(item).max(100) }).strict()
   .refine((v) => v.estruturado ? v.itens.length > 0 : v.itens.length === 0);

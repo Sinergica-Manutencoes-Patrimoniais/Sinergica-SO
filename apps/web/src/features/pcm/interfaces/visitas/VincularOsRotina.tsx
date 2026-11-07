@@ -3,9 +3,9 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const previa = z.object({ osId: z.string().uuid(), ocorrenciaLegadaId: z.string().uuid(), ocorrenciaPreparadaId: z.string().uuid(),
-  planoId: z.string().uuid(), versaoId: z.string().uuid(), rotinaId: z.string().uuid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().uuid() }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), previa }).strict(); type Pedido = z.infer<typeof pedido>;
+const previa = z.object({ osId: z.string().guid(), ocorrenciaLegadaId: z.string().guid(), ocorrenciaPreparadaId: z.string().guid(),
+  planoId: z.string().guid(), versaoId: z.string().guid(), rotinaId: z.string().guid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().guid() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), previa }).strict(); type Pedido = z.infer<typeof pedido>;
 export function VincularOsRotina({ userId, clienteId, osId, bloqueado }: { userId: string; clienteId: string; osId: string; bloqueado: boolean }) {
   const chave = `sso-os-rotina:${JSON.stringify([userId, clienteId, osId])}`; const [aberto, setAberto] = useState(false); const [confirmado, setConfirmado] = useState(false);
   const [aviso, setAviso] = useState(""); const enviando = useRef(false);
@@ -16,7 +16,7 @@ export function VincularOsRotina({ userId, clienteId, osId, bloqueado }: { userI
       if (error) throw error; const p = previa.parse(data); if (p.osId !== osId) throw new Error("Prévia divergente"); return p; } });
   const comando = useMutation({ mutationFn: async (p: Pedido) => { const { data, error } = await supabase.schema("pcm").rpc("sso_vincular_os_rotina", {
     p_request_id: p.requestId, p_cliente_id: clienteId, p_os_id: osId, p_previa: p.previa });
-    if (error) throw error; const r = z.object({ requestId: z.string().uuid(), osId: z.string().uuid(), state: z.literal("vinculado") }).strict().parse(data);
+    if (error) throw error; const r = z.object({ requestId: z.string().guid(), osId: z.string().guid(), state: z.literal("vinculado") }).strict().parse(data);
     if (r.requestId !== p.requestId || r.osId !== osId) throw new Error("Resposta divergente");
   }, onSuccess: (_r, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Vínculo registrado, mas tentativa local não foi limpa. Consulte suporte."); return; }

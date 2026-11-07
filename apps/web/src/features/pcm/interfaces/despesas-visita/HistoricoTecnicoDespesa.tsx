@@ -3,8 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha=z.object({revisao:z.number().int().positive(),participacao_id:z.string().uuid().nullable(),tecnico_nome:z.string().nullable(),
-  vinculo:z.enum(["sem_atribuicao","ausente","incompativel","vigente","encerrado"]),motivo:z.string().min(1).max(2000),ator_id:z.string().uuid(),criado_em:z.string()}).strict();
+const linha=z.object({revisao:z.number().int().positive(),participacao_id:z.string().guid().nullable(),tecnico_nome:z.string().nullable(),
+  vinculo:z.enum(["sem_atribuicao","ausente","incompativel","vigente","encerrado"]),motivo:z.string().min(1).max(2000),ator_id:z.string().guid(),criado_em:z.string()}).strict();
 export function HistoricoTecnicoDespesa({userId,clienteId,visitaId,despesaId,revisao}:{userId:string;clienteId:string;visitaId:string;despesaId:string;revisao:number}){
   const [aberto,setAberto]=useState(false);
   const consulta=useInfiniteQuery({queryKey:["despesas-visita",userId,clienteId,visitaId,despesaId,"historico-tecnico",revisao],enabled:aberto,gcTime:0,retry:false,initialPageParam:0,

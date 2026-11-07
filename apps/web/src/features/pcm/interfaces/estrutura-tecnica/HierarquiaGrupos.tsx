@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { BreadcrumbGrupo } from "./BreadcrumbGrupo";
 const linha = z
   .object({
-    grupo_id: z.string().uuid(),
+    grupo_id: z.string().guid(),
     grupo_nome: z.string(),
     quantidade: z.number().int().safe().positive(),
     local_nome: z.string().nullable(),

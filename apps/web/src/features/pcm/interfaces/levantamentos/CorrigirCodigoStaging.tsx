@@ -4,10 +4,10 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 const schema = z
   .object({
-    requestId: z.string().uuid(),
-    requestEdicao: z.string().uuid(),
-    requestCodigo: z.string().uuid(),
-    loteId: z.string().uuid(),
+    requestId: z.string().guid(),
+    requestEdicao: z.string().guid(),
+    requestCodigo: z.string().guid(),
+    loteId: z.string().guid(),
     revision: z.number().int().positive(),
     chave: z.string(),
     antes: z.record(z.string(), z.unknown()),
@@ -117,11 +117,11 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, atributos }: Prop
       if (error) throw error;
       const r = z
         .object({
-          loteId: z.string().uuid(),
+          loteId: z.string().guid(),
           chave: z.string(),
           revision: z.number().int(),
           codigoRevision: z.number().int(),
-          requestId: z.string().uuid(),
+          requestId: z.string().guid(),
           codigoOficialAlterado: z.literal(false),
           aliasCriado: z.literal(false),
         })

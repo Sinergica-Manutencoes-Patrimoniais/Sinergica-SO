@@ -2,10 +2,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ alocacao_id: z.string().uuid(), documento_ref: z.string(), data_documento: z.string(),
-  valor_centavos: z.number().int().positive().safe(), lancamento_id: z.string().uuid(),
+const linha = z.object({ alocacao_id: z.string().guid(), documento_ref: z.string(), data_documento: z.string(),
+  valor_centavos: z.number().int().positive().safe(), lancamento_id: z.string().guid(),
   lancamento_status: z.enum(["previsto", "realizado"]), data_pagamento: z.string().nullable(),
-  estorno_id: z.string().uuid().nullable(), conferencia_id: z.string().uuid().nullable(), data_conferencia: z.string().nullable() }).strict();
+  estorno_id: z.string().guid().nullable(), conferencia_id: z.string().guid().nullable(), data_conferencia: z.string().nullable() }).strict();
 type Props = { usuario: string; cliente: string; itemId: string };
 export function HistoricoDocumentos(props: Props) {
   if (import.meta.env.VITE_SSO_HISTORICO_FATURAVEL_ENABLED !== "true") return null;

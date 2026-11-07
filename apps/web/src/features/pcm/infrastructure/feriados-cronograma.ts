@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const item = z.object({ id: z.string().uuid(), contrato_id: z.string().uuid().nullable(), data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+const item = z.object({ id: z.string().guid(), contrato_id: z.string().guid().nullable(), data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   fonte: z.string().min(1).max(500), motivo: z.string().min(1).max(2000), ativo: z.boolean(), revisao: z.number().int().positive() }).strict();
-const pagina = z.object({ clienteId: z.string().uuid(), contratoId: z.string().uuid().nullable(), inicio: z.string(), fim: z.string(),
+const pagina = z.object({ clienteId: z.string().guid(), contratoId: z.string().guid().nullable(), inicio: z.string(), fim: z.string(),
   total: z.number().int().nonnegative().max(2000), assinatura: z.string().regex(/^[a-f0-9]{32}$/), itens: z.array(item).max(50) }).strict();
 
 /** Leitura declarativa limitada; não comprova feriados oficiais ou fotografia transacional. */

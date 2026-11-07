@@ -21,7 +21,7 @@ import type {
 
 const resultadoSchema = z
   .object({
-    aggregateId: z.string().uuid(),
+    aggregateId: z.string().guid(),
     revision: z.number().int().positive(),
     state: z.string(),
     created: z.boolean(),
@@ -29,10 +29,10 @@ const resultadoSchema = z
     warnings: z.array(
       z.union([
         z.string(),
-        z.object({ rotinaId: z.string().uuid(), pendencias: z.array(z.string()) }).strict(),
+        z.object({ rotinaId: z.string().guid(), pendencias: z.array(z.string()) }).strict(),
       ]),
     ),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
   })
   .strict();
 async function executar(
@@ -59,10 +59,10 @@ export async function prepararAprovacaoVersao(
   if (error) throw error;
   const resultado = z
     .object({
-      planoId: z.string().uuid(),
-      clienteId: z.string().uuid(),
+      planoId: z.string().guid(),
+      clienteId: z.string().guid(),
       revision: z.number().int().positive(),
-      versaoId: z.string().uuid(),
+      versaoId: z.string().guid(),
     })
     .strict()
     .parse(data);
@@ -163,7 +163,7 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;
-    const uuid = z.string().uuid();
+    const uuid = z.string().guid();
     const campos = z
       .object({
         id: uuid,
@@ -252,9 +252,9 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
       .array(
         z
           .object({
-            rotina_logica_id: z.string().uuid(),
-            rotina_anterior_id: z.string().uuid().nullable(),
-            rotina_rascunho_id: z.string().uuid().nullable(),
+            rotina_logica_id: z.string().guid(),
+            rotina_anterior_id: z.string().guid().nullable(),
+            rotina_rascunho_id: z.string().guid().nullable(),
             nome_anterior: z.string().nullable(),
             nome_rascunho: z.string().nullable(),
             classificacao: z.enum(["adicionada", "retirada", "alterada", "inalterada"]),
@@ -285,11 +285,11 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
     if (error) throw error;
     const resultado = z
       .object({
-        rotinaId: z.string().uuid(),
-        versaoId: z.string().uuid(),
+        rotinaId: z.string().guid(),
+        versaoId: z.string().guid(),
         questionario: z
           .object({
-            id: z.string().uuid(),
+            id: z.string().guid(),
             nome: z.string(),
             cabecalho: z.string().nullable(),
             rodape: z.string().nullable(),
@@ -346,7 +346,7 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;
-    return z.array(z.object({ id: z.string().uuid(), nome: z.string() })).parse(data);
+    return z.array(z.object({ id: z.string().guid(), nome: z.string() })).parse(data);
   },
   async listarVersoes(planoId, limite, apos, signal) {
     if (!Number.isSafeInteger(limite) || limite < 1 || limite > 100)
@@ -365,8 +365,8 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
       .array(
         z
           .object({
-            id: z.string().uuid(),
-            plano_id: z.string().uuid(),
+            id: z.string().guid(),
+            plano_id: z.string().guid(),
             numero: z.number().int().positive(),
             estado: z.enum(["rascunho", "aprovado"]),
             vigencia_inicio: z.string().nullable(),
@@ -397,14 +397,14 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
     if (error) throw error;
     const schema = z
       .object({
-        id: z.string().uuid(),
-        plano_id: z.string().uuid(),
-        versao_id: z.string().uuid(),
+        id: z.string().guid(),
+        plano_id: z.string().guid(),
+        versao_id: z.string().guid(),
         nome: z.string(),
         alvo_tipo: z.enum(["sistema", "componente", "grupo"]),
-        sistema_id: z.string().uuid().nullable(),
-        equipamento_id: z.string().uuid().nullable(),
-        grupo_id: z.string().uuid().nullable(),
+        sistema_id: z.string().guid().nullable(),
+        equipamento_id: z.string().guid().nullable(),
+        grupo_id: z.string().guid().nullable(),
         modo: z.enum(["calendario", "visita"]),
         intervalo_n: z.number().int().positive().nullable(),
         intervalo_unidade: z.enum(["dias", "semanas", "meses", "anos"]).nullable(),
@@ -414,7 +414,7 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
         tolerancia_antes: z.number().int().nonnegative(),
         tolerancia_depois: z.number().int().nonnegative(),
         instrucao: z.string().nullable(),
-        questionario_id: z.string().uuid().nullable(),
+        questionario_id: z.string().guid().nullable(),
         alvo_nome: z.string().nullable(),
         alvo_ativo: z.boolean(),
         questionario_nome: z.string().nullable(),
@@ -475,8 +475,8 @@ export const supabasePlanoManutencaoAdapter: SalvarPlanoGateway &
       .array(
         z
           .object({
-            id: z.string().uuid(),
-            cliente_id: z.string().uuid(),
+            id: z.string().guid(),
+            cliente_id: z.string().guid(),
             nome: z.string(),
             estado: z.enum([
               "rascunho",

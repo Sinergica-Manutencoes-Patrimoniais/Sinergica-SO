@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const itemSchema = z.object({ requestId: uuid, planoId: uuid, rotinaId: uuid, fotografia: z.record(z.string(), z.unknown()),
   modo: z.enum(["calendario", "visita"]), intervalo: z.number().int().min(1).max(10000),
   unidade: z.enum(["dias", "semanas", "meses", "anos"]), dataBase: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

@@ -6,7 +6,7 @@ import { AtestacaoServico } from "./AtestacaoServico";
 import { ConferenciaItensServico } from "./ConferenciaItensServico";
 import { ConferenciaServicoConsolidada } from "./ConferenciaServicoConsolidada";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const opcao = z.object({ vinculo_id: uuid, resposta_id: uuid, retorno_id: uuid, revisao_id: uuid, revisao: z.number().int(), decisao: z.string() }).strict();
 const pedido = z.object({ requestId: uuid, cliente: uuid, declaracao: uuid, vinculo: uuid, revisao: uuid, motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;

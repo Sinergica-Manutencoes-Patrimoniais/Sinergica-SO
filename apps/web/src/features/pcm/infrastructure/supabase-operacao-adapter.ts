@@ -58,7 +58,7 @@ const PREFIXO_CHAMADO = "chamado-aberto:";
 
 /** Resumo pontual limitado por Cliente; RLS da view permanece a autoridade. */
 export async function obterResumoOsDoCliente(clienteId: string, osId: string, signal?: AbortSignal): Promise<ItemOperacaoResumo | null> {
-  if (!z.string().uuid().safeParse(clienteId).success || !z.string().uuid().safeParse(osId).success)
+  if (!z.string().guid().safeParse(clienteId).success || !z.string().guid().safeParse(osId).success)
     throw new Error("Contexto inválido.");
   let consulta = supabase.schema("pcm").from("operacao_itens").select(COLUNAS_RESUMO)
     .eq("item_tipo", "ordem_servico").eq("cliente_id", clienteId).eq("ordem_servico_id", osId);

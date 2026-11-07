@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const item = z.object({ vinculo_id: z.string().uuid(), titulo: z.string(), criado_em: z.string(), retirado_em: z.string().nullable(), motivo: z.string().nullable() }).strict();
+const item = z.object({ vinculo_id: z.string().guid(), titulo: z.string(), criado_em: z.string(), retirado_em: z.string().nullable(), motivo: z.string().nullable() }).strict();
 export function HistoricoDocumentoCobranca({ usuario, cliente, lancamento }: { usuario: string; cliente: string; lancamento: string }) {
   const [aberto, setAberto] = useState(false); const [motivos, setMotivos] = useState<Record<string, string>>({}); const cache = useQueryClient();
   const chave = ["historico-documentos-cobranca", usuario, cliente, lancamento];

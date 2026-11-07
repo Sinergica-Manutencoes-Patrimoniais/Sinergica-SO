@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export type JanelaCronograma = { inicio: string; fim: string; feriadosInformados: readonly string[]; declaracoes?: { contratoId: string | null; datas: readonly string[] } };
 type Ocorrencia = { clienteId: string; planoId: string; versaoId: string; id: string; rotinaId: string; alvoId: string; vencimentoOriginal: string; dataProgramada: string | null; tipo?: "calendario" | "visita"; visitaEstado?: string | null; visitaRevisao?: number | null };
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const ocorrenciaSchema = z.object({ clienteId: uuid, planoId: uuid, versaoId: uuid, id: uuid, rotinaId: uuid, alvoId: uuid, vencimentoOriginal: z.string(), dataProgramada: z.string().nullable(), tipo: z.enum(["calendario", "visita"]).optional(), visitaEstado: z.string().nullable().optional(), visitaRevisao: z.number().int().positive().nullable().optional() });
 type Baseline = { rotinaId: string; alvoId: string; ciclo: number; vencimento: string; feriadoInformado: boolean };
 export type CapacidadeCronograma = { semana: string; registros: number; destinados: number; reservas: number; ausencias: number; limiteAtingido: boolean; identidadeFonte?: string }[];

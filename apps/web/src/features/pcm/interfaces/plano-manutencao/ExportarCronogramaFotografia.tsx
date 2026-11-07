@@ -82,7 +82,7 @@ export function ExportarCronogramaFotografia({ userId, clienteId, planoId, versa
     if (feriados.some((data) => data < inicio || data > fim)) {
       setErro("Há feriados informados fora do período selecionado. Remova-os ou ajuste o período."); return;
     }
-    if (alvoId.trim() && !z.string().uuid().safeParse(alvoId.trim()).success) {
+    if (alvoId.trim() && !z.string().guid().safeParse(alvoId.trim()).success) {
       setErro("Informe um identificador de alvo válido ou deixe o campo vazio."); return;
     }
     if (usarDeclarados && contratoDeclarado && (contratos.isFetching || contratos.isError || contratosDivergentes || !contratosCarregados.some((c) => c.id === contratoDeclarado))) {

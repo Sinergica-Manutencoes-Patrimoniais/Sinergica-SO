@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedido = z.object({ requestId: uuid, cliente: uuid, os: uuid, proposta: uuid, versao: z.number().int().positive(), decisao: z.enum(["aceita", "recusada"]), motivo: z.string().min(1).max(2000), evidencia: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function DecidirOrcamentoPcm({ usuario, cliente, os, proposta, versao, status }: { usuario: string; cliente: string; os: string; proposta: string; versao: number; status: string }) {

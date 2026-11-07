@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const inteiro = z.number().int().nonnegative().safe();
-const linha = z.object({ visita_id: z.string().uuid(), revisao_visita: inteiro.positive(), inicio_em: z.string().datetime({ offset: true }),
+const linha = z.object({ visita_id: z.string().guid(), revisao_visita: inteiro.positive(), inicio_em: z.string().datetime({ offset: true }),
   fuso: z.string().min(1), revisao_declaracao: inteiro.positive().nullable(), revisao_visita_declarada: inteiro.positive().nullable(),
   minutos_por_pessoa: inteiro.max(10080).nullable(), pessoas_proprias: inteiro.max(1000).nullable(), minutos_homem: inteiro.nullable() }).strict();
 

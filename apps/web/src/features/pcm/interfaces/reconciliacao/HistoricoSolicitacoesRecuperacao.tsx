@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const item = z.object({
-  request_id: z.string().uuid(), ator_id: z.string().uuid(), epoca: z.string().uuid(),
+  request_id: z.string().guid(), ator_id: z.string().guid(), epoca: z.string().guid(),
   revisao: z.string().regex(/^(0|[1-9][0-9]{0,18})$/), motivo: z.string().min(1).max(2000),
   criado_em: z.string().datetime({ offset: true }),
 }).strict();

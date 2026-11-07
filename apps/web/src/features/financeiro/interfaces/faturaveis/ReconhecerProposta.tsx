@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema = z.object({ requestId: z.string().uuid(), propostaId: z.string().uuid(), versao: z.number().int().positive(),
+const schema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(),
   valorCentavos: z.number().int().min(0).max(1000000000000), competencia: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/) }).strict();
 type Pedido = z.infer<typeof schema>;
 export function ReconhecerProposta({ usuario, cliente }: { usuario: string; cliente: string }) {
@@ -14,7 +14,7 @@ export function ReconhecerProposta({ usuario, cliente }: { usuario: string; clie
   const comando = useMutation({ mutationFn: async (p: Pedido) => {
     const { data, error } = await supabase.schema("financeiro").rpc("sso_reconhecer_proposta_com_fechamento", { p_request_id: p.requestId,
       p_cliente_id: cliente, p_proposta_id: p.propostaId, p_versao: p.versao, p_valor_centavos: p.valorCentavos, p_competencia: p.competencia });
-    if (error) throw error; return z.string().uuid().parse(data);
+    if (error) throw error; return z.string().guid().parse(data);
   }, onSuccess: async (_id, p) => {
     try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas tentativa local não foi limpa. Confira a fila."); return; }

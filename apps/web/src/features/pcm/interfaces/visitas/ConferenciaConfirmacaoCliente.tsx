@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema = z.object({ visitaId: z.string().uuid(), revision: z.number().int().positive(), politicaModo: z.enum(["sem_controle", "informativa", "obrigatoria"]),
+const schema = z.object({ visitaId: z.string().guid(), revision: z.number().int().positive(), politicaModo: z.enum(["sem_controle", "informativa", "obrigatoria"]),
   situacao: z.enum(["pendente_pcm", "politica_desatualizada", "nao_exigida", "fonte_indisponivel", "confirmada_portal", "confirmacao_pendente"]),
   confirmacaoEncontrada: z.boolean(), autorizaEnvio: z.literal(false) }).strict();
 const rotulos: Record<z.infer<typeof schema>["situacao"], string> = { pendente_pcm: "Confirmação do PCM pendente", politica_desatualizada: "Política alterada; reavaliar programação",

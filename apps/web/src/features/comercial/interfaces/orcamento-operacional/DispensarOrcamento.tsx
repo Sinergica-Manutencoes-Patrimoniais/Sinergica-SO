@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoDispensa } from "./HistoricoDispensa";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), dispensaId: z.string().uuid(), listaId: z.string().uuid(),
-  listaRevision: z.number().int().positive(), ordemServicoId: z.string().uuid(), motivo: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), dispensaId: z.string().guid(), listaId: z.string().guid(),
+  listaRevision: z.number().int().positive(), ordemServicoId: z.string().guid(), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string };
 export function DispensarOrcamento(props: Props) {
@@ -27,7 +27,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
       const { data, error } = await supabase.schema("pcm").rpc("sso_listar_listas_materiais_mediada", {
         p_cliente_id: cliente, p_ordem_servico_id: ordemServico, p_limite: 20, p_apos: pageParam }).abortSignal(signal);
       if (error) throw error;
-      const pagina = z.array(z.object({ id: z.string().uuid(), ordem_servico_id: z.string().uuid(),
+      const pagina = z.array(z.object({ id: z.string().guid(), ordem_servico_id: z.string().guid(),
         revisao: z.number().int().positive(), responsavel: z.enum(["cliente", "sinergica"]) }).passthrough()).max(20).parse(data);
       let anterior = pageParam?.toLowerCase() ?? null;
       for (const item of pagina) {
@@ -39,8 +39,8 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.id : undefined });
   const existente = useQuery({ queryKey: ["dispensa-lista", usuario, cliente, ordemServico, listaId], gcTime: 0, retry: false, enabled: !!listaId,
     queryFn: async ({ signal }) => { const { data, error } = await supabase.schema("comercial").rpc("sso_consultar_dispensa", { p_lista_id: listaId }).abortSignal(signal);
-      if (error) throw error; return z.array(z.object({ id: z.string().uuid(), lista_revisao: z.number().int().positive(),
-        motivo: z.string(), ator_id: z.string().uuid(), criado_em: z.string() }).strict()).max(1).parse(data)[0] ?? null; } });
+      if (error) throw error; return z.array(z.object({ id: z.string().guid(), lista_revisao: z.number().int().positive(),
+        motivo: z.string(), ator_id: z.string().guid(), criado_em: z.string() }).strict()).max(1).parse(data)[0] ?? null; } });
   const enviar = useMutation({ mutationFn: async (p: Pedido) => {
     if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa local divergente.");
     const { data, error } = await supabase.schema("comercial").rpc("sso_dispensar_orcamento", {

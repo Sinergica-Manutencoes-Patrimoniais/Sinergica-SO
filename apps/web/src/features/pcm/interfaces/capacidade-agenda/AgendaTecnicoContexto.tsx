@@ -27,7 +27,7 @@ function Conteudo({ userId, clienteId, semana }: { userId: string; clienteId: st
     initialPageParam:null as {nome:string;id:string}|null,
     queryFn:async({pageParam,signal})=>{const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_catalogo_tecnicos_agenda",{p_cliente_id:clienteId,p_busca:buscaNome,p_apos_nome:pageParam?.nome??null,p_apos_id:pageParam?.id??null,p_limite:50}).abortSignal(signal);
-      if(error)throw error;const pagina=z.array(z.object({id:z.string().uuid(),nome:z.string().min(1)}).strict()).max(50).parse(data);
+      if(error)throw error;const pagina=z.array(z.object({id:z.string().guid(),nome:z.string().min(1)}).strict()).max(50).parse(data);
       if(new Set(pagina.map((item)=>item.id.toLowerCase())).size!==pagina.length||pagina.some((item)=>item.id.toLowerCase()===pageParam?.id.toLowerCase()))throw new Error("Página divergente.");
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;
     },getNextPageParam:(pagina)=>pagina.length===50&&pagina.at(-1)?{nome:pagina.at(-1)!.nome,id:pagina.at(-1)!.id}:undefined});

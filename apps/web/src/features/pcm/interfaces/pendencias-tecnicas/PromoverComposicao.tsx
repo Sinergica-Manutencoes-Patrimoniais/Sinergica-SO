@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), composicaoId: z.string().uuid(), revisao: z.number().int().positive(), chamadoId: z.string().uuid(), titulo: z.string().min(1).max(200), descricao: z.string().max(10000), total: z.number().int().min(1).max(100).optional() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), composicaoId: z.string().guid(), revisao: z.number().int().positive(), chamadoId: z.string().guid(), titulo: z.string().min(1).max(200), descricao: z.string().max(10000), total: z.number().int().min(1).max(100).optional() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function PromoverComposicao({ userId, clienteId, composicaoId, revisao, total }: { userId: string; clienteId: string; composicaoId: string; revisao: number; total: number }) {
   const cache = useQueryClient(); const chave = `promocao-backlog:${JSON.stringify([userId, clienteId, composicaoId])}`; const trava = useRef(false);
@@ -16,7 +16,7 @@ export function PromoverComposicao({ userId, clienteId, composicaoId, revisao, t
     if (antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_promover_backlog_chamado", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_composicao_id: p.composicaoId, p_expected_revision: p.revisao, p_chamado_id: p.chamadoId, p_titulo: p.titulo, p_descricao: p.descricao });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), composicaoId: z.string().uuid(), chamadoId: z.string().uuid(), numero: z.string(), parcelas: z.array(z.object({ pendenciaId: z.string().uuid(), parcelaId: z.string().uuid() }).strict()).min(1).max(100), osCriada: z.literal(false), promocaoIntegral: z.literal(true) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), composicaoId: z.string().guid(), chamadoId: z.string().guid(), numero: z.string(), parcelas: z.array(z.object({ pendenciaId: z.string().guid(), parcelaId: z.string().guid() }).strict()).min(1).max(100), osCriada: z.literal(false), promocaoIntegral: z.literal(true) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.composicaoId !== p.composicaoId || r.chamadoId !== p.chamadoId ||
       new Set(r.parcelas.map((item) => item.pendenciaId.toLowerCase())).size !== r.parcelas.length ||
       new Set(r.parcelas.map((item) => item.parcelaId.toLowerCase())).size !== r.parcelas.length ||

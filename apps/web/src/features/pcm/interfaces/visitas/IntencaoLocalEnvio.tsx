@@ -4,12 +4,12 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { CandidatasT24 } from "./CandidatasT24";
 
-const pedido = z.object({ requestId: z.string().uuid(), visitaId: z.string().uuid(), osId: z.string().uuid(), revisao: z.number().int().positive(), protocolo:z.enum(["produtor_preventivo","produtor_corretivo"]).optional() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), visitaId: z.string().guid(), osId: z.string().guid(), revisao: z.number().int().positive(), protocolo:z.enum(["produtor_preventivo","produtor_corretivo"]).optional() }).strict();
 type Pedido = z.infer<typeof pedido>;
 const instante = z.string().datetime({ offset: true });
-const resposta = z.object({ aggregateId: z.string().uuid(), osId: z.string().uuid(), revision: z.number().int().positive(), requestId: z.string().uuid(),
+const resposta = z.object({ aggregateId: z.string().guid(), osId: z.string().guid(), revision: z.number().int().positive(), requestId: z.string().guid(),
   state: z.literal("bloqueada_sem_dispatch"), elegivelEm: instante, autorizaEnvio: z.literal(false) }).strict();
-const respostaProdutor=z.object({requestId:z.string().uuid(),tentativaId:z.string().uuid(),outboxId:z.string().uuid(),visitaId:z.string().uuid(),osId:z.string().uuid(),revision:z.number().int().positive(),protocolo:z.enum(["preventiva","corretiva"]),autorizaEnvio:z.literal(false)}).strict();
+const respostaProdutor=z.object({requestId:z.string().guid(),tentativaId:z.string().guid(),outboxId:z.string().guid(),visitaId:z.string().guid(),osId:z.string().guid(),revision:z.number().int().positive(),protocolo:z.enum(["preventiva","corretiva"]),autorizaEnvio:z.literal(false)}).strict();
 export function IntencaoLocalEnvio({ userId, clienteId, visitaId, osId, revisao, bloqueado }: { userId: string; clienteId: string; visitaId: string; osId: string; revisao: number; bloqueado: boolean }) {
   const chave = `sso-intencao-local:${JSON.stringify([userId, clienteId, visitaId, osId, revisao])}`;
   const cache=useQueryClient();
@@ -22,7 +22,7 @@ export function IntencaoLocalEnvio({ userId, clienteId, visitaId, osId, revisao,
     gcTime: 0, staleTime: 0, retry: false, refetchOnWindowFocus: true, queryFn: async ({ signal }) => {
       await conferirSessao(signal);const { data, error } = await supabase.schema("pcm").rpc("sso_bloqueios_intencao_local", { p_cliente_id: clienteId, p_visita_id: visitaId, p_os_id: osId }).abortSignal(signal);
       if (error) throw error;
-      const r = z.object({ visitaId: z.string().uuid(), osId: z.string().uuid(), revision: z.number().int().positive(), inicioJanela: instante,
+      const r = z.object({ visitaId: z.string().guid(), osId: z.string().guid(), revision: z.number().int().positive(), inicioJanela: instante,
         intencaoExistente: z.boolean(), bloqueios: z.array(z.string()), autorizaEnvio: z.literal(false) }).strict().parse(data);
       if (r.visitaId !== visitaId || r.osId !== osId) throw new Error("Resposta divergente"); await conferirSessao(signal);return r;
     } });
@@ -49,7 +49,7 @@ export function IntencaoLocalEnvio({ userId, clienteId, visitaId, osId, revisao,
     await conferirSessao();if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido local divergente.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_listar_intencoes_locais", { p_cliente_id: clienteId, p_visita_id: p.visitaId, p_request_id: p.requestId, p_apos: null });
     if (error) throw error;
-    const r = z.array(z.object({ request_id: z.string().uuid(), os_id: z.string().uuid(), revisao: z.number().int().positive(), elegivel_em: instante, criado_em: instante }).strict()).length(1).parse(data)[0]!;
+    const r = z.array(z.object({ request_id: z.string().guid(), os_id: z.string().guid(), revisao: z.number().int().positive(), elegivel_em: instante, criado_em: instante }).strict()).length(1).parse(data)[0]!;
     if (r.request_id !== p.requestId || r.os_id !== p.osId || r.revisao !== p.revisao) throw new Error("Registro divergente"); await conferirSessao();return r;
   }, onSuccess: async (r, p) => { try { await conferirSessao();if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Não foi possível conferir sessão ou pedido. Preserve a tentativa e consulte suporte."); return; }

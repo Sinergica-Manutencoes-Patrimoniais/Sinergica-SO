@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoDocumentoCobranca } from "./HistoricoDocumentoCobranca";
 
-const item = z.object({ cobranca_id: z.string().uuid(), anexo_id: z.string().uuid(), titulo: z.string() }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), cobrancaId: z.string().uuid(), anexoId: z.string().uuid() }).strict();
+const item = z.object({ cobranca_id: z.string().guid(), anexo_id: z.string().guid(), titulo: z.string() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), cobrancaId: z.string().guid(), anexoId: z.string().guid() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function VincularDocumentoCobranca({ usuario, cliente, lancamento }: { usuario: string; cliente: string; lancamento: string }) {
   const [aberto, setAberto] = useState(false);
@@ -19,7 +19,7 @@ export function VincularDocumentoCobranca({ usuario, cliente, lancamento }: { us
       if (error) throw error; return z.array(item).max(20).parse(data); }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.anexo_id : undefined });
   const comando = useMutation({ mutationFn: async (p: Pedido) => {
     const { data, error } = await supabase.schema("financeiro").rpc("sso_publicar_documento_cobranca_v2", { p_request_id: p.requestId, p_cobranca_id: p.cobrancaId, p_anexo_id: p.anexoId });
-    if (error) throw error; return z.string().uuid().parse(data);
+    if (error) throw error; return z.string().guid().parse(data);
   }, onSuccess: async (_id, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas tentativa local não foi limpa. Consulte suporte."); return; }
     setPendente(null); setAviso("Pedido registrado; confira o histórico. Repetição não restaura vínculo retirado.");

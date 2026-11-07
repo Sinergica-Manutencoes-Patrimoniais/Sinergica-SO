@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const pedido = z.object({ requestId: z.string().uuid(), publicacaoId: z.string().uuid() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), publicacaoId: z.string().guid() }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function ConfirmacaoVisita({ userId, clienteId, osId, publicacaoId }: { userId: string; clienteId: string; osId: string; publicacaoId: string }) {
   const chave = `sso-confirmacao-cliente:${JSON.stringify([userId, clienteId, osId, publicacaoId])}`; const cache = useQueryClient();

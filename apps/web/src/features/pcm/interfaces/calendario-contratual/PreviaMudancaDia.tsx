@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { OcorrenciasImpactoDia } from "./OcorrenciasImpactoDia";
 
 const data=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const linha=z.object({visita_id:z.string().uuid(),semana_origem:data,regra_origem_id:z.string().uuid(),inicio_em:z.string().datetime({offset:true}),
+const linha=z.object({visita_id:z.string().guid(),semana_origem:data,regra_origem_id:z.string().guid(),inicio_em:z.string().datetime({offset:true}),
   estado:z.string().min(1),revisao:z.number().int().positive(),data_proposta:data,
   classificacao:z.enum(["data_proposta_antes_vigencia","candidata_revisao","preservar_e_conferir"]),
   feriado_declarado:z.boolean().optional(),ocorrencia_preparada:z.boolean().optional()}).strict();

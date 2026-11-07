@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ os_id: z.string().uuid(), numero: z.string(), estado_local: z.string().nullable(), vinculo_local: z.boolean(), declaracao: z.enum(["nenhum", "um", "multiplos", "desconhecido"]).nullable(), declarada_em: z.string().nullable() }).strict();
+const linha = z.object({ os_id: z.string().guid(), numero: z.string(), estado_local: z.string().nullable(), vinculo_local: z.boolean(), declaracao: z.enum(["nenhum", "um", "multiplos", "desconhecido"]).nullable(), declarada_em: z.string().nullable() }).strict();
 export function InboxOsIncerta({ userId, clienteId }: { userId: string; clienteId: string }) {
   const consulta = useInfiniteQuery({ queryKey: ["inbox-os-incerta", userId, clienteId], gcTime: 0, initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {

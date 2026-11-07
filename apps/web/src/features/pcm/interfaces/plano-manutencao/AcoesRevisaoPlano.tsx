@@ -48,7 +48,7 @@ function validarOperacao(valor: unknown, planoId: string): Operacao {
           : null;
   if (!comando || comando.planoId !== planoId) throw new Error("Plano divergente");
   const versao =
-    "versaoEsperada" in valor ? z.string().uuid().parse(valor.versaoEsperada) : undefined;
+    "versaoEsperada" in valor ? z.string().guid().parse(valor.versaoEsperada) : undefined;
   return valor.tipo === "transicao"
     ? { tipo: "transicao", comando: comando as TransicionarRevisaoCommand }
     : valor.tipo === "inicio"
@@ -194,7 +194,7 @@ function Conteudo({
           resultado.state !== "aprovado" ||
           resultado.created !== false ||
           resultado.linkedIds.clienteId !== clienteId ||
-          !z.string().uuid().safeParse(resultado.linkedIds.versaoId).success ||
+          !z.string().guid().safeParse(resultado.linkedIds.versaoId).success ||
           (pedido.versaoEsperada !== undefined &&
             resultado.linkedIds.versaoId !== pedido.versaoEsperada)
         )

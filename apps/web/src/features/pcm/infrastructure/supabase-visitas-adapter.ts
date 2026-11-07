@@ -3,9 +3,9 @@ import { supabase } from "../../../lib/supabase-client";
 import type { CriarVisita, VisitasGateway } from "../application/visitas-gateway";
 
 const resultadoSchema = z.object({
-  aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.string(),
+  aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.string(),
   created: z.boolean(), linkedIds: z.record(z.string(), z.string().nullable()), warnings: z.array(z.string()),
-  requestId: z.string().uuid(),
+  requestId: z.string().guid(),
 }).strict();
 
 function resultadoDaVisita(data: unknown, comando: { visitaId: string; requestId: string }) {
@@ -39,8 +39,8 @@ export async function cancelarCriacaoVisita(atorId: string, c: CriarVisita, moti
   });
   if (error) throw error;
   const resposta = z.discriminatedUnion("estado", [
-    z.object({ estado: z.literal("cancelada"), requestId: z.string().uuid() }).strict(),
-    z.object({ estado: z.literal("criada"), requestId: z.string().uuid(), resultado: resultadoSchema }).strict(),
+    z.object({ estado: z.literal("cancelada"), requestId: z.string().guid() }).strict(),
+    z.object({ estado: z.literal("criada"), requestId: z.string().guid(), resultado: resultadoSchema }).strict(),
   ]).parse(data);
   if (resposta.requestId !== c.requestId) throw new Error("Resposta divergente.");
   if (resposta.estado === "criada") {
@@ -58,37 +58,37 @@ export async function reservarCriacaoVisita(atorId: string, c: CriarVisita): Pro
     p_responsavel_id: c.responsavelId, p_deslocamento_minutos: c.deslocamentoMinutos,
   });
   if (error) throw error;
-  const reserva = z.object({ requestId: z.string().uuid(), visitaId: z.string().uuid(), clienteId: z.string().uuid(), criaVisita: z.literal(false) }).strict().parse(data);
+  const reserva = z.object({ requestId: z.string().guid(), visitaId: z.string().guid(), clienteId: z.string().guid(), criaVisita: z.literal(false) }).strict().parse(data);
   if (reserva.visitaId !== c.visitaId || reserva.clienteId !== c.clienteId) throw new Error("Reserva divergente.");
   return { ...c, requestId: reserva.requestId };
 }
 
 const conferenciaSchema = z.object({
-  visitaId: z.string().uuid(), revision: z.number().int().positive(),
+  visitaId: z.string().guid(), revision: z.number().int().positive(),
   situacao: z.enum(["pendente_pcm", "ciencia_pendente", "ciencia_conferida", "nao_exigida"]),
   politicaModo: z.enum(["sem_controle", "informativa", "obrigatoria"]),
   politicaOrigem: z.enum(["padrao", "cliente", "contrato", "visita"]),
-  politicaId: z.string().uuid().nullable(), politicaRevisao: z.number().int().positive().nullable(),
-  confirmacaoId: z.string().uuid().nullable(), cienciaEncontrada: z.boolean(), autorizaEnvio: z.literal(false),
+  politicaId: z.string().guid().nullable(), politicaRevisao: z.number().int().positive().nullable(),
+  confirmacaoId: z.string().guid().nullable(), cienciaEncontrada: z.boolean(), autorizaEnvio: z.literal(false),
 }).strict();
 
 const estadoSchema = z.enum(["rascunho", "planejada", "confirmada", "enviada", "em_execucao", "parcial", "concluida", "reprogramada", "cancelada"]);
 const naturezaSchema = z.enum(["regular", "extra", "reposicao_manual"]);
-const resumoSchema = z.object({ id: z.string().uuid(), cliente_id: z.string().uuid(), inicio_em: z.string(), fim_em: z.string(),
-  fuso: z.string(), natureza: naturezaSchema, estado: estadoSchema, revisao: z.number().int().positive(), responsavel_id: z.string().uuid().nullable() }).strict()
+const resumoSchema = z.object({ id: z.string().guid(), cliente_id: z.string().guid(), inicio_em: z.string(), fim_em: z.string(),
+  fuso: z.string(), natureza: naturezaSchema, estado: estadoSchema, revisao: z.number().int().positive(), responsavel_id: z.string().guid().nullable() }).strict()
   .transform((v) => ({ id: v.id, clienteId: v.cliente_id, inicioEm: v.inicio_em, fimEm: v.fim_em,
     fuso: v.fuso, natureza: v.natureza, estado: v.estado, revisao: v.revisao, responsavelId: v.responsavel_id }));
-const detalheSchema = z.object({ id: z.string().uuid(), clienteId: z.string().uuid(), contratoId: z.string().uuid().nullable(),
-  areaId: z.string().uuid().nullable(), localId: z.string().uuid().nullable(), inicioEm: z.string(), fimEm: z.string(), fuso: z.string(),
-  natureza: naturezaSchema, estado: estadoSchema, responsavelId: z.string().uuid().nullable(), deslocamentoMinutos: z.number().int().nonnegative(),
+const detalheSchema = z.object({ id: z.string().guid(), clienteId: z.string().guid(), contratoId: z.string().guid().nullable(),
+  areaId: z.string().guid().nullable(), localId: z.string().guid().nullable(), inicioEm: z.string(), fimEm: z.string(), fuso: z.string(),
+  natureza: naturezaSchema, estado: estadoSchema, responsavelId: z.string().guid().nullable(), deslocamentoMinutos: z.number().int().nonnegative(),
   revisao: z.number().int().positive(), quantidadeOs: z.number().int().nonnegative(), quantidadeEquipe: z.number().int().nonnegative() }).strict();
-const historicoCampos = { id: z.string().uuid(), estimativa_minutos: z.number().int().nonnegative().nullable(), created_at: z.string(),
-  encerrado_em: z.string().nullable(), encerrado_por: z.string().uuid().nullable(), encerramento_motivo: z.string().nullable() };
-const osSchema = z.object({ ...historicoCampos, os_id: z.string().uuid(), numero: z.string(), titulo: z.string(), categoria: z.string(),
+const historicoCampos = { id: z.string().guid(), estimativa_minutos: z.number().int().nonnegative().nullable(), created_at: z.string(),
+  encerrado_em: z.string().nullable(), encerrado_por: z.string().guid().nullable(), encerramento_motivo: z.string().nullable() };
+const osSchema = z.object({ ...historicoCampos, os_id: z.string().guid(), numero: z.string(), titulo: z.string(), categoria: z.string(),
   sequencia: z.number().int().positive() }).strict().transform((v) => ({ id: v.id, osId: v.os_id, numero: v.numero,
   titulo: v.titulo, categoria: v.categoria, sequencia: v.sequencia, estimativaMinutos: v.estimativa_minutos,
   criadoEm: v.created_at, encerradoEm: v.encerrado_em, encerradoPor: v.encerrado_por, encerramentoMotivo: v.encerramento_motivo }));
-const membroSchema = z.object({ ...historicoCampos, funcionario_id: z.string().uuid(), nome: z.string(), papel: z.string() }).strict()
+const membroSchema = z.object({ ...historicoCampos, funcionario_id: z.string().guid(), nome: z.string(), papel: z.string() }).strict()
   .transform((v) => ({ id: v.id, funcionarioId: v.funcionario_id, nome: v.nome, papel: v.papel, estimativaMinutos: v.estimativa_minutos,
     criadoEm: v.created_at, encerradoEm: v.encerrado_em, encerradoPor: v.encerrado_por, encerramentoMotivo: v.encerramento_motivo }));
 
@@ -100,7 +100,7 @@ export const supabaseVisitasAdapter: VisitasGateway = {
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;
-    return z.array(z.object({ id: z.string().uuid(), nome: z.string(), area_id: z.string().uuid().nullable() }).strict()
+    return z.array(z.object({ id: z.string().guid(), nome: z.string(), area_id: z.string().guid().nullable() }).strict()
       .transform((v) => ({ id: v.id, nome: v.nome, areaId: v.area_id }))).parse(data);
   },
   async selecionarOs(c, signal) {
@@ -110,7 +110,7 @@ export const supabaseVisitasAdapter: VisitasGateway = {
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;
-    return z.array(z.object({ id: z.string().uuid(), numero: z.string(), titulo: z.string(), categoria: z.string(), status: z.string() }).strict()).parse(data);
+    return z.array(z.object({ id: z.string().guid(), numero: z.string(), titulo: z.string(), categoria: z.string(), status: z.string() }).strict()).parse(data);
   },
   async selecionarFuncionarios(c, signal) {
     if (!Number.isSafeInteger(c.limite) || c.limite < 1 || c.limite > 100) throw new Error("Paginação inválida.");
@@ -119,7 +119,7 @@ export const supabaseVisitasAdapter: VisitasGateway = {
     if (signal) consulta = consulta.abortSignal(signal);
     const { data, error } = await consulta;
     if (error) throw error;
-    return z.array(z.object({ id: z.string().uuid(), nome: z.string() }).strict()).parse(data);
+    return z.array(z.object({ id: z.string().guid(), nome: z.string() }).strict()).parse(data);
   },
   async listar(c, signal) {
     if (!Number.isSafeInteger(c.limite) || c.limite < 1 || c.limite > 100) throw new Error("Paginação inválida.");

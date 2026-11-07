@@ -14,13 +14,13 @@ export function rejeicaoInicialRegraComprovada(error: unknown): boolean {
 
 const resultadoSchema = z
   .object({
-    aggregateId: z.string().uuid(),
+    aggregateId: z.string().guid(),
     revision: z.number().int().positive(),
     state: z.string(),
     created: z.boolean(),
     linkedIds: z.record(z.string(), z.string()),
     warnings: z.array(z.string()),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
   })
   .strict();
 export type PedidoAlterarDia = {
@@ -68,9 +68,9 @@ export const supabaseCalendarioContratualAdapter: CriarRegraContratualGateway &
       .array(
         z
           .object({
-            id: z.string().uuid(),
-            serie_id: z.string().uuid(),
-            contrato_id: z.string().uuid(),
+            id: z.string().guid(),
+            serie_id: z.string().guid(),
+            contrato_id: z.string().guid(),
             numero: z.number().int().positive(),
             ancora_semana: z.string(),
             dia_semana: z.number().int().min(1).max(7),
@@ -116,7 +116,7 @@ export const supabaseCalendarioContratualAdapter: CriarRegraContratualGateway &
       .array(
         z
           .object({
-            id: z.string().uuid(),
+            id: z.string().guid(),
             tipo: z.enum(["residente", "volante", "avulso"]),
             status: z.enum(["rascunho", "ativo", "suspenso", "encerrado"]),
             vigencia_inicio: z.string(),

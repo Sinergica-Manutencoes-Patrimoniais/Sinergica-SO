@@ -4,7 +4,7 @@ import { supabase } from "../../../lib/supabase-client";
 
 const itemSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     status: z.enum([
       "rascunho",
       "em_revisao",
@@ -15,7 +15,7 @@ const itemSchema = z
       "cancelada",
     ]),
     versao: z.number().int().positive(),
-    lista_id: z.string().uuid(),
+    lista_id: z.string().guid(),
     lista_revisao: z.number().int().positive(),
   })
   .strict();
@@ -23,11 +23,11 @@ const itemSchema = z
 export type PrepararOrcamento = PrepararOrcamentoOperacional;
 export const validarPrepararOrcamento = (valor: unknown) => prepararOrcamentoOperacionalSchema.parse(valor);
 
-const parcelaSchema = z.object({ despesa_id: z.string().uuid(), despesa_revision: z.number().int().positive(), rateio_revision: z.number().int().positive(), vinculo_id: z.string().uuid(), descricao: z.string().min(1).max(10000), valor_centavos: z.number().int().safe().nonnegative().max(1_000_000_000_000), base: z.enum(["previsto", "realizado"]) }).strict();
-const fonteSchema = z.object({ despesaId: z.string().uuid(), despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(), vinculoId: z.string().uuid(), valorCentavos: z.number().int().safe().nonnegative().max(1_000_000_000_000), base: z.enum(["previsto", "realizado"]), descricaoFonte: z.string().min(1).max(10000), grupo: z.enum(["aquisicao", "operacional"]) }).strict();
+const parcelaSchema = z.object({ despesa_id: z.string().guid(), despesa_revision: z.number().int().positive(), rateio_revision: z.number().int().positive(), vinculo_id: z.string().guid(), descricao: z.string().min(1).max(10000), valor_centavos: z.number().int().safe().nonnegative().max(1_000_000_000_000), base: z.enum(["previsto", "realizado"]) }).strict();
+const fonteSchema = z.object({ despesaId: z.string().guid(), despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(), vinculoId: z.string().guid(), valorCentavos: z.number().int().safe().nonnegative().max(1_000_000_000_000), base: z.enum(["previsto", "realizado"]), descricaoFonte: z.string().min(1).max(10000), grupo: z.enum(["aquisicao", "operacional"]) }).strict();
 export const prepararParcelasSchema = z.object({
-  atorId: z.string().uuid(), clienteId: z.string().uuid(), requestId: z.string().uuid(), propostaId: z.string().uuid(),
-  expectedRevision: z.number().int().positive(), listaId: z.string().uuid(), listaRevision: z.number().int().positive(),
+  atorId: z.string().guid(), clienteId: z.string().guid(), requestId: z.string().guid(), propostaId: z.string().guid(),
+  expectedRevision: z.number().int().positive(), listaId: z.string().guid(), listaRevision: z.number().int().positive(),
   descricao: z.string().trim().min(1).max(4000), fontes: z.array(fonteSchema).min(1).max(100),
   fator: z.number().finite().min(1).max(100), precoCentavos: z.number().int().safe().nonnegative().max(1_000_000_000_000),
 }).strict().superRefine((p, ctx) => {
@@ -41,9 +41,9 @@ export const prepararParcelasSchema = z.object({
 export type PrepararOrcamentoParcelas = z.infer<typeof prepararParcelasSchema>;
 
 export const prepararMistoSchema = z.object({
-  atorId: z.string().uuid(), clienteId: z.string().uuid(), requestId: z.string().uuid(), propostaId: z.string().uuid(),
-  expectedRevision: z.number().int().positive(), listaId: z.string().uuid(), listaRevision: z.number().int().positive(),
-  descricao: z.string().trim().min(1).max(4000), aquisicaoIds: z.array(z.string().uuid()).max(100),
+  atorId: z.string().guid(), clienteId: z.string().guid(), requestId: z.string().guid(), propostaId: z.string().guid(),
+  expectedRevision: z.number().int().positive(), listaId: z.string().guid(), listaRevision: z.number().int().positive(),
+  descricao: z.string().trim().min(1).max(4000), aquisicaoIds: z.array(z.string().guid()).max(100),
   fontes: z.array(fonteSchema.extend({ grupo: z.literal("operacional") })).max(100),
   fator: z.number().finite().min(1).max(100), precoCentavos: z.number().int().safe().nonnegative().max(1_000_000_000_000),
 }).strict().superRefine((p, ctx) => {
@@ -64,16 +64,16 @@ export async function prepararOrcamentoMisto(entrada: PrepararOrcamentoMisto) {
     p_descricao: p.descricao, p_aquisicao_ids: p.aquisicaoIds, p_fontes: p.fontes, p_fator: p.fator, p_preco_centavos: p.precoCentavos,
   });
   if (error) throw error;
-  const r = z.object({ aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.literal("rascunho"), created: z.literal(false),
-    linkedIds: z.object({ listaId: z.string().uuid(), ordemServicoId: z.string().uuid() }).strict(), warnings: z.array(z.string()), requestId: z.string().uuid() }).strict().parse(data);
+  const r = z.object({ aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.literal("rascunho"), created: z.literal(false),
+    linkedIds: z.object({ listaId: z.string().guid(), ordemServicoId: z.string().guid() }).strict(), warnings: z.array(z.string()), requestId: z.string().guid() }).strict().parse(data);
   if (r.aggregateId !== p.propostaId || r.revision !== p.expectedRevision + 1 || r.requestId !== p.requestId || r.linkedIds.listaId !== p.listaId) throw new Error("Resposta inconsistente.");
   const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== p.atorId) throw new Error("Sessão alterada.");
   return r;
 }
 
 export async function listarParcelasOrcamento(atorId: string, clienteId: string, listaId: string, cursor: { despesaId: string; vinculoId: string } | null, signal?: AbortSignal) {
-  z.string().uuid().parse(atorId); z.string().uuid().parse(clienteId); z.string().uuid().parse(listaId);
-  if (cursor) { z.string().uuid().parse(cursor.despesaId); z.string().uuid().parse(cursor.vinculoId); }
+  z.string().guid().parse(atorId); z.string().guid().parse(clienteId); z.string().guid().parse(listaId);
+  if (cursor) { z.string().guid().parse(cursor.despesaId); z.string().guid().parse(cursor.vinculoId); }
   const antes = await supabase.auth.getUser();
   if (antes.error || antes.data.user?.id !== atorId || signal?.aborted) throw new Error("Sessão alterada.");
   let query = supabase.schema("comercial").rpc("sso_listar_parcelas_orcamento", { p_ator_id: atorId, p_cliente_id: clienteId, p_lista_id: listaId, p_apos_despesa: cursor?.despesaId ?? null, p_apos_vinculo: cursor?.vinculoId ?? null, p_limite: 30 });
@@ -101,7 +101,7 @@ export async function prepararOrcamentoParcelas(entrada: PrepararOrcamentoParcel
     p_descricao: p.descricao, p_fontes: p.fontes, p_fator: p.fator, p_preco_centavos: p.precoCentavos,
   });
   if (error) throw error;
-  const resposta = z.object({ aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.literal("rascunho"), created: z.literal(false), linkedIds: z.object({ listaId: z.string().uuid(), ordemServicoId: z.string().uuid() }).strict(), warnings: z.array(z.string()), requestId: z.string().uuid() }).strict().parse(data);
+  const resposta = z.object({ aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.literal("rascunho"), created: z.literal(false), linkedIds: z.object({ listaId: z.string().guid(), ordemServicoId: z.string().guid() }).strict(), warnings: z.array(z.string()), requestId: z.string().guid() }).strict().parse(data);
   if (resposta.aggregateId !== p.propostaId || resposta.revision !== p.expectedRevision + 1 || resposta.requestId !== p.requestId || resposta.linkedIds.listaId !== p.listaId) throw new Error("Resposta inconsistente.");
   const depois = await supabase.auth.getUser();
   if (depois.error || depois.data.user?.id !== p.atorId) throw new Error("Sessão alterada.");
@@ -129,15 +129,15 @@ export const supabaseOrcamentoOperacionalAdapter = {
     if (error) throw error;
     const resposta = z
       .object({
-        aggregateId: z.string().uuid(),
+        aggregateId: z.string().guid(),
         revision: z.number().int().positive(),
         state: z.literal("rascunho"),
         created: z.literal(false),
         linkedIds: z
-          .object({ listaId: z.string().uuid(), ordemServicoId: z.string().uuid() })
+          .object({ listaId: z.string().guid(), ordemServicoId: z.string().guid() })
           .strict(),
         warnings: z.array(z.string()),
-        requestId: z.string().uuid(),
+        requestId: z.string().guid(),
       })
       .strict()
       .parse(data);
@@ -158,12 +158,12 @@ export const supabaseOrcamentoOperacionalAdapter = {
     signal?: AbortSignal,
   ) {
     if (
-      !z.string().uuid().safeParse(clienteId).success ||
-      !z.string().uuid().safeParse(ordemServicoId).success ||
+      !z.string().guid().safeParse(clienteId).success ||
+      !z.string().guid().safeParse(ordemServicoId).success ||
       !Number.isSafeInteger(limite) ||
       limite < 1 ||
       limite > 100 ||
-      (apos !== null && !z.string().uuid().safeParse(apos).success)
+      (apos !== null && !z.string().guid().safeParse(apos).success)
     )
       throw new Error("Parâmetros inválidos.");
     let query = supabase.schema("comercial").rpc("sso_listar_edicao_orcamentos_os", {

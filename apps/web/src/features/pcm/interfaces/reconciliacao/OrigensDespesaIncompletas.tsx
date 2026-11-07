@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoObservacaoOrigem } from "./HistoricoObservacaoOrigem";
 
-const linha = z.object({ item_id: z.string().uuid(), estado_fonte: z.string(),
+const linha = z.object({ item_id: z.string().guid(), estado_fonte: z.string(),
   classificacao: z.enum(["declaracao_ausente_conferir", "despesa_indisponivel_conferir"]),
   revisao: z.number().int().positive(), observado_em: z.string().datetime({ offset: true }) }).strict();
 export function OrigensDespesaIncompletas({ userId, clienteId }: { userId: string; clienteId: string }) {

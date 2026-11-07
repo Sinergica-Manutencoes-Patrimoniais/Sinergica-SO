@@ -3,7 +3,7 @@ import { supabase } from "../../../lib/supabase-client";
 import { conferirEstruturaXlsxIsolada } from "./estrutura-xlsx-isolada";
 
 const linhaSchema = z.object({ chave: z.string().min(1).max(200), tipo: z.enum(["area", "local", "sublocal", "sistema", "equipamento", "componente", "grupo_quantitativo"]), atributos: z.record(z.string(), z.string().max(4000)) }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), origem: z.string().trim().min(1).max(200), aba: z.string().min(1).max(31), sha256: z.string().regex(/^[0-9a-f]{64}$/), linhas: z.array(linhaSchema).min(1).max(1000) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), origem: z.string().trim().min(1).max(200), aba: z.string().min(1).max(31), sha256: z.string().regex(/^[0-9a-f]{64}$/), linhas: z.array(linhaSchema).min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 const chaveLocal = (userId: string, clienteId: string) => `sso-xlsx-local:${JSON.stringify([userId, clienteId])}`;
 async function conferirSessao(userId: string) { const r = await supabase.auth.getUser(); if (r.error || r.data.user?.id !== userId) throw new Error("Sessão alterada."); }
@@ -13,7 +13,7 @@ async function enviarPedido(userId: string, chave: string, pedido: Pedido) {
   await conferirSessao(userId); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada; nada enviado.");
   const { data, error } = await supabase.schema("pcm").rpc("sso_receber_levantamento_manual", { p_request_id: pedido.requestId, p_cliente_id: pedido.clienteId, p_origem_declarada: "planilha", p_chave_origem: pedido.origem, p_linhas: pedido.linhas });
   if (error) throw new Error("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte.");
-  const recibo = z.object({ aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.boolean(), linkedIds: z.object({}).strict(), warnings: z.array(z.string()), requestId: z.string().uuid() }).strict().parse(data);
+  const recibo = z.object({ aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.boolean(), linkedIds: z.object({}).strict(), warnings: z.array(z.string()), requestId: z.string().guid() }).strict().parse(data);
   if (recibo.requestId !== pedido.requestId) throw new Error("Recibo divergente. Consulte suporte.");
   await conferirSessao(userId); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Recepção confirmada, mas tentativa local mudou. Consulte suporte.");
   sessionStorage.removeItem(chave);

@@ -24,7 +24,7 @@ function Conteudo({ userId, clienteId, visitaId, despesasVisiveis }: { userId: s
     const { data, error } = await supabase.schema("pcm").rpc("sso_recibo_correcao_mediada", { p_cliente_id: clienteId, p_visita_id: visitaId,
       p_request_id: p.requestId, p_despesa_id: p.despesaId, p_revisao: p.revisao, p_valor: p.valor, p_objeto_id: p.objetoId, p_motivo: p.motivo, p_conferencia: p.conferencia });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), despesaId: z.string().uuid(), visitaId: z.string().uuid(), clienteId: z.string().uuid(), revisao: z.number().int().positive(), confirmada: z.literal(true), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(), clienteId: z.string().guid(), revisao: z.number().int().positive(), confirmada: z.literal(true), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.despesaId !== p.despesaId || r.clienteId !== clienteId || r.visitaId !== visitaId || r.revisao !== p.revisao + 1) throw new Error("Recibo divergente.");
     await sessao(); if (sessionStorage.getItem(t.chave) !== t.texto) throw new Error("Tentativa alterada.");
   }, onSuccess: async (_data, t) => {

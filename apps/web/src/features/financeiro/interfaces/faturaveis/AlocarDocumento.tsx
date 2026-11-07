@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ParcelaAdicional } from "./ParcelaAdicional";
 
-const esquema = z.object({ requestId: z.string().uuid(), alocacaoId: z.string().uuid(), itemId: z.string().uuid(),
-  expectedRevision: z.number().int().positive(), lancamentoId: z.string().uuid(), documentoRef: z.string().trim().min(1).max(200),
+const esquema = z.object({ requestId: z.string().guid(), alocacaoId: z.string().guid(), itemId: z.string().guid(),
+  expectedRevision: z.number().int().positive(), lancamentoId: z.string().guid(), documentoRef: z.string().trim().min(1).max(200),
   dataDocumento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), valorCentavos: z.number().int().positive().safe(), protocolo: z.literal("mediado").optional() }).strict();
 type Pedido = z.infer<typeof esquema>;
 type Props = { usuario: string; cliente: string; itemId: string; revisao: number };
@@ -31,19 +31,19 @@ function Conteudo({ usuario, cliente, itemId, revisao }: Props) {
   const saldo = useQuery({ queryKey: ["faturavel-saldo", usuario, cliente, itemId, revisao], gcTime: 0, retry: false,
     queryFn: async ({ signal }) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");const { data: valorAtual, error } = await supabase.schema("financeiro").rpc("sso_consultar_saldo_faturavel", { p_cliente_id: cliente, p_item_id: itemId }).abortSignal(signal);
       if (error) throw error;
-      const resultado = z.object({ itemId: z.string().uuid(), revisao: z.number().int().positive(), situacao: z.enum(["nao_conferido", "divergente", "calculado"]), conferidoCentavos: z.string().nullable(), alocadoCentavos: z.string(), reservadoCentavos: z.string(), disponivelCentavos: z.string().nullable() }).strict().parse(valorAtual);
+      const resultado = z.object({ itemId: z.string().guid(), revisao: z.number().int().positive(), situacao: z.enum(["nao_conferido", "divergente", "calculado"]), conferidoCentavos: z.string().nullable(), alocadoCentavos: z.string(), reservadoCentavos: z.string(), disponivelCentavos: z.string().nullable() }).strict().parse(valorAtual);
       if (resultado.itemId !== itemId || resultado.revisao !== revisao || resultado.situacao !== "calculado" || resultado.disponivelCentavos === null || !/^\d+$/.test(resultado.disponivelCentavos)) throw new Error("Saldo indisponível ou revisão divergente.");
       const disponivel=z.number().int().nonnegative().safe().parse(Number(resultado.disponivelCentavos));const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return disponivel; } });
   const previaParcela = useQuery({ queryKey: ["faturavel-previa-parcela-documento", usuario, cliente, itemId, lancamento, revisao], gcTime: 0, retry: false,
-    enabled: import.meta.env.VITE_SSO_PREVIA_PARCELA_DOCUMENTO_ENABLED === "true" && z.string().uuid().safeParse(lancamento).success,
+    enabled: import.meta.env.VITE_SSO_PREVIA_PARCELA_DOCUMENTO_ENABLED === "true" && z.string().guid().safeParse(lancamento).success,
     queryFn: async ({ signal }) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");const { data: resposta, error } = await supabase.schema("financeiro").rpc("sso_previa_parcela_documento", { p_cliente_id: cliente, p_item_id: itemId, p_lancamento_id: lancamento }).abortSignal(signal); if (error) throw error;
-      const p = z.object({ itemId: z.string().uuid(), lancamentoId: z.string().uuid(), revisaoItem: z.number().int(), documento: z.object({ id: z.string().uuid(), referencia: z.string(), data: z.string() }).strict().nullable(), alocadoItemCentavos: z.string(), alocadoDocumentoCentavos: z.string().nullable(), parcelasAdicionaisHabilitadas: z.boolean(), reservaSaldo: z.literal(false), cobrancaEnviada: z.literal(false) }).strict().parse(resposta);
+      const p = z.object({ itemId: z.string().guid(), lancamentoId: z.string().guid(), revisaoItem: z.number().int(), documento: z.object({ id: z.string().guid(), referencia: z.string(), data: z.string() }).strict().nullable(), alocadoItemCentavos: z.string(), alocadoDocumentoCentavos: z.string().nullable(), parcelasAdicionaisHabilitadas: z.boolean(), reservaSaldo: z.literal(false), cobrancaEnviada: z.literal(false) }).strict().parse(resposta);
       if (p.itemId !== itemId || p.lancamentoId !== lancamento || p.revisaoItem !== revisao) throw new Error("Prévia divergente");const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return p; } });
   const opcoes = useInfiniteQuery({ queryKey: ["faturavel-lancamentos", usuario, cliente, itemId], gcTime: 0, retry: false,
     initialPageParam: null as string | null, queryFn: async ({ pageParam,signal }) => {
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");
       const { data: valores, error } = await supabase.schema("financeiro").rpc("sso_consultar_lancamentos_faturavel", { p_cliente_id: cliente, p_item_id: itemId, p_apos: pageParam }).abortSignal(signal);
-      if (error) throw error; const pagina=z.array(z.object({ id: z.string().uuid(), descricao: z.string().nullable(),
+      if (error) throw error; const pagina=z.array(z.object({ id: z.string().guid(), descricao: z.string().nullable(),
         valor_centavos: z.number().int().positive().safe(), competencia: z.string(), vencimento: z.string().nullable() }).strict()).max(20).parse(valores);
       let anterior=pageParam?.toLowerCase()??"";for(const item of pagina){const atual=item.id.toLowerCase();if(atual<=anterior)throw new Error("Página divergente.");anterior=atual;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return pagina;

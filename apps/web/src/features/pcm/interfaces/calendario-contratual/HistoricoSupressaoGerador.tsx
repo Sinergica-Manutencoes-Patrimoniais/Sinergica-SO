@@ -4,9 +4,9 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const linha = z.object({
-  request_id: z.string().uuid(),
-  serie_id: z.string().uuid(),
-  regra_id: z.string().uuid(),
+  request_id: z.string().guid(),
+  serie_id: z.string().guid(),
+  regra_id: z.string().guid(),
   semana: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   data_contratual: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   criado_em: z.string().datetime({ offset: true }),

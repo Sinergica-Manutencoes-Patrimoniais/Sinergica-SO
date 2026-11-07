@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedido = z.object({ requestId: z.string().uuid(), declaracaoId: z.string().uuid(), propostaId: z.string().uuid(), versao: z.number().int().positive(), motivo: z.string().min(1).max(1000) }).strict();
+const pedido = z.object({ requestId: z.string().guid(), declaracaoId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function VincularMaterialProposta({ usuario, cliente, declaracaoId }: { usuario: string; cliente: string; declaracaoId: string }) {
   const chave = `sso-material-proposta:${JSON.stringify([usuario, cliente, declaracaoId])}`;
@@ -14,7 +14,7 @@ export function VincularMaterialProposta({ usuario, cliente, declaracaoId }: { u
   const comando = useMutation({ mutationFn: async (p: Pedido) => {
     const { data, error } = await supabase.schema("financeiro").rpc("sso_vincular_material_proposta", { p_request_id: p.requestId,
       p_declaracao_id: p.declaracaoId, p_cliente_id: cliente, p_proposta_id: p.propostaId, p_versao: p.versao, p_motivo: p.motivo });
-    if (error) throw error; if (z.string().uuid().parse(data) !== p.declaracaoId) throw new Error("Resposta divergente");
+    if (error) throw error; if (z.string().guid().parse(data) !== p.declaracaoId) throw new Error("Resposta divergente");
   }, onSuccess: (_r, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas tentativa local não foi limpa. Consulte suporte."); return; }
     setPendente(null); setAviso("Vínculo preliminar registrado; não cria candidato nem cobrança.");

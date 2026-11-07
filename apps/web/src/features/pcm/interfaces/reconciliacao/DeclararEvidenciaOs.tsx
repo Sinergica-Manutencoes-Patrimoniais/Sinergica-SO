@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), osId: z.string().uuid(), atualizadoEm: z.string(), sync: z.string().nullable(), taskId: z.string().nullable(), nota: z.string().min(1).max(1000), resultado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), origem: z.string().min(1).max(200), referencia: z.string().min(1).max(300) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), osId: z.string().guid(), atualizadoEm: z.string(), sync: z.string().nullable(), taskId: z.string().nullable(), nota: z.string().min(1).max(1000), resultado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), origem: z.string().min(1).max(200), referencia: z.string().min(1).max(300) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; osId: string; atualizadoEm: string; sync: string | null; taskId: string | null; bloqueado: boolean };
 export function DeclararEvidenciaOs({ userId, clienteId, osId, atualizadoEm, sync, taskId, bloqueado }: Props) {
@@ -24,7 +24,7 @@ export function DeclararEvidenciaOs({ userId, clienteId, osId, atualizadoEm, syn
     if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_evidencia_os_manual", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_os_id: p.osId, p_updated_at: p.atualizadoEm, p_sync: p.sync, p_task_id: p.taskId, p_nota: p.nota, p_resultado: p.resultado, p_origem: p.origem, p_referencia: p.referencia });
     if (error) throw error;
-    const resposta = z.object({ requestId: z.string().uuid(), osId: z.string().uuid(), estado: z.literal("declaracao_nao_verificada"), autorizaRetry: z.literal(false) }).strict().parse(data);
+    const resposta = z.object({ requestId: z.string().guid(), osId: z.string().guid(), estado: z.literal("declaracao_nao_verificada"), autorizaRetry: z.literal(false) }).strict().parse(data);
     if (resposta.requestId !== p.requestId || resposta.osId !== p.osId) throw new Error("Resposta divergente");
     const depois = await supabase.auth.getUser();
     if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");

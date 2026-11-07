@@ -3,9 +3,9 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const item = z.object({ declaracao_id: z.string().uuid(), os_id: z.string().uuid(), lista_id: z.string().uuid(), lista_revisao: z.number().int().positive(),
-  descricao_declarada: z.string(), evidencia_declarada: z.string(), proposta_id: z.string().uuid(), versao: z.number().int().positive(),
-  linha_id: z.string().uuid(), descricao_publica: z.string(), quantidade: z.number().int().positive(), preco_unitario_centavos: z.string().regex(/^\d+$/) }).strict();
+const item = z.object({ declaracao_id: z.string().guid(), os_id: z.string().guid(), lista_id: z.string().guid(), lista_revisao: z.number().int().positive(),
+  descricao_declarada: z.string(), evidencia_declarada: z.string(), proposta_id: z.string().guid(), versao: z.number().int().positive(),
+  linha_id: z.string().guid(), descricao_publica: z.string(), quantidade: z.number().int().positive(), preco_unitario_centavos: z.string().regex(/^\d+$/) }).strict();
 export function RastreioLinhaMaterial({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
   const [aberto, setAberto] = useState(false);
   const consulta = useQuery({ queryKey: ["rastreio-linha-material", usuario, cliente, itemId], enabled: aberto, gcTime: 0, staleTime: 0,

@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { CancelarCandidataT24 } from "./CancelarCandidataT24";
 import { RespostasTardiasT24 } from "./RespostasTardiasT24";
 
-const uuid=z.string().uuid();
+const uuid=z.string().guid();
 const linha=z.object({id:uuid,revisao:z.number().int().positive(),estado:z.enum(["aguardando","reservado","iniciado","incerto","reconciliacao","confirmado","bloqueado","cancelado"]),elegivel_em:z.string().datetime({offset:true})}).strict();
 const diagnostico=z.object({tentativaId:uuid,visitaId:uuid,osId:uuid,revisaoObservada:z.number().int().positive(),revisaoTentativa:z.number().int().positive(),estado:linha.shape.estado,elegivelEm:z.string().datetime({offset:true}),bloqueios:z.array(z.string().regex(/^[a-z0-9_]+$/)).max(30),autorizaEnvio:z.literal(false)}).strict();
 type Props={userId:string;clienteId:string;visitaId:string;osId:string};

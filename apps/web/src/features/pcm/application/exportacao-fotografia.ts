@@ -6,7 +6,7 @@ import { z } from "zod";
 export type FiltroFotografiaExportacao = { alvoTipo?: "sistema" | "componente" | "grupo"; alvoId?: string; modo?: "calendario" | "visita"; snapshotHashSelecionado?: string };
 
 export function projetarFotografiaExportacao(snapshot: SnapshotExportacao, filtro: FiltroFotografiaExportacao): DadosExportacaoVersao {
-  if (filtro.alvoId !== undefined) z.string().uuid().parse(filtro.alvoId);
+  if (filtro.alvoId !== undefined) z.string().guid().parse(filtro.alvoId);
   if (filtro.snapshotHashSelecionado !== undefined) {
     z.string().regex(/^[a-f0-9]{32}$/).parse(filtro.snapshotHashSelecionado);
     if (!filtro.alvoId || !filtro.alvoTipo || snapshot.snapshotHash !== filtro.snapshotHashSelecionado ||

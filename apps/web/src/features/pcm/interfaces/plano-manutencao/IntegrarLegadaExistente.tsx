@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
-const uuid=z.string().uuid();
+const uuid=z.string().guid();
 const linha=z.object({id:uuid,plano_id:uuid,indice:z.number().int().nonnegative(),vencimento:z.string().date(),envio_estado:z.string(),resultado_estado:z.string(),auvo_task_id:z.number().nullable()}).strict();
 const pedido=z.object({request:uuid,cliente:uuid,plano:uuid,legado:uuid,relacao:uuid,preparada:uuid,legada:uuid,ciclo:uuid,motivo:z.string().trim().min(1).max(2000),tentativaIncerta:z.boolean().optional()}).strict();
 type Pedido=z.infer<typeof pedido>;

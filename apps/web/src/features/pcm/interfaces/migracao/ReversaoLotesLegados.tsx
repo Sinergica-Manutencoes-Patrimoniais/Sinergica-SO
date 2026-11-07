@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoReversaoLote } from "./HistoricoReversaoLote";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const loteSchema = z.object({ lote_id: id, quantidade: z.number().int().min(1).max(20), criado_em: z.string().datetime({ offset: true }) }).strict();
 const origemSchema = z.object({ clienteId: id, planoId: id, origemRequestId: id, revisao: z.number().int().positive(),
   estado: z.string(), versaoId: id, rotinaId: id }).strict();

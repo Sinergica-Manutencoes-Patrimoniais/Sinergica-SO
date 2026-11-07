@@ -9,7 +9,7 @@ import { HistoricoSelecao } from "./HistoricoSelecao";
 import { PromoverComposicao } from "./PromoverComposicao";
 import { DividirComposicao } from "./DividirComposicao";
 
-const itemSchema = z.object({ id: z.string().uuid(), alvo_tipo: z.string(), alvo_id: z.string().uuid(), revisao: z.number().int().positive(),
+const itemSchema = z.object({ id: z.string().guid(), alvo_tipo: z.string(), alvo_id: z.string().guid(), revisao: z.number().int().positive(),
   gravidade: z.number().nullable(), urgencia: z.number().nullable(), tendencia: z.number().nullable(), dor_cliente: z.number().nullable(),
   score: z.number().finite().nullable(), total: z.number().int().nonnegative(), criado_em: z.string().datetime({ offset: true }) }).strict();
 type Item = z.infer<typeof itemSchema>;
@@ -34,7 +34,7 @@ function validarPaginaRanking(pagina: ItemRanking[], cursor: CursorRanking, filt
   }
   return pagina;
 }
-const pedidoSchema = z.object({ requestId: z.string().uuid(), id: z.string().uuid(), revisao: z.number().int().positive(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), id: z.string().guid(), revisao: z.number().int().positive(),
   g: z.number().int().min(1).max(5), u: z.number().int().min(1).max(5), t: z.number().int().min(1).max(5),
   d: z.number().int().min(1).max(5).nullable(), motivo: z.string().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
@@ -71,7 +71,7 @@ export function Composicoes({ userId, clienteId }: { userId: string; clienteId: 
   return <section><h3>Composições de Backlog</h3><p>Ordenadas por GUTD quando os fatores estão informados. O ranking legado não está integrado.</p>
     {rankingConsistente && <p>Sem todos os fatores ou pesos válidos, a prioridade não é calculada. Mudanças durante paginação exigem reiniciar a consulta.</p>}
     {divididaId && <section aria-label="Composição recém-dividida"><h4>Composição separada</h4><p>Avalie GUTD antes de priorizar. A promoção é uma ação separada e não ocorreu automaticamente.</p><button type="button" onClick={() => setDivididaId(null)}>Voltar à lista</button>{dividida.isPending && <output>Carregando composição…</output>}{dividida.isError && <p role="alert">Não foi possível carregar a composição. <button type="button" onClick={() => void dividida.refetch()}>Tentar novamente</button></p>}{dividida.data && <Prioridade item={dividida.data} userId={userId} clienteId={clienteId} onDividida={setDivididaId} />}</section>}
-    {filtroHabilitado && <form onSubmit={(e) => { e.preventDefault(); const id = alvoId.trim(); if (!z.string().uuid().safeParse(id).success) { setErroFiltro("Informe o ID válido do alvo."); return; } setErroFiltro(""); setFiltro({ tipo: alvoTipo, id }); }}><label>Tipo de alvo <select value={alvoTipo} onChange={(e) => setAlvoTipo(e.target.value)}><option value="sistema">Sistema</option><option value="componente">Componente</option><option value="grupo">Grupo Quantitativo</option></select></label><label>ID do alvo <input value={alvoId} onChange={(e) => setAlvoId(e.target.value)} /></label><button type="submit">Filtrar no servidor</button>{filtro && <button type="button" onClick={() => { setFiltro(null); setErroFiltro(""); }}>Limpar filtro</button>}{erroFiltro && <p role="alert">{erroFiltro}</p>}{filtro && <p>Filtro aplicado: {filtro.tipo} · {filtro.id}. Apenas composições desta fonte e deste Cliente são exibidas.</p>}</form>}
+    {filtroHabilitado && <form onSubmit={(e) => { e.preventDefault(); const id = alvoId.trim(); if (!z.string().guid().safeParse(id).success) { setErroFiltro("Informe o ID válido do alvo."); return; } setErroFiltro(""); setFiltro({ tipo: alvoTipo, id }); }}><label>Tipo de alvo <select value={alvoTipo} onChange={(e) => setAlvoTipo(e.target.value)}><option value="sistema">Sistema</option><option value="componente">Componente</option><option value="grupo">Grupo Quantitativo</option></select></label><label>ID do alvo <input value={alvoId} onChange={(e) => setAlvoId(e.target.value)} /></label><button type="submit">Filtrar no servidor</button>{filtro && <button type="button" onClick={() => { setFiltro(null); setErroFiltro(""); }}>Limpar filtro</button>}{erroFiltro && <p role="alert">{erroFiltro}</p>}{filtro && <p>Filtro aplicado: {filtro.tipo} · {filtro.id}. Apenas composições desta fonte e deste Cliente são exibidas.</p>}</form>}
     <DiagnosticoComposicoesVazias userId={userId} clienteId={clienteId} />
     {lista.isFetching && <output>Carregando composições…</output>}
     {lista.isError && <p role="alert">Não foi possível consultar composições; dados podem ter mudado. <button type="button" onClick={() => void client.resetQueries({ queryKey: ["backlog-composicoes", userId, clienteId, rankingConsistente, filtro], exact: true })}>Reiniciar consulta</button></p>}
@@ -98,7 +98,7 @@ function Prioridade({ item, userId, clienteId, onDividida }: { item: Item; userI
     const { data, error } = await supabase.schema("pcm").rpc("sso_priorizar_composicao", { p_request_id: p.requestId, p_id: p.id,
       p_revisao: p.revisao, p_g: p.g, p_u: p.u, p_t: p.t, p_d: p.d, p_motivo: p.motivo });
     if (error) throw error;
-    const r = z.object({ aggregateId: z.string().uuid(), revision: z.number().int(), requestId: z.string().uuid() }).strict().parse(data);
+    const r = z.object({ aggregateId: z.string().guid(), revision: z.number().int(), requestId: z.string().guid() }).strict().parse(data);
     if (r.aggregateId !== p.id || r.requestId !== p.requestId || r.revision !== p.revisao + 1) throw new Error("Resposta divergente");
   }, onSuccess: async (_r, p) => {
     try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente"); sessionStorage.removeItem(chave); }

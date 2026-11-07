@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { conferirSessaoCobranca } from "../infrastructure/supabase-portal-cobrancas-os-adapter";
 
-const item = z.object({ id: z.string().uuid(), publicacao_anexo_id: z.string().uuid(), titulo: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), publicacao_anexo_id: z.string().guid(), titulo: z.string() }).strict();
 export function DocumentosCobranca({ userId, clienteId, osId, lancamentoId }: { userId: string; clienteId: string; osId: string; lancamentoId: string }) {
   const contexto = JSON.stringify([userId, clienteId, osId, lancamentoId]);
   const contextoAtual = useRef(contexto);

@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ atorId: z.string().uuid(), requestId: z.string().uuid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervalo: z.number().int().min(5).max(10080), motivo: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z.object({ atorId: z.string().guid(), requestId: z.string().guid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervalo: z.number().int().min(5).max(10080), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function ConfigurarExecutorFila({ userId }: { userId: string }) {
   const chave = `sso-config-executor-fila:${userId}`; const trava = useRef(false); const client = useQueryClient();
@@ -28,7 +28,7 @@ export function ConfigurarExecutorFila({ userId }: { userId: string }) {
     await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_configurar_executor_fila", { p_ator_id: userId, p_request_id: p.requestId, p_revisao: p.revisao, p_habilitado: p.habilitado, p_intervalo: p.intervalo, p_motivo: p.motivo });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervaloMinutos: z.number().int(), cronCriado: z.literal(false), efeitoRemotoComprovado: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervaloMinutos: z.number().int(), cronCriado: z.literal(false), efeitoRemotoComprovado: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.revisao !== p.revisao + 1 || r.habilitado !== p.habilitado || r.intervaloMinutos !== p.intervalo) throw new Error("Resposta divergente."); await sessao();
   }, onSuccess: async (_data, p) => finalizar(p, "Configuração registrada; nenhum cron foi criado."),
   onError: () => setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte."), onSettled: () => { trava.current = false; } });
@@ -36,7 +36,7 @@ export function ConfigurarExecutorFila({ userId }: { userId: string }) {
     await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_recibo_config_executor_fila", { p_ator_id: userId, p_request_id: p.requestId, p_revisao: p.revisao, p_habilitado: p.habilitado, p_intervalo: p.intervalo, p_motivo: p.motivo });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervaloMinutos: z.number().int(), cronCriado: z.literal(false), efeitoRemotoComprovado: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervaloMinutos: z.number().int(), cronCriado: z.literal(false), efeitoRemotoComprovado: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.revisao !== p.revisao + 1 || r.habilitado !== p.habilitado || r.intervaloMinutos !== p.intervalo) throw new Error("Recibo divergente.");
     await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
   }, onSuccess: async (_data, p) => finalizar(p, "Alteração confirmada; o recibo não informa se houve execução."),
@@ -63,7 +63,7 @@ export function ConfigurarExecutorFila({ userId }: { userId: string }) {
 
 function HistoricoExecutor({ userId }: { userId: string }) {
   const [aberto, setAberto] = useState(false);
-  const linha = z.object({ request_id: z.string().uuid(), ator_id: z.string().uuid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervalo_minutos: z.number().int().min(5).max(10080), motivo: z.string().min(1).max(2000), criado_em: z.string().datetime({ offset: true }) }).strict();
+  const linha = z.object({ request_id: z.string().guid(), ator_id: z.string().guid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervalo_minutos: z.number().int().min(5).max(10080), motivo: z.string().min(1).max(2000), criado_em: z.string().datetime({ offset: true }) }).strict();
   type Cursor = { data: string; request: string } | null;
   const q = useInfiniteQuery({ queryKey: ["config-executor-fila", userId, "historico"], enabled: aberto, gcTime: 0, retry: false, initialPageParam: null as Cursor,
     queryFn: async ({ pageParam, signal }) => {

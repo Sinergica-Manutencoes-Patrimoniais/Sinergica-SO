@@ -9,7 +9,7 @@ import { FilaAposPreparacao } from "./FilaAposPreparacao";
 import { FilaDasOcorrenciasPreparadas } from "./FilaDasOcorrenciasPreparadas";
 import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const esperadoSchema = z.object({ ciclo: z.number().int().nonnegative().safe(), vencimento: z.string().date() }).strict();
 const rotinaSchema = z.object({ rotinaId: uuid, nome: z.string().min(1), alvo: z.string().min(1), requestId: uuid,
   esperados: z.array(esperadoSchema).min(1).max(31) }).strict();

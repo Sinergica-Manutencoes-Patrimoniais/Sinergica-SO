@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const motivo = z.enum(["gate_fechado", "revisao_divergente", "item_nao_elegivel", "lancamento_incompativel", "competencia_fechada", "primeira_parcela_ausente", "reserva_ativa", "saldo_item_insuficiente", "saldo_documento_insuficiente"]);
-const resposta = z.object({ itemId: z.string().uuid(), documentoId: z.string().uuid(), impedimentos: z.array(motivo), consultaPrevia: z.literal(true), reservaSaldo: z.literal(false), resultadoPedidoAnterior: z.literal("desconhecido"), cobrancaEnviada: z.literal(false) }).strict();
+const resposta = z.object({ itemId: z.string().guid(), documentoId: z.string().guid(), impedimentos: z.array(motivo), consultaPrevia: z.literal(true), reservaSaldo: z.literal(false), resultadoPedidoAnterior: z.literal("desconhecido"), cobrancaEnviada: z.literal(false) }).strict();
 const descricoes: Record<z.infer<typeof motivo>, string> = { gate_fechado: "Fluxo bloqueado", revisao_divergente: "Revisão do item divergente", item_nao_elegivel: "Item não elegível", lancamento_incompativel: "Lançamento incompatível", competencia_fechada: "Competência fechada", primeira_parcela_ausente: "Não há parcela anterior neste documento para o item", reserva_ativa: "Há reserva interna ativa", saldo_item_insuficiente: "Saldo do item insuficiente", saldo_documento_insuficiente: "Saldo do documento insuficiente" };
 export function PreviaImpedimentosParcela({ usuario, cliente, itemId, documentoId, revisao, valor }: { usuario: string; cliente: string; itemId: string; documentoId: string; revisao: number; valor: string }) {
   const numero = /^\d+$/.test(valor) ? Number(valor) : NaN; const valido = Number.isSafeInteger(numero) && numero > 0;

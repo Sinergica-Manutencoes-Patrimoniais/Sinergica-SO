@@ -5,7 +5,7 @@ export function DiagnosticoAncestraisGrupos({userId,clienteId}:{userId:string;cl
   const ativo=import.meta.env.VITE_SSO_DIAGNOSTICO_ANCESTRAIS_GRUPOS_ENABLED==="true";
   const q=useInfiniteQuery({queryKey:["estrutura-tecnica",userId,clienteId,"diagnostico-ancestrais-grupos"],enabled:ativo,gcTime:0,initialPageParam:null as string | null,queryFn:async({pageParam,signal})=>{
     const {data,error}=await supabase.schema("pcm").rpc("sso_diagnostico_ancestrais_grupos",{p_cliente_id:clienteId,p_apos:pageParam,p_limite:100}).abortSignal(signal);if(error)throw error;
-    const r=z.object({clienteId:z.string().uuid(),examinados:z.number().int().min(0).max(100),ciclos:z.number().int().nonnegative(),incompletos:z.number().int().nonnegative(),limite:z.number().int().nonnegative(),ultimoId:z.string().uuid().nullable()}).strict().parse(data);
+    const r=z.object({clienteId:z.string().guid(),examinados:z.number().int().min(0).max(100),ciclos:z.number().int().nonnegative(),incompletos:z.number().int().nonnegative(),limite:z.number().int().nonnegative(),ultimoId:z.string().guid().nullable()}).strict().parse(data);
     if(r.clienteId!==clienteId || r.ciclos+r.incompletos+r.limite>r.examinados || (r.examinados>0 && !r.ultimoId))throw new Error("Diagnóstico divergente");return r;
   },getNextPageParam:p=>p.examinados===100 ? p.ultimoId ?? undefined : undefined});
   if(!ativo)return null;

@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
-    grupoId: z.string().uuid(),
-    clienteId: z.string().uuid(),
+    requestId: z.string().guid(),
+    grupoId: z.string().guid(),
+    clienteId: z.string().guid(),
     nome: z.string(),
     hash: z.string().regex(/^[a-f0-9]{64}$/),
     tipo: z.enum(["image/jpeg", "image/png"]),
@@ -18,7 +18,7 @@ const fotosSchema = z
   .array(
     z
       .object({
-        id: z.string().uuid(),
+        id: z.string().guid(),
         criado_em: z.string().datetime({ offset: true }),
         verificada: z.boolean(),
       })
@@ -117,8 +117,8 @@ function Fotos({
       if (error) throw error;
       const resposta = z
         .object({
-          fotoId: z.string().uuid(),
-          requestId: z.string().uuid(),
+          fotoId: z.string().guid(),
+          requestId: z.string().guid(),
         })
         .strict()
         .parse(data);

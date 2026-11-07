@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { prepararConferenciaFaturavel } from "../../domain/faturaveis";
 
-const uuid=z.string().uuid();
+const uuid=z.string().guid();
 const pedidoSchema=z.object({requestId:uuid,clienteId:uuid,itemId:uuid,fatoId:uuid,revision:z.number().int().positive().safe(),atestacaoRevision:z.number().int().positive().safe(),valorCentavos:z.number().int().nonnegative().safe(),motivo:z.string().max(2000).nullable()}).strict();
 const atestacao=z.object({clienteId:uuid,fatoId:uuid,revision:z.number().int().nonnegative().safe(),estado:z.enum(["confirmada","retirada"]).nullable(),revisaoPcmId:uuid,revisaoPcmAtual:z.boolean(),execucaoFisicaComprovada:z.literal(false),exclusividadeComprovada:z.literal(false),geraFaturavel:z.literal(false)}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;

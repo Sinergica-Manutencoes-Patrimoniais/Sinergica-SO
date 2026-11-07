@@ -2,12 +2,12 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const item = z.object({ id: z.string().uuid(), atorId: z.string().uuid(), criadoEm: z.string().datetime({ offset: true }),
+const item = z.object({ id: z.string().guid(), atorId: z.string().guid(), criadoEm: z.string().datetime({ offset: true }),
   revision: z.number().int().nonnegative(), versao: z.string().min(1).max(120), ambiente: z.string().min(1).max(120),
   ressalva: z.string().max(2000), referencias: z.record(z.string(), z.string()),
-  evidencias: z.array(z.object({ cenario: z.string(), id: z.string().uuid(), revision: z.number().int().positive() }).strict()).max(30),
+  evidencias: z.array(z.object({ cenario: z.string(), id: z.string().guid(), revision: z.number().int().positive() }).strict()).max(30),
 }).strict();
-const pagina = z.object({ clienteId: z.string().uuid(), onda: z.number().int().min(1).max(6),
+const pagina = z.object({ clienteId: z.string().guid(), onda: z.number().int().min(1).max(6),
   revisionAtual: z.number().int().nonnegative(), itens: z.array(item).max(25) }).strict();
 type Cursor = { antes: string | null; id: string | null };
 

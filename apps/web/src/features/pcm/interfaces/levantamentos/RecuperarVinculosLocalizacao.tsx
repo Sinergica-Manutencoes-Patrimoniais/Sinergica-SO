@@ -6,8 +6,8 @@ import { pedidoVinculoLocalizacaoSchema } from "./VincularLocalizacao";
 
 const prefixo = "sso-vincular-localizacao:";
 type Tentativa = { chaveStorage: string; texto: string; pedido: z.infer<typeof pedidoVinculoLocalizacaoSchema> };
-const recibo = z.object({ requestId: z.string().uuid(), aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.literal(false),
-  linkedIds: z.object({ entidadeId: z.string().uuid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict();
+const recibo = z.object({ requestId: z.string().guid(), aggregateId: z.string().guid(), revision: z.number().int().positive(), state: z.literal("pendente"), created: z.literal(false),
+  linkedIds: z.object({ entidadeId: z.string().guid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict();
 
 export function RecuperarVinculosLocalizacao({ userId, clienteId }: { userId: string; clienteId: string }) {
   if (import.meta.env.VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED !== "true") return null;

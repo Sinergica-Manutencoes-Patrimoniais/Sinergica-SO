@@ -23,7 +23,7 @@ import { ConflitosPropriedadeFila } from "./ConflitosPropriedadeFila";
 import { ReservasEnvioLegado } from "./ReservasEnvioLegado";
 
 const itemSchema = z.object({
-  id: z.string().uuid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().uuid(),
+  id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
   operacao: z.string().min(1), estado: z.enum(["pendente", "incerto", "enviado_nao_confirmado"]),
   estado_fonte: z.enum(["pending", "processing", "error", "sent"]),
   tentativas: z.number().int().nonnegative().safe(),
@@ -31,15 +31,15 @@ const itemSchema = z.object({
   enviado_em: z.string().refine((v) => Number.isFinite(Date.parse(v))).nullable(),
 }).strict();
 const notaSchema = z.object({
-  request_id: z.string().uuid(),
-  ator_id: z.string().uuid(),
+  request_id: z.string().guid(),
+  ator_id: z.string().guid(),
   criado_em: z.string().refine((v) => Number.isFinite(Date.parse(v))),
   observacao: z.string().min(1).max(1000),
   status_observado: z.string(),
   tentativas_observadas: z.number().int().nonnegative().safe(),
 }).strict();
 const pedidoSchema = z.object({
-  requestId: z.string().uuid(), clienteId: z.string().uuid(), outboxId: z.string().uuid(),
+  requestId: z.string().guid(), clienteId: z.string().guid(), outboxId: z.string().guid(),
   status: z.enum(["pending", "processing", "error", "sent"]),
   tentativas: z.number().int().nonnegative().safe(), observacao: z.string().trim().min(1).max(1000),
 }).strict();

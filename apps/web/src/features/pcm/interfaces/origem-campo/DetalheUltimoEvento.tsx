@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ConferenciaEventoCampo } from "./ConferenciaEventoCampo";
 
-const resposta = z.object({ clienteId: z.string().uuid(), osId: z.string().uuid(), ordemExterna: z.string().regex(/^[1-9]\d{0,17}$/),
+const resposta = z.object({ clienteId: z.string().guid(), osId: z.string().guid(), ordemExterna: z.string().regex(/^[1-9]\d{0,17}$/),
   statusCampo: z.enum(["aberta", "em_andamento", "concluida"]), titulo: z.string().max(200).nullable(), descricao: z.string().max(10000).nullable(),
   tecnicoAuvoId: z.string().max(18).nullable(), dataAgendada: z.string().max(40).nullable(), checkIn: z.string().max(40).nullable(), checkOut: z.string().max(40).nullable(),
   validacaoPcmComprovada: z.literal(false), osAlterada: z.literal(false) }).strict();

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
 
-const esquema = z.object({ requestId: z.string().uuid(), despesaId: z.string().uuid(), visitaId: z.string().uuid(),
+const esquema = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), acao: z.enum(["corrigir", "cancelar"]),
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), descricao: z.string().trim().min(1).max(10000).nullable(),
   motivo: z.string().trim().min(1).max(2000), conferencia: z.string().trim().min(1).max(2000) }).strict()

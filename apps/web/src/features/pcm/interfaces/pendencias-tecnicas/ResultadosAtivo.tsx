@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Alvo = { alvo_tipo: string; alvo_id: string; alvo_nome: string | null };
 type Props = { userId: string; clienteId: string; alvos: Alvo[] };
-const linha = z.object({ resposta_id: z.string().uuid(), retorno_id: z.string().uuid(), os_id: z.string().uuid(), chave_pergunta: z.string(), resultado: z.enum(["corrigido", "nao_ok", "nao_aplicavel"]), observacao: z.string().nullable(), fotos_registradas: z.number().int().nonnegative(), decisao_retorno: z.string().nullable() }).strict();
+const linha = z.object({ resposta_id: z.string().guid(), retorno_id: z.string().guid(), os_id: z.string().guid(), chave_pergunta: z.string(), resultado: z.enum(["corrigido", "nao_ok", "nao_aplicavel"]), observacao: z.string().nullable(), fotos_registradas: z.number().int().nonnegative(), decisao_retorno: z.string().nullable() }).strict();
 export function ResultadosAtivo(props: Props) {
   if (import.meta.env.VITE_SSO_RESULTADOS_ATIVO_ENABLED !== "true") return null;
   return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
@@ -39,7 +39,7 @@ function Selecao({ userId, clienteId, alvos }: Props) {
   return <section><h3>Resultados por ativo</h3><p>Fonte incompleta: somente retornos preparados vinculados à rotina versionada. Fotos são contagens registradas, não prova de autenticidade. Corrigido não cria Pendência nesta consulta.</p>
     <label>Ativo <select value={!alvoManual && alvo ? chave : ""} onChange={e => { setAlvoManual(null); setChave(e.target.value); setErro(""); }}><option value="">Selecione um ativo das Pendências carregadas</option>{unicos.map(([k, a]) => <option key={k} value={k}>{a.alvo_tipo} · {a.alvo_nome ?? a.alvo_id}</option>)}</select></label>
     {import.meta.env.VITE_SSO_BUSCA_ATIVOS_RESULTADOS_ENABLED === "true" && <BuscarAtivo userId={userId} clienteId={clienteId} aoSelecionar={(selecionado) => { setChave(""); setAlvoManual(selecionado); setErro(""); }} />}
-    <form onSubmit={(e) => { e.preventDefault(); const id=idManual.trim(); if(!z.string().uuid().safeParse(id).success){setErro("Informe um identificador de ativo válido.");return;}
+    <form onSubmit={(e) => { e.preventDefault(); const id=idManual.trim(); if(!z.string().guid().safeParse(id).success){setErro("Informe um identificador de ativo válido.");return;}
       setChave("");setAlvoManual({alvo_tipo:tipoManual,alvo_id:id,alvo_nome:null});setErro(""); }}>
       <p>Para consultar resultado de ativo sem Pendência carregada, informe o tipo e identificador. A consulta continua sujeita à autorização e não comprova existência de resultados fora desta fonte.</p>
       <label>Tipo <select value={tipoManual} onChange={(e)=>{setTipoManual(e.target.value as typeof tipoManual);setAlvoManual(null);setChave("");}}><option value="sistema">Sistema</option><option value="componente">Componente</option><option value="grupo">Grupo Quantitativo</option></select></label>
@@ -56,7 +56,7 @@ function BuscarAtivo({ userId, clienteId, aoSelecionar }: { userId: string; clie
   const consulta=useInfiniteQuery({queryKey:["pendencias-busca-ativo",userId,clienteId,busca],enabled:!!busca,gcTime:0,retry:false,initialPageParam:null as string|null,
     queryFn:async({pageParam,signal})=>{if(!busca)throw new Error("Busca ausente.");const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_buscar_ativos_resultados",{p_ator_id:userId,p_cliente_id:clienteId,p_tipo:busca.tipo,p_busca:busca.texto,p_apos:pageParam,p_limite:20}).abortSignal(signal);
-      if(error)throw error;const pagina=z.array(z.object({id:z.string().uuid(),nome:z.string().min(1).max(4000),ativo:z.boolean()}).strict()).max(20).parse(data);
+      if(error)throw error;const pagina=z.array(z.object({id:z.string().guid(),nome:z.string().min(1).max(4000),ativo:z.boolean()}).strict()).max(20).parse(data);
       let anterior=pageParam?.toLowerCase()??"";for(const item of pagina){const atual=item.id.toLowerCase();if(atual<=anterior)throw new Error("Página divergente.");anterior=atual;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;},
     getNextPageParam:(pagina)=>pagina.length===20?pagina.at(-1)?.id:undefined});

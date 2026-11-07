@@ -3,9 +3,9 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const parcela = z.object({ vinculoId: z.string().uuid(), osId: z.string().uuid().nullable(), valorCentavos: z.string().regex(/^\d{1,19}$/),
+const parcela = z.object({ vinculoId: z.string().guid(), osId: z.string().guid().nullable(), valorCentavos: z.string().regex(/^\d{1,19}$/),
   vinculo: z.enum(["ausente", "incompativel", "encerrado", "vigente"]) }).strict();
-const registro = z.object({ revisao: z.number().int().positive(), ator_id: z.string().uuid(), criado_em: z.string(), parcelas: z.array(parcela).max(100) }).strict();
+const registro = z.object({ revisao: z.number().int().positive(), ator_id: z.string().guid(), criado_em: z.string(), parcelas: z.array(parcela).max(100) }).strict();
 export function HistoricoRateio({ userId, clienteId, visitaId, despesaId, revisao }: { userId: string; clienteId: string; visitaId: string; despesaId: string; revisao: number }) {
   const [aberto, setAberto] = useState(false);
   const lista = useInfiniteQuery({ queryKey: ["despesas-visita", userId, clienteId, visitaId, despesaId, "historico-rateio", revisao],

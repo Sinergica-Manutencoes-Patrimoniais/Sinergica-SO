@@ -33,7 +33,7 @@ const snapshot = z.object({
           .optional(),
         ocorrencia_legada_id: z.string().nullable(),
         ocorrencia_preparada_id: z.string().nullable(),
-        ciclo_id: z.string().uuid().nullable().optional(),
+        ciclo_id: z.string().guid().nullable().optional(),
         ...estimativa,
       }),
     )
@@ -45,7 +45,7 @@ const snapshot = z.object({
         ocorrencia_id: z.string().min(1),
         vencimento_original: z.string().optional(),
         data_referencia: z.string().optional(),
-        ciclo_id: z.string().uuid().nullable().optional(),
+        ciclo_id: z.string().guid().nullable().optional(),
         ...estimativa,
       }),
     )
@@ -63,7 +63,7 @@ const snapshotV2 = snapshot.extend({
         tipo: z.enum(["calendario", "visita"]).nullable(),
         origem_id: z.string().nullable(),
         ocorrencia_legada_id: z.string().nullable(),
-        ciclo_id: z.string().uuid().nullable().optional(),
+        ciclo_id: z.string().guid().nullable().optional(),
         ...estimativa,
       }),
     )

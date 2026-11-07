@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const alerta=z.enum(["capacidade_nao_verificada","sobrecarga","simultaneidade_incompativel","qualificacao_incompativel","conflito","equipe_nao_verificada"]);
-const linha=z.object({request_id:z.string().uuid(),ator_id:z.string().uuid(),vencimento_declarado:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+const linha=z.object({request_id:z.string().guid(),ator_id:z.string().guid(),vencimento_declarado:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   alertas:z.array(alerta).max(6),motivo:z.string().min(1).max(2000),criado_em:z.string().datetime({offset:true}),
   origem_parcial:z.boolean().nullable().optional(),destino_parcial:z.boolean().nullable().optional()}).strict();
 const rotulos:Record<z.infer<typeof alerta>,string>={capacidade_nao_verificada:"capacidade não verificada",sobrecarga:"sobrecarga",simultaneidade_incompativel:"simultaneidade incompatível",qualificacao_incompativel:"qualificação incompatível",conflito:"conflito",equipe_nao_verificada:"equipe não verificada"};

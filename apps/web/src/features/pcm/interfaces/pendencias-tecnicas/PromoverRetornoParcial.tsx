@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 export const pedidoPromocaoParcialSchema = z.object({ requestId: id, atorId: id, clienteId: id, retornoId: id, retornoRevision: z.number().int().positive(),
   chamadoId: id, parcelaId: id, cicloId: id, titulo: z.string().trim().min(1).max(200), descricao: z.string().max(10000),
   descricaoRestante: z.string().min(1).max(4000), minutosRestantes: z.number().int().positive() }).strict();

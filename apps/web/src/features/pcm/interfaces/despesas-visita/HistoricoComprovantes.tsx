@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesaId: string };
 const linha = z.object({ revisao: z.number().int().positive(), valor_centavos: z.number().int().nonnegative().safe(),
-  ator_id: z.string().uuid(), registrado_em: z.string(), tipo: z.enum(["realizacao", "correcao"]) }).strict();
+  ator_id: z.string().guid(), registrado_em: z.string(), tipo: z.enum(["realizacao", "correcao"]) }).strict();
 export function HistoricoComprovantes(props: Props) {
   if (import.meta.env.VITE_SSO_HISTORICO_COMPROVANTES_ENABLED !== "true") return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesaId])} {...props} />;

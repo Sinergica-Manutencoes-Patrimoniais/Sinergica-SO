@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-const schema=z.object({evento_id:z.string().uuid(),tipo:z.enum(["atribuicao","interrupcao"]),os_id:z.string().uuid(),estado:z.string().nullable(),motivo:z.string().nullable(),ator_id:z.string().uuid(),ocorrido_em:z.string().datetime({offset:true})}).strict();
+const schema=z.object({evento_id:z.string().guid(),tipo:z.enum(["atribuicao","interrupcao"]),os_id:z.string().guid(),estado:z.string().nullable(),motivo:z.string().nullable(),ator_id:z.string().guid(),ocorrido_em:z.string().datetime({offset:true})}).strict();
 export function HistoricoParcela({userId,clienteId,parcelaId}:{userId:string;clienteId:string;parcelaId:string}){
   const [aberto,setAberto]=useState(false);const consulta=useInfiniteQuery({queryKey:["backlog-interrupcoes",userId,clienteId,parcelaId,"historico"],enabled:aberto,gcTime:0,initialPageParam:null as {em:string;id:string} | null,
     queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_historico_parcela_os",{p_parcela_id:parcelaId,p_apos_em:pageParam?.em ?? null,p_apos_id:pageParam?.id ?? null,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(schema).max(20).parse(data);},

@@ -8,7 +8,7 @@ import { AtenderParcelaRevisada } from "./AtenderParcelaRevisada";
 import { ReconciliacaoParcela } from "./ReconciliacaoParcela";
 import { GutdParcela } from "./GutdParcela";
 import { DiagnosticoDevolucao } from "./DiagnosticoDevolucao";
-const schema=z.object({pendencia_id:z.string().uuid(),parcela_id:z.string().uuid(),descricao:z.string(),situacao:z.string(),os_atendimento_id:z.string().uuid().nullable(),ordens_nao_finalizadas:z.number().int().nonnegative(),elegibilidade:z.literal("nao_comprovada"),motivos:z.array(z.string())}).strict();
+const schema=z.object({pendencia_id:z.string().guid(),parcela_id:z.string().guid(),descricao:z.string(),situacao:z.string(),os_atendimento_id:z.string().guid().nullable(),ordens_nao_finalizadas:z.number().int().nonnegative(),elegibilidade:z.literal("nao_comprovada"),motivos:z.array(z.string())}).strict();
 export function PreviaDevolucao(props:{userId:string;clienteId:string;composicaoId:string}){if(import.meta.env.VITE_SSO_PREVIA_DEVOLUCAO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.composicaoId])} {...props}/>;}
 function Conteudo({userId,clienteId,composicaoId}:{userId:string;clienteId:string;composicaoId:string}){
   const consulta=useInfiniteQuery({queryKey:["backlog-vinculo",userId,clienteId,composicaoId,"previa-devolucao"],gcTime:0,initialPageParam:null as string | null,queryFn:async({pageParam,signal})=>{

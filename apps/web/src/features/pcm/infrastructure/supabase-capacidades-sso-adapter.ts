@@ -5,27 +5,27 @@ import { ACOES_SSO } from "../domain/capacidades-sso";
 
 const resultadoSchema = z
   .object({
-    aggregateId: z.string().uuid(),
+    aggregateId: z.string().guid(),
     revision: z.number().int().nonnegative(),
     state: z.boolean(),
     created: z.boolean(),
     linkedIds: z.record(z.string(), z.string()),
     warnings: z.array(z.string()),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
   })
   .strict();
 
 const perfilSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().guid(),
   nome: z.string(),
   ativo: z.boolean(),
   revisao: z.number().int().nonnegative(),
 });
 const vinculoSchema = z
   .object({
-    id: z.string().uuid(),
-    usuario_id: z.string().uuid(),
-    perfil_id: z.string().uuid(),
+    id: z.string().guid(),
+    usuario_id: z.string().guid(),
+    perfil_id: z.string().guid(),
     ativo: z.boolean(),
     revisao: z.number().int().nonnegative(),
   })
@@ -38,11 +38,11 @@ const vinculoSchema = z
   }));
 const concessaoSchema = z
   .object({
-    id: z.string().uuid(),
-    usuario_id: z.string().uuid().nullable(),
-    perfil_id: z.string().uuid().nullable(),
+    id: z.string().guid(),
+    usuario_id: z.string().guid().nullable(),
+    perfil_id: z.string().guid().nullable(),
     acao: z.enum(ACOES_SSO),
-    cliente_id: z.string().uuid().nullable(),
+    cliente_id: z.string().guid().nullable(),
     ativa: z.boolean(),
     revisao: z.number().int().nonnegative(),
   })
@@ -56,9 +56,9 @@ const concessaoSchema = z
     revisao: x.revisao,
   }));
 const usuarioSchema = z
-  .object({ user_id: z.string().uuid(), nome: z.string(), papel: z.string(), ativo: z.boolean() })
+  .object({ user_id: z.string().guid(), nome: z.string(), papel: z.string(), ativo: z.boolean() })
   .transform((x) => ({ userId: x.user_id, nome: x.nome, papel: x.papel, ativo: x.ativo }));
-const clienteSchema = z.object({ id: z.string().uuid(), nome: z.string() });
+const clienteSchema = z.object({ id: z.string().guid(), nome: z.string() });
 
 async function listar<T>(
   rpc: string,

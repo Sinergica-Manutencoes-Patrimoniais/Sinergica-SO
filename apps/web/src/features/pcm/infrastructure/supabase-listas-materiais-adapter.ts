@@ -28,8 +28,8 @@ const eventoDados = z.discriminatedUnion("tipo", [
 ]);
 const informarSchema = z
   .object({
-    requestId: z.string().uuid(),
-    listaId: z.string().uuid(),
+    requestId: z.string().guid(),
+    listaId: z.string().guid(),
     expectedRevision: z.number().int().positive(),
     evento: eventoDados,
   })
@@ -57,8 +57,8 @@ const linhasSchema = z
   .max(1000);
 const comandoLinhasSchema = z
   .object({
-    requestId: z.string().uuid(),
-    listaId: z.string().uuid(),
+    requestId: z.string().guid(),
+    listaId: z.string().guid(),
     expectedRevision: z.number().int().positive(),
     linhas: linhasSchema,
   })
@@ -69,8 +69,8 @@ export const validarSalvarLinhasMateriais = (entrada: unknown) =>
 
 const listaSchema = z
   .object({
-    id: z.string().uuid(),
-    ordem_servico_id: z.string().uuid(),
+    id: z.string().guid(),
+    ordem_servico_id: z.string().guid(),
     responsavel: z.enum(["cliente", "sinergica"]),
     texto_original: z.string().min(1),
     estado: estadoSchema,
@@ -79,10 +79,10 @@ const listaSchema = z
   .strict();
 const comandoSchema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     expectedRevision: z.literal(0),
-    listaId: z.string().uuid(),
-    ordemServicoId: z.string().uuid(),
+    listaId: z.string().guid(),
+    ordemServicoId: z.string().guid(),
     responsavel: z.enum(["cliente", "sinergica"]),
     textoOriginal: z
       .string()
@@ -93,24 +93,24 @@ export type CriarListaMateriais = z.infer<typeof comandoSchema>;
 export const validarCriarListaMateriais = (entrada: unknown) => comandoSchema.parse(entrada);
 const resultadoSchema = z
   .object({
-    aggregateId: z.string().uuid(),
+    aggregateId: z.string().guid(),
     revision: z.literal(1),
     state: z.literal("levantada"),
     created: z.literal(true),
-    linkedIds: z.object({ ordemServicoId: z.string().uuid() }).strict(),
+    linkedIds: z.object({ ordemServicoId: z.string().guid() }).strict(),
     warnings: z.array(z.string()),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
   })
   .strict();
 
 export const supabaseListasMateriaisAdapter = {
   async consultarCentralPorSituacao(clienteId: string, ordemServicoId: string | null, responsavel: "cliente" | "sinergica" | null, estado: z.infer<typeof estadoSchema> | null, limite: number, apos: string | null, signal?: AbortSignal) {
-    if (!z.string().uuid().safeParse(clienteId).success ||
-      (ordemServicoId !== null && !z.string().uuid().safeParse(ordemServicoId).success) ||
+    if (!z.string().guid().safeParse(clienteId).success ||
+      (ordemServicoId !== null && !z.string().guid().safeParse(ordemServicoId).success) ||
       (responsavel !== null && !["cliente", "sinergica"].includes(responsavel)) ||
       (estado !== null && !estadoSchema.safeParse(estado).success) ||
       !Number.isSafeInteger(limite) || limite < 1 || limite > 100 ||
-      (apos !== null && !z.string().uuid().safeParse(apos).success)) throw new Error("Parâmetros inválidos.");
+      (apos !== null && !z.string().guid().safeParse(apos).success)) throw new Error("Parâmetros inválidos.");
     let query = supabase.schema("pcm").rpc("sso_consultar_central_materiais_situacao", {
       p_cliente_id: clienteId, p_ordem_servico_id: ordemServicoId, p_responsavel: responsavel,
       p_estado: estado, p_limite: limite, p_apos: apos,
@@ -129,8 +129,8 @@ export const supabaseListasMateriaisAdapter = {
     return pagina;
   },
   async buscarOsCentral(clienteId: string, busca: string, limite: number, apos: string | null, signal?: AbortSignal) {
-    if (!z.string().uuid().safeParse(clienteId).success || busca.length > 80 ||
-      !Number.isInteger(limite) || limite < 1 || limite > 50 || (apos !== null && !z.string().uuid().safeParse(apos).success)) {
+    if (!z.string().guid().safeParse(clienteId).success || busca.length > 80 ||
+      !Number.isInteger(limite) || limite < 1 || limite > 50 || (apos !== null && !z.string().guid().safeParse(apos).success)) {
       throw new Error("Parâmetros inválidos.");
     }
     let query = supabase.schema("pcm").rpc("sso_buscar_os_central_materiais", {
@@ -139,7 +139,7 @@ export const supabaseListasMateriaisAdapter = {
     if (signal) query = query.abortSignal(signal);
     const { data, error } = await query;
     if (error) throw error;
-    const pagina = z.array(z.object({ id: z.string().uuid(), numero: z.string(), titulo: z.string() }).strict()).max(limite).parse(data);
+    const pagina = z.array(z.object({ id: z.string().guid(), numero: z.string(), titulo: z.string() }).strict()).max(limite).parse(data);
     let anterior = apos?.toLowerCase() ?? null;
     for (const item of pagina) {
       if (anterior !== null && item.id.toLowerCase() <= anterior) throw new Error("Página divergente.");
@@ -148,10 +148,10 @@ export const supabaseListasMateriaisAdapter = {
     return pagina;
   },
   async consultarCentral(clienteId: string, ordemServicoId: string | null, responsavel: "cliente" | "sinergica" | null, limite: number, apos: string | null, signal?: AbortSignal) {
-    if (!z.string().uuid().safeParse(clienteId).success ||
-      (ordemServicoId !== null && !z.string().uuid().safeParse(ordemServicoId).success) ||
+    if (!z.string().guid().safeParse(clienteId).success ||
+      (ordemServicoId !== null && !z.string().guid().safeParse(ordemServicoId).success) ||
       !Number.isSafeInteger(limite) || limite < 1 || limite > 100 ||
-      (apos !== null && !z.string().uuid().safeParse(apos).success)) throw new Error("Parâmetros inválidos.");
+      (apos !== null && !z.string().guid().safeParse(apos).success)) throw new Error("Parâmetros inválidos.");
     let query = supabase.schema("pcm").rpc("sso_consultar_central_materiais_mediada", {
       p_cliente_id: clienteId, p_ordem_servico_id: ordemServicoId,
       p_responsavel: responsavel, p_limite: limite, p_apos: apos,
@@ -172,7 +172,7 @@ export const supabaseListasMateriaisAdapter = {
   },
   async obterSnapshot(listaId: string, revisao: number, signal?: AbortSignal) {
     if (
-      !z.string().uuid().safeParse(listaId).success ||
+      !z.string().guid().safeParse(listaId).success ||
       !Number.isSafeInteger(revisao) ||
       revisao < 1
     )
@@ -203,13 +203,13 @@ export const supabaseListasMateriaisAdapter = {
     if (error) throw error;
     const resultado = z
       .object({
-        aggregateId: z.string().uuid(),
+        aggregateId: z.string().guid(),
         revision: z.number().int().positive(),
         state: estadoSchema,
         created: z.literal(false),
         linkedIds: z.object({}).strict(),
         warnings: z.array(z.string()),
-        requestId: z.string().uuid(),
+        requestId: z.string().guid(),
       })
       .strict()
       .parse(data);
@@ -226,7 +226,7 @@ export const supabaseListasMateriaisAdapter = {
   },
   async listarEventos(listaId: string, limite: number, apos: number, signal?: AbortSignal) {
     if (
-      !z.string().uuid().safeParse(listaId).success ||
+      !z.string().guid().safeParse(listaId).success ||
       !Number.isSafeInteger(limite) ||
       limite < 1 ||
       limite > 100 ||
@@ -247,7 +247,7 @@ export const supabaseListasMateriaisAdapter = {
             revisao: z.number().int().positive(),
             tipo: z.enum(["disponibilidade", "excecao"]),
             dados: z.unknown(),
-            ator_id: z.string().uuid(),
+            ator_id: z.string().guid(),
             criado_em: z.string().datetime({ offset: true }),
           })
           .strict(),
@@ -264,7 +264,7 @@ export const supabaseListasMateriaisAdapter = {
   },
   async obterLinhas(listaId: string, revisao: number, signal?: AbortSignal) {
     if (
-      !z.string().uuid().safeParse(listaId).success ||
+      !z.string().guid().safeParse(listaId).success ||
       !Number.isSafeInteger(revisao) ||
       revisao < 1
     )
@@ -279,7 +279,7 @@ export const supabaseListasMateriaisAdapter = {
     return linhasSchema.parse(data);
   },
   async obterLinhasExatas(listaId: string, revisao: number, signal?: AbortSignal) {
-    if (!z.string().uuid().safeParse(listaId).success || !Number.isSafeInteger(revisao) || revisao < 2)
+    if (!z.string().guid().safeParse(listaId).success || !Number.isSafeInteger(revisao) || revisao < 2)
       throw new Error("Parâmetros inválidos.");
     let query = supabase.schema("pcm").rpc("sso_obter_linhas_materiais", { p_lista_id: listaId, p_revisao: revisao });
     if (signal) query = query.abortSignal(signal);
@@ -301,13 +301,13 @@ export const supabaseListasMateriaisAdapter = {
     if (error) throw error;
     const resultado = z
       .object({
-        aggregateId: z.string().uuid(),
+        aggregateId: z.string().guid(),
         revision: z.number().int().positive(),
         state: estadoSchema,
         created: z.literal(false),
         linkedIds: z.object({}).strict(),
         warnings: z.array(z.string()),
-        requestId: z.string().uuid(),
+        requestId: z.string().guid(),
       })
       .strict()
       .parse(data);
@@ -327,12 +327,12 @@ export const supabaseListasMateriaisAdapter = {
     signal?: AbortSignal,
   ) {
     if (
-      !z.string().uuid().safeParse(clienteId).success ||
-      !z.string().uuid().safeParse(ordemServicoId).success ||
+      !z.string().guid().safeParse(clienteId).success ||
+      !z.string().guid().safeParse(ordemServicoId).success ||
       !Number.isSafeInteger(limite) ||
       limite < 1 ||
       limite > 100 ||
-      (apos !== null && !z.string().uuid().safeParse(apos).success)
+      (apos !== null && !z.string().guid().safeParse(apos).success)
     )
       throw new Error("Parâmetros inválidos.");
     let query = supabase.schema("pcm").rpc("sso_listar_listas_materiais_mediada", {

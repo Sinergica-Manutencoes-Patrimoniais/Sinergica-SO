@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { chaveIdentidade } from "../domain/capacidade-por-tecnico";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const data = z.string().date().nullable();
 const rotina = z.object({
   id, planoId: id, versaoId: id, nome: z.string().min(1),

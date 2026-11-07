@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 const contagem = z.number().int().nonnegative().safe();
-const versao = z.object({ versao_id: z.string().uuid(), numero: z.number().int().positive().safe(), estado: z.string().min(1).max(100),
+const versao = z.object({ versao_id: z.string().guid(), numero: z.number().int().positive().safe(), estado: z.string().min(1).max(100),
   vigencia_inicio: z.string().date().nullable(), vigencia_fim: z.string().date().nullable(), aprovada_em: z.string().datetime({ offset: true }).nullable() }).strict();
 export function DiagnosticoVigencias({ userId, clienteId, planoId, revisao }: { userId: string; clienteId: string; planoId: string; revisao: number }) {
   const habilitado = import.meta.env.VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED === "true";

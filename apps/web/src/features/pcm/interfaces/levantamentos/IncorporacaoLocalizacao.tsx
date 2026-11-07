@@ -9,8 +9,8 @@ import { AtualizarLocalizacao } from "./AtualizarLocalizacao";
 import { VincularLocalizacao } from "./VincularLocalizacao";
 
 const pedidoSchema = z.object({
-  requestId: z.string().uuid(),
-  loteId: z.string().uuid(),
+  requestId: z.string().guid(),
+  loteId: z.string().guid(),
   chave: z.string().min(1).max(200),
   revisao: z.number().int().positive(),
   tipo: z.enum(["area", "local", "sublocal"]),

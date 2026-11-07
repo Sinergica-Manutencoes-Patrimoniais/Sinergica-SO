@@ -54,7 +54,7 @@ function Item({ item, userId, clienteId, osId, clienteNome }: { item: PropostaOs
         : supabase.schema("comercial").rpc("sso_portal_itens_publicos",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error;
-      const itens = z.array(z.object({ id: z.string().uuid(), descricao: z.string().min(1), quantidade: z.number().int().positive(),
+      const itens = z.array(z.object({ id: z.string().guid(), descricao: z.string().min(1), quantidade: z.number().int().positive(),
         precoUnitarioCentavos: z.number().int().nonnegative().safe() }).strict()).min(1).max(100).parse(data);
       await conferirSessaoProposta(userId, signal);
       return itens;

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const resposta = z.object({ itemId: z.string().uuid(), revisao: z.number().int().positive(), autorizacaoInterna: z.boolean(), regraContratual: z.literal("nao_comprovada"), aceiteAdicional: z.literal("nao_comprovado"), autorizaConferencia: z.literal(false) }).strict();
+const resposta = z.object({ itemId: z.string().guid(), revisao: z.number().int().positive(), autorizacaoInterna: z.boolean(), regraContratual: z.literal("nao_comprovada"), aceiteAdicional: z.literal("nao_comprovado"), autorizaConferencia: z.literal(false) }).strict();
 export function DiagnosticoAceiteComplemento({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
   const [aberto, setAberto] = useState(false);
   const consulta = useQuery({ queryKey: ["faturavel-diagnostico-aceite", usuario, cliente, itemId], enabled: aberto, gcTime: 0, staleTime: 0, retry: false,

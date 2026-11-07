@@ -3,8 +3,8 @@ import { useEffect,useRef,useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props={userId:string;clienteId:string;loteId:string;chave:string};
-const itemSchema=z.object({request_id:z.string().uuid(),cancelada_em:z.string(),ultima_observacao_em:z.string().nullable(),objeto_catalogado:z.boolean().nullable()}).strict();
-const resultadoSchema=z.object({observacaoId:z.string().uuid(),requestId:z.string().uuid(),objetoCatalogado:z.boolean(),observadoEm:z.string()}).strict();
+const itemSchema=z.object({request_id:z.string().guid(),cancelada_em:z.string(),ultima_observacao_em:z.string().nullable(),objeto_catalogado:z.boolean().nullable()}).strict();
+const resultadoSchema=z.object({observacaoId:z.string().guid(),requestId:z.string().guid(),objetoCatalogado:z.boolean(),observadoEm:z.string()}).strict();
 export function ConferenciaFotosCanceladas(p:Props){if(import.meta.env.VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([p.userId,p.clienteId,p.loteId,p.chave])} {...p}/>;}
 function Conteudo(p:Props){
  const consulta=useInfiniteQuery({queryKey:["conferencia-fotos-canceladas",p.userId,p.clienteId,p.loteId,p.chave],initialPageParam:null as string|null,gcTime:0,staleTime:0,retry:false,refetchOnWindowFocus:true,
@@ -18,7 +18,7 @@ function Conteudo(p:Props){
 }
 function Item(p:Props&{item:z.infer<typeof itemSchema>}){
  const key=`sso-conferencia-foto-cancelada:${JSON.stringify([p.userId,p.clienteId,p.loteId,p.chave,p.item.request_id])}`;
- const [pendente,setPendente]=useState<string|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;return z.string().uuid().parse(raw);}catch{return "invalido";}});
+ const [pendente,setPendente]=useState<string|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;return z.string().guid().parse(raw);}catch{return "invalido";}});
  const [aviso,setAviso]=useState("");const [ocupado,setOcupado]=useState(false);
  const montado=useRef(false);useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
  async function conferir(){if(ocupado||pendente==="invalido")return;setOcupado(true);setAviso("");try{

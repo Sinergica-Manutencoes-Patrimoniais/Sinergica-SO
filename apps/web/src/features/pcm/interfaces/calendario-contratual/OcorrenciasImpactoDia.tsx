@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { useState } from "react";
 import { HistoricoMovimentosOcorrencia } from "./HistoricoMovimentosOcorrencia";
 
-const linha = z.object({ ocorrencia_id: z.string().uuid(), plano_id: z.string().uuid(), rotina_id: z.string().uuid(),
+const linha = z.object({ ocorrencia_id: z.string().guid(), plano_id: z.string().guid(), rotina_id: z.string().guid(),
   vencimento_original: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), possui_vinculo_legado: z.boolean() }).strict();
 
 export function OcorrenciasImpactoDia({ userId, clienteId, serieId, visitaId }: {

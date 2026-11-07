@@ -2,10 +2,10 @@ import { z } from "zod";
 
 /** Composição privada: não usar este contrato como projeção para o Portal. */
 export const prepararOrcamentoOperacionalSchema = z.object({
-  requestId: z.string().uuid(),
-  propostaId: z.string().uuid(),
+  requestId: z.string().guid(),
+  propostaId: z.string().guid(),
   expectedRevision: z.number().int().positive(),
-  listaId: z.string().uuid(),
+  listaId: z.string().guid(),
   listaRevision: z.number().int().positive(),
   descricao: z.string().refine((v) => v.trim().length > 0 && v.length <= 4000),
   custoAquisicaoCentavos: z.number().int().min(0).max(1_000_000_000_000),

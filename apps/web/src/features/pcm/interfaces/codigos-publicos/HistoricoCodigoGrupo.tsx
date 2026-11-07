@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ id: z.string().uuid(), codigo: z.string().min(1).max(200), atual: z.boolean(), ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict();
+const linha = z.object({ id: z.string().guid(), codigo: z.string().min(1).max(200), atual: z.boolean(), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict();
 type Cursor = { data: string; id: string } | null;
 
 export function HistoricoCodigoGrupo({ userId, clienteId, grupoId }: { userId: string; clienteId: string; grupoId: string }) {
@@ -57,7 +57,7 @@ function MotivoCorrecao({ userId, clienteId, grupoId, codigoId }: { userId: stri
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_motivo_codigo_historico_grupo", { p_cliente_id: clienteId, p_grupo_id: grupoId, p_codigo_id: codigoId }).abortSignal(signal);
       if (error) throw error;
-      const r = z.object({ codigoId: z.string().uuid(), grupoId: z.string().uuid(), clienteId: z.string().uuid(), motivo: z.string().min(1).max(2000), atorId: z.string().uuid(), data: z.string().datetime({ offset: true }) }).strict().nullable().parse(data);
+      const r = z.object({ codigoId: z.string().guid(), grupoId: z.string().guid(), clienteId: z.string().guid(), motivo: z.string().min(1).max(2000), atorId: z.string().guid(), data: z.string().datetime({ offset: true }) }).strict().nullable().parse(data);
       if (r && (r.codigoId !== codigoId || r.grupoId !== grupoId || r.clienteId !== clienteId)) throw new Error("Resposta divergente.");
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");

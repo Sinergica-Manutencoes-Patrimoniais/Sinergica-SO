@@ -7,7 +7,7 @@ import { RelatorioOsDespesas } from "./RelatorioOsDespesas";
 const inteiro = z.number().int().nonnegative().safe();
 const resumo = z.object({ quantidade: inteiro, previsto_centavos: inteiro, realizado_centavos: inteiro,
   sem_realizado: inteiro, sem_rateio: inteiro, rateio_historico: inteiro }).strict();
-const os = z.object({ os_id: z.string().uuid(), numero: z.string(), valor_previsto_nao_realizado_centavos: inteiro,
+const os = z.object({ os_id: z.string().guid(), numero: z.string(), valor_previsto_nao_realizado_centavos: inteiro,
   valor_realizado_centavos: inteiro, despesas_nao_realizadas: inteiro, vinculos_historicos: inteiro }).strict();
 type Props = { userId: string; clienteId: string; visitaId: string };
 const moeda = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v / 100);

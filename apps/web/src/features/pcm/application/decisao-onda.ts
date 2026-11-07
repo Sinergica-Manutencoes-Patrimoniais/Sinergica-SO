@@ -2,7 +2,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
 export const pedidoDecisaoOndaSchema = z.object({
-  requestId: z.string().uuid(), clienteId: z.string().uuid(), onda: z.number().int().min(1).max(6),
+  requestId: z.string().guid(), clienteId: z.string().guid(), onda: z.number().int().min(1).max(6),
   revision: z.number().int().nonnegative(), versao: z.string().trim().min(1).max(120),
   ambiente: z.string().trim().min(1).max(120),
   referencias: z.record(z.string().regex(/^[a-z_]+$/), z.string().regex(/^[A-Za-z0-9_.:-]{1,200}$/)),
@@ -20,7 +20,7 @@ export async function registrarDecisaoOnda(ator: string, entrada: PedidoDecisaoO
     p_versao: p.versao, p_ambiente: p.ambiente, p_referencias: p.referencias, p_ressalva: p.ressalva,
   });
   if (error) throw error;
-  const resposta = z.object({ id: z.string().uuid(), requestId: z.string().uuid(), clienteId: z.string().uuid(),
+  const resposta = z.object({ id: z.string().guid(), requestId: z.string().guid(), clienteId: z.string().guid(),
     onda: z.number().int(), revision: z.number().int().nonnegative() }).strict().parse(data);
   const depois = await supabase.auth.getUser();
   if (depois.error || depois.data.user?.id !== ator || resposta.requestId !== p.requestId || resposta.clienteId !== p.clienteId ||

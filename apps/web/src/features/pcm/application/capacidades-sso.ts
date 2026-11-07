@@ -8,17 +8,17 @@ import type {
 } from "./capacidades-sso-gateway";
 
 const envelope = {
-  requestId: z.string().uuid(),
+  requestId: z.string().guid(),
   expectedRevision: z.number().int().nonnegative(),
   motivo: z.string().trim().min(1).max(1000),
 };
 export const concessaoSchema = z
   .object({
     ...envelope,
-    usuarioId: z.string().uuid().nullable(),
-    perfilId: z.string().uuid().nullable(),
+    usuarioId: z.string().guid().nullable(),
+    perfilId: z.string().guid().nullable(),
     acao: z.enum(ACOES_SSO),
-    clienteId: z.string().uuid().nullable(),
+    clienteId: z.string().guid().nullable(),
     ativa: z.boolean(),
   })
   .strict()
@@ -36,7 +36,7 @@ export const concessaoSchema = z
 export const perfilSchema = z
   .object({
     ...envelope,
-    perfilId: z.string().uuid(),
+    perfilId: z.string().guid(),
     nome: z.string().trim().min(1).max(120),
     ativo: z.boolean(),
   })
@@ -44,8 +44,8 @@ export const perfilSchema = z
 export const vinculoSchema = z
   .object({
     ...envelope,
-    usuarioId: z.string().uuid(),
-    perfilId: z.string().uuid(),
+    usuarioId: z.string().guid(),
+    perfilId: z.string().guid(),
     ativo: z.boolean(),
   })
   .strict();

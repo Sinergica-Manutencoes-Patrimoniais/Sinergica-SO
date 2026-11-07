@@ -2,7 +2,7 @@ import { z } from "zod";
 import { portalDecisaoOrcamentoSchema } from "@sinergica/shared";
 import { supabase } from "../../../lib/supabase-client";
 
-const proposta = z.object({ id: z.string().uuid(), ordem_servico_id: z.string().uuid(),
+const proposta = z.object({ id: z.string().guid(), ordem_servico_id: z.string().guid(),
   status: z.enum(["enviada", "aceita", "recusada"]), versao: z.number().int().positive(),
   valido_ate: z.string().nullable(), payload: z.object({ proposta: z.object({
     tipo: z.string().optional(), escopo: z.string().optional(), preco_centavos: z.number().int().safe().optional(),
@@ -40,8 +40,8 @@ export async function obterDetalheOperacional(clienteId: string, osId: string, p
   const requisicao=import.meta.env.VITE_SSO_PROPOSTAS_PORTAL_MEDIADAS_ENABLED==="true"?supabase.schema("comercial").rpc("sso_portal_detalhe_operacional_mediado",{...parametros,p_ator_id:userId}):supabase.schema("comercial").rpc("sso_portal_detalhe_operacional",parametros);
   const { data, error } = await requisicao;
   if (error) throw error;
-  const r = z.object({ propostaId: z.string().uuid(), versao: z.number().int().positive(),
-    ordemServicoId: z.string().uuid(), payload: proposta.shape.payload }).strict().parse(data);
+  const r = z.object({ propostaId: z.string().guid(), versao: z.number().int().positive(),
+    ordemServicoId: z.string().guid(), payload: proposta.shape.payload }).strict().parse(data);
   if (r.propostaId !== propostaId || r.ordemServicoId !== osId || r.versao !== versao) throw new Error("Resposta inválida.");
   return r.payload;
 }
@@ -52,8 +52,8 @@ export async function obterVersaoOperacional(clienteId: string, osId: string, pr
     : supabase.schema("comercial").rpc("sso_portal_versao_operacional",parametros);
   const { data, error } = await requisicao;
   if (error) throw error;
-  const r = z.object({ propostaId: z.string().uuid(), versao: z.number().int().positive(),
-    ordemServicoId: z.string().uuid(), payload: proposta.shape.payload }).strict().parse(data);
+  const r = z.object({ propostaId: z.string().guid(), versao: z.number().int().positive(),
+    ordemServicoId: z.string().guid(), payload: proposta.shape.payload }).strict().parse(data);
   if (r.propostaId !== propostaId || r.ordemServicoId !== osId || r.versao !== versao) throw new Error("Resposta inválida.");
   return r.payload;
 }

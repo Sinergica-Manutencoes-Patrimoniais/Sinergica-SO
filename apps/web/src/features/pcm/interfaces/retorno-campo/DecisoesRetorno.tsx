@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; revision: number; decisao: "devolver" | "reabrir"; motivo: string };
-const respostaDecisao = z.object({ requestId: z.string().uuid(), retornoId: z.string().uuid(), decisaoId: z.string().uuid(), revision: z.number().int().positive() }).strict();
-const itemHistorico = z.object({ revisao: z.number().int().positive(), decisao: z.string(), motivo: z.string().nullable(), ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict();
+const respostaDecisao = z.object({ requestId: z.string().guid(), retornoId: z.string().guid(), decisaoId: z.string().guid(), revision: z.number().int().positive() }).strict();
+const itemHistorico = z.object({ revisao: z.number().int().positive(), decisao: z.string(), motivo: z.string().nullable(), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict();
 
 export function DecisoesRetorno(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId])} {...props} />; }
 function Conteudo({ userId, clienteId, retornoId }: { userId: string; clienteId: string; retornoId: string }) {

@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid=z.string().uuid();
+const uuid=z.string().guid();
 const pedidoSchema=z.object({requestId:uuid,clienteId:uuid,visitaId:uuid,osId:uuid,tentativaId:uuid,fence:z.number().int().safe().nonnegative(),motivo:z.string().trim().min(1).max(2000)}).strict();
 const previaSchema=z.object({tentativaId:uuid,visitaId:uuid,osId:uuid,estado:z.enum(["aguardando","reservado","iniciado","incerto","reconciliacao","confirmado","bloqueado","cancelado"]),fence:z.number().int().safe().nonnegative(),efeitoRemotoComprovado:z.literal(false)}).strict();
 const reciboSchema=z.object({requestId:uuid,tentativaId:uuid,fence:z.number().int().safe().positive(),estado:z.enum(["cancelado","incerto"]),efeitoRemotoComprovado:z.literal(false)}).strict();

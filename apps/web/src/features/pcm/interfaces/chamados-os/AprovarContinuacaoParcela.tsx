@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { chamadosOsQueryKeys } from "../../application/chamados-os-queries";
 
-const id=z.string().uuid();
+const id=z.string().guid();
 const fotoSchema=z.object({clienteId:id,chamadoId:id,revision:z.number().int().safe().positive(),parcelaId:id,propostaId:id,
   propostaSha256:z.string().regex(/^[a-f0-9]{64}$/),osAnteriorId:id,osAtualizadaEm:z.string().datetime({offset:true}),
   descricaoRestante:z.string().min(1).max(4000),minutosRestantes:z.number().int().positive(),execucaoComprovada:z.literal(false)}).strict();

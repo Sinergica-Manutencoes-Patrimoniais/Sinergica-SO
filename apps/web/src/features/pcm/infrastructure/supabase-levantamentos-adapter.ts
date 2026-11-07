@@ -7,42 +7,42 @@ import {
 
 const respostaRecepcaoSchema = z
   .object({
-    aggregateId: z.string().uuid(),
+    aggregateId: z.string().guid(),
     revision: z.number().int().positive(),
     state: z.literal("pendente"),
     created: z.boolean(),
     linkedIds: z.object({}).strict(),
     warnings: z.array(z.string()),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
   })
   .strict();
 
 const incorporacaoSchema = z.object({
-  aggregateId: z.string().uuid(),
+  aggregateId: z.string().guid(),
   revision: z.number().int().positive(),
   state: z.literal("pendente"),
   created: z.literal(true),
-  linkedIds: z.object({ entidadeId: z.string().uuid(), tipo: z.enum(["area", "local", "sublocal"]) }).strict(),
+  linkedIds: z.object({ entidadeId: z.string().guid(), tipo: z.enum(["area", "local", "sublocal"]) }).strict(),
   warnings: z.array(z.string()),
-  requestId: z.string().uuid(),
+  requestId: z.string().guid(),
 }).strict();
 
 export const pedidoAtivoSchema = z.object({
-  requestId: z.string().uuid(), loteId: z.string().uuid(), chave: z.string().min(1).max(200),
+  requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200),
   revisao: z.number().int().positive(), tipo: z.enum(["sistema", "equipamento", "componente", "grupo_quantitativo"]),
-  localId: z.string().uuid(), categoriaId: z.string().uuid().nullable(), sistemaId: z.string().uuid().nullable(),
-  parentId: z.string().uuid().nullable(), codigo: z.string().max(200).nullable(),
+  localId: z.string().guid(), categoriaId: z.string().guid().nullable(), sistemaId: z.string().guid().nullable(),
+  parentId: z.string().guid().nullable(), codigo: z.string().max(200).nullable(),
   quantidade: z.number().int().positive().safe().nullable(), codigoRevision: z.number().int().nonnegative(),
 }).strict();
 export type PedidoAtivo = z.infer<typeof pedidoAtivoSchema>;
 const respostaAtivoSchema = incorporacaoSchema.extend({ linkedIds: z.object({
-  entidadeId: z.string().uuid(), tipo: pedidoAtivoSchema.shape.tipo,
+  entidadeId: z.string().guid(), tipo: pedidoAtivoSchema.shape.tipo,
 }).strict() });
 
 const lotesSchema = z.array(
   z
     .object({
-      id: z.string().uuid(),
+      id: z.string().guid(),
       origem: z.enum(["planilha", "auvo", "campo", "manual"]),
       chave_origem: z.string(),
       revisao: z.number().int().positive(),
@@ -86,7 +86,7 @@ function validarLimite(limite: number) {
 // Sem rollout: recepção depende de 0320 e revisão integrada de autorização.
 export const supabaseLevantamentosAdapter = {
   async consultarLoteRecebido(usuario: string, clienteId: string, loteId: string, signal?: AbortSignal) {
-    z.string().uuid().parse(usuario); z.string().uuid().parse(clienteId); z.string().uuid().parse(loteId);
+    z.string().guid().parse(usuario); z.string().guid().parse(clienteId); z.string().guid().parse(loteId);
     const antes = await supabase.auth.getUser();
     if (antes.error || antes.data.user?.id !== usuario || signal?.aborted) throw new Error("Sessão alterada.");
     let consulta = supabase.schema("pcm").rpc("sso_consultar_lote_recebido", {p_ator_id: usuario,p_cliente_id: clienteId,p_lote_id: loteId});
@@ -160,7 +160,7 @@ export const supabaseLevantamentosAdapter = {
       p_chave_origem: pedido.chaveOrigem, p_linhas: pedido.linhas,
     });
     if (error) throw error;
-    const reserva = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), criaLote: z.literal(false) }).strict().parse(data);
+    const reserva = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), criaLote: z.literal(false) }).strict().parse(data);
     if (reserva.clienteId !== clienteId) throw new Error("Reserva divergente.");
     return reserva.requestId;
   },
@@ -172,8 +172,8 @@ export const supabaseLevantamentosAdapter = {
     });
     if (error) throw error;
     const resposta = z.discriminatedUnion("estado", [
-      z.object({ estado: z.literal("cancelado"), requestId: z.string().uuid() }).strict(),
-      z.object({ estado: z.literal("recebido"), requestId: z.string().uuid(), resultado: respostaRecepcaoSchema }).strict(),
+      z.object({ estado: z.literal("cancelado"), requestId: z.string().guid() }).strict(),
+      z.object({ estado: z.literal("recebido"), requestId: z.string().guid(), resultado: respostaRecepcaoSchema }).strict(),
     ]).parse(data);
     if (resposta.requestId !== pedido.requestId || (resposta.estado === "recebido" && resposta.resultado.requestId !== pedido.requestId)) throw new Error("Resposta divergente.");
     return resposta;

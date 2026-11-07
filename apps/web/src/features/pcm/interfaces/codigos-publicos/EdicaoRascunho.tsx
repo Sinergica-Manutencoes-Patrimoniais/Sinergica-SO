@@ -6,7 +6,7 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 
 const cicloSchema = z.array(z.object({ revisao: z.number().int().positive(), codigo: z.string().nullable(),
   aprovado_em: z.string().nullable(), sincronizado_em: z.string().nullable(), etiquetado_em: z.string().nullable(), referenciado_os_em: z.string().nullable() }).strict()).length(1);
-const pedidoSchema = z.object({ requestId: z.string().uuid(), tipo: z.enum(["sistema", "componente"]), ativoId: z.string().uuid(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), tipo: z.enum(["sistema", "componente"]), ativoId: z.string().guid(),
   revision: z.number().int().positive(), anterior: z.string().nullable(), novo: z.string().min(1).max(200).regex(/^\S+$/) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; tipo: "sistema" | "componente"; ativoId: string; onAtualizado?: () => void };
@@ -34,7 +34,7 @@ function Conteudo({ userId, clienteId, tipo, ativoId, onAtualizado }: Props) {
     const { data, error } = await supabase.schema("pcm").rpc("sso_mediar_edicao_codigo_rascunho", { p_cliente_id: clienteId, p_request_id: p.requestId, p_tipo: p.tipo,
       p_ativo_id: p.ativoId, p_expected_revision: p.revision, p_codigo_anterior: p.anterior, p_codigo_novo: p.novo });
     if (error) throw error;
-    const resposta = z.object({ ativoId: z.string().uuid(), tipo: z.enum(["sistema","componente"]), codigoAtual: z.string(), revision: z.number().int(), requestId: z.string().uuid() }).strict().parse(data);
+    const resposta = z.object({ ativoId: z.string().guid(), tipo: z.enum(["sistema","componente"]), codigoAtual: z.string(), revision: z.number().int(), requestId: z.string().guid() }).strict().parse(data);
     if (resposta.ativoId !== p.ativoId || resposta.tipo !== p.tipo || resposta.codigoAtual !== p.novo || resposta.revision !== p.revision+1 || resposta.requestId !== p.requestId) throw new Error("Resposta divergente");
     const depois = await supabase.auth.getUser();
     if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");

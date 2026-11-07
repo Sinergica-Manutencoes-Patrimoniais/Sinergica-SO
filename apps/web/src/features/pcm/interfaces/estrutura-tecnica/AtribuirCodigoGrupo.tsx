@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), grupoId: z.string().uuid(), codigo: z.string().min(1).max(200).regex(/^[^\s]+$/) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), grupoId: z.string().guid(), codigo: z.string().min(1).max(200).regex(/^[^\s]+$/) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 
 export function AtribuirCodigoGrupo({ userId, clienteId, grupoId }: { userId: string; clienteId: string; grupoId: string }) {
@@ -33,7 +33,7 @@ function Conteudo({ userId, clienteId, grupoId }: { userId: string; clienteId: s
     if (!montado.current || antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_atribuir_codigo_grupo", { p_request_id: p.requestId, p_cliente_id: clienteId, p_grupo_id: grupoId, p_codigo: p.codigo });
     if (error) throw error;
-    if (!data || data.requestId !== p.requestId || data.clienteId !== clienteId || data.grupoId !== grupoId || data.codigo !== p.codigo || !z.string().uuid().safeParse(data.codigoId).success) throw new Error("Resposta inválida.");
+    if (!data || data.requestId !== p.requestId || data.clienteId !== clienteId || data.grupoId !== grupoId || data.codigo !== p.codigo || !z.string().guid().safeParse(data.codigoId).success) throw new Error("Resposta inválida.");
     const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }, onSuccess: async (_data, p) => {
     try {

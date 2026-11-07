@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema = z.object({ requestId: z.string().uuid(), declaracaoId: z.string().uuid(), quantidade: z.number().int().min(1).max(999999),
+const schema = z.object({ requestId: z.string().guid(), declaracaoId: z.string().guid(), quantidade: z.number().int().min(1).max(999999),
   preco: z.number().int().min(0).max(1000000000000), competencia: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/) }).strict();
 type Pedido = z.infer<typeof schema>;
 export function ReconhecerLinhaMaterial({ usuario, cliente, declaracaoId }: { usuario: string; cliente: string; declaracaoId: string }) {
@@ -14,7 +14,7 @@ export function ReconhecerLinhaMaterial({ usuario, cliente, declaracaoId }: { us
   const [aviso, setAviso] = useState(""); const enviando = useRef(false);
   const comando = useMutation({ mutationFn: async (p: Pedido) => { const { data, error } = await supabase.schema("financeiro").rpc("sso_reconhecer_linha_material", {
     p_request_id: p.requestId, p_cliente_id: cliente, p_declaracao_id: p.declaracaoId, p_quantidade: p.quantidade, p_preco_unitario: p.preco, p_competencia: p.competencia });
-    if (error) throw error; return z.string().uuid().parse(data);
+    if (error) throw error; return z.string().guid().parse(data);
   }, onSuccess: async (_r, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas tentativa local não foi limpa. Consulte suporte."); return; }
     setPendente(null); setAviso("Candidato pendente criado; nenhuma cobrança foi criada."); await cache.invalidateQueries({ queryKey: ["faturaveis", usuario, cliente] });

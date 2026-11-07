@@ -6,14 +6,14 @@ import type { VisitaResumo } from "../../application/visitas-gateway";
 import { supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-adapter";
 
 const pedidoSchema = z.object({
-  requestId: z.string().uuid(), intencaoId: z.string().uuid(), novoVinculoId: z.string().uuid(),
+  requestId: z.string().guid(), intencaoId: z.string().guid(), novoVinculoId: z.string().guid(),
   clienteId: z.string().min(1), origemId: z.string().min(1), destinoId: z.string().min(1), vinculoId: z.string().min(1),
   revisaoOrigem: z.number().int().safe().positive(), revisaoDestino: z.number().int().safe().positive(),
   sequencia: z.number().int().safe().positive(), motivo: z.string().trim().min(1).max(2000),
   tarefaEsperada: z.string().regex(/^[1-9][0-9]{0,18}$/),
-  material: z.object({listaId:z.string().uuid(),eventoRevisao:z.number().int().safe().min(2)}).strict().optional(),
+  material: z.object({listaId:z.string().guid(),eventoRevisao:z.number().int().safe().min(2)}).strict().optional(),
 }).strict().refine((p) => p.origemId !== p.destinoId);
-const excecaoSchema=z.object({lista_id:z.string().uuid(),revisao:z.number().int().min(2),motivo:z.string(),descricao:z.string(),revisao_linhas:z.number().int().nullable(),posicao:z.number().int().nullable(),ator_id:z.string().uuid(),criado_em:z.string().datetime({offset:true})}).strict();
+const excecaoSchema=z.object({lista_id:z.string().guid(),revisao:z.number().int().min(2),motivo:z.string(),descricao:z.string(),revisao_linhas:z.number().int().nullable(),posicao:z.number().int().nullable(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 
 /** Operação local; reconciliação da tarefa externa permanece pendente. */
@@ -94,9 +94,9 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
         p_ator_id: userId, p_cliente_id: clienteId, p_os_id: osId, p_antes: null, p_limite: 1,
       }).abortSignal(signal);
       if (error) throw error;
-      const eventos = z.array(z.object({ revisao: z.number().int().positive(), lista_id: z.string().uuid(),
+      const eventos = z.array(z.object({ revisao: z.number().int().positive(), lista_id: z.string().guid(),
         evento_revision: z.number().int().min(2), estado: z.enum(["suspenso", "retomado"]), motivo: z.string(),
-        ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict()).max(1).parse(data);
+        ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict()).max(1).parse(data);
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       return eventos[0] ?? null;

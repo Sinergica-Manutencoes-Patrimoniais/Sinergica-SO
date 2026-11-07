@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid=z.string().uuid();
+const uuid=z.string().guid();
 const pedido=z.object({ator:uuid,cliente:uuid,os:uuid,requestId:uuid,lista:uuid,evento:z.number().int().min(2),revision:z.number().int().nonnegative(),estado:z.enum(["suspenso","retomado"]),motivo:z.string().trim().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof pedido>;
 const evento=z.object({revisao:z.number().int().positive(),lista_id:uuid,evento_revision:z.number().int().min(2),estado:z.enum(["suspenso","retomado"]),motivo:z.string(),ator_id:uuid,criado_em:z.string()}).strict();

@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     clienteId: z.string().min(1),
     disponibilidadeId: z.string().min(1),
     intervaloId: z.string().min(1),

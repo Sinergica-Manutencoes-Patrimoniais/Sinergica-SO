@@ -3,8 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const previa = z.object({ outboxId: z.string().uuid(), epoca: z.string().uuid(), revisao: z.string().regex(/^\d+$/), situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();
-const comparacao = z.object({ outboxId: z.string().uuid(), equivalente: z.boolean(), situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();
+const previa = z.object({ outboxId: z.string().guid(), epoca: z.string().guid(), revisao: z.string().regex(/^\d+$/), situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();
+const comparacao = z.object({ outboxId: z.string().guid(), equivalente: z.boolean(), situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();
 type Previa = z.infer<typeof previa>;
 export function RevisaoLateralFila({ userId, clienteId, outboxId }: { userId: string; clienteId: string; outboxId: string }) {
   const [captura, setCaptura] = useState<Previa | null>(null);

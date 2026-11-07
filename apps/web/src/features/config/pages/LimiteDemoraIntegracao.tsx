@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const pedido = z.object({ atorId: z.string().uuid(), requestId: z.string().uuid(), expectedRevision: z.number().int().nonnegative(),
+const pedido = z.object({ atorId: z.string().guid(), requestId: z.string().guid(), expectedRevision: z.number().int().nonnegative(),
   limiteMinutos: z.number().int().min(1).max(10080), motivo: z.string().trim().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function LimiteDemoraIntegracao({ userId }: { userId: string }) {
@@ -24,7 +24,7 @@ export function LimiteDemoraIntegracao({ userId }: { userId: string }) {
     try { await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
       const { data, error } = await supabase.schema("pcm").rpc("sso_configurar_limite_demora", { p_ator_id: p.atorId, p_request_id: p.requestId,
         p_expected_revision: p.expectedRevision, p_limite_minutos: p.limiteMinutos, p_motivo: p.motivo }); if (error) throw error;
-      const r = z.object({ requestId: z.string().uuid(), revision: z.number().int().positive(), limiteMinutos: z.number().int().min(1).max(10080),
+      const r = z.object({ requestId: z.string().guid(), revision: z.number().int().positive(), limiteMinutos: z.number().int().min(1).max(10080),
         observacaoAtivada: z.boolean(), jobAlterado: z.literal(false) }).strict().parse(data);
       if (r.requestId !== p.requestId || r.revision !== p.expectedRevision + 1 || r.limiteMinutos !== p.limiteMinutos) throw new Error("Recibo divergente");
       await conferirAtor(); await cache.invalidateQueries({ queryKey: ["config-limite-demora", userId] }); await conferirAtor();

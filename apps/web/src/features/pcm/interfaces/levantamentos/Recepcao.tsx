@@ -57,7 +57,7 @@ export function Recepcao({
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
   const chaveCancelamento = `sso-cancelamento-recepcao:${JSON.stringify([userId, clienteId])}`;
-  const cancelamentoSchema = z.object({ requestId: z.string().uuid(), motivo: z.string().min(1).max(2000) }).strict();
+  const cancelamentoSchema = z.object({ requestId: z.string().guid(), motivo: z.string().min(1).max(2000) }).strict();
   const [cancelamento, setCancelamento] = useState<z.infer<typeof cancelamentoSchema> | "invalido" | null>(() => {
     try { const salvo = sessionStorage.getItem(chaveCancelamento); return salvo === null ? null : cancelamentoSchema.parse(JSON.parse(salvo)); }
     catch { return "invalido"; }

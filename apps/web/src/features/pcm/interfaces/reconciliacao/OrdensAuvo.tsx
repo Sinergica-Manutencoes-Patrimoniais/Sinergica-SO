@@ -15,7 +15,7 @@ import { ConflitosPropriedadeOs } from "./ConflitosPropriedadeOs";
 
 type Ordem = { id:string; numero:string; status_operacional:string; status_sync:string | null; auvo_task_id:string | null; atualizado_em:string; classificacao:string };
 type Pedido = { requestId:string; clienteId:string; osId:string; atualizadoEm:string; sync:string | null; taskId:string | null; nota:string };
-const pedidoSchema = z.object({ requestId:z.string().uuid(), clienteId:z.string().uuid(), osId:z.string().uuid(), atualizadoEm:z.string().refine((v) => Number.isFinite(Date.parse(v))), sync:z.string().nullable(), taskId:z.string().nullable(), nota:z.string().trim().min(1).max(1000) }).strict();
+const pedidoSchema = z.object({ requestId:z.string().guid(), clienteId:z.string().guid(), osId:z.string().guid(), atualizadoEm:z.string().refine((v) => Number.isFinite(Date.parse(v))), sync:z.string().nullable(), taskId:z.string().nullable(), nota:z.string().trim().min(1).max(1000) }).strict();
 
 export function OrdensAuvo({ userId,clienteId,onAbrirOs }: {userId:string;clienteId:string;onAbrirOs?: (osId:string)=>void}) {
   return <Conteudo key={JSON.stringify([userId,clienteId])} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />;
@@ -44,7 +44,7 @@ function Conteudo({ userId,clienteId,onAbrirOs }: {userId:string;clienteId:strin
       const {data,error}=await supabase.schema("pcm").rpc("sso_listar_notas_os_reconciliacao",{
       p_cliente_id:clienteId,p_os_id:selecionado,p_apos:pageParam?.data ?? null,p_apos_id:pageParam?.id ?? null,p_limite:50}).abortSignal(signal);
       if(error) throw error;
-      const pagina=z.array(z.object({request_id:z.string().uuid(),ator_id:z.string().uuid(),nota:z.string().min(1).max(1000),versao_observada:z.string().refine((v)=>Number.isFinite(Date.parse(v))),sync_observado:z.string().nullable(),task_observada:z.string().nullable(),criado_em:z.string().refine((v)=>Number.isFinite(Date.parse(v)))}).strict()).max(50).parse(data);
+      const pagina=z.array(z.object({request_id:z.string().guid(),ator_id:z.string().guid(),nota:z.string().min(1).max(1000),versao_observada:z.string().refine((v)=>Number.isFinite(Date.parse(v))),sync_observado:z.string().nullable(),task_observada:z.string().nullable(),criado_em:z.string().refine((v)=>Number.isFinite(Date.parse(v)))}).strict()).max(50).parse(data);
       const ids=new Set<string>();
       let instanteAnterior=pageParam ? Date.parse(pageParam.data) : -Infinity;
       for(const n of pagina) {

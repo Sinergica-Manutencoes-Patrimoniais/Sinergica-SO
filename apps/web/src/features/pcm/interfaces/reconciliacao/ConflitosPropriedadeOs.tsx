@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { ConfirmarRetornoPropriedadeOs } from "./ConfirmarRetornoPropriedadeOs";
 import { IniciarObservacaoNovoCliente } from "./IniciarObservacaoNovoCliente";
 
-const itemSchema = z.object({ os_id: z.string().uuid(), numero: z.string(), revisao: z.number().int().positive(),
+const itemSchema = z.object({ os_id: z.string().guid(), numero: z.string(), revisao: z.number().int().positive(),
   situacao: z.enum(["retorno_observado_conferir", "retorno_confirmado", "divergencia_observada", "observacao_atual_iniciada"]),
   observado_em: z.string().datetime({ offset: true }), observacao_revisao: z.number().int().positive().nullable().optional() }).strict();
 export function ConflitosPropriedadeOs({ userId, clienteId, onAbrirOs }: {

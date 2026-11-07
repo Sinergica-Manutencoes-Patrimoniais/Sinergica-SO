@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Base={userId:string;clienteId:string};
 type Props=Base&{grupoId:string;nome:string;revisao:number;ativo:boolean;disponivel:boolean};
-const pedidoSchema=z.object({requestId:z.string().uuid(),userId:z.string().uuid(),clienteId:z.string().uuid(),grupoId:z.string().uuid(),revision:z.number().int().positive(),ativo:z.boolean(),motivo:z.string().min(1).max(2000)}).strict();
-const linhaSchema=z.object({id:z.string().uuid(),nome:z.string(),revisao:z.number().int().positive(),local_id:z.string().uuid()}).strict();
+const pedidoSchema=z.object({requestId:z.string().guid(),userId:z.string().guid(),clienteId:z.string().guid(),grupoId:z.string().guid(),revision:z.number().int().positive(),ativo:z.boolean(),motivo:z.string().min(1).max(2000)}).strict();
+const linhaSchema=z.object({id:z.string().guid(),nome:z.string(),revisao:z.number().int().positive(),local_id:z.string().guid()}).strict();
 export function EstadoGrupo(p:Props){if(import.meta.env.VITE_SSO_ESTADO_GRUPO_ENABLED!=="true")return null;return <Comando key={JSON.stringify([p.userId,p.clienteId,p.grupoId])} {...p}/>;}
 function Comando(p:Props){
  const key=`sso-estado-grupo:${JSON.stringify([p.userId,p.clienteId,p.grupoId])}`;
@@ -15,7 +15,7 @@ function Comando(p:Props){
  async function enviar(v:z.infer<typeof pedidoSchema>){if(trava.current||!p.disponivel)return;trava.current=true;setOcupado(true);setAviso("");try{
   const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==p.userId)throw new Error("sessao_alterada"); if (sessionStorage.getItem(key) !== JSON.stringify(v)) throw new Error("tentativa_alterada");
   const {data,error}=await supabase.schema("pcm").rpc("sso_alterar_estado_grupo",{p_request_id:v.requestId,p_grupo_id:v.grupoId,p_expected_revision:v.revision,p_ativo:v.ativo,p_motivo:v.motivo});if(error)throw error;
-  const r=z.object({aggregateId:z.string().uuid(),revision:z.number().int().positive(),requestId:z.string().uuid(),ativo:z.boolean()}).strict().parse(data);
+  const r=z.object({aggregateId:z.string().guid(),revision:z.number().int().positive(),requestId:z.string().guid(),ativo:z.boolean()}).strict().parse(data);
   if(r.aggregateId!==v.grupoId||r.requestId!==v.requestId||r.revision!==v.revision+1||r.ativo!==v.ativo)throw new Error("resposta_divergente");
   const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==p.userId||!montado.current||sessionStorage.getItem(key)!==JSON.stringify(v))throw new Error("sessao_alterada");
   sessionStorage.removeItem(key);setPendente(null);setAberto(false);setAviso("Estado atualizado; a programação deve ser conferida.");

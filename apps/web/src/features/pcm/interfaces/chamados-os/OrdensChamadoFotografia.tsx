@@ -5,8 +5,8 @@ import { chamadosOsQueryKeys } from "../../application/chamados-os-queries";
 import { resumirProgressoChamado } from "../../domain/progresso-chamado";
 import { MateriaisDaOrdem } from "./MateriaisDaOrdem";
 
-const paginaSchema = z.object({ clienteId: z.string().uuid(), chamadoId: z.string().uuid(), total: z.number().int().min(0).max(10000),
-  assinatura: z.string().regex(/^[a-f0-9]{64}$/), itens: z.array(z.object({ id: z.string().uuid(), numero: z.string().max(1000),
+const paginaSchema = z.object({ clienteId: z.string().guid(), chamadoId: z.string().guid(), total: z.number().int().min(0).max(10000),
+  assinatura: z.string().regex(/^[a-f0-9]{64}$/), itens: z.array(z.object({ id: z.string().guid(), numero: z.string().max(1000),
     titulo: z.string().max(10000), status: z.string().max(200) }).strict()).max(20) }).strict();
 type Cursor = { apos: string | null; assinatura: string | null; total: number | null; recebidos: number };
 

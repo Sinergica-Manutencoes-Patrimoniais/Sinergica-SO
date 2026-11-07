@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const item = z.object({ id: z.string().uuid(), tipo: z.enum(["visita", "pendencia"]), os_id: z.string().uuid(), publicado_em: z.string(), descricao: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), tipo: z.enum(["visita", "pendencia"]), os_id: z.string().guid(), publicado_em: z.string(), descricao: z.string() }).strict();
 export function DetalheComunicacao({ userId, clienteId, publicacaoId, tipo }: { userId: string; clienteId: string; publicacaoId: string; tipo: "visita" | "pendencia" }) {
   const [aberto, setAberto] = useState(false);
   const consulta = useQuery({ queryKey: ["portal-comunicacao", userId, clienteId, tipo, publicacaoId], enabled: aberto,

@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), pendenciaId: z.string().uuid(), revisao: z.number().int().positive(), alvo: z.string().min(1).max(200), descricao: z.string().min(1).max(1000) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), pendenciaId: z.string().guid(), revisao: z.number().int().positive(), alvo: z.string().min(1).max(200), descricao: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function PublicarPendenciaPortal({ userId, clienteId, pendenciaId, revisao }: { userId: string; clienteId: string; pendenciaId: string; revisao: number }) {
   const chave = `sso-publicar-pendencia:${JSON.stringify([userId, clienteId, pendenciaId, revisao])}`;
@@ -20,7 +20,7 @@ export function PublicarPendenciaPortal({ userId, clienteId, pendenciaId, revisa
     await conferirSessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_publicar_pendencia_portal_mediada", { p_ator_id: userId, p_cliente_id: clienteId, p_request_id: pedido.requestId,
       p_pendencia_id: pedido.pendenciaId, p_revisao: pedido.revisao, p_alvo: pedido.alvo, p_descricao: pedido.descricao });
-    if (error) throw error; const id = z.string().uuid().parse(data); await conferirSessao(); return id;
+    if (error) throw error; const id = z.string().guid().parse(data); await conferirSessao(); return id;
   }, onSuccess: async (_id, pedido) => {
     try { await conferirSessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas a tentativa local não foi limpa. Consulte o histórico."); return; }

@@ -11,7 +11,7 @@ type Pedido = {
   revisao: number;
   observacao: string;
 };
-const pedidoSchema = z.object({ requestId: z.string().uuid(), loteId: z.string().uuid(), chave: z.string().min(1).max(200),
+const pedidoSchema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200),
   revisao: z.number().int().positive(), observacao: z.string().trim().min(1).max(2000) }).strict();
 
 /** Anotação de conferência não equivale à aprovação nem incorpora cadastros. */

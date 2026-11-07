@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { useState } from "react";
 import { HistoricoDemora } from "./HistoricoDemora";
 
-const item = z.object({ outbox_id: z.string().uuid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().uuid(),
+const item = z.object({ outbox_id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
   estado: z.enum(["inicio_desconhecido", "tempo_excedido_observado", "processamento_encerrado_na_fonte", "novo_processamento_observado"]),
   iniciado_em: z.string().datetime({ offset: true }).nullable(), limite_minutos: z.number().int().min(1).max(10080),
   revisao: z.number().int().positive(), atualizado_em: z.string().datetime({ offset: true }) }).strict();

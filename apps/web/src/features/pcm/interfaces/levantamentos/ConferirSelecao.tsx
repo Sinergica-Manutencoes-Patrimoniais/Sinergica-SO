@@ -5,8 +5,8 @@ import { supabase } from "../../../../lib/supabase-client";
 
 type Linha = { chave: string; tipo: string; atributos: Record<string, unknown> };
 type Props = { userId: string; clienteId: string; loteId: string; revisao: number; linhas: Linha[]; carregando: boolean };
-const itemSchema = z.object({ chave: z.string().min(1).max(200), atributos: z.record(z.string(), z.unknown()), requestId: z.string().uuid() }).strict();
-const pedidoSchema = z.object({ loteId: z.string().uuid(), revision: z.number().int().positive(), itens: z.array(itemSchema).min(1).max(50), proximo: z.number().int().nonnegative() }).strict().refine(p => p.proximo <= p.itens.length);
+const itemSchema = z.object({ chave: z.string().min(1).max(200), atributos: z.record(z.string(), z.unknown()), requestId: z.string().guid() }).strict();
+const pedidoSchema = z.object({ loteId: z.string().guid(), revision: z.number().int().positive(), itens: z.array(itemSchema).min(1).max(50), proximo: z.number().int().nonnegative() }).strict().refine(p => p.proximo <= p.itens.length);
 type Pedido = z.infer<typeof pedidoSchema>;
 type Selecionada = { chave: string; tipo: string; atributos: Record<string, unknown>; revision: number };
 export function ConferirSelecao(props: Props) {
@@ -26,7 +26,7 @@ function Conteudo({ userId, clienteId, loteId, revisao, linhas, carregando }: Pr
         await conferirSessao(); if (sessionStorage.getItem(key) !== JSON.stringify(atual)) throw new Error("Tentativa local divergente");
         const item = atual.itens[atual.proximo]; if (!item) throw new Error("Item ausente"); const esperada = atual.revision + atual.proximo;
         const { data, error } = await supabase.schema("pcm").rpc("sso_conferir_linha_autorizada", { p_request_id: item.requestId, p_lote_id: loteId, p_expected_revision: esperada, p_chave: item.chave, p_atributos: item.atributos }); if (error) throw error;
-        const r = z.object({ loteId: z.string().uuid(), chave: z.string(), revision: z.number().int().positive(), requestId: z.string().uuid() }).strict().parse(data);
+        const r = z.object({ loteId: z.string().guid(), chave: z.string(), revision: z.number().int().positive(), requestId: z.string().guid() }).strict().parse(data);
         if (r.loteId !== loteId || r.chave !== item.chave || r.revision !== esperada + 1 || r.requestId !== item.requestId) throw new Error("Resposta divergente");
         await conferirSessao(); const proximo = pedidoSchema.parse({ ...atual, proximo: atual.proximo + 1 }); if (sessionStorage.getItem(key) !== JSON.stringify(atual)) throw new Error("Tentativa divergente");
         sessionStorage.setItem(key, JSON.stringify(proximo)); atual = proximo; setPendente(proximo);

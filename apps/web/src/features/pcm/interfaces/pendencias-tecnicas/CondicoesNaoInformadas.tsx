@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 type Alvo = { alvo_tipo: string; alvo_id: string; alvo_nome: string | null };
 type Props = { userId: string; clienteId: string; alvos: Alvo[] };
-const linha = z.object({ pendencia_id: z.string().uuid(), alvo_tipo: z.string(), alvo_id: z.string().uuid(), pergunta: z.string(), revisao: z.number().int().positive(), situacao_contexto: z.enum(["sem_contexto_registrado", "condicao_nao_informada"]) }).strict();
+const linha = z.object({ pendencia_id: z.string().guid(), alvo_tipo: z.string(), alvo_id: z.string().guid(), pergunta: z.string(), revisao: z.number().int().positive(), situacao_contexto: z.enum(["sem_contexto_registrado", "condicao_nao_informada"]) }).strict();
 export function CondicoesNaoInformadas(props: Props) {
   if (import.meta.env.VITE_SSO_CONDICAO_NAO_INFORMADA_ENABLED !== "true") return null;
   return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props} />;

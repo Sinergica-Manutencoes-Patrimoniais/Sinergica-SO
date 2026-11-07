@@ -4,10 +4,10 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { VisibilidadeOrcamento } from "./VisibilidadeOrcamento";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), propostaId: z.string().uuid(), versao: z.number().int().positive(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(),
   estadoEsperado: z.enum(["rascunho", "em_revisao", "aprovada"]), acao: z.enum(["revisar", "aprovar", "publicar"]),
   escopoPublico: z.string().max(4000).nullable(), descricaoPublica: z.string().max(1000).nullable(),
-  itensPublicos: z.array(z.object({ id: z.string().uuid(), descricao: z.string().min(1).max(1000), quantidade: z.number().int().positive().max(999999), precoUnitarioCentavos: z.number().int().min(0).max(1000000000000) }).strict()).min(1).max(100).optional() }).strict()
+  itensPublicos: z.array(z.object({ id: z.string().guid(), descricao: z.string().min(1).max(1000), quantidade: z.number().int().positive().max(999999), precoUnitarioCentavos: z.number().int().min(0).max(1000000000000) }).strict()).min(1).max(100).optional() }).strict()
   .refine((p) => p.acao === "publicar" ? !!p.escopoPublico?.trim() && !!p.descricaoPublica?.trim()
     : p.escopoPublico === null && p.descricaoPublica === null);
 type Pedido = z.infer<typeof pedidoSchema>;
@@ -49,7 +49,7 @@ function Conteudo({ usuario, cliente, ordemServico, propostaId, versao, status }
       const { data, error } = await supabase.schema("comercial").rpc("sso_diagnosticar_fonte_retificada", {
         p_ator_id: usuario, p_cliente_id: cliente, p_proposta_id: propostaId, p_versao: versao,
       }).abortSignal(signal); if (error) throw error;
-      const r = z.object({ clienteId: z.string().uuid(), propostaId: z.string().uuid(), versao: z.number().int().positive(),
+      const r = z.object({ clienteId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(),
         estado: z.enum(["sem_fotografia", "fonte_retificada", "sem_retificacao_observada"]) }).strict().parse(data);
       const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== usuario || signal.aborted || r.clienteId !== cliente || r.propostaId !== propostaId || r.versao !== versao) throw new Error("Contexto divergente");
       return r;

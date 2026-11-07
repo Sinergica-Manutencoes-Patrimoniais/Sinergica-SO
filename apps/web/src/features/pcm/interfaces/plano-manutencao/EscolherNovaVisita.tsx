@@ -6,9 +6,9 @@ import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { comparacaoImpactoArmazenadaSchema, type ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
 
 type Props = { userId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; comparacao: ComparacaoImpacto };
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string(), planoId: z.string(), rascunhoId: z.string().uuid(), preparadaId: z.string().uuid(), planoRevision: z.number().int().positive(), decisaoRevision: z.number().int().nonnegative(), visita: z.string().uuid(), data: z.string().date(), fonte: z.string().trim().min(1).max(500), motivo: z.string().trim().min(1).max(2000), comparacao: comparacaoImpactoArmazenadaSchema }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string(), planoId: z.string(), rascunhoId: z.string().guid(), preparadaId: z.string().guid(), planoRevision: z.number().int().positive(), decisaoRevision: z.number().int().nonnegative(), visita: z.string().guid(), data: z.string().date(), fonte: z.string().trim().min(1).max(500), motivo: z.string().trim().min(1).max(2000), comparacao: comparacaoImpactoArmazenadaSchema }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-const candidatoSchema = z.object({ visita_id: z.string().uuid(), vencimento: z.string().date(), serie_id: z.string().uuid(), semana_origem: z.string().date() }).strict();
+const candidatoSchema = z.object({ visita_id: z.string().guid(), vencimento: z.string().date(), serie_id: z.string().guid(), semana_origem: z.string().date() }).strict();
 export function EscolherNovaVisita(props: Props) {
  if (import.meta.env.VITE_SSO_NOVA_DATA_VISITA_ENABLED !== "true") return null;
  return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.rascunhoId,props.preparadaId,props.decisaoRevision])} {...props} />;

@@ -17,7 +17,7 @@ function Lista({ userId, clienteId, grupoId }: Props) {
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_listar_fotos_verificadas_grupo", { p_ator_id: userId, p_cliente_id: clienteId, p_grupo_id: grupoId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal);
       if (error) throw error;
-      const pagina = z.array(z.object({ id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
+      const pagina = z.array(z.object({ id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       return pagina;

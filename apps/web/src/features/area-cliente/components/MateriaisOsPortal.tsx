@@ -125,7 +125,7 @@ function ClassificacaoExcecao({ userId, clienteId, osId, listaId, revisao }: { u
         p_ator_id: userId, p_cliente_id: clienteId, p_os_id: osId, p_lista_id: listaId, p_revisao: revisao,
       }).abortSignal(signal);
       if (error) throw error;
-      const resultado = z.object({ listaId: z.string().uuid(), revisao: z.number().int().positive(),
+      const resultado = z.object({ listaId: z.string().guid(), revisao: z.number().int().positive(),
         classificacao: z.enum(["faltante", "parcial", "errado", "novo_levantamento", "nao_classificada"]).nullable() }).strict().parse(data);
       if (resultado.listaId.toLowerCase() !== listaId.toLowerCase() || resultado.revisao !== revisao) throw new Error("Lista divergente.");
       const depois = await supabase.auth.getUser();

@@ -3,9 +3,9 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const previa = z.object({ osId: z.string().uuid(), ocorrenciaLegadaId: z.string().uuid(), ocorrenciaPreparadaId: z.string().uuid(), planoId: z.string().uuid(),
-  versaoId: z.string().uuid(), rotinaId: z.string().uuid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().uuid() }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), visitaId: z.string().uuid(), osId: z.string().uuid(), revisaoVisita: z.number().int().positive(),
+const previa = z.object({ osId: z.string().guid(), ocorrenciaLegadaId: z.string().guid(), ocorrenciaPreparadaId: z.string().guid(), planoId: z.string().guid(),
+  versaoId: z.string().guid(), rotinaId: z.string().guid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().guid() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), visitaId: z.string().guid(), osId: z.string().guid(), revisaoVisita: z.number().int().positive(),
   revisaoVinculo: z.number().int().positive(), previa }).strict(); type Pedido = z.infer<typeof pedido>;
 export function RevalidarVinculoConteudo({ userId, clienteId, visitaId, osId, revisao, bloqueado }: { userId: string; clienteId: string; visitaId: string; osId: string; revisao: number; bloqueado: boolean }) {
   const chave = `sso-revalidar-vinculo:${JSON.stringify([userId, clienteId, visitaId, osId, revisao])}`;
@@ -24,7 +24,7 @@ export function RevalidarVinculoConteudo({ userId, clienteId, visitaId, osId, re
     } });
   const comando = useMutation({ mutationFn: async (p: Pedido) => { const { data, error } = await supabase.schema("pcm").rpc("sso_revalidar_vinculo_os_conteudo", {
     p_request_id: p.requestId, p_cliente_id: clienteId, p_visita_id: p.visitaId, p_os_id: p.osId, p_revisao_visita: p.revisaoVisita, p_revisao_vinculo: p.revisaoVinculo, p_previa: p.previa });
-    if (error) throw error; const r = z.object({ requestId: z.string().uuid(), osId: z.string().uuid(), revisaoVinculo: z.number().int().positive(), state: z.literal("vinculo_conferido_sem_envio") }).strict().parse(data);
+    if (error) throw error; const r = z.object({ requestId: z.string().guid(), osId: z.string().guid(), revisaoVinculo: z.number().int().positive(), state: z.literal("vinculo_conferido_sem_envio") }).strict().parse(data);
     if (r.requestId !== p.requestId || r.osId !== osId || r.revisaoVinculo !== p.revisaoVinculo) throw new Error("Resposta divergente");
   }, onSuccess: (_r, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Conferência registrada, mas tentativa local não foi limpa. Consulte suporte."); return; }

@@ -8,7 +8,7 @@ import { planoManutencaoKeys } from "../../application/plano-manutencao-queries"
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const pedidoSchema = z.object({
   requestId: id, atorId: id, origemClienteId: id, origemPlanoId: id, origemRevision: z.number().int().positive(),
   origemVersaoId: id, origemRotinaId: id, destinoClienteId: id, destinoPlanoId: id,

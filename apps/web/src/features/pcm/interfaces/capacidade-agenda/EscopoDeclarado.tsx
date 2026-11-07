@@ -10,7 +10,7 @@ import {
 
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     clienteId: z.string().min(1),
     osId: z.string().min(1),
     revision: z.number().int().nonnegative(),

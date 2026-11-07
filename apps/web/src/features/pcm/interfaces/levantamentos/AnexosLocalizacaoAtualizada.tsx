@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props = { userId: string; clienteId: string; tipo: "area" | "local" | "sublocal"; entidadeId: string };
-const item = z.object({ id: z.string().uuid(), tipo_anexo: z.enum(["foto", "documento"]), criado_em: z.string().datetime({ offset: true }) }).strict();
+const item = z.object({ id: z.string().guid(), tipo_anexo: z.enum(["foto", "documento"]), criado_em: z.string().datetime({ offset: true }) }).strict();
 export function AnexosLocalizacaoAtualizada(props: Props) { if (import.meta.env.VITE_SSO_ACESSO_ANEXO_LOCALIZACAO_ENABLED !== "true") return null; return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.entidadeId])} {...props}/>; }
 function Abrir(props: Props) { const [aberto, setAberto] = useState(false); return <section><button type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar anexos temporários" : "Ver anexos temporários"}</button>{aberto && <Conteudo {...props}/>}</section>; }
 function Conteudo({ userId, clienteId, tipo, entidadeId }: Props) {

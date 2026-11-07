@@ -7,7 +7,7 @@ import { PreventivasLegadasLocal } from "./PreventivasLegadasLocal";
 type Props = { userId: string; clienteId: string; localId: string; itemId: string };
 const ativo = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     nome: z.string(),
     tipo: z.enum(["equipamento", "componente"]),
     identificador: z.string().nullable(),
@@ -17,7 +17,7 @@ const ativo = z
   .strict();
 const os = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     numero: z.string(),
     categoria: z.string().nullable(),
     status: z.string().nullable(),

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { CriarOsGrupo } from "./CriarOsGrupo";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, ocorrenciaId: uuid, tipo: z.enum(["intencao", "decisao"]), titulo: z.string().max(200), motivo: z.string().trim().min(1).max(2000), intencaoId: z.string(), osId: z.string() }).strict().superRefine((p, ctx) => {
   if (p.tipo === "intencao" ? !p.titulo.trim() || !!p.intencaoId || !!p.osId : !uuid.safeParse(p.intencaoId).success || !uuid.safeParse(p.osId).success) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tentativa inválida." });
 });

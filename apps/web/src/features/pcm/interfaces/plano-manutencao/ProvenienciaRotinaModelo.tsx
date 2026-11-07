@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const base = { planoId: id, versaoId: id, rotinaId: id };
 const respostaSchema = z.union([
   z.object({ ...base, copiada: z.literal(false) }).strict(),

@@ -3,7 +3,7 @@ import { supabase } from "../../../lib/supabase-client";
 
 const referencia = z.string().min(1).max(200).regex(/^[A-Za-z0-9_.:-]+$/);
 export const pedidoEvidenciaSchema = z.object({
-  requestId: z.string().uuid(), clienteId: z.string().uuid(), onda: z.number().int().min(1).max(6),
+  requestId: z.string().guid(), clienteId: z.string().guid(), onda: z.number().int().min(1).max(6),
   expectedRevision: z.number().int().nonnegative(), cenario: z.string().regex(/^CT-(00[1-9]|0[12][0-9]|030)$/),
   versao: z.string().trim().min(1).max(120), ambiente: z.string().trim().min(1).max(120),
   executadoEm: z.string().datetime({ offset: true }), resultado: z.enum(["passou", "falhou", "bloqueado"]),
@@ -21,8 +21,8 @@ export async function registrarEvidenciaOnda(entrada: PedidoEvidencia) {
     p_resultado: p.resultado, p_identificadores: p.identificadores, p_artefatos: p.artefatos, p_ressalva: p.ressalva,
   });
   if (error) throw error;
-  const resposta = z.object({ id: z.string().uuid(), clienteId: z.string().uuid(), onda: z.number().int(),
-    revision: z.number().int().positive(), requestId: z.string().uuid() }).strict().parse(data);
+  const resposta = z.object({ id: z.string().guid(), clienteId: z.string().guid(), onda: z.number().int(),
+    revision: z.number().int().positive(), requestId: z.string().guid() }).strict().parse(data);
   if (resposta.clienteId !== p.clienteId || resposta.onda !== p.onda || resposta.requestId !== p.requestId || resposta.revision !== p.expectedRevision + 1) {
     throw new Error("Confirmação de evidência divergente.");
   }

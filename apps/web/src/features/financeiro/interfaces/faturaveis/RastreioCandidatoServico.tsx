@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const resposta = z.object({ clienteId: uuid, itemId: uuid, fatoId: uuid, declaracaoId: uuid, snapshotId: uuid, osId: uuid,
   propostaId: uuid, versao: z.number().int().positive(), linhaId: uuid, revisaoPcmId: uuid,
   execucaoFisicaComprovada: z.literal(false), exclusividadeComprovada: z.literal(false), autorizaFaturamento: z.literal(false) }).strict();

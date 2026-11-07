@@ -209,8 +209,8 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     const comando = validar(chave, payload, id);
     const recibo = z
       .object({
-        requestId: z.string().uuid(),
-        aggregateId: z.string().uuid(),
+        requestId: z.string().guid(),
+        aggregateId: z.string().guid(),
         revision: z.number().int().positive(),
         state: z.boolean(),
         created: z.boolean(),

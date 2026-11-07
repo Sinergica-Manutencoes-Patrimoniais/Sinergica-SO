@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { ComandosCicloDevolucao } from "./ComandosCicloDevolucao";
 import { ContinuacoesParcelaCiclo } from "./ContinuacoesParcelaCiclo";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const revisao = z.number().int().positive().nullable();
 export const candidatoDevolucaoSchema = z.object({ pendencia_id: id, parcela_id: id, chamado_id: id, situacao: z.string(), ciclo_id: id.nullable(),
   ciclo_estado: z.enum(["em_tratamento", "devolvido", "concluido"]).nullable(), ciclo_revisao: revisao,

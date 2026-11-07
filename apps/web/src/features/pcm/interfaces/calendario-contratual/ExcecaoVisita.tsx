@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const pedidoSchema = z.object({ requestId: uuid, ator: uuid, cliente: uuid, visita: uuid, revisao: z.number().int().positive(), data: dataCivil, origem: z.string().trim().min(1).max(500), natureza: z.string().trim().min(1).max(200), motivo: z.string().trim().min(1).max(2000), tentativaIncerta: z.boolean().optional() }).strict();
 const estadoSchema = z.object({ visitaId: uuid, aprovada: z.boolean(), revisaoAtual: z.number().int().positive(), dataAtual: dataCivil, requestId: uuid.optional(), revisaoVisita: z.number().int().positive().optional(), data: dataCivil.optional(), origem: z.string().optional(), natureza: z.string().optional(), motivo: z.string().optional(), atorId: uuid.optional(), aprovadaEm: z.string().optional() }).strict();

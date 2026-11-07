@@ -5,8 +5,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import type { DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
 import { HistoricoTecnicoDespesa } from "./HistoricoTecnicoDespesa";
 
-export const esquemaAtribuicaoTecnico = z.object({ requestId: z.string().uuid(), despesaId: z.string().uuid(), visitaId: z.string().uuid(),
-  expectedRevision: z.number().int().positive(), participacaoId: z.string().uuid().nullable(), motivo: z.string().trim().min(1).max(2000) }).strict();
+export const esquemaAtribuicaoTecnico = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
+  expectedRevision: z.number().int().positive(), participacaoId: z.string().guid().nullable(), motivo: z.string().trim().min(1).max(2000) }).strict();
 const esquema = esquemaAtribuicaoTecnico;
 type Pedido = z.infer<typeof esquema>;
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
@@ -32,12 +32,12 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
       const parametros={p_cliente_id:clienteId,p_visita_id:visitaId,p_apos:pageParam};
       const requisicao=mediado?supabase.schema("pcm").rpc("sso_tecnicos_despesa_visita_mediado",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_tecnicos_despesa_visita",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
-      if (error) throw error; const pagina=z.array(z.object({ id: z.string().uuid(), nome: z.string() }).strict()).max(20).parse(data);let anterior=pageParam?.toLowerCase()??"";
+      if (error) throw error; const pagina=z.array(z.object({ id: z.string().guid(), nome: z.string() }).strict()).max(20).parse(data);let anterior=pageParam?.toLowerCase()??"";
       for(const item of pagina){const id=item.id.toLowerCase();if(id<=anterior)throw new Error("Página divergente.");anterior=id;}await conferirSessao(signal);return pagina;
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.id : undefined });
   const atual = useQuery({ queryKey: ["despesas-visita", userId, clienteId, visitaId, despesa.id, "tecnico"], gcTime: 0, retry: false,
     queryFn: async ({ signal }) => { await conferirSessao(signal);const requisicao=mediado?supabase.schema("pcm").rpc("sso_atribuicao_tecnico_despesa_mediada",{p_ator_id:userId,p_cliente_id:clienteId,p_visita_id:visitaId,p_despesa_id:despesa.id}):supabase.schema("pcm").rpc("sso_atribuicao_tecnico_despesa",{p_despesa_id:despesa.id});const { data, error } = await requisicao.abortSignal(signal);
-      if (error) throw error; const resultado=z.array(z.object({ participacao_id: z.string().uuid().nullable(), tecnico_nome: z.string().nullable(),
+      if (error) throw error; const resultado=z.array(z.object({ participacao_id: z.string().guid().nullable(), tecnico_nome: z.string().nullable(),
         vigente: z.boolean().nullable(), revisao: z.number().int().positive() }).strict()).max(1).parse(data)[0] ?? null;await conferirSessao(signal);return resultado; } });
   const enviar = useMutation({ mutationFn: async (p: Pedido) => {
     await conferirSessao();if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa alterada.");

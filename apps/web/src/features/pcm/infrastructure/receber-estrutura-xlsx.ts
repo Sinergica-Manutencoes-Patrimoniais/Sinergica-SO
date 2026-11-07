@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const tentativaSchema = z.object({ requestId: uuid, origem: z.string().min(1).max(200), aba: z.string().min(1).max(31),
   sha256: z.string().regex(/^[a-f0-9]{64}$/), anteriores: z.array(uuid).max(32).optional() }).strict();
 const recuperacaoSchema = z.discriminatedUnion("estado", [

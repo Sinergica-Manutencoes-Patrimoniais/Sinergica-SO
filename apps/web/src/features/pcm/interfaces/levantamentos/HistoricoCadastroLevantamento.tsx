@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props = { userId: string; clienteId: string; tipo: "area" | "local" | "sublocal" | "sistema" | "equipamento" | "componente" | "grupo_quantitativo"; entidadeId: string };
-const evento = z.object({ request_id: z.string().uuid(), lote_id: z.string().uuid(), linha_chave: z.string(), revisao_lote: z.number().int().positive(), operacao: z.string(), motivo: z.string().nullable(), ator_id: z.string().uuid(), ocorrido_em: z.string().datetime({ offset: true }) }).strict();
+const evento = z.object({ request_id: z.string().guid(), lote_id: z.string().guid(), linha_chave: z.string(), revisao_lote: z.number().int().positive(), operacao: z.string(), motivo: z.string().nullable(), ator_id: z.string().guid(), ocorrido_em: z.string().datetime({ offset: true }) }).strict();
 export function HistoricoCadastroLevantamento(props: Props) { if (import.meta.env.VITE_SSO_HISTORICO_CADASTRO_LOTES_ENABLED !== "true") return null; return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.entidadeId])} {...props}/>; }
 function Abrir(props: Props) { const [aberto, setAberto] = useState(false); return <section><button type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar histórico de levantamento" : "Ver histórico de levantamento"}</button>{aberto && <Conteudo {...props}/>}</section>; }
 function Conteudo({ userId, clienteId, tipo, entidadeId }: Props) {

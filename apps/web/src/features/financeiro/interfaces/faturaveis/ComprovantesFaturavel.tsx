@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const item = z.object({ id: z.string().uuid(), revisao: z.number().int().positive(), criado_em: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), revisao: z.number().int().positive(), criado_em: z.string() }).strict();
 export function ComprovantesFaturavel({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
   const [aberto, setAberto] = useState(false); const [revisao, setRevisao] = useState(""); const cache = useQueryClient();
   const chave = ["comprovantes-faturavel", usuario, cliente, itemId];

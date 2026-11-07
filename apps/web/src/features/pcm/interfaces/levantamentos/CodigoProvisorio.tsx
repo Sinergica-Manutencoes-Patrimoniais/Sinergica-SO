@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), loteId: z.string().uuid(), chave: z.string().min(1).max(200),
+const pedidoSchema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200),
   loteRevision: z.number().int().positive(), revision: z.number().int().nonnegative(), codigo: z.string().min(1).max(200).regex(/^\S+$/) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
@@ -26,7 +26,7 @@ function Conteudo({ userId,clienteId,loteId,chave,revisao }: Props) {
       if(error) throw error; return z.array(z.object({codigo:z.string(),revisao:z.number().int().positive()}).strict()).max(1).parse(data)[0] ?? null; }});
   const envio=useMutation({mutationFn:async(p:Pedido)=>{
     const {data,error}=await supabase.schema("pcm").rpc("sso_salvar_codigo_autorizado",{p_request_id:p.requestId,p_lote_id:p.loteId,p_chave:p.chave,p_lote_revisao:p.loteRevision,p_revisao:p.revision,p_codigo:p.codigo});
-    if(error) throw error; const r=z.object({loteId:z.string().uuid(),chave:z.string(),revision:z.number().int(),codigo:z.string(),requestId:z.string().uuid()}).strict().parse(data);
+    if(error) throw error; const r=z.object({loteId:z.string().guid(),chave:z.string(),revision:z.number().int(),codigo:z.string(),requestId:z.string().guid()}).strict().parse(data);
     if(r.loteId!==p.loteId || r.chave!==p.chave || r.revision!==p.revision+1 || r.codigo!==p.codigo || r.requestId!==p.requestId) throw new Error("Resposta divergente");
   },onSuccess:async(_r,p)=>{try{if(sessionStorage.getItem(storageKey)!==JSON.stringify(p)) throw new Error("Tentativa divergente");sessionStorage.removeItem(storageKey);}catch{setAviso("Código salvo; tentativa local não foi limpa. Consulte suporte.");return;}
     setPendente(null);setCodigo("");setAviso("Candidato salvo em staging; esta ação não reserva nem incorpora o código.");await client.invalidateQueries({queryKey:["levantamentos",userId,clienteId,loteId,chave]});await client.invalidateQueries({queryKey:["levantamentos",userId,clienteId,"lotes"]});

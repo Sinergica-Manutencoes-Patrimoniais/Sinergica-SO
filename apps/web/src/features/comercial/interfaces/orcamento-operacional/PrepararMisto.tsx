@@ -7,7 +7,7 @@ import { HistoricoComposicaoMista } from "./HistoricoComposicaoMista";
 import { CorrelacionarGasto } from "./CorrelacionarGasto";
 import { centavosParaEntradaReais, valorReaisParaCentavos } from "../../domain/valor-em-reais";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const aquisicaoSchema = z.object({ id: uuid, lista_revisao: z.number().int().positive(), tipo: z.enum(["material", "retirada_exclusiva"]),
   descricao: z.string().min(1).max(1000), valor_centavos: z.number().int().safe().nonnegative().max(1_000_000_000_000),
   criado_em: z.string().datetime({ offset: true }) }).strict();

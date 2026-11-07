@@ -6,8 +6,8 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 import { FinalizarOsValidada } from "./FinalizarOsValidada";
 import { AprovarFinalizarAtomico } from "./AprovarFinalizarAtomico";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; justificativa: string };
-const respostaAprovacao = z.object({ retornoId: z.string().uuid(), condicaoEvidenciaId: z.string().uuid(), decisaoId: z.string().uuid(), revision: z.number().int().positive(), pendenciasProcessadas: z.number().int().nonnegative(), osEncerrada: z.literal(false), conteudoAutenticado: z.literal(false), requestId: z.string().uuid() }).strict();
-const historicoSchema = z.object({request_id:z.string().uuid(),condicao_evidencia_id:z.string().uuid(),decisao_id:z.string().uuid(),revisao_decisao:z.number().int().positive(),justificativa:z.string(),ator_id:z.string().uuid(),criado_em:z.string().datetime({offset:true})}).strict();
+const respostaAprovacao = z.object({ retornoId: z.string().guid(), condicaoEvidenciaId: z.string().guid(), decisaoId: z.string().guid(), revision: z.number().int().positive(), pendenciasProcessadas: z.number().int().nonnegative(), osEncerrada: z.literal(false), conteudoAutenticado: z.literal(false), requestId: z.string().guid() }).strict();
+const historicoSchema = z.object({request_id:z.string().guid(),condicao_evidencia_id:z.string().guid(),decisao_id:z.string().guid(),revisao_decisao:z.number().int().positive(),justificativa:z.string(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
 
 export function AprovarRetornoPcm(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.conferenciaId])} {...props} />; }
 function Conteudo({ userId, clienteId, retornoId, conferenciaId, evidencias, decisao, historicoCompleto }: { userId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; historicoCompleto: boolean }) {

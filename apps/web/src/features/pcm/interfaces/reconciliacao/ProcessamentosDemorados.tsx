@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DemorasObservadas } from "./DemorasObservadas";
 
-const linha = z.object({ outbox_id: z.string().uuid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().uuid(),
+const linha = z.object({ outbox_id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
   iniciado_em: z.string().datetime({ offset: true }).nullable(), classificacao: z.enum(["inicio_desconhecido", "tempo_excedido_observado"]),
   observado_em: z.string().datetime({ offset: true }) }).strict();
 export function ProcessamentosDemorados({ userId, clienteId }: { userId: string; clienteId: string }) {

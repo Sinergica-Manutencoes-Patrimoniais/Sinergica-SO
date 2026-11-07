@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const resposta = z.object({ outboxId: z.string().uuid(), estadoFila: z.enum(["pending", "processing", "error", "sent"]),
+const resposta = z.object({ outboxId: z.string().guid(), estadoFila: z.enum(["pending", "processing", "error", "sent"]),
   processamentoIniciadoEm: z.string().datetime({ offset: true }).nullable(), observadoEm: z.string().datetime({ offset: true }),
   estadoRemoto: z.literal("desconhecido"), autorizaRetry: z.literal(false) }).strict();
 

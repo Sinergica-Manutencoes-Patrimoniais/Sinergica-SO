@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const item = z.object({ tipo: z.enum(["mo", "material", "veiculo", "outro"]), descricao: z.string().trim().min(1).max(2000), nivel_id: uuid.nullable(), material_id: uuid.nullable(), quantidade: z.number().finite().nonnegative().max(99999999.99), custo_unitario_centavos: z.number().int().nonnegative().safe().max(999999999999) }).strict();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, propostaId: uuid, versao: z.number().int().positive(), snapshot: z.string().regex(/^[0-9a-f]{32}$/), itens: z.array(item).max(100), preco: z.number().int().nonnegative().safe(), motivo: z.string().trim().min(1).max(2000) }).strict();
 const previaSchema = z.object({ clienteId: uuid, propostaId: uuid, versao: z.number().int().positive(), status: z.string(), precoCentavos: z.number().int().nonnegative().safe(), snapshot: z.string().regex(/^[0-9a-f]{32}$/), itens: z.array(z.object({ id: uuid, tipo: item.shape.tipo, descricao: z.string(), nivelId: uuid.nullable(), materialId: uuid.nullable(), quantidade: z.number().nonnegative().finite(), custoUnitarioCentavos: z.number().int().nonnegative().safe() }).strict()).max(100) }).strict();

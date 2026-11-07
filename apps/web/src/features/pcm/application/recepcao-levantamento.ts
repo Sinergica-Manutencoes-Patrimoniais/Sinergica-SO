@@ -31,7 +31,7 @@ const dadosSchema = z
     linhas: z.array(linhaSchema).min(1).max(1000),
   })
   .strict();
-const pedidoSchema = dadosSchema.extend({ requestId: z.string().uuid() }).strict();
+const pedidoSchema = dadosSchema.extend({ requestId: z.string().guid() }).strict();
 export type RecepcaoLevantamento = z.infer<typeof pedidoSchema>;
 export function validarRecepcaoLevantamento(valor: unknown): RecepcaoLevantamento {
   return pedidoSchema.parse(valor);

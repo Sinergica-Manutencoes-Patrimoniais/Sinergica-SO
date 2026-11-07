@@ -32,7 +32,7 @@ function serializarDados(valor: z.infer<typeof dados>): string {
   if (new TextEncoder().encode(texto).length > limiteTexto) throw new Error("Limite de tamanho excedido.");
   return texto;
 }
-export const pedidoRecepcaoEnvelope = dados.extend({ requestId: z.string().uuid(), clienteId: z.string().uuid(), osId: z.string().uuid(), envelopeId: z.string().uuid() }).strict();
+export const pedidoRecepcaoEnvelope = dados.extend({ requestId: z.string().guid(), clienteId: z.string().guid(), osId: z.string().guid(), envelopeId: z.string().guid() }).strict();
 const pedido = pedidoRecepcaoEnvelope;
 type Pedido = z.infer<typeof pedido>;
 type Props = { userId: string; clienteId: string; envelopeId: string; osId: string; disponivel: boolean };
@@ -85,7 +85,7 @@ function Conteudo({ userId, clienteId, envelopeId, osId, disponivel }: Props) {
         p_request_id: p.requestId, p_linhas: p.linhas, p_fotos: p.fotos,
       });
       if (error) throw error;
-      const r = z.object({ requestId: z.string().uuid(), envelopeId: z.string().uuid(), loteId: z.string().uuid(), estado: z.literal("pendente"), origemComprovada: z.literal(false), fotosImportadas: z.literal(false), cadastrosIncorporados: z.literal(false) }).strict().parse(data);
+      const r = z.object({ requestId: z.string().guid(), envelopeId: z.string().guid(), loteId: z.string().guid(), estado: z.literal("pendente"), origemComprovada: z.literal(false), fotosImportadas: z.literal(false), cadastrosIncorporados: z.literal(false) }).strict().parse(data);
       if (r.requestId !== p.requestId || r.envelopeId !== p.envelopeId) throw new Error("Recibo divergente.");
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");

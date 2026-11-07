@@ -3,8 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const esquema = z.object({ requestId: z.string().uuid(), conferenciaId: z.string().uuid(), estornoId: z.string().uuid(),
-  saidaId: z.string().uuid(), referencia: z.string().trim().min(1).max(200), motivo: z.string().trim().min(1).max(2000) }).strict();
+const esquema = z.object({ requestId: z.string().guid(), conferenciaId: z.string().guid(), estornoId: z.string().guid(),
+  saidaId: z.string().guid(), referencia: z.string().trim().min(1).max(200), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof esquema>;
 export function ConferirEstornos(props: { usuario: string; cliente: string }) {
   if (import.meta.env.VITE_SSO_CONFERIR_ESTORNO_ENABLED !== "true") return null;
@@ -26,7 +26,7 @@ function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
     initialPageParam: null as string | null, queryFn: async ({ pageParam, signal }) => {
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");
       const { data, error } = await supabase.schema("financeiro").rpc("sso_estornos_para_conferencia", { p_cliente_id: cliente, p_apos: pageParam }).abortSignal(signal);
-      if (error) throw error; const pagina=z.array(z.object({ id: z.string().uuid(), item_id: z.string().uuid(),
+      if (error) throw error; const pagina=z.array(z.object({ id: z.string().guid(), item_id: z.string().guid(),
         valor_centavos: z.number().int().positive().safe(), criado_em: z.string() }).strict()).max(20).parse(data);
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return pagina;
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.id : undefined });
@@ -34,7 +34,7 @@ function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
     enabled: !!estorno, initialPageParam: null as string | null, queryFn: async ({ pageParam, signal }) => {
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");
       const { data, error } = await supabase.schema("financeiro").rpc("sso_saidas_para_conferencia", { p_estorno_id: estorno, p_apos: pageParam }).abortSignal(signal);
-      if (error) throw error; const pagina=z.array(z.object({ id: z.string().uuid(), descricao: z.string().nullable(),
+      if (error) throw error; const pagina=z.array(z.object({ id: z.string().guid(), descricao: z.string().nullable(),
         valor_centavos: z.number().int().positive().safe(), competencia: z.string(), pagamento: z.string().nullable() }).strict()).max(20).parse(data);
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return pagina;
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.id : undefined });

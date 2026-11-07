@@ -7,14 +7,14 @@ import { supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-ad
 import { TriagemIntencoes } from "./TriagemIntencoes";
 import { TransferirOsEnviada } from "./TransferirOsEnviada";
 
-const pedidoSchema=z.object({requestId:z.string().uuid(),intencaoId:z.string().uuid(),clienteId:z.string().uuid(),origemId:z.string().uuid(),destinoId:z.string().uuid(),vinculoId:z.string().uuid(),
+const pedidoSchema=z.object({requestId:z.string().guid(),intencaoId:z.string().guid(),clienteId:z.string().guid(),origemId:z.string().guid(),destinoId:z.string().guid(),vinculoId:z.string().guid(),
   revisaoOrigem:z.number().int().positive().safe(),revisaoDestino:z.number().int().positive().safe(),motivo:z.string().trim().min(1).max(2000),
-  material:z.object({listaId:z.string().uuid(),eventoRevisao:z.number().int().min(2).safe()}).strict().optional()}).strict()
+  material:z.object({listaId:z.string().guid(),eventoRevisao:z.number().int().min(2).safe()}).strict().optional()}).strict()
   .refine(p=>p.origemId.toLowerCase()!==p.destinoId.toLowerCase());
 type Pedido=z.infer<typeof pedidoSchema>;
-const excecaoSchema=z.object({lista_id:z.string().uuid(),revisao:z.number().int().min(2),motivo:z.string(),descricao:z.string(),revisao_linhas:z.number().int().nullable(),posicao:z.number().int().nullable(),ator_id:z.string().uuid(),criado_em:z.string().datetime({offset:true})}).strict();
-const intencaoSchema=z.object({id:z.string().uuid(),os_id:z.string().uuid(),visita_origem_id:z.string().uuid(),visita_destino_id:z.string().uuid(),tarefa_auvo_id:z.string().min(1),estado:z.string().min(1),criado_em:z.string().datetime({offset:true})}).strict();
-const origemMaterialSchema=z.object({intencaoId:z.string().uuid(),osId:z.string().uuid(),origem:z.object({listaId:z.string().uuid(),eventoRevisao:z.number().int().min(2),registradoEm:z.string().datetime({offset:true}),motivo:z.string().min(1).max(50),descricao:z.string().min(1).max(4000)}).strict().nullable(),excecaoAtualComprovada:z.literal(false).optional()}).strict();
+const excecaoSchema=z.object({lista_id:z.string().guid(),revisao:z.number().int().min(2),motivo:z.string(),descricao:z.string(),revisao_linhas:z.number().int().nullable(),posicao:z.number().int().nullable(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
+const intencaoSchema=z.object({id:z.string().guid(),os_id:z.string().guid(),visita_origem_id:z.string().guid(),visita_destino_id:z.string().guid(),tarefa_auvo_id:z.string().min(1),estado:z.string().min(1),criado_em:z.string().datetime({offset:true})}).strict();
+const origemMaterialSchema=z.object({intencaoId:z.string().guid(),osId:z.string().guid(),origem:z.object({listaId:z.string().guid(),eventoRevisao:z.number().int().min(2),registradoEm:z.string().datetime({offset:true}),motivo:z.string().min(1).max(50),descricao:z.string().min(1).max(4000)}).strict().nullable(),excecaoAtualComprovada:z.literal(false).optional()}).strict();
 type Props = {userId:string;clienteId:string;visitas:VisitaResumo[];bloqueado:boolean};
 export function IntencaoOsEnviada(props: Props) {
   return <IntencaoOsEnviadaInterna key={JSON.stringify([props.userId, props.clienteId])} {...props} />;

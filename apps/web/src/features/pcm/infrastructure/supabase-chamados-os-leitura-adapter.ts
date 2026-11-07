@@ -4,7 +4,7 @@ import { supabase } from "../../../lib/supabase-client";
 const ordensSchema = z.array(
   z
     .object({
-      id: z.string().uuid(),
+      id: z.string().guid(),
       numero: z.string(),
       titulo: z.string(),
       status: z.string(),

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { VisitasGateway } from "./visitas-gateway";
 
-const identificador = z.string().uuid();
+const identificador = z.string().guid();
 const contextoSchema = z.object({ usuarioId: identificador, clienteId: identificador, visitaId: identificador }).strict();
 const inteiro = z.number().int().nonnegative().max(2147483647);
 const base = { requestId: identificador, expectedRevision: inteiro.min(1), visitaId: identificador };

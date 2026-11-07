@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ConferirGrupoFila } from "./ConferirGrupoFila";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ ciclo_id: uuid, preparada_id: uuid, estado: z.enum(["aguardando", "verificacao", "cancelado"]),
   revisao: z.number().int().positive(), vencimento: z.string().date(), atualizado_em: z.string().datetime({ offset: true }), situacao_atual: z.enum(["conferida", "verificacao", "cancelada"]).optional() }).strict();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, planoId: uuid, preparadaId: uuid, contextoPreparadaId: uuid.optional(),

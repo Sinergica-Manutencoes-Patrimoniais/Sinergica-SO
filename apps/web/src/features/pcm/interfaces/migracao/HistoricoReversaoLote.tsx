@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const linha = z.object({ request_id: id, ator_id: id, motivo: z.string().min(1).max(2000),
   criado_em: z.string().datetime({ offset: true }), revertidos: z.number().int().nonnegative().max(20), pendentes: z.number().int().nonnegative().max(20),
   itens: z.array(z.object({ planoId: id, revisao: z.number().int().positive(), estado: z.enum(["revertido_logicamente", "pendente_reconciliacao"]) }).strict()).min(1).max(20) }).strict();

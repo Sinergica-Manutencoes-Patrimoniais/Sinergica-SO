@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const linha = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     alvo_tipo: z.enum(["sistema", "componente", "grupo"]),
-    alvo_id: z.string().uuid(),
+    alvo_id: z.string().guid(),
     alvo_nome: z.string().nullable(),
     pergunta: z.string(),
     observacao: z.string().nullable(),

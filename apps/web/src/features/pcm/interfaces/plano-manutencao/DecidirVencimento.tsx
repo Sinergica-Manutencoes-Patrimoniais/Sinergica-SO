@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema=z.object({requestId:z.string().uuid(),decisaoId:z.string().uuid(),planoId:z.string().uuid(),clienteId:z.string().uuid(),revision:z.number().int().positive().safe(),versaoId:z.string().uuid(),rotinaId:z.string().uuid(),ciclo:z.number().int().nonnegative().safe(),vencimento:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),decisao:z.enum(["avaliar","tratar_manualmente"]),motivo:z.string().trim().min(1).max(2000)}).strict();
+const schema=z.object({requestId:z.string().guid(),decisaoId:z.string().guid(),planoId:z.string().guid(),clienteId:z.string().guid(),revision:z.number().int().positive().safe(),versaoId:z.string().guid(),rotinaId:z.string().guid(),ciclo:z.number().int().nonnegative().safe(),vencimento:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),decisao:z.enum(["avaliar","tratar_manualmente"]),motivo:z.string().trim().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;planoId:string;revision:number;versaoId:string;rotinaId:string;ciclo:number;vencimento:string};
 export function DecidirVencimento(props:Props) {
@@ -25,7 +25,7 @@ function Conteudo({userId,clienteId,planoId,revision,versaoId,rotinaId,ciclo,ven
     queryFn:async ({pageParam,signal}) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");const parametros={
       p_plano_id:planoId,p_versao_id:versaoId,p_rotina_id:rotinaId,p_ciclo:ciclo,p_vencimento:vencimento,
       p_apos:pageParam?.data??null,p_apos_id:pageParam?.id??null,p_limite:30};if(import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED!=="true")throw new Error("Consulta mediada indisponível.");const {data,error}=await supabase.schema("pcm").rpc("sso_historico_vencimento_mediado",{...parametros,p_ator_id:userId,p_cliente_id:clienteId}).abortSignal(signal);
-      if(error)throw error;const pagina=z.array(z.object({id:z.string().uuid(),decisao:z.enum(["avaliar","tratar_manualmente"]),motivo:z.string(),ator_id:z.string().uuid(),criado_em:z.string()}).strict()).max(30).parse(data);
+      if(error)throw error;const pagina=z.array(z.object({id:z.string().guid(),decisao:z.enum(["avaliar","tratar_manualmente"]),motivo:z.string(),ator_id:z.string().guid(),criado_em:z.string()}).strict()).max(30).parse(data);
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;},
     getNextPageParam:(pagina) => {const ultima=pagina.at(-1);return pagina.length===30&&ultima ? {data:ultima.criado_em,id:ultima.id} : undefined;}});
   const [pedido,setPedido]=useState<Pedido|"invalido"|null>(() => {try{const salvo=sessionStorage.getItem(chave);if(!salvo)return null;const p=schema.parse(JSON.parse(salvo));

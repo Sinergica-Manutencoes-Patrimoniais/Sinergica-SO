@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
 type Props = { userId: string; clienteId: string };
-const item = z.object({ id: z.string().uuid(), os_id: z.string().uuid(), os_numero: z.string(), inicio_em: z.string(), fim_em: z.string(), mensagem: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), os_id: z.string().guid(), os_numero: z.string(), inicio_em: z.string(), fim_em: z.string(), mensagem: z.string() }).strict();
 export function CalendarioVisitasPortal(props: Props) {
   if (import.meta.env.VITE_SSO_PORTAL_CALENDARIO_VISITAS_ENABLED !== "true") return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props} />;

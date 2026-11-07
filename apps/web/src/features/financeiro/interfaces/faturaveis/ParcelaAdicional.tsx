@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PreviaImpedimentosParcela } from "./PreviaImpedimentosParcela";
 
-const pedido = z.object({ requestId: z.string().uuid(), alocacaoId: z.string().uuid(), cliente: z.string().uuid(), itemId: z.string().uuid(), revisao: z.number().int().positive(), documentoId: z.string().uuid(), valorCentavos: z.number().int().positive().safe() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), alocacaoId: z.string().guid(), cliente: z.string().guid(), itemId: z.string().guid(), revisao: z.number().int().positive(), documentoId: z.string().guid(), valorCentavos: z.number().int().positive().safe() }).strict();
 type Pedido = z.infer<typeof pedido>;
 function explicarFalha(erro: unknown) {
   const codigo = typeof erro === "object" && erro !== null && "code" in erro && typeof erro.code === "string" ? erro.code : "";
@@ -21,7 +21,7 @@ export function ParcelaAdicional({ usuario, cliente, itemId, documentoId, revisa
   const [valor, setValor] = useState(""); const [confirmado, setConfirmado] = useState<string | null>(null); const [mensagem, setMensagem] = useState("");
   const fotografia=JSON.stringify({usuario,cliente,itemId,documentoId,revisao,saldo,valor});
   const comando = useMutation({ mutationFn: async (p: Pedido) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou pedido alterado.");const { data, error } = await supabase.schema("financeiro").rpc("sso_alocar_parcela_adicional", { p_request_id: p.requestId, p_alocacao_id: p.alocacaoId, p_cliente_id: p.cliente, p_item_id: p.itemId, p_expected_revision: p.revisao, p_documento_id: p.documentoId, p_valor_centavos: p.valorCentavos }); if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), aggregateId: z.string().uuid(), revision: z.number().int(), state: z.enum(["parcial", "faturado"]), linkedIds: z.object({ alocacaoId: z.string().uuid(), documentoId: z.string().uuid(), lancamentoId: z.string().uuid() }).passthrough() }).passthrough().parse(data);
+    const r = z.object({ requestId: z.string().guid(), aggregateId: z.string().guid(), revision: z.number().int(), state: z.enum(["parcial", "faturado"]), linkedIds: z.object({ alocacaoId: z.string().guid(), documentoId: z.string().guid(), lancamentoId: z.string().guid() }).passthrough() }).passthrough().parse(data);
     if (r.requestId !== p.requestId || r.aggregateId !== p.itemId || r.revision !== p.revisao + 1 || r.linkedIds.alocacaoId !== p.alocacaoId || r.linkedIds.documentoId !== p.documentoId) throw new Error("Resposta divergente");const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario)throw new Error("Sessão alterada."); } });
   const enviar = async (p: Pedido) => {
     if (travado.current) return;

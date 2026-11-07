@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha=z.object({decisao_id:z.string().uuid(),decisao:z.enum(["aprovado","recusado"]),decisao_em:z.string(),decisao_autor:z.string().uuid().nullable()}).strict();
+const linha=z.object({decisao_id:z.string().guid(),decisao:z.enum(["aprovado","recusado"]),decisao_em:z.string(),decisao_autor:z.string().guid().nullable()}).strict();
 type Props={usuario:string;cliente:string;orcamento:string}&({os:string;requisicao?:never}|{os?:never;requisicao:string});
 export function DecisoesLegadoOs({usuario,cliente,os,requisicao,orcamento}:Props){
  const [aberto,setAberto]=useState(false);

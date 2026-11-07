@@ -2,8 +2,8 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
 export const transferenciaVisitaSchema = z.object({
-  requestId: z.string().uuid(), origemId: z.string().uuid(), destinoId: z.string().uuid(),
-  vinculoId: z.string().uuid(), novoVinculoId: z.string().uuid(),
+  requestId: z.string().guid(), origemId: z.string().guid(), destinoId: z.string().guid(),
+  vinculoId: z.string().guid(), novoVinculoId: z.string().guid(),
   revisaoOrigem: z.number().int().safe().positive(), revisaoDestino: z.number().int().safe().positive(),
   sequencia: z.number().int().safe().positive(), motivo: z.string().trim().min(1).max(2000),
   confirmadas: z.boolean().optional(),
@@ -22,10 +22,10 @@ export const supabaseTransferenciaVisitaAdapter = {
     });
     if (error) throw error;
     const recibo = z.discriminatedUnion("encontrado", [
-      z.object({ encontrado: z.literal(false), requestId: z.string().uuid() }).strict(),
-      z.object({ encontrado: z.literal(true), requestId: z.string().uuid(), resultado: z.object({
-        origemId: z.string().uuid(), destinoId: z.string().uuid(), osId: z.string().uuid(),
-        novoVinculoId: z.string().uuid(), requestId: z.string().uuid(),
+      z.object({ encontrado: z.literal(false), requestId: z.string().guid() }).strict(),
+      z.object({ encontrado: z.literal(true), requestId: z.string().guid(), resultado: z.object({
+        origemId: z.string().guid(), destinoId: z.string().guid(), osId: z.string().guid(),
+        novoVinculoId: z.string().guid(), requestId: z.string().guid(),
         reconfirmacaoNecessaria: z.boolean().optional(),
       }).strict() }).strict(),
     ]).parse(data);
@@ -46,8 +46,8 @@ export const supabaseTransferenciaVisitaAdapter = {
       p_revisao_destino: c.revisaoDestino, p_sequencia: c.sequencia, p_motivo: c.motivo,
     });
     if (error) throw error;
-    const resultado = z.object({ origemId: z.string().uuid(), destinoId: z.string().uuid(), osId: z.string().uuid(),
-      novoVinculoId: z.string().uuid(), requestId: z.string().uuid(), reconfirmacaoNecessaria: z.boolean().optional() }).strict().parse(data);
+    const resultado = z.object({ origemId: z.string().guid(), destinoId: z.string().guid(), osId: z.string().guid(),
+      novoVinculoId: z.string().guid(), requestId: z.string().guid(), reconfirmacaoNecessaria: z.boolean().optional() }).strict().parse(data);
     if (resultado.origemId !== c.origemId || resultado.destinoId !== c.destinoId
       || resultado.novoVinculoId !== c.novoVinculoId || resultado.requestId !== c.requestId)
       throw new Error("Resposta de transferência divergente.");

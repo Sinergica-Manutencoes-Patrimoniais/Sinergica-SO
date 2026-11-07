@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const centavos = z.number().int().nonnegative().safe();
 const revisao = z.number().int().nonnegative().safe();
 const data = z.string().refine((v) => {

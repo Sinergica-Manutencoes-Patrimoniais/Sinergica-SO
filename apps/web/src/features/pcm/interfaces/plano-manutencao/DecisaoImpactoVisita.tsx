@@ -7,8 +7,8 @@ import { EscolherNovaVisita } from "./EscolherNovaVisita";
 import { useComparacaoImpacto, DetalhesComparacaoImpacto, comparacaoImpactoArmazenadaSchema, type ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
 import { supabase } from "../../../../lib/supabase-client";
 const decisaoSchema = z.enum(["manter_sem_alterar", "exige_reconciliacao"]);
-const camposComuns = { preparada_id: z.string().uuid(), rascunho_id: z.string().uuid(), rotina_id: z.string().uuid(), revisao_decisao: z.number().int().nonnegative().safe(), ultima_decisao: decisaoSchema.nullable(), ultima_revisao_plano: z.number().int().positive().safe().nullable() };
-const linhaSchema = z.object({ ...camposComuns, semana_origem: z.string().date(), visita_id: z.string().uuid(), ciclo_canonico_id: z.string().uuid().nullable() }).strict();
+const camposComuns = { preparada_id: z.string().guid(), rascunho_id: z.string().guid(), rotina_id: z.string().guid(), revisao_decisao: z.number().int().nonnegative().safe(), ultima_decisao: decisaoSchema.nullable(), ultima_revisao_plano: z.number().int().positive().safe().nullable() };
+const linhaSchema = z.object({ ...camposComuns, semana_origem: z.string().date(), visita_id: z.string().guid(), ciclo_canonico_id: z.string().guid().nullable() }).strict();
 type Pedido = { requestId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; decisao: "manter_sem_alterar" | "exige_reconciliacao" | "alterar_conteudo"; motivo: string; comparacao?: ComparacaoImpacto };
 
 export function DecisaoImpactoVisita(props: { userId: string; clienteId: string; planoId: string; revision: number }) {

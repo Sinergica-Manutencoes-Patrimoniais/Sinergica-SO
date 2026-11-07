@@ -3,8 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), oportunidadeId: z.string().uuid().nullable(),
-  listaId: z.string().uuid(), listaRevision: z.number().int().positive(), ordemServicoId: z.string().uuid() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), oportunidadeId: z.string().guid().nullable(),
+  listaId: z.string().guid(), listaRevision: z.number().int().positive(), ordemServicoId: z.string().guid() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; listaInicialId?: string };
 export function CriarOrcamento(props: Props) {
@@ -26,7 +26,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
   const oportunidades = useInfiniteQuery({ queryKey: ["orcamento-criacao", usuario, cliente, ordemServico, "oportunidades"], gcTime: 0, initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("comercial").rpc("sso_listar_oportunidades_orcamento", { p_cliente_id: cliente, p_apos: pageParam }).abortSignal(signal);
       if (error) throw error;
-      const pagina=z.array(z.object({ id: z.string().uuid(), titulo: z.string() }).strict()).max(20).parse(data);
+      const pagina=z.array(z.object({ id: z.string().guid(), titulo: z.string() }).strict()).max(20).parse(data);
       let anterior=pageParam?.toLowerCase() ?? null;
       for(const item of pagina){const id=item.id.toLowerCase();if(anterior!==null && id<=anterior)throw new Error("Página inválida.");anterior=id;}
       return pagina; }, getNextPageParam: (p) => p.length === 20 ? p.at(-1)?.id : undefined });
@@ -34,7 +34,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
     queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_listar_listas_materiais_mediada", {
       p_cliente_id: cliente, p_ordem_servico_id: ordemServico, p_limite: 100, p_apos: pageParam }).abortSignal(signal);
       if (error) throw error;
-      const pagina = z.array(z.object({ id: z.string().uuid(), ordem_servico_id: z.string().uuid(),
+      const pagina = z.array(z.object({ id: z.string().guid(), ordem_servico_id: z.string().guid(),
         responsavel: z.enum(["cliente", "sinergica"]), revisao: z.number().int().positive(), texto_original: z.string() }).passthrough()).max(100).parse(data);
       let anterior = pageParam?.toLowerCase() ?? null;
       for (const item of pagina) {

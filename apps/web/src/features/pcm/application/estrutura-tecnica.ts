@@ -8,12 +8,12 @@ import type {
 
 const grupoSchema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     expectedRevision: z.number().int().nonnegative(),
-    grupoId: z.string().uuid(),
-    localId: z.string().uuid(),
-    categoriaId: z.string().uuid(),
-    sistemaId: z.string().uuid().nullable(),
+    grupoId: z.string().guid(),
+    localId: z.string().guid(),
+    categoriaId: z.string().guid(),
+    sistemaId: z.string().guid().nullable(),
     nome: z.string().trim().min(1).max(200),
     quantidade: z.number().int().positive().safe(),
     caracteristicas: z.record(z.string(), z.string()),
@@ -33,12 +33,12 @@ export function validarComandoGrupo(input: SalvarGrupoCommand): SalvarGrupoComma
 
 const moverSchema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     expectedRevision: z.number().int().positive(),
-    componenteId: z.string().uuid(),
-    areaId: z.string().uuid().nullable(),
-    localId: z.string().uuid().nullable(),
-    parentId: z.string().uuid().nullable(),
+    componenteId: z.string().guid(),
+    areaId: z.string().guid().nullable(),
+    localId: z.string().guid().nullable(),
+    parentId: z.string().guid().nullable(),
   })
   .strict()
   .refine((v) => !v.localId || Boolean(v.areaId), {

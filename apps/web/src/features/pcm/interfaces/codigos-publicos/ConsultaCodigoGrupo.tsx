@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const resposta = z.object({ grupoId: z.string().uuid(), clienteId: z.string().uuid(),
+const resposta = z.object({ grupoId: z.string().guid(), clienteId: z.string().guid(),
   codigoAtual: z.string().min(1).max(200), codigoHistorico: z.boolean() }).strict().nullable();
 
 export function ConsultaCodigoGrupo({ userId, clienteId }: { userId: string; clienteId: string }) {

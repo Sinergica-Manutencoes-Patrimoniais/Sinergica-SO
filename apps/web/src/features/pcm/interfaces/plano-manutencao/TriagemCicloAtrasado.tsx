@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase-client";
 import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
 type Pedido = { requestId: string; clienteId: string; preparadaId: string; revisao: number; data: string; decisao: "avaliar" | "tratar_manualmente"; motivo: string };
 const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), preparadaId: z.string().uuid(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), preparadaId: z.string().guid(),
   revisao: z.number().int().nonnegative(), data: dataCivil, decisao: z.enum(["avaliar", "tratar_manualmente"]), motivo: z.string().min(1).max(2000) }).strict();
-const candidatoSchema = z.object({ preparada_id: z.string().uuid(), versao_id: z.string().uuid(), rotina_id: z.string().uuid(), ciclo: z.number().int().nonnegative(),
+const candidatoSchema = z.object({ preparada_id: z.string().guid(), versao_id: z.string().guid(), rotina_id: z.string().guid(), ciclo: z.number().int().nonnegative(),
   vencimento_original: dataCivil, tolerancia_depois: z.number().int().nonnegative(), tem_vinculo_legado: z.boolean(), tem_os: z.boolean(), ultima_revisao: z.number().int().nonnegative() }).strict();
 
 type Props = { userId: string; clienteId: string; planoId: string; rotinaId: string; ocorrenciaEmConferencia?: string };

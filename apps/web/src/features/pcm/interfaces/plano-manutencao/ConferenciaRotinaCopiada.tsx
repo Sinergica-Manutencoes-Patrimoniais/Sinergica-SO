@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const contexto = { clienteId: id, planoId: id, versaoId: id, rotinaId: id };
 const consultaSchema = z.union([

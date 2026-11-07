@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const comandoSchema = z.object({ requestId: z.string().uuid(), listaId: z.string().uuid(),
+const comandoSchema = z.object({ requestId: z.string().guid(), listaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), linhas: z.array(z.object({ descricao: z.string().trim().min(1).max(1000),
     quantidade: z.string().trim().min(1).max(100).nullable(), unidade: z.string().trim().min(1).max(100).nullable() }).strict()).min(1).max(100) }).strict();
 type Comando = z.infer<typeof comandoSchema>;

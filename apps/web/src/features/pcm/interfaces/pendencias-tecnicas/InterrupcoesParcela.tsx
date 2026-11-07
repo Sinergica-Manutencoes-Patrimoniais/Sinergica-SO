@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DeclararInterrupcao } from "./DeclararInterrupcao";
 import { HistoricoParcela } from "./HistoricoParcela";
-const schema=z.object({os_id:z.string().uuid(),estado:z.enum(["declarada","revogada"]),revisao:z.number().int().positive(),atualizado_em:z.string().datetime({offset:true})}).strict();
+const schema=z.object({os_id:z.string().guid(),estado:z.enum(["declarada","revogada"]),revisao:z.number().int().positive(),atualizado_em:z.string().datetime({offset:true})}).strict();
 export function InterrupcoesParcela({userId,clienteId,parcelaId}:{userId:string;clienteId:string;parcelaId:string}){
   const [aberto,setAberto]=useState(false);const consulta=useInfiniteQuery({queryKey:["backlog-interrupcoes",userId,clienteId,parcelaId],enabled:aberto,gcTime:0,initialPageParam:null as string | null,
     queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_listar_interrupcoes_parcela",{p_parcela_id:parcelaId,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(schema).max(20).parse(data);},getNextPageParam:(p)=>p.length===20 ? p.at(-1)?.os_id : undefined});

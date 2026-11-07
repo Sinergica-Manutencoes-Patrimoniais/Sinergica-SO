@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props = { userId: string; clienteId: string; selecionadas: Record<string, number> };
-const linha = z.object({ pendencia_id: z.string().uuid(), revisao_solicitada: z.number().int().positive(), revisao_atual: z.number().int().positive().nullable(), situacao: z.enum(["indisponivel", "revisao_alterada", "nao_aberta", "ja_composta", "sem_conflito_observado"]) }).strict();
+const linha = z.object({ pendencia_id: z.string().guid(), revisao_solicitada: z.number().int().positive(), revisao_atual: z.number().int().positive().nullable(), situacao: z.enum(["indisponivel", "revisao_alterada", "nao_aberta", "ja_composta", "sem_conflito_observado"]) }).strict();
 export function PreviaSelecao(props: Props) {
   if (import.meta.env.VITE_SSO_PREVIA_SELECAO_COMPOSICAO_ENABLED !== "true") return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props} />;

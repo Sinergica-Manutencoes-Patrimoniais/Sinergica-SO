@@ -15,7 +15,7 @@ type Props={userId:string;clienteId:string;contratos:ContratoCalendario[];regras
 type Periodo={inicio:string;fim:string;contrato:string|null};
 type Cursor={apos:string|null;assinatura:string|null;total:number|null;lidas:number};
 type Pagina={itens:Feriado[];assinatura:string|null;total:number|null};
-const feriadoSchema=z.object({id:z.string().uuid(),contrato_id:z.string().uuid().nullable(),data:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),fonte:z.string().min(1).max(500),motivo:z.string().min(1).max(2000),ativo:z.boolean(),revisao:z.number().int().positive()}).strict();
+const feriadoSchema=z.object({id:z.string().guid(),contrato_id:z.string().guid().nullable(),data:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),fonte:z.string().min(1).max(500),motivo:z.string().min(1).max(2000),ativo:z.boolean(),revisao:z.number().int().positive()}).strict();
 export function FeriadosDeclarados(props:Props) {
   return <ConteudoFeriados key={JSON.stringify([props.userId,props.clienteId])} {...props}/>;
 }
@@ -35,7 +35,7 @@ function ConteudoFeriados({userId,clienteId,contratos,regras=[],onUsar}:Props) {
     let query=fotografia ? supabase.schema("pcm").rpc("sso_fotografia_feriados",{...parametros,p_ator_id:userId}) : supabase.schema("pcm").rpc("sso_listar_feriados_declarados",parametros);
     if(signal)query=query.abortSignal(signal);const {data:rows,error}=await query;if(error)throw error;
     let pagina:Pagina;
-    if(fotografia){const r=z.object({clienteId:z.string().uuid(),contratoId:z.string().uuid().nullable(),inicio:z.string(),fim:z.string(),total:z.number().int().nonnegative().max(2000),assinatura:z.string().regex(/^[a-f0-9]{32}$/),itens:z.array(feriadoSchema).max(50)}).strict().parse(rows);
+    if(fotografia){const r=z.object({clienteId:z.string().guid(),contratoId:z.string().guid().nullable(),inicio:z.string(),fim:z.string(),total:z.number().int().nonnegative().max(2000),assinatura:z.string().regex(/^[a-f0-9]{32}$/),itens:z.array(feriadoSchema).max(50)}).strict().parse(rows);
       if(r.clienteId!==clienteId||r.contratoId!==p.contrato||r.inicio!==p.inicio||r.fim!==p.fim||(c.assinatura!==null&&(r.assinatura!==c.assinatura||r.total!==c.total))||c.lidas+r.itens.length>r.total||(r.itens.length<50&&c.lidas+r.itens.length!==r.total))throw new Error("Fotografia de feriados alterada.");
       pagina={itens:r.itens,assinatura:r.assinatura,total:r.total};
     }else pagina={itens:z.array(feriadoSchema).max(50).parse(rows),assinatura:null,total:null};

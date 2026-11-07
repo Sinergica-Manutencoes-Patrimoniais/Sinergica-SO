@@ -5,7 +5,7 @@ import { TriagemChamadoProvisorio } from "./TriagemChamadoProvisorio";
 import { DetalheUltimoEvento } from "./DetalheUltimoEvento";
 import { ConflitosCampo } from "./ConflitosCampo";
 
-const item = z.object({ os_id: z.string().uuid(), chamado_id: z.string().uuid(), provisorio: z.boolean(), status_os: z.string(),
+const item = z.object({ os_id: z.string().guid(), chamado_id: z.string().guid(), provisorio: z.boolean(), status_os: z.string(),
   status_campo: z.enum(["aberta", "em_andamento", "concluida"]), ordem_externa: z.string().regex(/^[1-9]\d{0,17}$/),
   conflitos: z.number().int().nonnegative().safe(), validacao_comprovada: z.literal(false) }).strict();
 const rotulos = { aberta: "Aberta em campo", em_andamento: "Em andamento em campo", concluida: "Concluída em campo — conferir validação PCM" } as const;

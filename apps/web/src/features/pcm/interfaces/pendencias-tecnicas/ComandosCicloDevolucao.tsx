@@ -5,7 +5,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { CandidatoDevolucao } from "./CandidatosDevolucaoCiclo";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const base = { requestId: id, atorId: id, clienteId: id, composicaoId: id, pendenciaId: id };
 const pedidoSchema = z.discriminatedUnion("tipo", [
   z.object({ ...base, tipo: z.literal("inicializar"), cicloId: id }).strict(),

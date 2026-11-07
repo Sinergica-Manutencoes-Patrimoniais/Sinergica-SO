@@ -99,7 +99,7 @@ function Conteudo({ usuario, cliente, onAbrirOs, permissaoMonitorada = false }: 
     <form onSubmit={(evento) => {
       evento.preventDefault();
       const valor = osDigitada.trim();
-      if (valor && !z.string().uuid().safeParse(valor).success) { setErro("Informe o identificador UUID da OS ou deixe vazio."); return; }
+      if (valor && !z.string().guid().safeParse(valor).success) { setErro("Informe o identificador UUID da OS ou deixe vazio."); return; }
       setErro(""); if((valor || null)===os) void listas.refetch(); else setOs(valor || null); setAberta(null); setOrcamentoOs(null);
     }}>
       <label>Identificador da OS <input value={osDigitada} onChange={(evento) => setOsDigitada(evento.target.value)} /></label>

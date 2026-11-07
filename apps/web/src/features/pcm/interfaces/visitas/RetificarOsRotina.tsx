@@ -3,12 +3,12 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const previa = z.object({ osId: z.string().uuid(), ocorrenciaLegadaId: z.string().uuid(), ocorrenciaPreparadaId: z.string().uuid(), planoId: z.string().uuid(),
-  versaoId: z.string().uuid(), rotinaId: z.string().uuid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().uuid() }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), osId: z.string().uuid(), revisao: z.number().int().positive(), acao: z.enum(["invalidar", "retificar"]), motivo: z.string().min(1).max(1000), previa: previa.nullable() }).strict()
+const previa = z.object({ osId: z.string().guid(), ocorrenciaLegadaId: z.string().guid(), ocorrenciaPreparadaId: z.string().guid(), planoId: z.string().guid(),
+  versaoId: z.string().guid(), rotinaId: z.string().guid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().guid() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), osId: z.string().guid(), revisao: z.number().int().positive(), acao: z.enum(["invalidar", "retificar"]), motivo: z.string().min(1).max(1000), previa: previa.nullable() }).strict()
   .refine((p) => p.acao === "invalidar" ? p.previa === null : p.previa !== null);
 type Pedido = z.infer<typeof pedido>;
-const evento = z.object({ revisao: z.number().int().positive(), acao: z.enum(["base", "invalidar", "retificar"]), motivo: z.string().nullable(), ator_id: z.string().uuid(), criado_em: z.string(), previa: previa.nullable() }).strict();
+const evento = z.object({ revisao: z.number().int().positive(), acao: z.enum(["base", "invalidar", "retificar"]), motivo: z.string().nullable(), ator_id: z.string().guid(), criado_em: z.string(), previa: previa.nullable() }).strict();
 export function RetificarOsRotina({ userId, clienteId, osId, bloqueado }: { userId: string; clienteId: string; osId: string; bloqueado: boolean }) {
   const chave = `sso-retificar-os-rotina:${JSON.stringify([userId, clienteId, osId])}`; const cache = useQueryClient();
   const [aberto, setAberto] = useState(false); const [motivo, setMotivo] = useState(""); const [confirmado, setConfirmado] = useState(false); const [aviso, setAviso] = useState(""); const enviando = useRef(false);

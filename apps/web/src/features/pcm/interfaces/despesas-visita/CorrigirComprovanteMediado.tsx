@@ -4,10 +4,10 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ingerirComprovanteDespesa, type DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
 
-export const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), visitaId: z.string().uuid(), despesaId: z.string().uuid(),
+export const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), visitaId: z.string().guid(), despesaId: z.string().guid(),
   revisao: z.number().int().positive(), valor: z.number().int().nonnegative().safe(), motivo: z.string().trim().min(1).max(2000),
   conferencia: z.string().trim().min(1).max(2000), hash: z.string().regex(/^[0-9a-f]{64}$/), tipo: z.enum(["application/pdf", "image/jpeg", "image/png"]),
-  tamanho: z.number().int().positive().max(10 * 1024 * 1024), objetoId: z.string().uuid().nullable() }).strict();
+  tamanho: z.number().int().positive().max(10 * 1024 * 1024), objetoId: z.string().guid().nullable() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: Pick<DespesaVisitaListada, "id" | "status" | "revisao" | "realizadoCentavos"> };
 async function hashArquivo(arquivo: File) {
@@ -63,7 +63,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
     const { data, error } = await supabase.schema("pcm").rpc("sso_recibo_correcao_mediada", { p_cliente_id: clienteId, p_visita_id: visitaId,
       p_request_id: p.requestId, p_despesa_id: p.despesaId, p_revisao: p.revisao, p_valor: p.valor, p_objeto_id: p.objetoId, p_motivo: p.motivo, p_conferencia: p.conferencia });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), despesaId: z.string().uuid(), visitaId: z.string().uuid(), clienteId: z.string().uuid(),
+    const r = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(), clienteId: z.string().guid(),
       revisao: z.number().int().positive(), confirmada: z.literal(true), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.despesaId !== p.despesaId || r.visitaId !== visitaId || r.clienteId !== clienteId || r.revisao !== p.revisao + 1) throw new Error("Recibo divergente.");
     await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
@@ -79,8 +79,8 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
         p_request_id: p.requestId, p_cliente_id: p.clienteId, p_visita_id: p.visitaId, p_despesa_id: p.despesaId, p_digest: p.hash,
       });
       if (error) throw error;
-      const r = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), visitaId: z.string().uuid(), despesaId: z.string().uuid(),
-        digest: z.string().regex(/^[0-9a-f]{64}$/), objetoId: z.string().uuid().nullable(), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
+      const r = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), visitaId: z.string().guid(), despesaId: z.string().guid(),
+        digest: z.string().regex(/^[0-9a-f]{64}$/), objetoId: z.string().guid().nullable(), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
       if (r.requestId !== p.requestId || r.clienteId !== p.clienteId || r.visitaId !== p.visitaId || r.despesaId !== p.despesaId || r.digest !== p.hash) throw new Error("Resposta divergente.");
       await sessao();
       if (!montado.current || sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");

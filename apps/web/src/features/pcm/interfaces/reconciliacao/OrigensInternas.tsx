@@ -8,9 +8,9 @@ import { OrigensDespesaIncompletas } from "./OrigensDespesaIncompletas";
 import { CustosProposta } from "./CustosProposta";
 
 type Origem = { chave:string; descricao:string; classificacao:string; osId?: string };
-const comercialSchema = z.object({ proposta_id: z.string().uuid(), os_id: z.string().uuid(), lista_id: z.string().uuid(),
+const comercialSchema = z.object({ proposta_id: z.string().guid(), os_id: z.string().guid(), lista_id: z.string().guid(),
   status: z.string(), versao: z.number().int().nullable(), classificacao: z.enum(["conflito_de_origem", "vinculo_observado"]) }).strict();
-const financeiroSchema = z.object({ item_id: z.string().uuid(), despesa_id: z.string().uuid(), visita_id: z.string().uuid(),
+const financeiroSchema = z.object({ item_id: z.string().guid(), despesa_id: z.string().guid(), visita_id: z.string().guid(),
   status: z.string(), revisao: z.number().int(), despesa_revisao_atual: z.number().int(), despesa_revisao_origem: z.number().int(),
   classificacao: z.enum(["conflito_de_origem", "despesa_alterada_conferir", "vinculo_observado"]) }).strict();
 function Secao({userId,clienteId,tipo,onAbrirOs}:{userId:string;clienteId:string;tipo:"comercial" | "financeiro";onAbrirOs?: (osId:string) => void}) {

@@ -5,15 +5,15 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const linha = z
   .object({
-    plano_id: z.string().uuid(),
+    plano_id: z.string().guid(),
     plano_nome: z.string(),
     plano_estado: z.string(),
-    versao_id: z.string().uuid(),
+    versao_id: z.string().guid(),
     versao_numero: z.number().int().positive(),
     versao_estado: z.enum(["rascunho", "aprovado"]),
     vigencia_inicio: z.string().nullable(),
     vigencia_fim: z.string().nullable(),
-    rotina_id: z.string().uuid(),
+    rotina_id: z.string().guid(),
     rotina_nome: z.string(),
   })
   .strict();

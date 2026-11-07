@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export const pedidoCancelamentoChamadoCampoSchema = z.object({ requestId: uuid, clienteId: uuid, osId: uuid, chamadoId: uuid, revision: z.number().int().positive().safe(),
   osUpdatedAt: z.string().datetime({ offset: true }).nullable(), taskId: z.string().regex(/^[1-9]\d{0,18}$/), motivo: z.string().min(1).max(2000) }).strict();
 const schema = pedidoCancelamentoChamadoCampoSchema;

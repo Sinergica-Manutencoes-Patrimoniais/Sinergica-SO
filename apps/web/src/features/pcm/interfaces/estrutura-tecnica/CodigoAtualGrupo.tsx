@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { SubstituicaoCodigoPublico } from "../codigos-publicos/Substituicao";
 
-const item = z.object({ id: z.string().uuid(), codigo: z.string().min(1).max(200), atual: z.boolean(), ator_id: z.string().uuid(), criado_em: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), codigo: z.string().min(1).max(200), atual: z.boolean(), ator_id: z.string().guid(), criado_em: z.string() }).strict();
 type Props = { userId: string; clienteId: string; grupoId: string };
 
 export function CodigoAtualGrupo(props: Props) {

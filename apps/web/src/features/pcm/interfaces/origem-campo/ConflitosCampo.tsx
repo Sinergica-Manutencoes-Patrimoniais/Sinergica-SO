@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const conflito = z.object({ envelope_id: z.string().uuid(), estado: z.enum(["conflito_regressao", "conflito_ordem"]),
+const conflito = z.object({ envelope_id: z.string().guid(), estado: z.enum(["conflito_regressao", "conflito_ordem"]),
   registrado_em: z.string().datetime({ offset: true }) }).strict();
 
 export function ConflitosCampo({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {

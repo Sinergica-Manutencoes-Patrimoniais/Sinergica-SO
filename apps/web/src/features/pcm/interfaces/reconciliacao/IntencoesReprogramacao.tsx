@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const linha = z.object({
   intencao_id: id, os_id: id, visita_origem_id: id, visita_destino_id: id,
   tarefa_auvo_id: z.string().regex(/^[1-9][0-9]*$/),

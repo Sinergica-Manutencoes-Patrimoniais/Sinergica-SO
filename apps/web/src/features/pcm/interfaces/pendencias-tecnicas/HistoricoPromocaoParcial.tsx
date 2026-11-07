@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id=z.string().uuid();
+const id=z.string().guid();
 const recibo=z.object({requestId:id,clienteId:id,retornoId:id,retornoRevision:z.number().int().positive(),pendenciaId:id,
  chamadoAnteriorId:id,parcelaAnteriorId:id,cicloAnteriorId:id,chamadoId:id,numero:z.string().min(1),parcelaId:id,cicloId:id,
  descricaoRestante:z.string().min(1).max(4000),minutosRestantes:z.number().int().positive(),osCriada:z.literal(false),tarefaCriada:z.literal(false)}).strict();

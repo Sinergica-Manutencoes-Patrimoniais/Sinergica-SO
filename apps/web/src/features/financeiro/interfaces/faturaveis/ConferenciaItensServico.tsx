@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const contagem = z.union([z.number(), z.string().regex(/^\d+$/)])
   .refine((v) => Number.isSafeInteger(Number(v)) && Number(v) >= 0).transform(Number);
 const resultado = z.object({ clienteId: uuid, fatoId: uuid, declaracoesMaterial: contagem, itensPropostaIntegral: contagem,

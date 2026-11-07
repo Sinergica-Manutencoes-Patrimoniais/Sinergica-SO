@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const item = z.object({ lancamento_id: z.string().uuid(), descricao: z.string(), valor_centavos: z.string().regex(/^\d+$/),
+const item = z.object({ lancamento_id: z.string().guid(), descricao: z.string(), valor_centavos: z.string().regex(/^\d+$/),
   data_competencia: z.string(), documento_ref: z.string().nullable(), situacao: z.enum(["sem_documento_sso", "sem_alocacao_ativa"]) }).strict();
 export function DiagnosticoDocumentos({ usuario, cliente, competencia }: { usuario: string; cliente: string; competencia: string }) {
   const [aberto, setAberto] = useState(false);

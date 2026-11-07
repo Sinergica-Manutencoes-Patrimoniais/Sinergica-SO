@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const evento = z.object({ id: z.string().uuid(), status: z.enum(["solicitacao", "corretiva", "backlog", "planejamento", "em_execucao", "finalizado", "cancelado"]),
+const evento = z.object({ id: z.string().guid(), status: z.enum(["solicitacao", "corretiva", "backlog", "planejamento", "em_execucao", "finalizado", "cancelado"]),
   ocorrido_em: z.string() }).strict();
 type Cursor = { data: string; id: string } | null;
 export async function listarTimelineOs(clienteId: string, osId: string, cursor: Cursor, signal?: AbortSignal) {

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const opcaoSchema = z.object({ os_id: id, numero: z.string(), estado_os: z.string(), os_atualizada_em: z.string().datetime({ offset: true }).nullable(),
   chamado_revision: z.number().int().positive(), escopo_revision: z.number().int().positive(), suspensao_revision: z.number().int().positive().nullable(),
   declaracao_revision: z.number().int().nonnegative(), declaracao_estado: z.enum(["declarada", "revogada"]).nullable() }).strict();

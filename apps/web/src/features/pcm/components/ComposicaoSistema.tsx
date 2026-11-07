@@ -18,12 +18,12 @@ import { SeletorItensComFiltro } from "./SeletorItensComFiltro";
 
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
-    atorId: z.string().uuid(),
-    clienteId: z.string().uuid(),
-    sistemaId: z.string().uuid(),
-    observados: z.array(z.string().uuid()).max(1000),
-    desejados: z.array(z.string().uuid()).max(1000),
+    requestId: z.string().guid(),
+    atorId: z.string().guid(),
+    clienteId: z.string().guid(),
+    sistemaId: z.string().guid(),
+    observados: z.array(z.string().guid()).max(1000),
+    desejados: z.array(z.string().guid()).max(1000),
   })
   .strict();
 type Pedido = z.infer<typeof pedidoSchema>;
@@ -199,10 +199,10 @@ function Conteudo({ gateway, sistema, temEscrita, userId, onSalvo }: Props) {
         if (error) throw error;
         const r = z
           .object({
-            requestId: z.string().uuid(),
-            clienteId: z.string().uuid(),
-            sistemaId: z.string().uuid(),
-            itens: z.array(z.string().uuid()).max(1000),
+            requestId: z.string().guid(),
+            clienteId: z.string().guid(),
+            sistemaId: z.string().guid(),
+            itens: z.array(z.string().guid()).max(1000),
           })
           .strict()
           .parse(data);

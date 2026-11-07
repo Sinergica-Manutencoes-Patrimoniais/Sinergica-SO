@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 type Props = { userId: string; clienteId: string; planoId: string };
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), planoId: z.string().uuid(), revisao: z.number().int().nonnegative().safe(), fuso: z.string().trim().min(1).max(100), fonte: z.string().trim().min(1).max(500), motivo: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), revisao: z.number().int().nonnegative().safe(), fuso: z.string().trim().min(1).max(100), fonte: z.string().trim().min(1).max(500), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-const linhaHistorico = z.object({ request_id: z.string().uuid(), revisao: z.number().int().positive().safe(), fuso: z.string().min(1).max(100), fonte: z.string().min(1).max(500), motivo: z.string().min(1).max(2000), ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }), contrato_referencia_id: z.string().uuid().nullable() }).strict();
+const linhaHistorico = z.object({ request_id: z.string().guid(), revisao: z.number().int().positive().safe(), fuso: z.string().min(1).max(100), fonte: z.string().min(1).max(500), motivo: z.string().min(1).max(2000), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }), contrato_referencia_id: z.string().guid().nullable() }).strict();
 export function FusoPlanoDeclarado(props: Props) {
   if (import.meta.env.VITE_SSO_FUSO_PLANO_MEDIADO_ENABLED !== "true") return <p>Declaração de fuso indisponível.</p>;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId])} {...props} />;
@@ -45,7 +45,7 @@ function Conteudo({ userId, clienteId, planoId }: Props) {
     if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_declarar_fuso_mediado", { p_ator_id: userId, p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_expected_revision: p.revisao, p_fuso: p.fuso, p_contrato_referencia_id: null, p_fonte: p.fonte, p_motivo: p.motivo });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), planoId: z.string().uuid(), revisao: z.number().int().positive().safe(), fusoDeclarado: z.string(), contratoReferenciaId: z.null(), fonteValidada: z.literal(false), geracaoAlterada: z.literal(false), vinculoContratualComprovado: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), planoId: z.string().guid(), revisao: z.number().int().positive().safe(), fusoDeclarado: z.string(), contratoReferenciaId: z.null(), fonteValidada: z.literal(false), geracaoAlterada: z.literal(false), vinculoContratualComprovado: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.planoId !== p.planoId || r.revisao !== p.revisao + 1 || r.fusoDeclarado !== p.fuso) throw new Error("Recibo divergente.");
     await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
   }, onSuccess: async (_data, p) => { try { await cache.invalidateQueries({ queryKey: ["historico-fuso-plano", userId, clienteId, planoId], refetchType: "none" });

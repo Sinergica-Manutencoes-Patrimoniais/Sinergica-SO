@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const fonte = z.object({ despesaId: z.string().uuid(), despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(), vinculoId: z.string().uuid(), grupo: z.enum(["aquisicao","operacional"]), valorCentavos: z.number().int().safe().nonnegative(), base: z.enum(["previsto","realizado"]), descricaoFonte: z.string().min(1).max(10000) }).strict();
+const fonte = z.object({ despesaId: z.string().guid(), despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(), vinculoId: z.string().guid(), grupo: z.enum(["aquisicao","operacional"]), valorCentavos: z.number().int().safe().nonnegative(), base: z.enum(["previsto","realizado"]), descricaoFonte: z.string().min(1).max(10000) }).strict();
 const linha = z.object({ posicao: z.number().int().positive(), fonte }).strict();
 type Props = { usuario: string; cliente: string; propostaId: string; versao: number };
 export function HistoricoFontes(props: Props) {

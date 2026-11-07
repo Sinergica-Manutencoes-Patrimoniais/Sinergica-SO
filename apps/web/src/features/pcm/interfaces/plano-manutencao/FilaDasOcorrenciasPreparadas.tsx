@@ -4,9 +4,9 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { IncluirFilaSelecionada } from "./IncluirFilaSelecionada";
 
-const linha = z.object({ tipo: z.enum(["calendario", "visita"]), preparada_id: z.string().uuid(), versao_id: z.string().uuid(),
-  rotina_id: z.string().uuid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().uuid(), vencimento_original: z.string().date(),
-  ocorrencia_grupo_id: z.string().uuid().nullable(), estado: z.string(), fila_executavel: z.literal(false) }).strict();
+const linha = z.object({ tipo: z.enum(["calendario", "visita"]), preparada_id: z.string().guid(), versao_id: z.string().guid(),
+  rotina_id: z.string().guid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().guid(), vencimento_original: z.string().date(),
+  ocorrencia_grupo_id: z.string().guid().nullable(), estado: z.string(), fila_executavel: z.literal(false) }).strict();
 type Props = { userId: string; clienteId: string; planoId: string; preparadas: string[] };
 export function FilaDasOcorrenciasPreparadas(props: Props) {
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, [...props.preparadas].sort()])} {...props} />;

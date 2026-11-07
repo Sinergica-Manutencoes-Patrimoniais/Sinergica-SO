@@ -32,8 +32,8 @@ export function BreadcrumbAtivo({
       if (error) throw error;
       const r = z
         .object({
-          clienteId: z.string().uuid(),
-          ativoId: z.string().uuid(),
+          clienteId: z.string().guid(),
+          ativoId: z.string().guid(),
           estado: z.enum(["disponivel", "sem_posicao", "indisponivel", "ciclo", "limite"]),
           caminho: z.array(z.string()).max(66),
         })

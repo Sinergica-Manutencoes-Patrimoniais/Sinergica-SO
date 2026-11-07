@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const nota = z.object({ request_id: z.string().uuid(), ator_id: z.string().uuid(), observacao: z.string(), status_observado: z.enum(["pending", "processing", "sent", "error"]), tentativas_observadas: z.number().int().nonnegative(), criado_em: z.string() }).strict();
+const nota = z.object({ request_id: z.string().guid(), ator_id: z.string().guid(), observacao: z.string(), status_observado: z.enum(["pending", "processing", "sent", "error"]), tentativas_observadas: z.number().int().nonnegative(), criado_em: z.string() }).strict();
 export function NotasFiltradas({ userId, clienteId, outboxId }: { userId: string; clienteId: string; outboxId: string }) {
   const [minhas, setMinhas] = useState(false); const [estado, setEstado] = useState("");
   const consulta = useInfiniteQuery({ queryKey: ["reconciliacao-notas-filtradas", userId, clienteId, outboxId, minhas, estado], gcTime: 0, initialPageParam: null as { data: string; id: string } | null,

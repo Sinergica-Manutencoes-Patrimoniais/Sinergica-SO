@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema = z.object({ requestId: z.string().uuid(), propostaId: z.string().uuid(), modo: z.enum(["integral", "linhas"]), motivo: z.string().min(1).max(1000) }).strict();
+const schema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), modo: z.enum(["integral", "linhas"]), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof schema>;
 export function ModoProposta({ usuario, cliente }: { usuario: string; cliente: string }) {
   const chave = `sso-modo-proposta:${JSON.stringify([usuario, cliente])}`;
@@ -13,7 +13,7 @@ export function ModoProposta({ usuario, cliente }: { usuario: string; cliente: s
   const comando = useMutation({ mutationFn: async (p: Pedido) => {
     const { data, error } = await supabase.schema("financeiro").rpc("sso_definir_modo_proposta", { p_request_id: p.requestId,
       p_cliente_id: cliente, p_proposta_id: p.propostaId, p_modo: p.modo, p_motivo: p.motivo });
-    if (error) throw error; if (z.string().uuid().parse(data) !== p.propostaId) throw new Error("Resposta divergente");
+    if (error) throw error; if (z.string().guid().parse(data) !== p.propostaId) throw new Error("Resposta divergente");
   }, onSuccess: (_r, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas a tentativa local não foi limpa. Consulte suporte."); return; }
     setPendente(null); setAviso("Modo registrado; nenhuma cobrança foi criada.");

@@ -20,9 +20,9 @@ import { ChamadoCicloPreventivo } from "./ChamadoCicloPreventivo";
 
 type Obrigacao = { tipo: "calendario" | "visita"; preparada_id: string; versao_id: string; rotina_id: string; alvo_tipo: string; alvo_id: string; vencimento_original: string; ocorrencia_grupo_id: string | null; estado: string; fila_executavel: boolean };
 type Cursor = { tipo: "calendario" | "visita"; id: string } | null;
-const obrigacao = z.object({ tipo: z.enum(["calendario", "visita"]), preparada_id: z.string().uuid(), versao_id: z.string().uuid(),
-  rotina_id: z.string().uuid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().uuid(),
-  vencimento_original: z.string().date(), ocorrencia_grupo_id: z.string().uuid().nullable(),
+const obrigacao = z.object({ tipo: z.enum(["calendario", "visita"]), preparada_id: z.string().guid(), versao_id: z.string().guid(),
+  rotina_id: z.string().guid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().guid(),
+  vencimento_original: z.string().date(), ocorrencia_grupo_id: z.string().guid().nullable(),
   estado: z.enum(["grupo_registrado_nao_executavel", "grupo_preparado_sem_registro", "preparada_sem_estado_execucao"]), fila_executavel: z.literal(false) }).strict();
 
 function GestaoFilaObrigacao(props: { userId: string; clienteId: string; planoId: string; preparadaId: string; tipo?: "calendario" | "visita" }) {

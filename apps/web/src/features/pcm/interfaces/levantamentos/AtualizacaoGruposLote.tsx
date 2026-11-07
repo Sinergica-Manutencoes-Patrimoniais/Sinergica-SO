@@ -3,11 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const itemSchema=z.object({chave:z.string().min(1).max(200),grupoId:z.string().uuid(),grupoRevision:z.number().int().positive().safe(),
-  localId:z.string().uuid(),atributos:z.record(z.string(), z.unknown()),caracteristicas:z.record(z.string(), z.string()),motivo:z.string().min(1).max(2000),
+const itemSchema=z.object({chave:z.string().min(1).max(200),grupoId:z.string().guid(),grupoRevision:z.number().int().positive().safe(),
+  localId:z.string().guid(),atributos:z.record(z.string(), z.unknown()),caracteristicas:z.record(z.string(), z.string()),motivo:z.string().min(1).max(2000),
   codigoStaging:z.string().min(1).max(200).nullable(),codigoRevision:z.number().int().nonnegative().safe(),
-  revisaoSelecao:z.number().int().positive().safe(),requestId:z.string().uuid()}).strict();
-const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive().safe(),itens:z.array(itemSchema).min(1).max(50)}).strict();
+  revisaoSelecao:z.number().int().positive().safe(),requestId:z.string().guid()}).strict();
+const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive().safe(),itens:z.array(itemSchema).min(1).max(50)}).strict();
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 const Contexto=createContext<((item:Item)=>void)|null>(null);
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;children:ReactNode};
@@ -21,8 +21,8 @@ function Conteudo({userId,clienteId,loteId,revisao,children}:Props){
  const envio=useMutation({mutationFn:async(p:Pedido)=>{
   await conferirSessao();if(sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error("Tentativa alterada.");
   const {data,error}=await supabase.schema("pcm").rpc("sso_atualizar_grupos_lote",{p_request_id:p.requestId,p_lote_id:p.loteId,p_expected_revision:p.revision,p_itens:p.itens});if(error)throw error;
-  const individual=z.object({aggregateId:z.string().uuid(),revision:z.number().int().positive(),requestId:z.string().uuid(),state:z.literal("pendente"),created:z.literal(false),linkedIds:z.object({entidadeId:z.string().uuid(),tipo:z.literal("grupo_quantitativo")}),warnings:z.array(z.string())}).passthrough();
-  const r=z.object({aggregateId:z.string().uuid(),revision:z.number().int(),requestId:z.string().uuid(),atomicidade:z.literal("integral"),resultados:z.array(z.object({chave:z.string(),resultado:individual}))}).parse(data);
+  const individual=z.object({aggregateId:z.string().guid(),revision:z.number().int().positive(),requestId:z.string().guid(),state:z.literal("pendente"),created:z.literal(false),linkedIds:z.object({entidadeId:z.string().guid(),tipo:z.literal("grupo_quantitativo")}),warnings:z.array(z.string())}).passthrough();
+  const r=z.object({aggregateId:z.string().guid(),revision:z.number().int(),requestId:z.string().guid(),atomicidade:z.literal("integral"),resultados:z.array(z.object({chave:z.string(),resultado:individual}))}).parse(data);
   if(r.aggregateId!==p.loteId || r.requestId!==p.requestId || r.revision!==p.revision+p.itens.length || r.resultados.length!==p.itens.length || r.resultados.some((x,i)=>x.chave!==p.itens[i]?.chave || x.resultado.aggregateId!==p.loteId || x.resultado.revision!==p.revision+i+1 || x.resultado.requestId!==p.itens[i]?.requestId || x.resultado.linkedIds.entidadeId!==p.itens[i]?.grupoId))throw new Error("Resposta divergente.");
   await conferirSessao();if(sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error("Tentativa alterada.");return r;
  },onSuccess:async(_r,p)=>{try{await client.invalidateQueries({queryKey:["levantamentos",userId,clienteId],refetchType:"none"});await client.invalidateQueries({queryKey:["estrutura-tecnica",userId,clienteId],refetchType:"none"});await conferirSessao();if(sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error();sessionStorage.removeItem(storage);}catch{setAviso("Resultado confirmado; tentativa não foi removida. Consulte suporte.");return;}setPendente(null);setItens([]);setConfirmado(null);setAviso("Grupos atualizados. Confira os resultados do levantamento.");void client.refetchQueries({queryKey:["levantamentos",userId,clienteId],type:"active"});void client.refetchQueries({queryKey:["estrutura-tecnica",userId,clienteId],type:"active"});},onError:()=>setAviso("Resultado não confirmado. Repita a mesma tentativa ou consulte suporte."),onSettled:()=>{trava.current=false;}});

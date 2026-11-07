@@ -1,7 +1,7 @@
 import { supabase } from "../../../lib/supabase-client";
 import { z } from "zod";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const revisaoPositiva = z.number().int().safe().positive();
 
 export async function conferirToleranciasLote(usuario:string,clienteId:string,loteId:string,revisao:number,ids:string[],signal?:AbortSignal) {

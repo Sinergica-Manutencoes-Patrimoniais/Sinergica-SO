@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import type { DiagnosticoLinhaCsv } from "../../application/importacao-estrutura-csv";
 type Props = { userId: string; clienteId: string; chaveOrigem: string; diagnosticos: DiagnosticoLinhaCsv[] | null };
 const linha = z.object({ numero: z.number().int().min(2), estado: z.enum(["apta_estruturalmente", "rejeitada"]), celulas: z.array(z.string()).min(1).max(100), erros: z.array(z.string().min(1).max(500)).max(30) }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), chaveOrigem: z.string().min(1).max(200), linhas: z.array(linha).min(1).max(1000) }).strict(); type Pedido = z.infer<typeof pedido>;
+const pedido = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), chaveOrigem: z.string().min(1).max(200), linhas: z.array(linha).min(1).max(1000) }).strict(); type Pedido = z.infer<typeof pedido>;
 export function QuarentenaCsv(props: Props) { if (import.meta.env.VITE_SSO_QUARENTENA_CSV_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props}/>; }
 function Conteudo({ userId, clienteId, chaveOrigem, diagnosticos }: Props) {
   const key = `sso-quarentena-csv:${JSON.stringify([userId, clienteId])}`; const client = useQueryClient(); const trava = useRef(false); const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState("");
@@ -17,7 +17,7 @@ function Conteudo({ userId, clienteId, chaveOrigem, diagnosticos }: Props) {
     if (antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(key) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa alterada.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_receber_quarentena_autorizada", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_chave_origem: p.chaveOrigem, p_linhas: p.linhas });
     if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), quarentenaId: z.string().uuid(), quantidade: z.number().int().positive(), oficialAlterado: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), quarentenaId: z.string().guid(), quantidade: z.number().int().positive(), oficialAlterado: z.literal(false) }).strict().parse(data);
     const depois = await supabase.auth.getUser();
     if (depois.error || depois.data.user?.id !== userId || r.requestId !== p.requestId || r.quantidade !== p.linhas.length) throw new Error("Sessão ou resposta divergente.");
   }, onSuccess: async (_r, p) => {

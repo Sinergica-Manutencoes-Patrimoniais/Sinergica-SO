@@ -6,7 +6,7 @@ import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { RegistrarOcorrenciaGrupo } from "./RegistrarOcorrenciaGrupo";
 import { ReabrirGrupoFila } from "./ReabrirGrupoFila";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const previaSchema = z.object({ tipo: z.enum(["calendario", "visita"]), preparadaId: uuid, cicloId: uuid, grupoId: uuid, filaRevisao: z.number().int().positive(), filaEstado: z.enum(["aguardando", "verificacao", "cancelado"]), gruposRegistrados: z.number().int().nonnegative(), efeitosLocais: z.number().int().nonnegative(), fotografiaHash: z.string().regex(/^[a-f0-9]{64}$/), confirmavel: z.boolean(), fontesExternasComprovadas: z.literal(false), declaracaoAtual: z.boolean(), podeReabrir: z.boolean() }).strict();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, planoId: uuid, preparadaId: uuid, tipo: z.enum(["calendario", "visita"]), filaRevisao: z.number().int().positive(), fotografiaHash: z.string().regex(/^[a-f0-9]{64}$/), fontes: z.string().trim().min(1).max(2000), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;

@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { HistoricoAutorizacaoComplemento } from "./HistoricoAutorizacaoComplemento";
 
-const linha = z.object({ item_id: z.string().uuid(), revisao: z.number().int().positive(), valor_centavos: z.string(), estado: z.string(), autorizacao_id: z.string().uuid().nullable() }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), propostaId: z.string().uuid(), itemId: z.string().uuid(), revisao: z.number().int().positive(), motivo: z.string().min(1).max(1000) }).strict();
+const linha = z.object({ item_id: z.string().guid(), revisao: z.number().int().positive(), valor_centavos: z.string(), estado: z.string(), autorizacao_id: z.string().guid().nullable() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), propostaId: z.string().guid(), itemId: z.string().guid(), revisao: z.number().int().positive(), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function AutorizacaoComplemento({ usuario, clienteId, propostaId }: { usuario: string; clienteId: string; propostaId: string }) {
   const chave = `autorizacao-complemento:${JSON.stringify([usuario, clienteId, propostaId])}`; const cache = useQueryClient(); const bloqueio = useRef(false);
@@ -14,7 +14,7 @@ export function AutorizacaoComplemento({ usuario, clienteId, propostaId }: { usu
   const lista = useInfiniteQuery({ queryKey: ["comercial-complementos", usuario, clienteId, propostaId], gcTime: 0, retry: false, initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("financeiro").rpc("sso_listar_complementos_comercial", { p_cliente_id: clienteId, p_proposta_id: propostaId, p_apos: pageParam, p_limite: 50 }).abortSignal(signal); if (error) throw error; return z.array(linha).parse(data); }, getNextPageParam: (p) => p.length === 50 ? p.at(-1)?.item_id : undefined });
   const comando = useMutation({ mutationFn: async (p: Pedido) => { const { data, error } = await supabase.schema("financeiro").rpc("sso_autorizar_complemento_interno", { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_item_id: p.itemId, p_expected_revision: p.revisao, p_motivo: p.motivo }); if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), itemId: z.string().uuid(), revisaoItem: z.number().int(), valorCentavos: z.string(), estado: z.literal("autorizacao_interna"), aceiteCliente: z.literal(false), cobrancaEnviada: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), itemId: z.string().guid(), revisaoItem: z.number().int(), valorCentavos: z.string(), estado: z.literal("autorizacao_interna"), aceiteCliente: z.literal(false), cobrancaEnviada: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.itemId !== p.itemId || r.revisaoItem !== p.revisao) throw new Error("Resposta divergente"); } });
   const enviar = async (p: Pedido) => { if (bloqueio.current) return; bloqueio.current = true; try { await comando.mutateAsync(p); sessionStorage.removeItem(chave); setPendente(null); setConfirmado(false); setMotivo(""); setMensagem("Autorização interna registrada; não é aceite do Cliente nem cobrança."); await cache.invalidateQueries({ queryKey: ["comercial-complementos", usuario, clienteId, propostaId] }); } catch { setMensagem("Resultado não confirmado. Repita o mesmo pedido ou procure suporte."); } finally { bloqueio.current = false; } };
   return <section aria-label="Autorização interna de complementos"><h3>Autorização interna de complementos</h3><p>Decisão interna sobre valor exato, não é aceite do Cliente nem substitui aprovação contratual. Não envia cobrança.</p>

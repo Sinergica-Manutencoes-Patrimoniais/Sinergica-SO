@@ -29,8 +29,8 @@ export function BreadcrumbGrupo({
       if (error) throw error;
       const r = z
         .object({
-          grupoId: z.string().uuid(),
-          clienteId: z.string().uuid(),
+          grupoId: z.string().guid(),
+          clienteId: z.string().guid(),
           estado: z.enum(["disponivel", "indisponivel", "ciclo", "limite"]),
           caminho: z.array(z.string()).max(65),
         })

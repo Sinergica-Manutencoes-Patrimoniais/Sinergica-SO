@@ -3,9 +3,9 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), outboxId: z.string().uuid(), componenteId: z.string().uuid(), observacao: z.string().min(1).max(2000) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), outboxId: z.string().guid(), componenteId: z.string().guid(), observacao: z.string().min(1).max(2000) }).strict();
 const reciboSchema = pedidoSchema.omit({ observacao: true }).extend({ criadoEm: z.string().datetime({ offset: true }) }).strict();
-const linhaSchema = z.object({ request_id: z.string().uuid(), ator_id: z.string().uuid(), observacao: z.string().min(1).max(2000), criado_em: z.string().datetime({ offset: true }) }).strict();
+const linhaSchema = z.object({ request_id: z.string().guid(), ator_id: z.string().guid(), observacao: z.string().min(1).max(2000), criado_em: z.string().datetime({ offset: true }) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; outboxId: string; componenteId: string };
 export function ObservacoesReserva(props: Props) {

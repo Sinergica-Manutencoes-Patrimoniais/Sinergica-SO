@@ -3,10 +3,10 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const base = { requestId: z.string().uuid(), itemId: z.string().uuid(), expectedRevision: z.number().int().positive(), motivo: z.string().trim().min(1).max(2000), protocolo: z.literal("mediado").optional() };
+const base = { requestId: z.string().guid(), itemId: z.string().guid(), expectedRevision: z.number().int().positive(), motivo: z.string().trim().min(1).max(2000), protocolo: z.literal("mediado").optional() };
 const schema = z.discriminatedUnion("tipo", [
-  z.object({ ...base, tipo: z.literal("estornar"), estornoId: z.string().uuid(), alocacaoId: z.string().uuid() }).strict(),
-  z.object({ ...base, tipo: z.literal("complementar"), novoItemId: z.string().uuid(), complementoId: z.string().uuid(), valorCentavos: z.number().int().positive().safe() }).strict(),
+  z.object({ ...base, tipo: z.literal("estornar"), estornoId: z.string().guid(), alocacaoId: z.string().guid() }).strict(),
+  z.object({ ...base, tipo: z.literal("complementar"), novoItemId: z.string().guid(), complementoId: z.string().guid(), valorCentavos: z.number().int().positive().safe() }).strict(),
 ]);
 type Pedido = z.infer<typeof schema>;
 function mesmaTentativa(salvo: string | null, pedido: Pedido): boolean {
@@ -36,7 +36,7 @@ function Conteudo({ usuario, cliente, itemId, revisao, status }: Props) {
     enabled: status === "parcial" || status === "faturado", initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => { const antes=await supabase.auth.getUser(); if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");
       const { data, error } = await (import.meta.env.VITE_SSO_CORRIGIR_FATURAVEL_MEDIADO_ENABLED === "true" ? supabase.schema("financeiro").rpc("sso_listar_alocacoes_mediada", { p_ator_id: usuario, p_cliente_id: cliente, p_item_id: itemId, p_apos: pageParam }) : supabase.schema("financeiro").rpc("sso_listar_alocacoes_faturavel", { p_item_id: itemId, p_apos: pageParam })).abortSignal(signal);
-      if (error) throw error; const pagina=z.array(z.object({ id: z.string().uuid(), documento_ref: z.string(),
+      if (error) throw error; const pagina=z.array(z.object({ id: z.string().guid(), documento_ref: z.string(),
         valor_centavos: z.number().int().positive().safe(), estornada: z.boolean(), criado_em: z.string() }).strict()).max(20).parse(data);
       let anterior=pageParam?.toLowerCase()??"";for(const item of pagina){if(item.id.toLowerCase()<=anterior)throw new Error("Página divergente.");anterior=item.id.toLowerCase();}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return pagina; },

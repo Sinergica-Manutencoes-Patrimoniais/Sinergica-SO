@@ -38,8 +38,8 @@ export function PreflightAprovacaoRevisao({
       const r = z
         .object({
           revisao: z.number().int().positive(),
-          versaoAnteriorId: z.string().uuid().nullable(),
-          rascunhoId: z.string().uuid().nullable(),
+          versaoAnteriorId: z.string().guid().nullable(),
+          rascunhoId: z.string().guid().nullable(),
           snapshotAnteriorDisponivel: z.boolean(),
           vigenciaAnteriorInicio: z.string().date().nullable(),
           vigenciaAnteriorFim: z.string().date().nullable(),

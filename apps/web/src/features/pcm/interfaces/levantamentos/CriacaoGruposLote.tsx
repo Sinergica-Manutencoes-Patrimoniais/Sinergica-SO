@@ -2,8 +2,8 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-const itemSchema=z.object({chave:z.string().min(1).max(200),atributos:z.record(z.string(), z.unknown()),localId:z.string().uuid(),categoriaId:z.string().uuid(),sistemaId:z.string().uuid().nullable(),quantidade:z.number().int().positive().safe(),codigoRevision:z.number().int().nonnegative(),codigo:z.string().min(1).max(200).nullable().optional(),requestId:z.string().uuid()}).strict();
-const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();
+const itemSchema=z.object({chave:z.string().min(1).max(200),atributos:z.record(z.string(), z.unknown()),localId:z.string().guid(),categoriaId:z.string().guid(),sistemaId:z.string().guid().nullable(),quantidade:z.number().int().positive().safe(),codigoRevision:z.number().int().nonnegative(),codigo:z.string().min(1).max(200).nullable().optional(),requestId:z.string().guid()}).strict();
+const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 const Contexto=createContext<((item:Item)=>void) | null>(null);
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;children:ReactNode};
@@ -18,8 +18,8 @@ function Conteudo({userId,clienteId,loteId,revisao,children}:Props){
   if(antes.error || antes.data.user?.id!==userId || sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");
   const {data,error}=await supabase.schema("pcm").rpc("sso_criar_grupos_autorizado",{p_request_id:p.requestId,p_lote_id:p.loteId,p_expected_revision:p.revision,p_itens:p.itens});
   if(error)throw error;
-  const individual=z.object({aggregateId:z.string().uuid(),revision:z.number().int().positive(),requestId:z.string().uuid(),state:z.literal("pendente"),created:z.literal(true),linkedIds:z.object({entidadeId:z.string().uuid(),tipo:z.literal("grupo_quantitativo")})}).passthrough();
-  const r=z.object({aggregateId:z.string().uuid(),revision:z.number().int(),requestId:z.string().uuid(),atomicidade:z.literal("integral"),resultados:z.array(z.object({chave:z.string(),resultado:individual}))}).parse(data);
+  const individual=z.object({aggregateId:z.string().guid(),revision:z.number().int().positive(),requestId:z.string().guid(),state:z.literal("pendente"),created:z.literal(true),linkedIds:z.object({entidadeId:z.string().guid(),tipo:z.literal("grupo_quantitativo")})}).passthrough();
+  const r=z.object({aggregateId:z.string().guid(),revision:z.number().int(),requestId:z.string().guid(),atomicidade:z.literal("integral"),resultados:z.array(z.object({chave:z.string(),resultado:individual}))}).parse(data);
   if(r.aggregateId!==p.loteId || r.requestId!==p.requestId || r.revision!==p.revision+p.itens.length || r.resultados.length!==p.itens.length || r.resultados.some((v,i)=>v.chave!==p.itens[i]?.chave || v.resultado.requestId!==p.itens[i]?.requestId || v.resultado.aggregateId!==p.loteId || v.resultado.revision!==p.revision+i+1) || new Set(r.resultados.map(v=>v.resultado.linkedIds.entidadeId.toLowerCase())).size!==r.resultados.length)throw new Error("Resposta divergente");
   const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==userId || sessionStorage.getItem(storage)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");return r;
  },onSuccess:async(r,p)=>{

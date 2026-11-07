@@ -3,13 +3,13 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
 const itemSchema = z.object({
-  id: z.string().uuid(), revision: z.number().int().positive(), cenario: z.string().regex(/^CT-(00[1-9]|0[12][0-9]|030)$/),
-  versao: z.string().min(1).max(120), ambiente: z.string().min(1).max(120), executorId: z.string().uuid(),
+  id: z.string().guid(), revision: z.number().int().positive(), cenario: z.string().regex(/^CT-(00[1-9]|0[12][0-9]|030)$/),
+  versao: z.string().min(1).max(120), ambiente: z.string().min(1).max(120), executorId: z.string().guid(),
   executadoEm: z.string().datetime({offset:true}), resultado: z.enum(["passou", "falhou", "bloqueado"]),
   identificadores: z.array(z.string()).min(1).max(50), artefatos: z.array(z.string()).min(1).max(50), ressalva: z.string().max(2000),
 }).strict();
 const paginaSchema = z.object({
-  clienteId: z.string().uuid(), onda: z.number().int().min(1).max(6), revision: z.number().int().nonnegative(),
+  clienteId: z.string().guid(), onda: z.number().int().min(1).max(6), revision: z.number().int().nonnegative(),
   itens: z.array(itemSchema).max(50),
 }).strict();
 type Cursor = { apos: number | null; revision: number | null };

@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha=z.object({supressao_id:z.string().uuid(),serie_id:z.string().uuid(),regra_id:z.string().uuid(),semana_origem:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),data_contratual:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),feriado_ativo:z.boolean(),revogada:z.boolean(),criado_em:z.string().datetime({offset:true}),visita_suprimida_id:z.string().uuid().nullable().optional()}).strict();
-const pedido=z.object({requestId:z.string().uuid(),supressaoId:z.string().uuid(),motivo:z.string().trim().min(1).max(2000)}).strict();
+const linha=z.object({supressao_id:z.string().guid(),serie_id:z.string().guid(),regra_id:z.string().guid(),semana_origem:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),data_contratual:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),feriado_ativo:z.boolean(),revogada:z.boolean(),criado_em:z.string().datetime({offset:true}),visita_suprimida_id:z.string().guid().nullable().optional()}).strict();
+const pedido=z.object({requestId:z.string().guid(),supressaoId:z.string().guid(),motivo:z.string().trim().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof pedido>;
 type Props={userId:string;clienteId:string;feriadoId:string};
 export function SupressoesFeriado(props:Props){

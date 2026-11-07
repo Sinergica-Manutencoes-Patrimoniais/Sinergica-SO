@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { RetificarFonteAquisicao } from "./RetificarFonteAquisicao";
 import { valorReaisParaCentavos } from "../../domain/valor-em-reais";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const tipo = z.enum(["material", "retirada_exclusiva"]);
 const pedidoSchema = z.object({ atorId: uuid, clienteId: uuid, requestId: uuid, fonteId: uuid, listaId: uuid,
   listaRevision: z.number().int().positive(), tipo, descricao: z.string().trim().min(1).max(1000),

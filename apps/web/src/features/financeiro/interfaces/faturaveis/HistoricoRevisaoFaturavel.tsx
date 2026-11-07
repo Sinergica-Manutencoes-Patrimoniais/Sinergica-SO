@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const item = z.object({ revisao: z.number().int().positive(), tipo: z.enum(["conferido", "cancelado"]),
   valor_anterior_centavos: z.string().regex(/^\d+$/), valor_final_centavos: z.string().regex(/^\d+$/).nullable(),
-  motivo: z.string().nullable(), ator_id: z.string().uuid(), ocorrido_em: z.string() }).strict();
+  motivo: z.string().nullable(), ator_id: z.string().guid(), ocorrido_em: z.string() }).strict();
 export function HistoricoRevisaoFaturavel({ usuario, cliente, itemId, revisao }: { usuario: string; cliente: string; itemId: string; revisao: number }) {
   const [aberto, setAberto] = useState(false);
   const lista = useInfiniteQuery({ queryKey: ["historico-revisao-faturavel", usuario, cliente, itemId, revisao], enabled: aberto,

@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase-client";
 import { enviarComprovanteDespesa, type DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
 import { CorrigirComprovanteMediado } from "./CorrigirComprovanteMediado";
 
-const esquema = z.object({ requestId: z.string().uuid(), despesaId: z.string().uuid(), visitaId: z.string().uuid(),
+const esquema = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), valorCentavos: z.number().int().nonnegative().safe(),
-  comprovanteObjetoId: z.string().uuid().nullable(), motivo: z.string().trim().min(1).max(2000),
+  comprovanteObjetoId: z.string().guid().nullable(), motivo: z.string().trim().min(1).max(2000),
   conferencia: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof esquema>;
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
@@ -65,7 +65,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
     if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Tentativa divergente");
     const uploadSalvo = sessionStorage.getItem(chaveUpload);
     if (uploadSalvo !== null) {
-      const marcador = z.object({ requestId: z.string().uuid() }).strict().parse(JSON.parse(uploadSalvo));
+      const marcador = z.object({ requestId: z.string().guid() }).strict().parse(JSON.parse(uploadSalvo));
       if (marcador.requestId !== pedido.requestId) throw new Error("Upload divergente");
       sessionStorage.removeItem(chaveUpload); setUploadIncerto(false);
     }

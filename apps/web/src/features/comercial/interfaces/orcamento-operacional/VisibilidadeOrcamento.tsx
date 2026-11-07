@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const evento = z.object({ situacao: z.enum(["publicar", "retirar", "republicar"]), sequencia: z.number().int().positive().nullable(),
-  acao: z.enum(["retirar", "republicar"]).nullable(), motivo: z.string().nullable(), ator_id: z.string().uuid().nullable(), criado_em: z.string().nullable() }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), propostaId: z.string().uuid(), versao: z.number().int().positive(), acao: z.enum(["retirar", "republicar"]), motivo: z.string().min(1).max(1000) }).strict();
+  acao: z.enum(["retirar", "republicar"]).nullable(), motivo: z.string().nullable(), ator_id: z.string().guid().nullable(), criado_em: z.string().nullable() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(), acao: z.enum(["retirar", "republicar"]), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function VisibilidadeOrcamento({ usuario, cliente, propostaId, versao }: { usuario: string; cliente: string; propostaId: string; versao: number }) {
   const chave = `sso-visibilidade-orcamento:${JSON.stringify([usuario, cliente, propostaId, versao])}`; const cache = useQueryClient();

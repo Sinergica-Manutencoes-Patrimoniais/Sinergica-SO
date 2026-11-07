@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { UnirChamadoCampo } from "./UnirChamadoCampo";
 import { CancelarChamadoCampo } from "./CancelarChamadoCampo";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 export const pedidoTriagemChamadoCampoSchema = z.object({ requestId: uuid, clienteId: uuid, osId: uuid, chamadoId: uuid,
   chamadoRevision: z.number().int().positive().safe(), triagemRevision: z.number().int().nonnegative().safe(),
   acao: z.enum(["confirmar", "corrigir"]), titulo: z.string().nullable(), descricao: z.string().nullable(), motivo: z.string().min(1).max(2000) }).strict();

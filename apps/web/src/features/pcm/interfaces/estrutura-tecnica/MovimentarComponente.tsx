@@ -77,14 +77,14 @@ export function MovimentarComponente({
       await conferirSessao();
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa alterada.");
       const recibo = z.object({
-        requestId: z.string().uuid(),
-        aggregateId: z.string().uuid(),
+        requestId: z.string().guid(),
+        aggregateId: z.string().guid(),
         revision: z.number().int().positive(),
         linkedIds: z.object({
-          clienteId: z.string().uuid(),
-          areaId: z.string().uuid().optional(),
-          localId: z.string().uuid().optional(),
-          parentId: z.string().uuid().optional(),
+          clienteId: z.string().guid(),
+          areaId: z.string().guid().optional(),
+          localId: z.string().guid().optional(),
+          parentId: z.string().guid().optional(),
         }),
       }).passthrough().parse(await enviar(comando));
       if (

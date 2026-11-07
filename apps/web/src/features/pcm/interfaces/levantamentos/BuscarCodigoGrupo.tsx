@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-const linha=z.object({lote_id:z.string().uuid(),linha_chave:z.string(),nome:z.string().nullable(),estado:z.enum(["incorporada","rejeitada","pendente"])}).strict();
+const linha=z.object({lote_id:z.string().guid(),linha_chave:z.string(),nome:z.string().nullable(),estado:z.enum(["incorporada","rejeitada","pendente"])}).strict();
 export function BuscarCodigoGrupo({userId,clienteId}:{userId:string;clienteId:string}){
   const ativo=import.meta.env.VITE_SSO_BUSCAR_CODIGO_GRUPO_STAGING_ENABLED==="true";const [entrada,setEntrada]=useState("");const [codigo,setCodigo]=useState("");
   const q=useInfiniteQuery({queryKey:["levantamentos",userId,clienteId,"codigo-grupo",codigo],enabled:ativo && codigo.length>0,gcTime:0,initialPageParam:null as {lote:string;chave:string}|null,queryFn:async({pageParam,signal})=>{

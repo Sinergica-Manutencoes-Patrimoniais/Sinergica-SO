@@ -4,7 +4,7 @@ import { supabase } from "../../../lib/supabase-client";
 import { ConfirmacaoVisita } from "./ConfirmacaoVisita";
 
 type Props = { userId: string; clienteId: string; osId: string };
-const visita = z.object({ id: z.string().uuid(), inicio_em: z.string(), fim_em: z.string(), mensagem: z.string(), ciente_em: z.string().nullable() }).strict();
+const visita = z.object({ id: z.string().guid(), inicio_em: z.string(), fim_em: z.string(), mensagem: z.string(), ciente_em: z.string().nullable() }).strict();
 export function VisitasOsPortal(props: Props) {
   if (import.meta.env.VITE_SSO_PORTAL_VISITAS_ENABLED !== "true") return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;

@@ -7,7 +7,7 @@ import { ChamadoPainel } from "../../components/ChamadoPainel";
 import { carregarDadosAberturaOs } from "../../application/abrir-ordem-servico";
 import { supabaseOrdemServicoAdapter } from "../../infrastructure/supabase-ordem-servico-adapter";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, planoId: uuid, preparadaId: uuid }).strict();
 const resultadoSchema = pedidoSchema.extend({ cicloId: uuid, chamadoId: uuid, numero: z.string().min(1), criado: z.boolean(), osCriada: z.literal(false), tarefaAuvoCriada: z.literal(false) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;

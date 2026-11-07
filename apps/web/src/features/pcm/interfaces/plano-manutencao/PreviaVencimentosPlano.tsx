@@ -20,13 +20,13 @@ import { TriagemCicloAtrasado } from "./TriagemCicloAtrasado";
 const obrigacao = z
   .object({
     tipo: z.enum(["calendario", "visita"]),
-    preparada_id: z.string().uuid(),
-    versao_id: z.string().uuid(),
-    rotina_id: z.string().uuid(),
+    preparada_id: z.string().guid(),
+    versao_id: z.string().guid(),
+    rotina_id: z.string().guid(),
     alvo_tipo: z.string(),
-    alvo_id: z.string().uuid(),
+    alvo_id: z.string().guid(),
     vencimento_original: z.string().date(),
-    ocorrencia_grupo_id: z.string().uuid().nullable(),
+    ocorrencia_grupo_id: z.string().guid().nullable(),
     estado: z.string(),
     fila_executavel: z.literal(false),
   })
@@ -277,11 +277,11 @@ function Conteudo({
         .array(
           z
             .object({
-              ciclo_id: z.string().uuid(),
-              preparada_id: z.string().uuid(),
-              versao_origem_id: z.string().uuid(),
+              ciclo_id: z.string().guid(),
+              preparada_id: z.string().guid(),
+              versao_origem_id: z.string().guid(),
               alvo_tipo: z.enum(["sistema", "componente", "grupo"]),
-              alvo_id: z.string().uuid(),
+              alvo_id: z.string().guid(),
             })
             .strict(),
         )

@@ -10,7 +10,7 @@ export function RecuperarConfirmacaoFila({ userId, clienteId, itensCarregados, d
   const [selecionado, setSelecionado] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   function recuperar() {
-    const id = z.string().uuid().safeParse(entrada.trim().toLowerCase());
+    const id = z.string().guid().safeParse(entrada.trim().toLowerCase());
     if (!id.success) { setAviso("Informe o identificador válido do item da fila."); return; }
     if (itensCarregados.includes(id.data)) { setAviso("O item está na lista; use a tentativa exibida nele."); setSelecionado(null); return; }
     try {

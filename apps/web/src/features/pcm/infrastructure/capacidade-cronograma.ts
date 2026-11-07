@@ -4,8 +4,8 @@ import { semanaCapacidade } from "../domain/semana-capacidade";
 import type { CapacidadeCronograma } from "../application/cronograma-fotografia";
 
 const minutos = z.number().int().nonnegative().safe();
-const snapshot = z.object({ clienteId: z.string().uuid(), semanaInicio: z.string().date(), completude: z.literal("desconhecida"),
-  limiteDisponibilidadesAtingido: z.boolean(), disponibilidades: z.array(z.object({ id: z.string().uuid(), funcionario_id: z.string().uuid(),
+const snapshot = z.object({ clienteId: z.string().guid(), semanaInicio: z.string().date(), completude: z.literal("desconhecida"),
+  limiteDisponibilidadesAtingido: z.boolean(), disponibilidades: z.array(z.object({ id: z.string().guid(), funcionario_id: z.string().guid(),
     semana_inicio: z.string().date(), revisao: z.number().int().positive(), destinados_minutos: minutos, reservas_minutos: minutos,
     ausencias_minutos: minutos }).passthrough()).max(100) }).passthrough();
 

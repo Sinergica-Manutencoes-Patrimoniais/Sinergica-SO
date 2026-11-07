@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import type { LancamentoItem } from "../../domain/lancamento";
 import { VincularDocumentoCobranca } from "./VincularDocumentoCobranca";
 
-const schema = z.object({ requestId: z.string().uuid(), lancamentoId: z.string().uuid(), osId: z.string().uuid(),
+const schema = z.object({ requestId: z.string().guid(), lancamentoId: z.string().guid(), osId: z.string().guid(),
   descricao: z.string().trim().min(1).max(1000), valorCentavos: z.number().int().positive(),
   competencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), vencimento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable() }).strict();
 type Pedido = z.infer<typeof schema>;

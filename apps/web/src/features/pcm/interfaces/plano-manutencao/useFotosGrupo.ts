@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const fotoSchema = z.object({ id: uuid, atestado_request_id: uuid, nota_id: uuid, revisao: z.number().int().positive(), mime_declarado: z.enum(["image/jpeg", "image/png"]), justificativa: z.string(), criado_em: z.string() }).strict();
 export function useFotosGrupo(userId: string, clienteId: string, ocorrenciaId: string) {
   return useInfiniteQuery({ queryKey: ["fotos-atestado-grupo", userId, clienteId, ocorrenciaId], initialPageParam: null as number | null, gcTime: 0, retry: false, queryFn: async ({ pageParam, signal }) => {

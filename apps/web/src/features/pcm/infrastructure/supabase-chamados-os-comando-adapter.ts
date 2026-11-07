@@ -3,8 +3,8 @@ import { supabase } from "../../../lib/supabase-client";
 import { criarOsChamadoSchema, type CriacaoOsChamadoGateway } from "../application/chamados-os-comando";
 
 const resultadoSchema = z.object({
-  chamadoId: z.string().uuid(), osId: z.string().uuid(), numero: z.string().min(1),
-  revision: z.number().int().safe().positive(), requestId: z.string().uuid(),
+  chamadoId: z.string().guid(), osId: z.string().guid(), numero: z.string().min(1),
+  revision: z.number().int().safe().positive(), requestId: z.string().guid(),
 }).strict();
 
 // O núcleo 0324 continua privado; o wrapper permanece gateado até rollout coordenado.
@@ -41,8 +41,8 @@ export const supabaseChamadosOsComandoAdapter: CriacaoOsChamadoGateway = {
     });
     if (error) throw error;
     const resposta = z.discriminatedUnion("estado", [
-      z.object({ requestId: z.string().uuid(), estado: z.literal("indeterminado"), autorizaNovaCriacao: z.literal(false) }).strict(),
-      z.object({ requestId: z.string().uuid(), estado: z.literal("confirmado"), resultado: resultadoSchema, autorizaNovaCriacao: z.literal(false) }).strict(),
+      z.object({ requestId: z.string().guid(), estado: z.literal("indeterminado"), autorizaNovaCriacao: z.literal(false) }).strict(),
+      z.object({ requestId: z.string().guid(), estado: z.literal("confirmado"), resultado: resultadoSchema, autorizaNovaCriacao: z.literal(false) }).strict(),
     ]).parse(data);
     if (resposta.requestId !== c.requestId) throw new Error("Pedido divergente.");
     if (resposta.estado === "indeterminado") return { estado: "indeterminado" };

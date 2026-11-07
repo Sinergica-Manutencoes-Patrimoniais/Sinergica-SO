@@ -5,9 +5,9 @@ import { supabase } from "../../../../lib/supabase-client";
 import { PromoverRetornoCiclo } from "./PromoverRetornoCiclo";
 import { HistoricoPromocaoIntegral } from "./HistoricoPromocaoIntegral";
 
-const itemSchema = z.object({ id: z.string().uuid(), ciclo_id: z.string().uuid(), pendencia_id: z.string().uuid(),
-  composicao_id: z.string().uuid(), chamado_id: z.string().uuid(), parcela_id: z.string().uuid(), os_id: z.string().uuid(),
-  reconciliacao_id: z.string().uuid(), estado: z.enum(["aguardando", "promovido"]), revisao: z.number().int().positive(),
+const itemSchema = z.object({ id: z.string().guid(), ciclo_id: z.string().guid(), pendencia_id: z.string().guid(),
+  composicao_id: z.string().guid(), chamado_id: z.string().guid(), parcela_id: z.string().guid(), os_id: z.string().guid(),
+  reconciliacao_id: z.string().guid(), estado: z.enum(["aguardando", "promovido"]), revisao: z.number().int().positive(),
   criado_em: z.string().datetime({ offset: true }) }).strict();
 
 /** Consulta experimental separada da fila e do ranking oficiais. */

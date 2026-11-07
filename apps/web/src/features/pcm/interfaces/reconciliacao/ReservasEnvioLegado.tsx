@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { EvidenciasOs } from "./EvidenciasOs";
 import { ReconciliarReservaLegada } from "./ReconciliarReservaLegada";
 
-const itemSchema = z.object({ reserva_id: z.string().uuid(), os_id: z.string().uuid(),
+const itemSchema = z.object({ reserva_id: z.string().guid(), os_id: z.string().guid(),
   criado_em: z.string().refine((v) => Number.isFinite(Date.parse(v))) }).strict();
 
 export function ReservasEnvioLegado({ userId, clienteId, onAbrirOs }: { userId: string; clienteId: string; onAbrirOs?: (osId: string) => void }) {

@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { useState } from "react";
 import { AvaliarEvidenciaOs } from "./AvaliarEvidenciaOs";
 
-const evidencia = z.object({ request_id: z.string().uuid(), resultado_declarado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), origem: z.string(), referencia: z.string(), criado_em: z.string() }).strict();
+const evidencia = z.object({ request_id: z.string().guid(), resultado_declarado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), origem: z.string(), referencia: z.string(), criado_em: z.string() }).strict();
 export function EvidenciasOs({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const consulta = useInfiniteQuery({

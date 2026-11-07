@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const estadoSchema = z.object({ parcelaId: id, situacao: z.string(), revision: z.number().int().nonnegative(), osId: id.nullable(),
   suspensao: z.enum(["suspenso", "retomado"]).nullable(), suspensaoRevision: z.number().int().positive().nullable(),
   interrupcao: z.enum(["declarada", "revogada"]).nullable(), interrupcaoRevision: z.number().int().positive().nullable() }).strict();

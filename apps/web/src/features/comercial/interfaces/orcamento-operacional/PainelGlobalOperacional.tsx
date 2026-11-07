@@ -3,8 +3,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ResumoDecisaoPcm } from "./ResumoDecisaoPcm";
 
-const item = z.object({ id: z.string().uuid(), cliente_id: z.string().uuid(), cliente_nome: z.string(),
-  os_id: z.string().uuid(), os_numero: z.string(), status: z.string(), versao: z.number().int().positive(),
+const item = z.object({ id: z.string().guid(), cliente_id: z.string().guid(), cliente_nome: z.string(),
+  os_id: z.string().guid(), os_numero: z.string(), status: z.string(), versao: z.number().int().positive(),
   criada_em: z.string(), tem_oportunidade: z.boolean() }).strict();
 type Props = { usuario: string; inicio: string; fim: string };
 export function PainelGlobalOperacional(props: Props) {

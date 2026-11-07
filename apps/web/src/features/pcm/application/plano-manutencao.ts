@@ -29,21 +29,21 @@ const dataBase = z
   .nullable();
 const planoSchema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     expectedRevision: inteiro,
-    planoId: z.string().uuid(),
-    clienteId: z.string().uuid(),
+    planoId: z.string().guid(),
+    clienteId: z.string().guid(),
     nome: z.string().trim().min(1).max(200),
   })
   .strict();
 const rotinaCampos = {
-  requestId: z.string().uuid(),
+  requestId: z.string().guid(),
   expectedRevision: inteiro.min(1),
-  planoId: z.string().uuid(),
-  rotinaId: z.string().uuid(),
+  planoId: z.string().guid(),
+  rotinaId: z.string().guid(),
   nome: z.string().trim().min(1).max(200),
   alvoTipo: z.enum(["sistema", "componente", "grupo"]),
-  alvoId: z.string().uuid(),
+  alvoId: z.string().guid(),
   modo: z.enum(["calendario", "visita"]),
   intervalo: inteiro.min(1).nullable(),
   unidade: z.enum(["dias", "semanas", "meses", "anos"]).nullable(),
@@ -62,20 +62,20 @@ const edicaoSchema = z
     toleranciaAntes: inteiro,
     toleranciaDepois: inteiro,
     instrucao: z.string().trim().max(10000).nullable(),
-    questionarioId: z.string().uuid().nullable(),
+    questionarioId: z.string().guid().nullable(),
     tipoTempo: z.enum(["total", "por_unidade"]).nullable(),
   })
   .strict()
   .refine(validarParRecorrencia, "Informe intervalo e unidade juntos.");
 const revisaoCampos = {
-  requestId: z.string().uuid(),
+  requestId: z.string().guid(),
   expectedRevision: inteiro.min(1),
-  planoId: z.string().uuid(),
+  planoId: z.string().guid(),
 };
 const retiradaSchema = z
   .object({
     ...revisaoCampos,
-    rotinaId: z.string().uuid(),
+    rotinaId: z.string().guid(),
     motivo: z.string().trim().min(1).max(2000),
   })
   .strict();
@@ -100,7 +100,7 @@ const aprovacaoSchema = z
   })
   .strict();
 const iniciarRevisaoSchema = z
-  .object({ ...revisaoCampos, novaVersaoId: z.string().uuid() })
+  .object({ ...revisaoCampos, novaVersaoId: z.string().guid() })
   .strict();
 
 export function validarInicioRevisao(

@@ -3,9 +3,9 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const estadoSchema = z.object({ clienteId: z.string().uuid(), componenteId: z.string().uuid(), textoAtual: z.string().nullable(), categoriaId: z.string().uuid().nullable(), revision: z.number().int().nonnegative(), atual: z.boolean() }).strict();
-const categoriaSchema = z.object({ id: z.string().uuid(), nome: z.string().min(1) }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), componenteId: z.string().uuid(), categoriaId: z.string().uuid(), textoObservado: z.string().nullable(), revision: z.number().int().nonnegative(), motivo: z.string().min(1).max(2000) }).strict();
+const estadoSchema = z.object({ clienteId: z.string().guid(), componenteId: z.string().guid(), textoAtual: z.string().nullable(), categoriaId: z.string().guid().nullable(), revision: z.number().int().nonnegative(), atual: z.boolean() }).strict();
+const categoriaSchema = z.object({ id: z.string().guid(), nome: z.string().min(1) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), componenteId: z.string().guid(), categoriaId: z.string().guid(), textoObservado: z.string().nullable(), revision: z.number().int().nonnegative(), motivo: z.string().min(1).max(2000) }).strict();
 const reciboSchema = pedidoSchema.omit({ textoObservado: true, motivo: true }).extend({ revision: z.number().int().positive() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; componenteId: string };

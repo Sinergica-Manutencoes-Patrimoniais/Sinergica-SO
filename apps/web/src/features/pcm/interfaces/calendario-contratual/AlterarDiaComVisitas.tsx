@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { ExcecaoVisita } from "./ExcecaoVisita";
 import { AlterarDiaComVisitasV2 } from "./AlterarDiaComVisitasV2";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const linha = z
   .object({

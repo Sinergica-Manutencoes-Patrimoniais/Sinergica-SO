@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ documento_id: z.string().uuid(), revisao_item: z.number().int(), valor_centavos: z.string(), criado_em: z.string(), estado: z.enum(["reservado", "liberado", "convertido"]), alocacao_id: z.string().uuid().nullable(), alocacao_centavos: z.string().nullable(), alocacao_estornada: z.boolean() }).strict();
+const linha = z.object({ documento_id: z.string().guid(), revisao_item: z.number().int(), valor_centavos: z.string(), criado_em: z.string(), estado: z.enum(["reservado", "liberado", "convertido"]), alocacao_id: z.string().guid().nullable(), alocacao_centavos: z.string().nullable(), alocacao_estornada: z.boolean() }).strict();
 export function HistoricoDocumentosInternos({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
   const consulta = useInfiniteQuery({ queryKey: ["documento-interno-historico", usuario, cliente, itemId], gcTime: 0, initialPageParam: null as { data: string; id: string } | null,
     queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("financeiro").rpc("sso_historico_documentos_internos", { p_cliente_id: cliente, p_item_id: itemId, p_antes: pageParam?.data ?? null, p_antes_id: pageParam?.id ?? null, p_limite: 50 }).abortSignal(signal); if (error) throw error; return z.array(linha).parse(data); },

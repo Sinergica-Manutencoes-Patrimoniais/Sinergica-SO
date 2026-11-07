@@ -6,7 +6,7 @@ import { supabaseChamadosOsLeituraAdapter } from "../../infrastructure/supabase-
 import { OrdensDoChamado } from "./OrdensDoChamado";
 
 const inteiro = z.union([z.number(), z.string().regex(/^\d+$/)]).refine((v) => Number.isSafeInteger(Number(v)) && Number(v) >= 0).transform(Number);
-const cardSchema = z.object({ id: z.string().uuid(), numero: z.string().min(1), titulo: z.string(), status_chamado: z.string(),
+const cardSchema = z.object({ id: z.string().guid(), numero: z.string().min(1), titulo: z.string(), status_chamado: z.string(),
   total_os: inteiro.nullable(), finalizadas: inteiro.nullable(), etapas_mistas: z.boolean().nullable(), vinculo_inconsistente: z.boolean() }).strict()
   .refine((v) => v.vinculo_inconsistente
     ? v.total_os === null && v.finalizadas === null && v.etapas_mistas === null

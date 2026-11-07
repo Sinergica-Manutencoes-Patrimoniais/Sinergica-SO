@@ -1,5 +1,5 @@
 import { z } from "zod";
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const centavos = z.number().int().nonnegative().safe();
 const revisao = z.number().int().nonnegative().safe();
 const motivo = z.string().trim().min(1).max(2000);

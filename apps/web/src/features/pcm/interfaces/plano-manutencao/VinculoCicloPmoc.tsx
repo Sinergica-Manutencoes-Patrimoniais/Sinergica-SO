@@ -7,9 +7,9 @@ import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 type Props = { userId: string; clienteId: string; propostaId: string; decisaoRevision: number };
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
-    clienteId: z.string().uuid(),
-    propostaId: z.string().uuid(),
+    requestId: z.string().guid(),
+    clienteId: z.string().guid(),
+    propostaId: z.string().guid(),
     decisaoRevision: z.number().int().positive().safe(),
     evidencia: z.string().trim().min(1).max(500),
     motivo: z.string().trim().min(1).max(2000),
@@ -75,10 +75,10 @@ function Conteudo({ userId, clienteId, propostaId, decisaoRevision }: Props) {
       if (error) throw error;
       const r = z
         .object({
-          propostaId: z.string().uuid(),
-          vinculoId: z.string().uuid().nullable(),
+          propostaId: z.string().guid(),
+          vinculoId: z.string().guid().nullable(),
           estado: z.enum(["nao_vinculado", "declarado_pcm", "revisao_necessaria"]),
-          agendamentoId: z.string().uuid().nullable(),
+          agendamentoId: z.string().guid().nullable(),
         })
         .strict()
         .parse(data);
@@ -111,10 +111,10 @@ function Conteudo({ userId, clienteId, propostaId, decisaoRevision }: Props) {
       if (error) throw error;
       const r = z
         .object({
-          requestId: z.string().uuid(),
-          vinculoId: z.string().uuid(),
-          propostaId: z.string().uuid(),
-          agendamentoId: z.string().uuid(),
+          requestId: z.string().guid(),
+          vinculoId: z.string().guid(),
+          propostaId: z.string().guid(),
+          agendamentoId: z.string().guid(),
           escopoDeclaradoPcm: z.literal(true),
           fonteIndependenteValidada: z.literal(false),
           exclusividadeGlobalComprovada: z.literal(false),

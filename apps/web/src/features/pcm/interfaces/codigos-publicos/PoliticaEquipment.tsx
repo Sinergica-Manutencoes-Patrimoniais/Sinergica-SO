@@ -4,8 +4,8 @@ import { z } from "zod";
 import { useAuth } from "../../../../app/auth-context";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linhaSchema = z.object({ categoria_id: z.string().uuid(), nome: z.string().min(1), controlado: z.boolean().nullable(), revisao: z.number().int().nonnegative() }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), categoriaId: z.string().uuid(), revision: z.number().int().nonnegative(), controlado: z.boolean(), motivo: z.string().min(1).max(2000) }).strict();
+const linhaSchema = z.object({ categoria_id: z.string().guid(), nome: z.string().min(1), controlado: z.boolean().nullable(), revisao: z.number().int().nonnegative() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), categoriaId: z.string().guid(), revision: z.number().int().nonnegative(), controlado: z.boolean(), motivo: z.string().min(1).max(2000) }).strict();
 const reciboSchema = pedidoSchema.omit({ motivo: true }).extend({ revision: z.number().int().positive() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Linha = z.infer<typeof linhaSchema>;

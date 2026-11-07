@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Pedido = { requestId: string; clienteId: string; ocorrenciaId: string; osId: string; motivo: string };
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, ocorrenciaId: uuid, osId: uuid, motivo: z.string().trim().min(1).max(2000) }).strict();
 type Props = { userId: string; clienteId: string; planoId: string; ocorrenciaId: string };
 export function VincularOsGrupo(props: Props) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.ocorrenciaId])} {...props} />; }

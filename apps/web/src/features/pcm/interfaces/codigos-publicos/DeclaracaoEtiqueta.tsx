@@ -5,8 +5,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
 const pedidoSchema = z.object({
-  requestId: z.string().uuid(), tipo: z.enum(["sistema", "componente", "grupo_quantitativo"]),
-  ativoId: z.string().uuid(), codigo: z.string().min(1).max(200),
+  requestId: z.string().guid(), tipo: z.enum(["sistema", "componente", "grupo_quantitativo"]),
+  ativoId: z.string().guid(), codigo: z.string().min(1).max(200),
 }).strict();
 const respostaSchema = pedidoSchema.extend({ etiquetadoEm: z.string().datetime({ offset: true }), revision: z.number().int().positive() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;

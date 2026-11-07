@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
 type Props = { userId: string; clienteId: string; osId: string };
-const item = z.object({ id: z.string().uuid(), titulo: z.string(), publicado_em: z.string() }).strict();
+const item = z.object({ id: z.string().guid(), titulo: z.string(), publicado_em: z.string() }).strict();
 export function AnexosOsPortal(props: Props) {
   if (import.meta.env.VITE_SSO_PORTAL_ANEXOS_OS_ENABLED !== "true") return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;

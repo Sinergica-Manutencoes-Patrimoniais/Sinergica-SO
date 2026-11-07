@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const schema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), osId: z.string().uuid(), propostaId: z.string().uuid(),
+const schema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), osId: z.string().guid(), propostaId: z.string().guid(),
   revisao: z.number().int().positive().safe(), motivo: z.string().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof schema>;
 type Props = { userId: string; clienteId: string; osId: string; propostaId: string; revisao: number;

@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const item = z.object({ pendencia_id: z.string().uuid(), parcela_id: z.string().uuid().nullable(), situacao_parcela: z.string().nullable(), reconciliacao_declarada: z.string().nullable(), reconciliacao_revisao: z.number().int().positive().nullable(), execucao_comprovada: z.literal(false), devolucao_autorizada: z.literal(false) }).strict();
+const item = z.object({ pendencia_id: z.string().guid(), parcela_id: z.string().guid().nullable(), situacao_parcela: z.string().nullable(), reconciliacao_declarada: z.string().nullable(), reconciliacao_revisao: z.number().int().positive().nullable(), execucao_comprovada: z.literal(false), devolucao_autorizada: z.literal(false) }).strict();
 type Props = { userId: string; clienteId: string; composicaoId: string };
 export function EscopoEvidencias(props: Props) {
   if (import.meta.env.VITE_SSO_VISAO_ESCOPO_EVIDENCIAS_ENABLED !== "true") return null;

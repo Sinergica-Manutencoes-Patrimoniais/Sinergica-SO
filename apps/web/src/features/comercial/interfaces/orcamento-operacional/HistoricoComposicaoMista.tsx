@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const aquisicao = z.object({ fonteId: uuid, tipo: z.enum(["material", "retirada_exclusiva"]), listaRevision: z.number().int().positive(),
   valorCentavos: z.number().int().safe().nonnegative() }).strict();
 const parcela = z.object({ despesaId: uuid, despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(),

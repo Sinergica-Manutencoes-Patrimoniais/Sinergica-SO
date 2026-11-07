@@ -2,7 +2,7 @@ import { z } from "zod";
 import { chaveIdentidade } from "../domain/capacidade-por-tecnico";
 import type { SnapshotExportacao } from "./snapshot-exportacao";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linhaSchema = z.object({
   tipo: z.enum(["calendario", "visita"]), id: uuid, clienteId: uuid, planoId: uuid, versaoId: uuid, rotinaId: uuid, alvoId: uuid,
   vencimentoOriginal: z.string().date(), dataProgramada: z.string().date().nullable(),

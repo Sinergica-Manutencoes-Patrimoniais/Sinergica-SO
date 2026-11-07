@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const resultado = z.object({ outboxId: z.string().uuid(), contextoEquivalente: z.boolean(), revisaoMonotonicaDisponivel: z.literal(false), situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();
+const resultado = z.object({ outboxId: z.string().guid(), contextoEquivalente: z.boolean(), revisaoMonotonicaDisponivel: z.literal(false), situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();
 export function RevalidarPreviaFila({ userId, clienteId, outboxId, estado, tentativas }: { userId: string; clienteId: string; outboxId: string; estado: string; tentativas: number }) {
   const consulta = useQuery({ queryKey: ["reconciliacao-revalidar-previa", userId, clienteId, outboxId, estado, tentativas], gcTime: 0, staleTime: 0, retry: false,
     queryFn: async ({ signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_revalidar_previa_fila", { p_cliente_id: clienteId, p_outbox_id: outboxId, p_estado: estado, p_tentativas: tentativas }).abortSignal(signal); if (error) throw error; const r = resultado.parse(data); if (r.outboxId !== outboxId) throw new Error("Item divergente"); return r; } });

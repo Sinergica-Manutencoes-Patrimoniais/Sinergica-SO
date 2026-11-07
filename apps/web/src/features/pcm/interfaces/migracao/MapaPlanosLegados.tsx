@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { RelatorioPrevia } from "./RelatorioPrevia";
 import { ConferenciaPlanoLegado } from "./ConferenciaPlanoLegado";
 
-const linha=z.object({plano_legado_id:z.string().uuid(),plano_destino_id:z.string().uuid().nullable(),rotina_id:z.string().uuid().nullable(),versao_id:z.string().uuid().nullable(),estado_destino:z.string().nullable(),
+const linha=z.object({plano_legado_id:z.string().guid(),plano_destino_id:z.string().guid().nullable(),rotina_id:z.string().guid().nullable(),versao_id:z.string().guid().nullable(),estado_destino:z.string().nullable(),
   classificacao:z.enum(["alvo_ambiguo","alvo_indisponivel","destino_ocupado","mapeamento_inconsistente","origem_alterada","rascunho_registrado","destino_sem_mapeamento","sem_destino_observado"])}).strict();
 const nomes={alvo_ambiguo:"Alvo ambíguo: revisar",alvo_indisponivel:"Alvo indisponível: revisar",destino_ocupado:"Identidade de destino indisponível: revisar",mapeamento_inconsistente:"Mapeamento inconsistente: revisar",origem_alterada:"Origem alterada após rascunho",rascunho_registrado:"Rascunho registrado",destino_sem_mapeamento:"Destino sem mapeamento conhecido",sem_destino_observado:"Sem destino observado"} as const;
 

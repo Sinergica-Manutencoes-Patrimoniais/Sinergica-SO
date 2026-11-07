@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const linha = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().guid(),
     nome: z.string(),
     estado: z.enum(["rascunho", "ativo", "pausado"]),
     primeira_data: z.string(),

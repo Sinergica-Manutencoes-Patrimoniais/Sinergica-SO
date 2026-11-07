@@ -6,8 +6,8 @@ import { DiagnosticoDocumentos } from "./DiagnosticoDocumentos";
 import { ConferirDatasDocumentos } from "./ConferirDatasDocumentos";
 import { RelatorioAlocacaoPagamento } from "./RelatorioAlocacaoPagamento";
 
-const item = z.object({ alocacao_id: z.string().uuid(), documento_id: z.string().uuid(), referencia: z.string(), data_documento: z.string(),
-  item_id: z.string().uuid(), valor_centavos: z.string().regex(/^\d+$/), estornada: z.boolean() }).strict();
+const item = z.object({ alocacao_id: z.string().guid(), documento_id: z.string().guid(), referencia: z.string(), data_documento: z.string(),
+  item_id: z.string().guid(), valor_centavos: z.string().regex(/^\d+$/), estornada: z.boolean() }).strict();
 export function DocumentosCompetencia({ usuario, cliente }: { usuario: string; cliente: string }) {
   const hoje = new Date(); const atual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
   const [mes, setMes] = useState(atual); const [competencia, setCompetencia] = useState(atual);

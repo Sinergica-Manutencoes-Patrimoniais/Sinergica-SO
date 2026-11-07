@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const esquema = z.discriminatedUnion("acao", [
-  z.object({ acao: z.literal("publicar"), requestId: z.string().uuid(), publicacaoId: z.string().uuid(), notaId: z.string().uuid(), titulo: z.string().trim().min(1).max(300) }).strict(),
-  z.object({ acao: z.literal("revogar"), requestId: z.string().uuid(), revogacaoId: z.string().uuid(), publicacaoId: z.string().uuid(), motivo: z.string().trim().min(1).max(2000) }).strict(),
+  z.object({ acao: z.literal("publicar"), requestId: z.string().guid(), publicacaoId: z.string().guid(), notaId: z.string().guid(), titulo: z.string().trim().min(1).max(300) }).strict(),
+  z.object({ acao: z.literal("revogar"), requestId: z.string().guid(), revogacaoId: z.string().guid(), publicacaoId: z.string().guid(), motivo: z.string().trim().min(1).max(2000) }).strict(),
 ]);
 type Pedido = z.infer<typeof esquema>;
 type Props = { usuario: string; cliente: string; ordemServico: string };
@@ -25,7 +25,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     initialPageParam: null as string | null, queryFn: async ({ pageParam, signal }) => {
       const { data, error } = await supabase.schema("pcm").rpc("sso_anexos_os_para_publicacao", {
         p_cliente_id: cliente, p_os_id: ordemServico, p_apos: pageParam }).abortSignal(signal);
-      if (error) throw error; return z.array(z.object({ nota_id: z.string().uuid(), criado_em: z.string(), publicacao_id: z.string().uuid().nullable() }).strict()).parse(data);
+      if (error) throw error; return z.array(z.object({ nota_id: z.string().guid(), criado_em: z.string(), publicacao_id: z.string().guid().nullable() }).strict()).parse(data);
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.nota_id : undefined });
   const enviar = useMutation({ mutationFn: async (p: Pedido) => {
     const chamada = p.acao === "publicar" ? await supabase.schema("pcm").rpc("sso_publicar_anexo_os", {

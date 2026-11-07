@@ -6,11 +6,11 @@ import { VincularMaterialProposta } from "./VincularMaterialProposta";
 import { VincularLinhaMaterial } from "./VincularLinhaMaterial";
 import { ReconhecerLinhaMaterial } from "./ReconhecerLinhaMaterial";
 
-const linha = z.object({ id: z.string().uuid(), os_id: z.string().uuid(), lista_id: z.string().uuid(), lista_revisao: z.number().int().positive(),
+const linha = z.object({ id: z.string().guid(), os_id: z.string().guid(), lista_id: z.string().guid(), lista_revisao: z.number().int().positive(),
   descricao: z.string(), evidencia: z.string(), estado: z.enum(["pendente", "aceita", "rejeitada"]), revisao: z.number().int().positive(), criado_em: z.string() }).strict();
 const pedido = z.discriminatedUnion("tipo", [
-  z.object({ tipo: z.literal("declarar"), requestId: z.string().uuid(), id: z.string().uuid(), listaId: z.string().uuid(), revisao: z.number().int().positive(), descricao: z.string().min(1).max(1000), evidencia: z.string().min(1).max(1000) }).strict(),
-  z.object({ tipo: z.literal("revisar"), requestId: z.string().uuid(), id: z.string().uuid(), revisao: z.number().int().positive(), decisao: z.enum(["aceita", "rejeitada"]), motivo: z.string().min(1).max(1000) }).strict(),
+  z.object({ tipo: z.literal("declarar"), requestId: z.string().guid(), id: z.string().guid(), listaId: z.string().guid(), revisao: z.number().int().positive(), descricao: z.string().min(1).max(1000), evidencia: z.string().min(1).max(1000) }).strict(),
+  z.object({ tipo: z.literal("revisar"), requestId: z.string().guid(), id: z.string().guid(), revisao: z.number().int().positive(), decisao: z.enum(["aceita", "rejeitada"]), motivo: z.string().min(1).max(1000) }).strict(),
 ]);
 type Pedido = z.infer<typeof pedido>;
 export function DeclaracoesMaterial(props: { usuario: string; cliente: string }) {
@@ -29,7 +29,7 @@ function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
     const resultado = p.tipo === "declarar" ? await supabase.schema("financeiro").rpc("sso_declarar_material_fornecido", { p_request_id: p.requestId, p_declaracao_id: p.id,
       p_cliente_id: cliente, p_lista_id: p.listaId, p_lista_revisao: p.revisao, p_descricao: p.descricao, p_evidencia: p.evidencia }) :
       await supabase.schema("financeiro").rpc("sso_revisar_material_fornecido", { p_request_id: p.requestId, p_declaracao_id: p.id, p_revisao: p.revisao, p_decisao: p.decisao, p_motivo: p.motivo });
-    if (resultado.error) throw resultado.error; if (z.string().uuid().parse(resultado.data) !== p.id) throw new Error("Resposta divergente");
+    if (resultado.error) throw resultado.error; if (z.string().guid().parse(resultado.data) !== p.id) throw new Error("Resposta divergente");
   }, onSuccess: async (_r, p) => {
     try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas tentativa local não foi limpa. Consulte suporte."); return; }

@@ -3,8 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ linha_id: z.string().uuid(), descricao: z.string(), quantidade: z.number().int().positive(), preco_unitario_centavos: z.string().regex(/^\d+$/) }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), declaracaoId: z.string().uuid(), linhaId: z.string().uuid(), quantidade: z.number().int().min(1).max(999999), preco: z.number().int().min(0).max(1000000000000), justificativa: z.string().min(1).max(1000) }).strict();
+const linha = z.object({ linha_id: z.string().guid(), descricao: z.string(), quantidade: z.number().int().positive(), preco_unitario_centavos: z.string().regex(/^\d+$/) }).strict();
+const pedido = z.object({ requestId: z.string().guid(), declaracaoId: z.string().guid(), linhaId: z.string().guid(), quantidade: z.number().int().min(1).max(999999), preco: z.number().int().min(0).max(1000000000000), justificativa: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function VincularLinhaMaterial({ usuario, cliente, declaracaoId }: { usuario: string; cliente: string; declaracaoId: string }) {
   const chave = `sso-material-linha:${JSON.stringify([usuario, cliente, declaracaoId])}`;
@@ -18,7 +18,7 @@ export function VincularLinhaMaterial({ usuario, cliente, declaracaoId }: { usua
   const comando = useMutation({ mutationFn: async (p: Pedido) => {
     const { data, error } = await supabase.schema("financeiro").rpc("sso_vincular_material_linha", { p_request_id: p.requestId, p_cliente_id: cliente,
       p_declaracao_id: p.declaracaoId, p_linha_id: p.linhaId, p_quantidade: p.quantidade, p_preco_unitario: p.preco, p_justificativa: p.justificativa });
-    if (error) throw error; if (z.string().uuid().parse(data) !== p.declaracaoId) throw new Error("Resposta divergente");
+    if (error) throw error; if (z.string().guid().parse(data) !== p.declaracaoId) throw new Error("Resposta divergente");
   }, onSuccess: (_r, p) => { try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chave); }
     catch { setAviso("Pedido processado, mas tentativa local não foi limpa. Consulte suporte."); return; }
     setPendente(null); setAviso("Linha vinculada sem criar faturável ou cobrança.");

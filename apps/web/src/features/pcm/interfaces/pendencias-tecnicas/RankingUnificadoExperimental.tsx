@@ -2,8 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const itemSchema = z.object({ tipo: z.enum(["composicao", "retorno", "retorno_parcial"]), id: z.string().uuid(), composicao_id: z.string().uuid(),
-  pendencia_id: z.string().uuid().nullable(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().uuid(),
+const itemSchema = z.object({ tipo: z.enum(["composicao", "retorno", "retorno_parcial"]), id: z.string().guid(), composicao_id: z.string().guid(),
+  pendencia_id: z.string().guid().nullable(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().guid(),
   score: z.string().regex(/^[0-5](?:\.[0-9]{1,40})?$/).nullable(), revisao: z.number().int().positive(), assinatura: z.string().regex(/^[a-f0-9]{32}$/) }).strict()
   .refine((item) => item.tipo === "composicao" ? item.pendencia_id === null && item.id === item.composicao_id : item.pendencia_id !== null);
 type Item = z.infer<typeof itemSchema>;

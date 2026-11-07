@@ -4,7 +4,7 @@ import { z } from "zod";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
 const contagem = z.number().int().nonnegative().safe();
-const osSchema = z.object({ os_id: z.string().uuid(), ocorrencia_id: z.string().uuid(), rotina_id: z.string().uuid(), vencimento_original: z.string().date(), status: z.string().min(1).max(100) }).strict();
+const osSchema = z.object({ os_id: z.string().guid(), ocorrencia_id: z.string().guid(), rotina_id: z.string().guid(), vencimento_original: z.string().date(), status: z.string().min(1).max(100) }).strict();
 
 export function DiagnosticoOsRevisao({ userId, clienteId, planoId, revisao }: { userId: string; clienteId: string; planoId: string; revisao: number }) {
   const habilitado = import.meta.env.VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED === "true";

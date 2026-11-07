@@ -4,9 +4,9 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoDocumentosInternos } from "./HistoricoDocumentosInternos";
 
-const contexto = z.object({ itemId: z.string().uuid(), revisaoItem: z.number().int().positive(), estadoItem: z.string(), selecao: z.object({ id: z.string().uuid(), revisaoItem: z.number().int(), saldoCentavos: z.string() }).strict().nullable(), documento: z.object({ id: z.string().uuid(), revisaoItem: z.number().int(), valorCentavos: z.string(), estado: z.enum(["reservado", "liberado", "convertido"]) }).strict().nullable(), fiscal: z.literal(false), cobrancaEnviada: z.literal(false) }).strict();
-const saldoSchema = z.object({ itemId: z.string().uuid(), revisao: z.number().int().positive(), situacao: z.enum(["nao_conferido", "divergente", "calculado"]), conferidoCentavos: z.string().nullable(), alocadoCentavos: z.string().nullable(), reservadoCentavos: z.string().nullable(), disponivelCentavos: z.string().nullable() }).strict();
-const pedido = z.object({ requestId: z.string().uuid(), cliente: z.string().uuid(), itemId: z.string().uuid(), acao: z.enum(["selecionar", "emitir", "liberar", "converter"]), parametros: z.record(z.string(), z.union([z.string(), z.number()])) }).strict();
+const contexto = z.object({ itemId: z.string().guid(), revisaoItem: z.number().int().positive(), estadoItem: z.string(), selecao: z.object({ id: z.string().guid(), revisaoItem: z.number().int(), saldoCentavos: z.string() }).strict().nullable(), documento: z.object({ id: z.string().guid(), revisaoItem: z.number().int(), valorCentavos: z.string(), estado: z.enum(["reservado", "liberado", "convertido"]) }).strict().nullable(), fiscal: z.literal(false), cobrancaEnviada: z.literal(false) }).strict();
+const saldoSchema = z.object({ itemId: z.string().guid(), revisao: z.number().int().positive(), situacao: z.enum(["nao_conferido", "divergente", "calculado"]), conferidoCentavos: z.string().nullable(), alocadoCentavos: z.string().nullable(), reservadoCentavos: z.string().nullable(), disponivelCentavos: z.string().nullable() }).strict();
+const pedido = z.object({ requestId: z.string().guid(), cliente: z.string().guid(), itemId: z.string().guid(), acao: z.enum(["selecionar", "emitir", "liberar", "converter"]), parametros: z.record(z.string(), z.union([z.string(), z.number()])) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function DocumentoInterno({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
   const chave = `documento-interno:${JSON.stringify([usuario, cliente, itemId])}`; const cache = useQueryClient(); const travado = useRef(false);
@@ -18,7 +18,7 @@ export function DocumentoInterno({ usuario, cliente, itemId }: { usuario: string
   const comando = useMutation({ mutationFn: async (p: Pedido) => {
     const nomes = { selecionar: "sso_selecionar_faturavel_documento", emitir: "sso_emitir_documento_interno_parcial", liberar: "sso_liberar_reserva_interna", converter: "sso_converter_reserva_interna" } as const;
     const { data: resposta, error } = await supabase.schema("financeiro").rpc(nomes[p.acao], { p_request_id: p.requestId, ...p.parametros }); if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid() }).passthrough().parse(resposta); if (r.requestId !== p.requestId) throw new Error("Resposta divergente");
+    const r = z.object({ requestId: z.string().guid() }).passthrough().parse(resposta); if (r.requestId !== p.requestId) throw new Error("Resposta divergente");
     if (p.acao === "selecionar" && (r.itemId !== p.itemId || r.estado !== "selecao_local_nao_emitida" || r.reservaSaldo !== false)) throw new Error("Resposta inválida");
     if (p.acao !== "selecionar" && r.cobrancaEnviada !== false) throw new Error("Resposta inválida");
   } });
@@ -42,7 +42,7 @@ export function DocumentoInterno({ usuario, cliente, itemId }: { usuario: string
     if (acao === "selecionar") parametros = { p_item_id: itemId, p_expected_revision: c.revisaoItem };
     else if (acao === "emitir" && c.selecao && /^[1-9][0-9]{0,15}$/.test(valorParcela) && saldo.data.disponivelCentavos !== null && BigInt(valorParcela) <= BigInt(saldo.data.disponivelCentavos)) parametros = { p_selecao_id: c.selecao.id, p_valor_centavos: valorParcela };
     else if (acao === "liberar" && c.documento && motivo.trim()) parametros = { p_documento_id: c.documento.id, p_revisao: c.revisaoItem, p_motivo: motivo.trim() };
-    else if (acao === "converter" && c.documento && motivo.trim() && z.string().uuid().safeParse(lancamento).success && referencia.trim() && data) parametros = { p_documento_id: c.documento.id, p_revisao: c.revisaoItem, p_alocacao_id: crypto.randomUUID(), p_lancamento_id: lancamento, p_documento_ref: referencia.trim(), p_data_documento: data, p_motivo: motivo.trim() };
+    else if (acao === "converter" && c.documento && motivo.trim() && z.string().guid().safeParse(lancamento).success && referencia.trim() && data) parametros = { p_documento_id: c.documento.id, p_revisao: c.revisaoItem, p_alocacao_id: crypto.randomUUID(), p_lancamento_id: lancamento, p_documento_ref: referencia.trim(), p_data_documento: data, p_motivo: motivo.trim() };
     else { setMensagem("Confira os campos exigidos."); return; }
     const p = pedido.parse({ requestId: crypto.randomUUID(), cliente, itemId, acao, parametros }); try { if (sessionStorage.getItem(chave)) { setMensagem("Existe pedido anterior; reabra para recuperar."); return; } sessionStorage.setItem(chave, JSON.stringify(p)); } catch { setMensagem("Não foi possível guardar o pedido; nada foi enviado."); return; } setPendente(p); void enviar(p);
   };

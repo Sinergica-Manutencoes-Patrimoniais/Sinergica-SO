@@ -3,9 +3,9 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const resultado = z.object({
-  osId: z.string().uuid(), versaoLocal: z.string(), estadoLocal: z.string().nullable(), tarefaLocal: z.string().nullable(),
+  osId: z.string().guid(), versaoLocal: z.string(), estadoLocal: z.string().nullable(), tarefaLocal: z.string().nullable(),
   situacaoLocal: z.enum(["sem_declaracao", "fonte_local_alterada", "fonte_local_equivalente"]),
-  ultimaDeclaracao: z.object({ requestId: z.string().uuid(), resultadoDeclarado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), declaradaEm: z.string() }).strict().nullable(),
+  ultimaDeclaracao: z.object({ requestId: z.string().guid(), resultadoDeclarado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), declaradaEm: z.string() }).strict().nullable(),
   situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false),
 }).strict();
 export function RevalidarIncertezaOs({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {

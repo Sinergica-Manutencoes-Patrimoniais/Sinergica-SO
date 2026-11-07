@@ -61,8 +61,8 @@ function Conteudo({
       return z
         .array(
           z.object({
-            id: z.string().uuid(),
-            cliente_id: z.string().uuid(),
+            id: z.string().guid(),
+            cliente_id: z.string().guid(),
             nome: z.string(),
             ativo: z.boolean(),
           }),
@@ -88,7 +88,7 @@ function Conteudo({
         null,
       );
       return z
-        .array(z.object({ id: z.string().uuid(), nome: z.string(), ativo: z.boolean() }))
+        .array(z.object({ id: z.string().guid(), nome: z.string(), ativo: z.boolean() }))
         .max(50)
         .parse(data);
     },
@@ -112,14 +112,14 @@ function Conteudo({
       return z
         .array(
           z.object({
-            id: z.string().uuid(),
-            client_id: z.string().uuid().nullable(),
-            local_id: z.string().uuid().nullable(),
+            id: z.string().guid(),
+            client_id: z.string().guid().nullable(),
+            local_id: z.string().guid().nullable(),
             ativo: z.boolean(),
             nome: z.string().optional(),
             tipo: z.enum(["componente", "equipamento"]).optional(),
             identificador: z.string().nullable().optional(),
-            parent_item_id: z.string().uuid().nullable(),
+            parent_item_id: z.string().guid().nullable(),
           }),
         )
         .max(50)
@@ -149,7 +149,7 @@ function Conteudo({
         sistemaId ?? null,
       );
       return z
-        .array(z.object({ sistema_id: z.string().uuid(), item_id: z.string().uuid() }))
+        .array(z.object({ sistema_id: z.string().guid(), item_id: z.string().guid() }))
         .max(50)
         .parse(data);
     },
@@ -180,11 +180,11 @@ function Conteudo({
         .array(
           z
             .object({
-              id: z.string().uuid(),
-              cliente_id: z.string().uuid(),
-              local_id: z.string().uuid(),
-              categoria_id: z.string().uuid(),
-              sistema_id: z.string().uuid().nullable(),
+              id: z.string().guid(),
+              cliente_id: z.string().guid(),
+              local_id: z.string().guid(),
+              categoria_id: z.string().guid(),
+              sistema_id: z.string().guid().nullable(),
               nome: z.string(),
               quantidade: z.number().int().positive().safe(),
               caracteristicas: z.record(z.string(), z.string()),
@@ -548,9 +548,9 @@ export function DetalheMembro({
       }).abortSignal(signal);
       if (error) throw error;
       const item = z.object({
-        id: z.string().uuid(), client_id: z.string().uuid(), local_id: z.string().uuid().nullable(),
+        id: z.string().guid(), client_id: z.string().guid(), local_id: z.string().guid().nullable(),
         ativo: z.literal(true), nome: z.string(), tipo: z.enum(["componente", "equipamento"]),
-        identificador: z.string().nullable(), parent_item_id: z.string().uuid().nullable(),
+        identificador: z.string().nullable(), parent_item_id: z.string().guid().nullable(),
       }).strict().nullable().parse(data);
       if (item && (item.id !== itemId || item.client_id !== clienteId)) throw new Error("Item divergente.");
       await conferir();

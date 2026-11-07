@@ -21,15 +21,15 @@ import { EvidenciasOrigem } from "./EvidenciasOrigem";
 import { ResultadosAtivo } from "./ResultadosAtivo";
 import { ResolucaoFotoManual } from "./ResolucaoFotoManual";
 
-const linhaSchema = z.object({ id: z.string().uuid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]),
-  alvo_id: z.string().uuid(), alvo_nome: z.string().nullable(), pergunta: z.string(), observacao: z.string().nullable(),
+const linhaSchema = z.object({ id: z.string().guid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]),
+  alvo_id: z.string().guid(), alvo_nome: z.string().nullable(), pergunta: z.string(), observacao: z.string().nullable(),
   estado: z.enum(["aberta", "risco_aceito", "dispensada", "duplicada", "resolvida"]), revisao: z.number().int().positive(),
   criado_em: z.string().datetime({ offset: true }) }).strict();
 type Linha = z.infer<typeof linhaSchema>;
-const pedidoSchema = z.object({ requestId: z.string().uuid(), pendenciaId: z.string().uuid(), revision: z.number().int().positive(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), pendenciaId: z.string().guid(), revision: z.number().int().positive(),
   decisao: z.enum(["risco_aceito", "dispensada", "duplicada", "reaberta"]), motivo: z.string().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
-const respostaSchema = z.object({ pendenciaId: z.string().uuid(), requestId: z.string().uuid(), revision: z.number().int().positive(),
+const respostaSchema = z.object({ pendenciaId: z.string().guid(), requestId: z.string().guid(), revision: z.number().int().positive(),
   estado: z.enum(["aberta", "risco_aceito", "dispensada", "duplicada", "resolvida"]) }).strict();
 
 /** A flag e os comandos no banco permanecem fechados até revisão e integração completas. */
@@ -118,8 +118,8 @@ function Lista({ userId, clienteId }: { userId: string; clienteId: string }) {
     {!lista.isError && lista.hasNextPage && <button type="button" disabled={lista.isFetchingNextPage} onClick={() => void lista.fetchNextPage()}>Carregar mais</button>}
   </section>;
 }
-const pedidoComposicaoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(),
-  itens: z.array(z.object({ id: z.string().uuid(), revision: z.number().int().positive() }).strict()).min(1).max(100) }).strict();
+const pedidoComposicaoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(),
+  itens: z.array(z.object({ id: z.string().guid(), revision: z.number().int().positive() }).strict()).min(1).max(100) }).strict();
 type PedidoComposicao = z.infer<typeof pedidoComposicaoSchema>;
 function ComporBacklog({ userId, clienteId, selecionadas, selecaoConferida, limpar }: { userId: string; clienteId: string; selecionadas: Record<string, number>; selecaoConferida: boolean; limpar: () => void }) {
   const chave = `sso-backlog-composicao:${JSON.stringify([userId, clienteId])}`;
@@ -133,9 +133,9 @@ function ComporBacklog({ userId, clienteId, selecionadas, selecaoConferida, limp
       p_request_id: p.requestId, p_cliente_id: p.clienteId, p_itens: p.itens,
     });
     if (error) throw error;
-    const resposta = z.object({ aggregateId: z.string().uuid(), revision: z.literal(1), state: z.literal("aguardando"),
-      created: z.literal(true), linkedIds: z.object({ pendencias: z.array(z.object({ id: z.string().uuid(), revision: z.number().int().positive() }).strict()) }).strict(),
-      warnings: z.array(z.string()), requestId: z.string().uuid() }).strict().parse(data);
+    const resposta = z.object({ aggregateId: z.string().guid(), revision: z.literal(1), state: z.literal("aguardando"),
+      created: z.literal(true), linkedIds: z.object({ pendencias: z.array(z.object({ id: z.string().guid(), revision: z.number().int().positive() }).strict()) }).strict(),
+      warnings: z.array(z.string()), requestId: z.string().guid() }).strict().parse(data);
     if (resposta.requestId !== p.requestId || JSON.stringify(resposta.linkedIds.pendencias) !== JSON.stringify(p.itens)) throw new Error("Resposta divergente");
     return resposta;
   }, onSuccess: async (_r, p) => {
@@ -185,7 +185,7 @@ function Decidir({ item, userId, clienteId }: { item: Linha; userId: string; cli
       }).abortSignal(signal);
       if (error) throw error;
       return z.array(z.object({ revisao: z.number().int().positive(), decisao: z.string(), motivo: z.string(),
-        ator_id: z.string().uuid(), ocorrido_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
+        ator_id: z.string().guid(), ocorrido_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.revisao : undefined });
   const envio = useMutation({ mutationFn: async (p: Pedido) => {
     if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");

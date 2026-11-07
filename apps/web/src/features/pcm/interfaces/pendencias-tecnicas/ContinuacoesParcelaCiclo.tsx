@@ -5,7 +5,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DevolverParcialCiclo } from "./DevolverParcialCiclo";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const linhaSchema = z.object({ proposta_id: id, parcela_id: id, os_id: id, chamado_id: id, chamado_revision: z.number().int().positive(),
   descricao_restante: z.string().min(1).max(4000), minutos_restantes: z.number().int().positive(), situacao: z.string(), proposta_sha256: hash, vinculo_declarado_atual: z.boolean() }).strict();

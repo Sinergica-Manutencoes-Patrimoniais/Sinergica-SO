@@ -10,23 +10,23 @@ import type {
 
 const resultadoSchema = z
   .object({
-    aggregateId: z.string().uuid(),
+    aggregateId: z.string().guid(),
     revision: z.number().int().positive(),
     state: z.boolean(),
     created: z.boolean(),
     linkedIds: z.record(z.string(), z.string()),
     warnings: z.array(z.string()),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
   })
   .strict();
 
 const grupoSchema = z
   .object({
-    id: z.string().uuid(),
-    cliente_id: z.string().uuid(),
-    local_id: z.string().uuid(),
-    categoria_id: z.string().uuid(),
-    sistema_id: z.string().uuid().nullable(),
+    id: z.string().guid(),
+    cliente_id: z.string().guid(),
+    local_id: z.string().guid(),
+    categoria_id: z.string().guid(),
+    sistema_id: z.string().guid().nullable(),
     nome: z.string(),
     quantidade: z.number().int().positive().safe(),
     caracteristicas: z.record(z.string(), z.string()),
@@ -46,10 +46,10 @@ const grupoSchema = z
 
 const historicoSchema = z
   .object({
-    evento_id: z.string().uuid(),
+    evento_id: z.string().guid(),
     ocorrido_em: z.string(),
     acao: z.string(),
-    ator_id: z.string().uuid().nullable(),
+    ator_id: z.string().guid().nullable(),
     antes: z.record(z.string(), z.unknown()).nullable(),
     depois: z.record(z.string(), z.unknown()),
   })
@@ -84,9 +84,9 @@ export const supabaseEstruturaTecnicaAdapter: EstruturaTecnicaGateway &
       .array(
         z
           .object({
-            id: z.string().uuid(),
+            id: z.string().guid(),
             nome: z.string(),
-            area_id: z.string().uuid().nullable(),
+            area_id: z.string().guid().nullable(),
           })
           .transform((d) => ({ id: d.id, nome: d.nome, areaId: d.area_id })),
       )

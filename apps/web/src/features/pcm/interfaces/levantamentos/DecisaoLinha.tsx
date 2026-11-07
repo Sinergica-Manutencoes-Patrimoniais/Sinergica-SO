@@ -5,8 +5,8 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 
 const decisaoSchema = z.array(z.object({
   decisao: z.enum(["rejeitada", "incorporada", "atualizada", "vinculada"]), revisao: z.number().int().positive(),
-  motivo: z.string().nullable(), tipo: z.string().nullable(), entidade_id: z.string().uuid().nullable(),
-  ator_id: z.string().uuid(), ocorrido_em: z.string().datetime({ offset: true }),
+  motivo: z.string().nullable(), tipo: z.string().nullable(), entidade_id: z.string().guid().nullable(),
+  ator_id: z.string().guid(), ocorrido_em: z.string().datetime({ offset: true }),
 }).strict()).max(1);
 
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number };

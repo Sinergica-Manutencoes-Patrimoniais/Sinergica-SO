@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const opcao = z.object({ snapshot_id: uuid, vinculo_evidencia_id: uuid, resposta_id: uuid, evidencia_id: uuid, retorno_id: uuid }).strict();
 const pedido = z.object({ requestId: uuid, cliente: uuid, declaracao: uuid, snapshot: uuid, evidencia: uuid, motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;

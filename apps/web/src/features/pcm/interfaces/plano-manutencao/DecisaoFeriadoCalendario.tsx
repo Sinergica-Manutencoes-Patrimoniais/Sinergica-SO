@@ -3,13 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), preparadaId: z.string().uuid(),
-  feriadoId: z.string().uuid(), revisao: z.number().int().nonnegative().safe(), motivo: z.string().min(1).max(2000),
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), preparadaId: z.string().guid(),
+  feriadoId: z.string().guid(), revisao: z.number().int().nonnegative().safe(), motivo: z.string().min(1).max(2000),
   vencimento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), feriadoRevisao: z.number().int().nonnegative().safe().optional() }).strict();
-const feriadoSchema = z.object({ id: z.string().uuid(), fonte: z.string(), revisao: z.number().int().nonnegative().safe() }).strict();
+const feriadoSchema = z.object({ id: z.string().guid(), fonte: z.string(), revisao: z.number().int().nonnegative().safe() }).strict();
 const consultaSchema = z.discriminatedUnion("preparadaExiste", [
   z.object({ preparadaExiste: z.literal(false), feriados: z.array(feriadoSchema).length(0), fonteCompleta: z.literal(false) }).strict(),
-  z.object({ preparadaExiste: z.literal(true), preparadaId: z.string().uuid(), vencimentoOriginal: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  z.object({ preparadaExiste: z.literal(true), preparadaId: z.string().guid(), vencimentoOriginal: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     revisao: z.number().int().nonnegative().safe(), feriados: z.array(feriadoSchema), fonteCompleta: z.literal(false) }).strict(),
 ]);
 type Pedido = z.infer<typeof pedidoSchema>;

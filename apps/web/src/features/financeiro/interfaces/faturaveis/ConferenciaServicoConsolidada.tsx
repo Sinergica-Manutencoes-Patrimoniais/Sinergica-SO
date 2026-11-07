@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const count = z.union([z.number(), z.string().regex(/^\d+$/)]).refine(v => Number.isSafeInteger(Number(v)) && Number(v) >= 0).transform(Number);
 const comum = { clienteId: uuid, fatoId: uuid, exclusividadeComprovada: z.literal(false), geraFaturavel: z.literal(false) };
 const atestacao = z.object({ ...comum, revision: z.number().int().nonnegative().safe(), estado: z.enum(["confirmada", "retirada"]).nullable(),

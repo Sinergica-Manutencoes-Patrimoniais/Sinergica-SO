@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const itemSchema = z.object({ preparadaId: uuid, requestId: uuid, vencimento: z.string().date(), rotinaId: uuid, alvoId: uuid }).strict();
 const resultadoSchema = z.object({ preparadaId: uuid, cicloId: uuid, estado: z.enum(["aguardando", "verificacao"]) }).strict();
 const pedidoSchema = z.object({ clienteId: uuid, planoId: uuid, motivo: z.string().trim().min(1).max(2000), itens: z.array(itemSchema).min(1).max(25), proximo: z.number().int().nonnegative(), resultados: z.array(resultadoSchema).max(25).optional() }).strict().superRefine((p, ctx) => {

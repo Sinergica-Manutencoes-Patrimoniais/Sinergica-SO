@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ ocorrencia_id:z.string().uuid(),plano_id:z.string().uuid(),rotina_id:z.string().uuid(),visita_id:z.string().uuid(),vencimento_original:z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).strict();
+const linha = z.object({ ocorrencia_id:z.string().guid(),plano_id:z.string().guid(),rotina_id:z.string().guid(),visita_id:z.string().guid(),vencimento_original:z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).strict();
 type Props={userId:string;clienteId:string;feriadoId:string;data:string};
 export function ImpactosFeriado(props:Props){
   const [aberto,setAberto]=useState(false);

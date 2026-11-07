@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
-const linha = z.object({ id: z.string().uuid(), entidade: z.string(), objeto_id: z.string().uuid(), operacao: z.string(), estado: z.string(), estado_fonte: z.enum(["pending", "processing", "error", "sent"]), tentativas: z.number().int().nonnegative(), enfileirado_em: z.string(), enviado_em: z.string().nullable() }).strict();
+const linha = z.object({ id: z.string().guid(), entidade: z.string(), objeto_id: z.string().guid(), operacao: z.string(), estado: z.string(), estado_fonte: z.enum(["pending", "processing", "error", "sent"]), tentativas: z.number().int().nonnegative(), enfileirado_em: z.string(), enviado_em: z.string().nullable() }).strict();
 const celula = (valor: string | number | null) => `"${(`'${valor ?? ""}`).replaceAll('"', '""')}"`;
 type Props = { userId: string; clienteId: string; estado: string };
 export function ExportarFila(props: Props) {

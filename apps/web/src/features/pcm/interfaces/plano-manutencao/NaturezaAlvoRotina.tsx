@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, ator: uuid, cliente: uuid, plano: uuid, rotina: uuid,
   alvo: uuid, versao: uuid, revisao: z.number().int().safe().positive(),
   natureza: z.enum(["equipamento", "componente"]) }).strict();

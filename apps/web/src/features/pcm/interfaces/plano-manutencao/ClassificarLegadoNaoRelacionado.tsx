@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-const fotoSchema = z.object({ hash: z.string().regex(/^[a-f0-9]{64}$/), plano: z.string(), legado: z.string(), sistemaId: z.string().uuid().nullable(), equipamentoId: z.string().uuid().nullable(), primeiraData: z.string(), intervaloN: z.number(), intervaloUnidade: z.string(), ocorrencias: z.number(), os: z.number(), fontesExternasComprovadas: z.literal(false) }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), planoId: z.string().uuid(), legadoId: z.string().uuid(), revisao: z.number().int().positive(), hash: z.string().regex(/^[a-f0-9]{64}$/), contexto: z.string().min(1), motivo: z.string().min(1), tentativaIncerta: z.boolean().optional() }).strict();
+const fotoSchema = z.object({ hash: z.string().regex(/^[a-f0-9]{64}$/), plano: z.string(), legado: z.string(), sistemaId: z.string().guid().nullable(), equipamentoId: z.string().guid().nullable(), primeiraData: z.string(), intervaloN: z.number(), intervaloUnidade: z.string(), ocorrencias: z.number(), os: z.number(), fontesExternasComprovadas: z.literal(false) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), legadoId: z.string().guid(), revisao: z.number().int().positive(), hash: z.string().regex(/^[a-f0-9]{64}$/), contexto: z.string().min(1), motivo: z.string().min(1), tentativaIncerta: z.boolean().optional() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function ClassificarLegadoNaoRelacionado(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.legadoId])} {...props} />; }
 function Conteudo({userId,clienteId,planoId,legadoId,revision}:{userId:string;clienteId:string;planoId:string;legadoId:string;revision:number}) {

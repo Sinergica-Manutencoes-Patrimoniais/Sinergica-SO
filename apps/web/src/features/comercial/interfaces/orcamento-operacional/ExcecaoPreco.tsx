@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const centavos = z.number().int().nonnegative().safe();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), propostaId: z.string().uuid(), expectedRevision: z.number().int().positive(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), expectedRevision: z.number().int().positive(),
   precoCentavos: centavos.max(1000000000000), motivo: z.string().trim().min(1).max(2000), protocolo: z.literal("mediado").optional() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; propostaId: string; versao: number };

@@ -11,17 +11,17 @@ import { AplicarRetiradasFila } from "../interfaces/plano-manutencao/AplicarReti
 
 const tamanhoPagina = 50;
 const entrada = z.object({
-  ciclo_id: z.string().uuid(),
-  preparada_id: z.string().uuid(),
+  ciclo_id: z.string().guid(),
+  preparada_id: z.string().guid(),
   estado: z.enum(["aguardando", "verificacao", "cancelado"]),
   revisao: z.number().int().positive(),
   vencimento: z.string().date(),
   atualizado_em: z.string().datetime({ offset: true }),
-  rotina_id: z.string().uuid().nullable(),
+  rotina_id: z.string().guid().nullable(),
   rotina_nome: z.string().nullable(),
   alvo_tipo: z.enum(["sistema", "componente", "grupo"]).nullable(),
-  alvo_id: z.string().uuid().nullable(),
-  versao_origem_id: z.string().uuid().nullable(),
+  alvo_id: z.string().guid().nullable(),
+  versao_origem_id: z.string().guid().nullable(),
   ciclo_indice: z.number().int().nonnegative().safe().nullable(),
 }).strict();
 
@@ -43,7 +43,7 @@ function NomeAlvo({ userId, clienteId, tipo, id }: { userId: string; clienteId: 
       const { data, error } = await supabase.schema("pcm").from(tabela).select("id,nome")
         .eq(campoCliente, clienteId).eq("id", id).is("deleted_at", null).abortSignal(signal).maybeSingle();
       if (error) throw error;
-      const cadastro = z.object({ id: z.string().uuid(), nome: z.string().min(1).max(200) }).strict().parse(data);
+      const cadastro = z.object({ id: z.string().guid(), nome: z.string().min(1).max(200) }).strict().parse(data);
       if (cadastro.id.toLowerCase() !== id.toLowerCase()) throw new Error("Alvo divergente.");
       await conferirSessao(userId, signal);
       return cadastro.nome;

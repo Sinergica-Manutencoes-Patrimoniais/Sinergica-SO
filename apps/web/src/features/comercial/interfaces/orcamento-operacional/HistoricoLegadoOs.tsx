@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DecisoesLegadoOs } from "./DecisoesLegadoOs";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ orcamento_id: uuid, numero: z.string(), status: z.string(), valido_ate: z.string().nullable(), criado_em: z.string(), decisao_id: uuid.nullable(), decisao: z.enum(["aprovado", "recusado"]).nullable(), decisao_em: z.string().nullable(), decisao_autor: uuid.nullable() }).strict();
 const orcamento = linha.omit({decisao_id:true,decisao:true,decisao_em:true,decisao_autor:true});
 export function HistoricoLegadoOs({ usuario, cliente, os }: { usuario: string; cliente: string; os: string }) {

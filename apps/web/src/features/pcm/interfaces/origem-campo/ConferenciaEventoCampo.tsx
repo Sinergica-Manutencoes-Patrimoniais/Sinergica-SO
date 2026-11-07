@@ -5,13 +5,13 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const campos = z.object({ titulo: z.string().nullable(), descricao: z.string().nullable(), tecnicoAuvoId: z.string().nullable(),
   dataAgendada: z.string().nullable(), checkIn: z.string().nullable(), checkOut: z.string().nullable() }).strict();
-const previaSchema = z.object({ clienteId: z.string().uuid(), osId: z.string().uuid(), envelopeId: z.string().uuid(),
+const previaSchema = z.object({ clienteId: z.string().guid(), osId: z.string().guid(), envelopeId: z.string().guid(),
   ordemExterna: z.string().regex(/^[1-9]\d{0,17}$/), revisao: z.number().int().nonnegative().safe(), atual: campos, declarado: campos,
-  tecnicoAtualId: z.string().uuid().nullable(), tecnicoDeclaradoId: z.string().uuid().nullable(), tecnicoAmbiguo: z.boolean(),
+  tecnicoAtualId: z.string().guid().nullable(), tecnicoDeclaradoId: z.string().guid().nullable(), tecnicoAmbiguo: z.boolean(),
   aplicavel: z.boolean(), aplicacaoAutomatica: z.boolean(), statusAlterado: z.literal(false), validacaoPcmComprovada: z.literal(false) }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), osId: z.string().uuid(),
-  envelopeId: z.string().uuid(), ordemExterna: z.string().regex(/^[1-9]\d{0,17}$/), revisao: z.number().int().nonnegative().safe(),
-  tecnicoEsperado: z.string().uuid().nullable(), motivo: z.string().trim().min(1).max(1000) }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), osId: z.string().guid(),
+  envelopeId: z.string().guid(), ordemExterna: z.string().regex(/^[1-9]\d{0,17}$/), revisao: z.number().int().nonnegative().safe(),
+  tecnicoEsperado: z.string().guid().nullable(), motivo: z.string().trim().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; osId: string };
 const rotulos: [keyof z.infer<typeof campos>, string][] = [["titulo", "Título"], ["descricao", "Descrição"], ["tecnicoAuvoId", "Técnico no Auvo"],
@@ -42,8 +42,8 @@ function Conteudo({ userId, clienteId, osId }: Props) {
     const { data, error } = await supabase.schema("pcm").rpc("sso_confirmar_evento_campo_pcm", { p_ator_id: userId, p_request_id: p.requestId,
       p_cliente_id: p.clienteId, p_os_id: p.osId, p_envelope_id: p.envelopeId, p_ordem: p.ordemExterna, p_revisao: p.revisao, p_tecnico_esperado: p.tecnicoEsperado, p_motivo: p.motivo });
     if (error) throw error;
-    const r = z.object({ estado: z.literal("aplicado"), requestId: z.string().uuid(), atorId: z.string().uuid(), clienteId: z.string().uuid(),
-      osId: z.string().uuid(), envelopeId: z.string().uuid(), ordemExterna: z.string(), validacaoPcmComprovada: z.literal(false), chamadoAlterado: z.literal(false), statusAlterado: z.literal(false) }).passthrough().parse(data);
+    const r = z.object({ estado: z.literal("aplicado"), requestId: z.string().guid(), atorId: z.string().guid(), clienteId: z.string().guid(),
+      osId: z.string().guid(), envelopeId: z.string().guid(), ordemExterna: z.string(), validacaoPcmComprovada: z.literal(false), chamadoAlterado: z.literal(false), statusAlterado: z.literal(false) }).passthrough().parse(data);
     if (r.requestId !== p.requestId || r.atorId !== userId || r.clienteId !== p.clienteId || r.osId !== p.osId || r.envelopeId !== p.envelopeId || r.ordemExterna !== p.ordemExterna) throw new Error("Recibo divergente.");
     await sessao(); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
   }, onSuccess: async (_r, p) => { try { await cache.invalidateQueries({ queryKey: ["estado-origem-campo", userId, clienteId], refetchType: "none" });

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ReverterRascunhoLegado } from "./ReverterRascunhoLegado";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const fotografia = z.object({ id: uuid, cliente_id: uuid, nome: z.string().min(1), questionario_id: uuid,
   tipo_tarefa_id: uuid, primeira_data: z.string(), intervalo_n: z.number().int().positive(), intervalo_unidade: z.string(),
   sistema_id: uuid.nullable(), equipamento_id: uuid.nullable() }).passthrough();

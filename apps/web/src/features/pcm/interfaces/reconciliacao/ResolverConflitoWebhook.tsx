@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedidoSchema = z.object({ requestId: z.string().uuid(), usuario: z.string(), cliente: z.string(), os: z.string(),
+const pedidoSchema = z.object({ requestId: z.string().guid(), usuario: z.string(), cliente: z.string(), os: z.string(),
   conflito: z.string(), taskId: z.string().regex(/^\d+$/), status: z.string(), atualizadoEm: z.string() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; os: string; conflito: string; statusRemoto: string; statusAtual: string; taskId: string; taskAtual: string | null; atualizadoEm: string };

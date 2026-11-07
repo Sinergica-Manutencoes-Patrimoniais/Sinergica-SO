@@ -4,11 +4,11 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const resposta = z.discriminatedUnion("situacao", [
-  z.object({ requestId: z.string().uuid(), itemId: z.string().uuid(), situacao: z.literal("nao_encontrado_nao_conclusivo"), cobrancaEnviada: z.literal(false) }).strict(),
-  z.object({ requestId: z.string().uuid(), itemId: z.string().uuid(), situacao: z.literal("inconsistente_investigar"), cobrancaEnviada: z.literal(false) }).strict(),
-  z.object({ requestId: z.string().uuid(), itemId: z.string().uuid(), situacao: z.literal("alocacao_registrada"), alocacaoId: z.string().uuid(), documentoId: z.string().uuid(), revisaoItem: z.number().int(), cobrancaEnviada: z.literal(false) }).strict(),
+  z.object({ requestId: z.string().guid(), itemId: z.string().guid(), situacao: z.literal("nao_encontrado_nao_conclusivo"), cobrancaEnviada: z.literal(false) }).strict(),
+  z.object({ requestId: z.string().guid(), itemId: z.string().guid(), situacao: z.literal("inconsistente_investigar"), cobrancaEnviada: z.literal(false) }).strict(),
+  z.object({ requestId: z.string().guid(), itemId: z.string().guid(), situacao: z.literal("alocacao_registrada"), alocacaoId: z.string().guid(), documentoId: z.string().guid(), revisaoItem: z.number().int(), cobrancaEnviada: z.literal(false) }).strict(),
 ]);
-const armazenado = z.object({ requestId: z.string().uuid(), alocacaoId: z.string().uuid(), cliente: z.string().uuid(), itemId: z.string().uuid(), revisao: z.number().int().positive(), documentoId: z.string().uuid(), valorCentavos: z.number().int().positive().safe() }).strict();
+const armazenado = z.object({ requestId: z.string().guid(), alocacaoId: z.string().guid(), cliente: z.string().guid(), itemId: z.string().guid(), revisao: z.number().int().positive(), documentoId: z.string().guid(), valorCentavos: z.number().int().positive().safe() }).strict();
 export function RecuperarParcela({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
   const [requestId, setRequestId] = useState(""); const [mensagem, setMensagem] = useState(""); const [ocupado, setOcupado] = useState(false);
   const contexto = useRef({ usuario, cliente, itemId, requestId });
@@ -22,7 +22,7 @@ export function RecuperarParcela({ usuario, cliente, itemId }: { usuario: string
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");
       const { data, error } = await supabase.schema("financeiro").rpc("sso_listar_pedidos_alocacao_proprios", { p_cliente_id: cliente, p_item_id: itemId, p_antes: pageParam?.data ?? null, p_antes_id: pageParam?.id ?? null, p_limite: 50 }).abortSignal(signal);
       if (error) throw error;
-      const pagina=z.array(z.object({ request_id: z.string().uuid(), criado_em: z.string().datetime({offset:true}), situacao: z.enum(["alocacao_registrada", "inconsistente_investigar"]), alocacao_id: z.string().uuid().nullable(), documento_id: z.string().uuid().nullable() }).strict()).max(50).parse(data);
+      const pagina=z.array(z.object({ request_id: z.string().guid(), criado_em: z.string().datetime({offset:true}), situacao: z.enum(["alocacao_registrada", "inconsistente_investigar"]), alocacao_id: z.string().guid().nullable(), documento_id: z.string().guid().nullable() }).strict()).max(50).parse(data);
       const vistos=new Set<string>();let anterior=pageParam;
       for(const p of pagina){const id=p.request_id.toLowerCase();const tempo=Date.parse(p.criado_em);
         if(vistos.has(id)||(p.situacao==="alocacao_registrada"&&(!p.alocacao_id||!p.documento_id))||(p.situacao==="inconsistente_investigar"&&(p.alocacao_id!==null||p.documento_id!==null)))throw new Error("Página inconsistente.");
@@ -40,7 +40,7 @@ export function RecuperarParcela({ usuario, cliente, itemId }: { usuario: string
     }
     setLocalizados(achados); setMensagem(invalidos ? "Há pedido local ilegível; procure suporte. Nada foi apagado." : achados.length ? "Pedidos locais encontrados. Selecione um para consultar." : "Nenhum pedido local encontrado nesta sessão; isso não prova ausência no servidor.");
   } catch { setMensagem("Não foi possível ler pedidos desta sessão. Nada foi apagado."); } };
-  const consultar = async () => { if (ocupado || !z.string().uuid().safeParse(requestId).success) { setMensagem("Informe um identificador de pedido válido."); return; } const solicitado={usuario,cliente,itemId,requestId};setOcupado(true); setMensagem(""); try {
+  const consultar = async () => { if (ocupado || !z.string().guid().safeParse(requestId).success) { setMensagem("Informe um identificador de pedido válido."); return; } const solicitado={usuario,cliente,itemId,requestId};setOcupado(true); setMensagem(""); try {
     const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario)throw new Error("Sessão alterada.");
     const { data, error } = await supabase.schema("financeiro").rpc("sso_recuperar_parcela_adicional", { p_cliente_id: cliente, p_item_id: itemId, p_request_id: requestId }); if (error) throw error; const r = resposta.parse(data); if (r.requestId !== requestId || r.itemId !== itemId) throw new Error("Resposta divergente");
     const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||!montado.current||JSON.stringify(contexto.current)!==JSON.stringify(solicitado))throw new Error("Contexto alterado.");

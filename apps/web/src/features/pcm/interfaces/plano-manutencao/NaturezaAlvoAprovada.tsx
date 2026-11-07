@@ -20,7 +20,7 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, alvoId }: Pr
         p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_versao_id: versaoId, p_rotina_id: rotinaId,
       }).abortSignal(signal);
       if (error) throw error;
-      const id = z.string().uuid();
+      const id = z.string().guid();
       const r = z.object({ planoId: id, versaoId: id, rotinaId: id, alvoId: id,
         natureza: z.enum(["equipamento", "componente"]).nullable() }).strict().parse(data);
       if (r.planoId !== planoId || r.versaoId !== versaoId || r.rotinaId !== rotinaId || r.alvoId !== alvoId)

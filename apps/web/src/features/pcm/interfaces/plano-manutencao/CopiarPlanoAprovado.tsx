@@ -5,7 +5,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({
   requestId: uuid, atorId: uuid, clienteId: uuid, origemPlanoId: uuid,
   origemVersaoId: uuid, origemRevision: z.number().int().positive(),

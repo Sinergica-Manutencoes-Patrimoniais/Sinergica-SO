@@ -20,7 +20,7 @@ function Conteudo({ userId, clienteId, tipo, entidadeId }: Props) {
       await conferirSessao(userId, signal);
       const { data, error } = await supabase.schema("pcm").rpc("sso_listar_documentos_ativo_mediado", { p_tipo: tipo, p_entidade_id: entidadeId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal);
       if (error) throw error;
-      const pagina = z.array(z.object({ id: z.string().uuid(), titulo: z.string(), criado_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
+      const pagina = z.array(z.object({ id: z.string().guid(), titulo: z.string(), criado_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
       await conferirSessao(userId, signal);
       return pagina;
     },

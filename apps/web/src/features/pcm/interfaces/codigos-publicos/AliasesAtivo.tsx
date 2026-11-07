@@ -16,7 +16,7 @@ function Conteudo({userId,clienteId,tipo,ativoId}:Props){
       : supabase.schema("pcm").rpc("sso_listar_aliases_ativo",parametros);
     const {data,error}=await consulta.abortSignal(signal);
     if(error)throw error;
-    const pagina=z.array(z.object({id:z.string().uuid(),codigo:z.string().min(1).max(200),criado_em:z.string().datetime({offset:true})}).strict()).max(20).parse(data);
+    const pagina=z.array(z.object({id:z.string().guid(),codigo:z.string().min(1).max(200),criado_em:z.string().datetime({offset:true})}).strict()).max(20).parse(data);
     let anterior=pageParam?.toLowerCase() ?? null;
     for(const alias of pagina){const id=alias.id.toLowerCase();if(anterior!==null && id<=anterior)throw new Error("Página de aliases inconsistente.");anterior=id;}
     const depois=await supabase.auth.getUser();

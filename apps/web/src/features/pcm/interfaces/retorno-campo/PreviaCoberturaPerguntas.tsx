@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const contagem=z.number().int().nonnegative().safe();
-const pergunta=z.object({indice:contagem,pergunta_id:z.string().min(1),obrigatoriedade:z.enum(["obrigatoria","opcional","indeterminada"]),resposta_id:z.string().uuid().nullable(),resultado:z.string().nullable(),decisao_pcm:z.string().nullable(),revisao_uploads_decisao:contagem.nullable(),revisao_uploads_atual:contagem,estado:z.string()}).strict();
+const pergunta=z.object({indice:contagem,pergunta_id:z.string().min(1),obrigatoriedade:z.enum(["obrigatoria","opcional","indeterminada"]),resposta_id:z.string().guid().nullable(),resultado:z.string().nullable(),decisao_pcm:z.string().nullable(),revisao_uploads_decisao:contagem.nullable(),revisao_uploads_atual:contagem,estado:z.string()}).strict();
 async function conferirSessao(userId:string,signal:AbortSignal){const {data,error}=await supabase.auth.getUser();if(error || data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");}
 
 export function PreviaCoberturaPerguntas({ userId, clienteId, retornoId }: { userId: string; clienteId: string; retornoId: string }) {

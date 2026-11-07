@@ -49,7 +49,7 @@ function Lista({ userId }: { userId: string }) {
       const corpo = acao === "consultar" ? { ...t.pedido, acao: "consultar" } : t.pedido;
       const { data, error } = await supabase.functions.invoke("pcm-receber-levantamento-estruturado", { body: corpo });
       if (error) throw error;
-      const r = z.object({ estado: z.literal("recebido"), requestId: z.string().uuid(), loteId: z.string().uuid(),
+      const r = z.object({ estado: z.literal("recebido"), requestId: z.string().guid(), loteId: z.string().guid(),
         origemComprovada: z.literal(false), fotosImportadas: z.literal(false), cadastrosIncorporados: z.literal(false) }).strict().parse(data);
       if (r.requestId !== t.pedido.contexto.requestId) throw new Error();
       await cache.invalidateQueries({ queryKey: ["levantamentos", userId, t.pedido.contexto.clienteId, "lotes"], refetchType: "none" });

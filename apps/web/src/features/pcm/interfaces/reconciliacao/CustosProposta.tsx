@@ -6,8 +6,8 @@ import { HistoricoCustosProposta } from "./HistoricoCustosProposta";
 import { EditarComposicaoEscopada } from "./EditarComposicaoEscopada";
 
 const valor = z.number().int().nonnegative().safe();
-const resposta = z.object({ clienteId: z.string().uuid(), propostaId: z.string().uuid(), versao: z.number().int().positive(), atualizadaEm: z.string().datetime({ offset: true }), custoTotalCentavos: valor, pisoCentavos: valor, precoSugeridoCentavos: valor, precoCentavos: valor }).strict();
-const item = z.object({ id: z.string().uuid(), tipo: z.enum(["mo", "material", "veiculo", "outro"]), descricao: z.string(), quantidade: z.number().nonnegative().finite(), custo_unitario_centavos: valor, total_centavos: valor }).strict();
+const resposta = z.object({ clienteId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(), atualizadaEm: z.string().datetime({ offset: true }), custoTotalCentavos: valor, pisoCentavos: valor, precoSugeridoCentavos: valor, precoCentavos: valor }).strict();
+const item = z.object({ id: z.string().guid(), tipo: z.enum(["mo", "material", "veiculo", "outro"]), descricao: z.string(), quantidade: z.number().nonnegative().finite(), custo_unitario_centavos: valor, total_centavos: valor }).strict();
 const dinheiro = (centavos: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
 
 export function CustosProposta({ userId, clienteId, propostaId }: { userId: string; clienteId: string; propostaId: string }) {

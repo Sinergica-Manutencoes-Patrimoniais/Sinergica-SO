@@ -24,12 +24,12 @@ const fusoIana = z
   }, "Fuso horário inválido.");
 const schema = z
   .object({
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     expectedRevision: z.literal(0),
-    clienteId: z.string().uuid(),
-    serieId: z.string().uuid(),
-    regraId: z.string().uuid(),
-    contratoId: z.string().uuid(),
+    clienteId: z.string().guid(),
+    serieId: z.string().guid(),
+    regraId: z.string().guid(),
+    contratoId: z.string().guid(),
     ancoraSemana: data.refine(
       (valor) => new Date(`${valor}T00:00:00.000Z`).getUTCDay() === 1,
       "A âncora deve ser segunda-feira.",

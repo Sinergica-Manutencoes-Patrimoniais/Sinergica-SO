@@ -12,7 +12,7 @@ import {
 } from "../../infrastructure/supabase-despesas-visita-adapter";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
-const uploadSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), visitaId: z.string().uuid(), despesaId: z.string().uuid(), expectedRevision: z.number().int().positive(), realizadoCentavos: z.number().int().nonnegative().safe(), caminho: z.string(), hash: z.string().regex(/^[0-9a-f]{64}$/), tipo: z.enum(["application/pdf", "image/jpeg", "image/png"]), tamanho: z.number().int().positive().max(10 * 1024 * 1024), modo: z.literal("mediado").optional() }).strict();
+const uploadSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), visitaId: z.string().guid(), despesaId: z.string().guid(), expectedRevision: z.number().int().positive(), realizadoCentavos: z.number().int().nonnegative().safe(), caminho: z.string(), hash: z.string().regex(/^[0-9a-f]{64}$/), tipo: z.enum(["application/pdf", "image/jpeg", "image/png"]), tamanho: z.number().int().positive().max(10 * 1024 * 1024), modo: z.literal("mediado").optional() }).strict();
 type Upload = z.infer<typeof uploadSchema>;
 async function hashArquivo(arquivo: File) {
   const hash = await crypto.subtle.digest("SHA-256", await arquivo.arrayBuffer());
@@ -44,7 +44,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
   const [upload, setUpload] = useState<Upload | "invalido" | null>(() => {
     try { const salvo = sessionStorage.getItem(chaveUpload); if (!salvo) return null; const p = uploadSchema.parse(JSON.parse(salvo));
       const prefixo = `${clienteId}/${despesa.id}/`;
-      return p.clienteId === clienteId && p.visitaId === visitaId && p.despesaId === despesa.id && p.caminho.startsWith(prefixo) && z.string().uuid().safeParse(p.caminho.slice(prefixo.length)).success ? p : "invalido";
+      return p.clienteId === clienteId && p.visitaId === visitaId && p.despesaId === despesa.id && p.caminho.startsWith(prefixo) && z.string().guid().safeParse(p.caminho.slice(prefixo.length)).success ? p : "invalido";
     } catch { return "invalido"; }
   });
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
@@ -68,7 +68,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
         p_request_id: pedido.requestId, p_revision: pedido.expectedRevision, p_valor: pedido.realizadoCentavos, p_objeto_id: pedido.comprovanteObjetoId,
       });
       if (error) throw error;
-      const r = z.object({requestId:z.string().uuid(),clienteId:z.string().uuid(),visitaId:z.string().uuid(),despesaId:z.string().uuid(),revision:z.number().int().positive(),confirmada:z.literal(true),integridadeBytesComprovada:z.literal(false)}).strict().parse(data);
+      const r = z.object({requestId:z.string().guid(),clienteId:z.string().guid(),visitaId:z.string().guid(),despesaId:z.string().guid(),revision:z.number().int().positive(),confirmada:z.literal(true),integridadeBytesComprovada:z.literal(false)}).strict().parse(data);
       if (r.requestId !== pedido.requestId || r.clienteId !== clienteId || r.visitaId !== visitaId || r.despesaId !== pedido.despesaId || r.revision !== pedido.expectedRevision + 1) throw new Error("Recibo divergente.");
       const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
     },
@@ -80,7 +80,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
         const salvo = sessionStorage.getItem(chaveUpload);
         if (salvo !== null) { const u=uploadSchema.parse(JSON.parse(salvo)); if (u.requestId!==pedido.requestId||u.clienteId!==clienteId||u.visitaId!==visitaId||u.despesaId!==pedido.despesaId) throw new Error(); }
         const modoSalvo = sessionStorage.getItem(chaveModo);
-        if (modoSalvo !== null) { const m=z.object({requestId:z.string().uuid(),modo:z.enum(["mediado","legado"])}).strict().parse(JSON.parse(modoSalvo)); if(m.requestId!==pedido.requestId)throw new Error(); }
+        if (modoSalvo !== null) { const m=z.object({requestId:z.string().guid(),modo:z.enum(["mediado","legado"])}).strict().parse(JSON.parse(modoSalvo)); if(m.requestId!==pedido.requestId)throw new Error(); }
         if (sessionStorage.getItem(chaveUpload) !== salvo || sessionStorage.getItem(chaveModo) !== modoSalvo) throw new Error();
         if (salvo !== null) sessionStorage.removeItem(chaveUpload);
         if (modoSalvo !== null) sessionStorage.removeItem(chaveModo);
@@ -101,7 +101,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
       const tentativa = salvo ? uploadSchema.parse(JSON.parse(salvo)) : null;
       if (tentativa && (tentativa.requestId !== pedido.requestId || tentativa.despesaId !== pedido.despesaId || tentativa.clienteId !== clienteId || tentativa.visitaId !== visitaId)) throw new Error("Tentativa divergente.");
       const modoSalvo = sessionStorage.getItem(chaveModo);
-      const modo = modoSalvo ? z.object({ requestId: z.string().uuid(), modo: z.enum(["mediado", "legado"]) }).strict().parse(JSON.parse(modoSalvo)) : null;
+      const modo = modoSalvo ? z.object({ requestId: z.string().guid(), modo: z.enum(["mediado", "legado"]) }).strict().parse(JSON.parse(modoSalvo)) : null;
       // Sem protocolo preservado não é seguro decidir por inferência como repetir o comando.
       if (!modo || modo.requestId !== pedido.requestId || (tentativa && (tentativa.modo === "mediado" ? "mediado" : "legado") !== modo.modo)) throw new Error("Protocolo da tentativa indisponível ou divergente.");
       const mediado = modo.modo === "mediado";
@@ -118,7 +118,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
         if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
         if (sessionStorage.getItem(chave) !== JSON.stringify(pedido)) { setMensagem("Realização registrada, mas a tentativa local divergiu. Contate suporte."); return; }
         const modoSalvo = sessionStorage.getItem(chaveModo);
-        const modo = modoSalvo ? z.object({ requestId: z.string().uuid(), modo: z.enum(["mediado", "legado"]) }).strict().parse(JSON.parse(modoSalvo)) : null;
+        const modo = modoSalvo ? z.object({ requestId: z.string().guid(), modo: z.enum(["mediado", "legado"]) }).strict().parse(JSON.parse(modoSalvo)) : null;
         if (!modo || modo.requestId !== pedido.requestId) { setMensagem("Realização registrada, mas o protocolo local divergiu. Contate suporte."); return; }
         const uploadSalvo = sessionStorage.getItem(chaveUpload);
         if (uploadSalvo !== null) {
@@ -204,8 +204,8 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
         p_request_id: tentativa.requestId, p_cliente_id: clienteId, p_visita_id: visitaId, p_despesa_id: despesa.id, p_digest: tentativa.hash,
       });
       if (error) throw error;
-      const r = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), visitaId: z.string().uuid(), despesaId: z.string().uuid(),
-        digest: z.string().regex(/^[0-9a-f]{64}$/), objetoId: z.string().uuid().nullable(), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
+      const r = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), visitaId: z.string().guid(), despesaId: z.string().guid(),
+        digest: z.string().regex(/^[0-9a-f]{64}$/), objetoId: z.string().guid().nullable(), integridadeBytesComprovada: z.literal(false) }).strict().parse(data);
       if (r.requestId !== tentativa.requestId || r.clienteId !== clienteId || r.visitaId !== visitaId || r.despesaId !== despesa.id || r.digest !== tentativa.hash) throw new Error("Resposta divergente.");
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || !montado.current || sessionStorage.getItem(chaveUpload) !== JSON.stringify(tentativa) || sessionStorage.getItem(chave) !== null) throw new Error("Sessão ou tentativa alterada.");

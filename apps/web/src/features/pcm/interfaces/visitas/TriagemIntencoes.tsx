@@ -4,11 +4,11 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 type Item={id:string;os_id:string;tarefa_auvo_id:string;estado:string;revisao:number};
-const pedidoSchema=z.object({requestId:z.string().uuid(),eventoId:z.string().uuid(),clienteId:z.string().uuid(),intencaoId:z.string().uuid(),revision:z.number().int().positive().safe(),acao:z.enum(["anotar","descartar"]),resultado:z.enum(["desconhecido","mesma_tarefa","divergente"]).nullable(),tarefa:z.string().max(100).nullable(),referencia:z.string().max(500).nullable(),motivo:z.string().trim().min(1).max(2000)}).strict()
+const pedidoSchema=z.object({requestId:z.string().guid(),eventoId:z.string().guid(),clienteId:z.string().guid(),intencaoId:z.string().guid(),revision:z.number().int().positive().safe(),acao:z.enum(["anotar","descartar"]),resultado:z.enum(["desconhecido","mesma_tarefa","divergente"]).nullable(),tarefa:z.string().max(100).nullable(),referencia:z.string().max(500).nullable(),motivo:z.string().trim().min(1).max(2000)}).strict()
   .refine(p=>p.acao==="anotar"?p.resultado!==null&&!!p.referencia?.trim():p.resultado===null&&p.tarefa===null&&p.referencia===null);
 type Pedido=z.infer<typeof pedidoSchema>;
 type Props = {userId:string;clienteId:string};
-const origemSchema=z.object({intencaoId:z.string().uuid(),osId:z.string().uuid(),origem:z.object({listaId:z.string().uuid(),eventoRevisao:z.number().int().min(2),registradoEm:z.string().datetime({offset:true}),motivo:z.string().min(1).max(50),descricao:z.string().min(1).max(4000)}).strict().nullable(),excecaoAtualComprovada:z.literal(false).optional()}).strict();
+const origemSchema=z.object({intencaoId:z.string().guid(),osId:z.string().guid(),origem:z.object({listaId:z.string().guid(),eventoRevisao:z.number().int().min(2),registradoEm:z.string().datetime({offset:true}),motivo:z.string().min(1).max(50),descricao:z.string().min(1).max(4000)}).strict().nullable(),excecaoAtualComprovada:z.literal(false).optional()}).strict();
 export function TriagemIntencoes(props: Props) {
   return <TriagemIntencoesInterna key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
 }
@@ -23,14 +23,14 @@ function TriagemIntencoesInterna({userId,clienteId}: Props) {
     queryFn:async({pageParam,signal}) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_listar_intencoes_triagem_mediada",{
       p_cliente_id:clienteId,p_apos:pageParam,p_limite:30}).abortSignal(signal);if(error)throw error;
-      const pagina=z.array(z.object({id:z.string().uuid(),os_id:z.string().uuid(),tarefa_auvo_id:z.string().min(1),estado:z.string(),revisao:z.number().int().positive().safe()}).passthrough()).max(30).parse(data);let anterior=pageParam?.toLowerCase()??"";for(const linha of pagina){const id=linha.id.toLowerCase();if(id<=anterior)throw new Error("Página divergente.");anterior=id;}
+      const pagina=z.array(z.object({id:z.string().guid(),os_id:z.string().guid(),tarefa_auvo_id:z.string().min(1),estado:z.string(),revisao:z.number().int().positive().safe()}).passthrough()).max(30).parse(data);let anterior=pageParam?.toLowerCase()??"";for(const linha of pagina){const id=linha.id.toLowerCase();if(id<=anterior)throw new Error("Página divergente.");anterior=id;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       return pagina as Item[];},getNextPageParam:(pagina) => pagina.length===30 ? pagina.at(-1)?.id : undefined});
   const historico=useInfiniteQuery({queryKey:["historico-triagem-intencao",userId,clienteId,selecionado],gcTime:0,enabled:!!selecionado,initialPageParam:null as number|null,
     queryFn:async({pageParam,signal}) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_listar_triagens_mediada",{
       p_cliente_id:clienteId,p_intencao_id:selecionado,p_apos:pageParam,p_limite:30}).abortSignal(signal);if(error)throw error;
-      const pagina=z.array(z.object({id:z.string().uuid(),revisao:z.number().int().positive().safe(),acao:z.enum(["anotar","descartar"]),resultado_declarado:z.string().nullable(),ator_id:z.string().uuid(),criado_em:z.string()}).strict()).max(30).parse(data);let anterior=pageParam??0;for(const linha of pagina){if(linha.revisao<=anterior)throw new Error("Página divergente.");anterior=linha.revisao;}
+      const pagina=z.array(z.object({id:z.string().guid(),revisao:z.number().int().positive().safe(),acao:z.enum(["anotar","descartar"]),resultado_declarado:z.string().nullable(),ator_id:z.string().guid(),criado_em:z.string()}).strict()).max(30).parse(data);let anterior=pageParam??0;for(const linha of pagina){if(linha.revisao<=anterior)throw new Error("Página divergente.");anterior=linha.revisao;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       return pagina;},
     getNextPageParam:(pagina) => pagina.length===30 ? pagina.at(-1)?.revisao : undefined});

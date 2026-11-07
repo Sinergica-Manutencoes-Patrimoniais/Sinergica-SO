@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { ConfirmarRetornoPropriedadeFila } from "./ConfirmarRetornoPropriedadeFila";
 import { RecuperarConfirmacaoFila } from "./RecuperarConfirmacaoFila";
 
-const linha = z.object({ outbox_id: z.string().uuid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().uuid(),
+const linha = z.object({ outbox_id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
   revisao: z.number().int().positive(), situacao: z.enum(["retorno_observado_conferir", "divergencia_observada"]),
   observado_em: z.string().datetime({ offset: true }) }).strict();
 export function ConflitosPropriedadeFila({ userId, clienteId }: { userId: string; clienteId: string }) {

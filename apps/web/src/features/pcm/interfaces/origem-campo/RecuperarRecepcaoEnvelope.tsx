@@ -52,7 +52,7 @@ function Lista({ userId }: { userId: string }) {
         p_request_id: p.requestId, p_linhas: p.linhas, p_fotos: p.fotos,
       });
       if (error) throw error;
-      const r = z.object({ requestId: z.string().uuid(), envelopeId: z.string().uuid(), loteId: z.string().uuid(), estado: z.literal("pendente"), origemComprovada: z.literal(false), fotosImportadas: z.literal(false), cadastrosIncorporados: z.literal(false) }).strict().parse(data);
+      const r = z.object({ requestId: z.string().guid(), envelopeId: z.string().guid(), loteId: z.string().guid(), estado: z.literal("pendente"), origemComprovada: z.literal(false), fotosImportadas: z.literal(false), cadastrosIncorporados: z.literal(false) }).strict().parse(data);
       if (r.requestId !== p.requestId || r.envelopeId !== p.envelopeId) throw new Error("Recibo divergente.");
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");

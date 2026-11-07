@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
-const cursorSchema = z.object({ tipo: z.enum(["calendario", "visita"]), ciclo: z.string().uuid() }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), planoId: z.string().uuid(), cursor: cursorSchema.nullable() }).strict();
+const cursorSchema = z.object({ tipo: z.enum(["calendario", "visita"]), ciclo: z.string().guid() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), cursor: cursorSchema.nullable() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Cursor = z.infer<typeof cursorSchema>;
 export function AplicarRetiradasFila(props: { userId: string; clienteId: string; planoId: string }) {
@@ -20,7 +20,7 @@ function Conteudo({ userId, clienteId, planoId }: { userId: string; clienteId: s
   const envio = useMutation({ mutationFn: async (p: Pedido) => {
     await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Tentativa divergente.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_aplicar_retiradas_fila", { p_ator_id: userId, p_request_id: p.requestId, p_cliente_id: p.clienteId, p_plano_id: p.planoId, p_limite: 50, p_apos_tipo: p.cursor?.tipo ?? null, p_apos_ciclo: p.cursor?.ciclo ?? null }); if (error) throw error;
-    const r = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), planoId: z.string().uuid(), canceladas: z.number().int().nonnegative().max(50), pendentesConferencia: z.number().int().nonnegative().max(50), visitasSemPermissao: z.number().int().nonnegative().max(50), visitadas: z.number().int().nonnegative().max(50), ultimoTipo: z.enum(["calendario", "visita"]).nullable(), ultimoCiclo: z.string().uuid().nullable(), maisPossivel: z.boolean(), osAlteradas: z.literal(false), tarefaAuvoCriada: z.literal(false) }).strict().parse(data);
+    const r = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), canceladas: z.number().int().nonnegative().max(50), pendentesConferencia: z.number().int().nonnegative().max(50), visitasSemPermissao: z.number().int().nonnegative().max(50), visitadas: z.number().int().nonnegative().max(50), ultimoTipo: z.enum(["calendario", "visita"]).nullable(), ultimoCiclo: z.string().guid().nullable(), maisPossivel: z.boolean(), osAlteradas: z.literal(false), tarefaAuvoCriada: z.literal(false) }).strict().parse(data);
     if (r.requestId !== p.requestId || r.clienteId !== clienteId || r.planoId !== planoId || r.canceladas + r.pendentesConferencia + r.visitasSemPermissao !== r.visitadas || (r.ultimoTipo === null) !== (r.ultimoCiclo === null) || r.maisPossivel !== (r.visitadas === 50)) throw new Error("Recibo divergente.");
     await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada."); return r;
   }, onSuccess: async (r, p) => { try { await conferirSessaoDiagnostico(userId); if (!montado.current) throw new Error("Tela desmontada."); if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error(); sessionStorage.removeItem(chave); } catch { setAviso("Tentativa preservada; procure suporte."); return; }

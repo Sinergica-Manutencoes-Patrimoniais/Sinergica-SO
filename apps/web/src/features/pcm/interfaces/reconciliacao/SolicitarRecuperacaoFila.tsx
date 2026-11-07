@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const revisao = z.string().regex(/^(0|[1-9][0-9]{0,18})$/);
 const previaSchema = z.object({ outboxId: id, epoca: id, revisao,
   situacaoRemota: z.literal("desconhecida"), autorizaRetry: z.literal(false) }).strict();

@@ -6,8 +6,8 @@ import { obterPaginaSnapshotExportacao } from "../../infrastructure/supabase-sna
 
 type Tipo = "sistema" | "componente" | "grupo";
 type Cursor = { posicao: number; assinatura: string | null; total: number | null };
-const rotina = z.object({ id: z.string().uuid(), planoId: z.string().uuid(), versaoId: z.string().uuid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().uuid(), alvoNome: z.string().min(1) });
-const pagina = z.object({ clienteId: z.string().uuid(), planoId: z.string().uuid(), versaoId: z.string().uuid(), snapshotHash: z.string().regex(/^[a-f0-9]{32}$/),
+const rotina = z.object({ id: z.string().guid(), planoId: z.string().guid(), versaoId: z.string().guid(), alvoTipo: z.enum(["sistema", "componente", "grupo"]), alvoId: z.string().guid(), alvoNome: z.string().min(1) });
+const pagina = z.object({ clienteId: z.string().guid(), planoId: z.string().guid(), versaoId: z.string().guid(), snapshotHash: z.string().regex(/^[a-f0-9]{32}$/),
   total: z.number().int().nonnegative().max(1_048_575), posicao: z.number().int().nonnegative(), proximaPosicao: z.number().int().nonnegative().nullable(), rotinas: z.array(rotina).max(100) });
 
 /** Navegação por páginas; exportação ainda reconfere a fotografia integral no servidor. */

@@ -8,7 +8,7 @@ import { ReconciliacaoServicoMaterial } from "./ReconciliacaoServicoMaterial";
 import { SnapshotServico } from "./SnapshotServico";
 import { CandidatoServico } from "./CandidatoServico";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ id: uuid, os_id: uuid, proposta_id: uuid, versao: z.number().int(), linha_id: uuid, quantidade: z.number().int(), preco_unitario_centavos: z.string(), chave_evento: z.string(), justificativa: z.string(), ator_id: uuid, decisao: z.enum(["aceita", "rejeitada"]).nullable() }).strict();
 const pedido = z.object({ requestId: uuid, cliente: uuid, tipo: z.enum(["declarar", "decidir"]), parametros: z.record(z.string(), z.union([z.string(), z.number()])) }).strict(); type Pedido = z.infer<typeof pedido>;
 export function ServicosExtra({ usuario, cliente }: { usuario: string; cliente: string }) {

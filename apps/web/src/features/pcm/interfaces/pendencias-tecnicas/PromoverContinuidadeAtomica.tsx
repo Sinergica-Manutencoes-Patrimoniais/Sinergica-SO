@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const contextoSchema = z.object({ clienteId:id, retornoId:id, chamadoId:id, propostaId:id,
   revision:z.number().int().safe().positive(), estadoRetorno:z.enum(["aguardando","promovido"]),
   situacaoProposta:z.enum(["pendente","rejeitada","executada","devolvida_backlog"]),

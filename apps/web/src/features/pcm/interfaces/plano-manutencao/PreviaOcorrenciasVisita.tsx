@@ -190,7 +190,7 @@ function Conteudo({
           : data.preparada !== true)
       )
         throw new Error("Resposta inválida.");
-      const ocorrenciaId = z.string().uuid().parse(data.ocorrenciaId);
+      const ocorrenciaId = z.string().guid().parse(data.ocorrenciaId);
       await conferirSessaoDiagnostico(userId);
       return { ocorrenciaId, visitaId: p.visitaId, modo: p.modo ?? "anterior" };
     },
@@ -295,9 +295,9 @@ function Conteudo({
               encontrado: z.literal(true),
               resultado: z
                 .object({
-                  requestId: z.string().uuid(),
-                  ocorrenciaId: z.string().uuid(),
-                  visitaId: z.string().uuid(),
+                  requestId: z.string().guid(),
+                  ocorrenciaId: z.string().guid(),
+                  visitaId: z.string().guid(),
                   preparada: z.literal(true),
                 })
                 .passthrough(),

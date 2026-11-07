@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
-const linha = z.object({ vinculo_id: z.string().uuid(), versao_id: z.string().uuid(), rotina_id: z.string().uuid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().uuid(), vencimento: z.string().date(), agendamento_id: z.string().uuid(), status_pmoc: z.string().nullable(), estado_vinculo: z.enum(["declarado_pcm", "revisao_necessaria", "conflito"]) }).strict();
+const linha = z.object({ vinculo_id: z.string().guid(), versao_id: z.string().guid(), rotina_id: z.string().guid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().guid(), vencimento: z.string().date(), agendamento_id: z.string().guid(), status_pmoc: z.string().nullable(), estado_vinculo: z.enum(["declarado_pcm", "revisao_necessaria", "conflito"]) }).strict();
 type Props = { userId: string; clienteId: string; planoId: string };
 export function ObrigacoesPmoc(props: Props) { if (import.meta.env.VITE_SSO_OBRIGACOES_PMOC_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props} />; }
 function Conteudo({ userId, clienteId, planoId }: Props) {

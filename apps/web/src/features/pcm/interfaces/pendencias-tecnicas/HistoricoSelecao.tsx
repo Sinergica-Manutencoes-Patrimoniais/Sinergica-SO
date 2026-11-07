@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props = { userId: string; clienteId: string; composicaoId: string };
-const evento = z.object({ request_id: z.string().uuid(), ator_id: z.string().uuid(), itens: z.array(z.object({ id: z.string().uuid(), revision: z.number().int().positive() }).strict()).min(1).max(100) }).strict();
+const evento = z.object({ request_id: z.string().guid(), ator_id: z.string().guid(), itens: z.array(z.object({ id: z.string().guid(), revision: z.number().int().positive() }).strict()).min(1).max(100) }).strict();
 export function HistoricoSelecao(props: Props) {
   if (import.meta.env.VITE_SSO_HISTORICO_SELECAO_ENABLED !== "true") return null;
   return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.composicaoId])} {...props} />;

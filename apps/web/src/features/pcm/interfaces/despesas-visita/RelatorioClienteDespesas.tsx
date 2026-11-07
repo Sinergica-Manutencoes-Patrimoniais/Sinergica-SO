@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const inteiro = z.number().int().nonnegative().safe();
-const linha = z.object({ tecnico_id: z.string().uuid().nullable(), tecnico_nome: z.string().nullable(), quantidade: inteiro,
+const linha = z.object({ tecnico_id: z.string().guid().nullable(), tecnico_nome: z.string().nullable(), quantidade: inteiro,
   previsto_centavos: inteiro, realizado_centavos: inteiro, sem_realizado: inteiro, atribuicoes_historicas: inteiro }).strict();
 const moeda = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v / 100);
 type Props = { userId: string; clienteId: string; periodoInicial?: { inicio: string; fim: string } };

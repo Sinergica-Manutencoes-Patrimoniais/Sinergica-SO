@@ -3,10 +3,10 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const linha = z.object({ id: z.string().uuid(), tipo: z.enum(["dispensada", "revogada"]), dispensa_id: z.string().uuid(),
-  lista_revisao: z.number().int().positive(), motivo: z.string(), ator_id: z.string().uuid(), criado_em: z.string() }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), revogacaoId: z.string().uuid(), dispensaId: z.string().uuid(),
-  listaId: z.string().uuid(), listaRevision: z.number().int().positive(), motivo: z.string().trim().min(1).max(2000) }).strict();
+const linha = z.object({ id: z.string().guid(), tipo: z.enum(["dispensada", "revogada"]), dispensa_id: z.string().guid(),
+  lista_revisao: z.number().int().positive(), motivo: z.string(), ator_id: z.string().guid(), criado_em: z.string() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), revogacaoId: z.string().guid(), dispensaId: z.string().guid(),
+  listaId: z.string().guid(), listaRevision: z.number().int().positive(), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; listaId: string; listaRevision: number; vigenteId: string | null };
 export function HistoricoDispensa(props: Props) {

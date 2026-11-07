@@ -7,7 +7,7 @@ import { EscolherNovaDataCalendario } from "./EscolherNovaDataCalendario";
 import { useComparacaoImpacto, DetalhesComparacaoImpacto, comparacaoImpactoArmazenadaSchema, type ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
 import { supabase } from "../../../../lib/supabase-client";
 const decisaoSchema = z.enum(["manter_sem_alterar", "exige_reconciliacao"]);
-const camposComuns = { preparada_id: z.string().uuid(), rascunho_id: z.string().uuid(), rotina_id: z.string().uuid(), revisao_decisao: z.number().int().nonnegative().safe(), ultima_decisao: decisaoSchema.nullable(), ultima_revisao_plano: z.number().int().positive().safe().nullable() };
+const camposComuns = { preparada_id: z.string().guid(), rascunho_id: z.string().guid(), rotina_id: z.string().guid(), revisao_decisao: z.number().int().nonnegative().safe(), ultima_decisao: decisaoSchema.nullable(), ultima_revisao_plano: z.number().int().positive().safe().nullable() };
 const linhaSchema = z.object({ ...camposComuns, ciclo: z.number().int().nonnegative().safe(), vencimento_original: z.string().date(), ultimo_motivo: z.string().nullable() }).strict();
 type Pedido = { requestId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; decisao: "manter_sem_alterar" | "exige_reconciliacao" | "alterar_conteudo"; motivo: string; comparacao?: ComparacaoImpacto };
 

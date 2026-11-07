@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 type Props = { userId: string; clienteId: string; pendenciaId: string };
-const origem = z.object({ pendenciaId: z.string().uuid(), respostaId: z.string().uuid(), retornoId: z.string().uuid(), osOrigemId: z.string().uuid(), ocorrenciaId: z.string().uuid().nullable(), ocorrenciaGrupoId: z.string().uuid().nullable().optional(), tipoOrigem: z.enum(["legada", "grupo"]).optional(), rotinaId: z.string().uuid(), alvoTipo: z.string(), alvoId: z.string().uuid() }).strict().refine((r) => r.tipoOrigem === "grupo" ? r.ocorrenciaId === null && !!r.ocorrenciaGrupoId : !!r.ocorrenciaId && !r.ocorrenciaGrupoId);
-const vinculo = z.object({ composicao_id: z.string().uuid(), chamado_id: z.string().uuid().nullable(), parcela_id: z.string().uuid().nullable(), os_atribuida_id: z.string().uuid().nullable() }).strict();
+const origem = z.object({ pendenciaId: z.string().guid(), respostaId: z.string().guid(), retornoId: z.string().guid(), osOrigemId: z.string().guid(), ocorrenciaId: z.string().guid().nullable(), ocorrenciaGrupoId: z.string().guid().nullable().optional(), tipoOrigem: z.enum(["legada", "grupo"]).optional(), rotinaId: z.string().guid(), alvoTipo: z.string(), alvoId: z.string().guid() }).strict().refine((r) => r.tipoOrigem === "grupo" ? r.ocorrenciaId === null && !!r.ocorrenciaGrupoId : !!r.ocorrenciaId && !r.ocorrenciaGrupoId);
+const vinculo = z.object({ composicao_id: z.string().guid(), chamado_id: z.string().guid().nullable(), parcela_id: z.string().guid().nullable(), os_atribuida_id: z.string().guid().nullable() }).strict();
 export function RastreabilidadePendencia(props: Props) {
   if (import.meta.env.VITE_SSO_RASTREABILIDADE_PENDENCIA_ENABLED !== "true") return null;
   return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.pendenciaId])} {...props} />;

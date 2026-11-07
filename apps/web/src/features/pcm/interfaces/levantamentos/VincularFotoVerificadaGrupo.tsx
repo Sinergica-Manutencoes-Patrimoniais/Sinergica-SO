@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const destinoSchema = z.object({ fotoId: id, grupoId: id.nullable(), grupoAtivo: z.boolean().nullable(),
   revision: z.number().int().nonnegative(), decisao: z.enum(["aceita", "rejeitada"]).nullable(),
   ingestaoConfirmada: z.boolean(), inadequada: z.boolean(), retirada: z.boolean(), vinculado: z.boolean() }).strict();

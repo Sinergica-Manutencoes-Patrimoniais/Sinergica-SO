@@ -214,7 +214,7 @@ const tentativaSchema = z
     origemTipo: z.enum(["os", "ocorrencia", "ocorrencia_visita"]),
     origemId: z.string().min(1),
     clienteId: z.string().min(1),
-    requestId: z.string().uuid(),
+    requestId: z.string().guid(),
     revision: z.number().int().nonnegative(),
     internosMinutos: z.number().int().nonnegative().nullable(),
     terceirosMinutos: z.number().int().nonnegative().nullable(),

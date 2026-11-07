@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 const itemSchema = z
   .object({
-    pendencia_id: z.string().uuid(),
+    pendencia_id: z.string().guid(),
     pergunta: z.string(),
     estado: z.string(),
     revisao_atual: z.number().int().positive(),
@@ -14,12 +14,12 @@ const itemSchema = z
   .strict();
 const pedidoSchema = z
   .object({
-    requestId: z.string().uuid(),
-    clienteId: z.string().uuid(),
-    origemId: z.string().uuid(),
+    requestId: z.string().guid(),
+    clienteId: z.string().guid(),
+    origemId: z.string().guid(),
     revisao: z.number().int().positive(),
-    destinoId: z.string().uuid(),
-    itens: z.array(z.string().uuid()).min(1).max(99),
+    destinoId: z.string().guid(),
+    itens: z.array(z.string().guid()).min(1).max(99),
     motivo: z.string().min(1).max(2000),
   })
   .strict();
@@ -106,12 +106,12 @@ export function DividirComposicao({
       if (error) throw error;
       const r = z
         .object({
-          requestId: z.string().uuid(),
-          origemId: z.string().uuid(),
+          requestId: z.string().guid(),
+          origemId: z.string().guid(),
           origemRevision: z.number().int().positive(),
-          destinoId: z.string().uuid(),
+          destinoId: z.string().guid(),
           destinoRevision: z.literal(1),
-          itens: z.array(z.string().uuid()),
+          itens: z.array(z.string().guid()),
           chamadoCriado: z.literal(false),
           osCriada: z.literal(false),
         })

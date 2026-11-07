@@ -4,8 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 type Props = { userId: string; clienteId: string; visitaId: string; osId: string; revisao: number; bloqueado: boolean };
-const item = z.object({ id: z.string().uuid(), revisao: z.number().int().positive(), mensagem: z.string(), publicado_em: z.string(), revogado_em: z.string().nullable() }).strict();
-const pedidoSchema = z.object({ requestId: z.string().uuid(), visitaId: z.string().uuid(), osId: z.string().uuid(), revisao: z.number().int().positive(), mensagem: z.string().min(1).max(1000) }).strict();
+const item = z.object({ id: z.string().guid(), revisao: z.number().int().positive(), mensagem: z.string(), publicado_em: z.string(), revogado_em: z.string().nullable() }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), visitaId: z.string().guid(), osId: z.string().guid(), revisao: z.number().int().positive(), mensagem: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function PublicarVisitaPortal({ userId, clienteId, visitaId, osId, revisao, bloqueado }: Props) {
   const [mensagem, setMensagem] = useState("");
@@ -27,7 +27,7 @@ export function PublicarVisitaPortal({ userId, clienteId, visitaId, osId, revisa
     const { data, error } = await supabase.schema("pcm").rpc("sso_portal_publicar_visita_v2", {
       p_request_id: p.requestId, p_visita_id: p.visitaId, p_os_id: p.osId, p_revisao: p.revisao, p_mensagem: p.mensagem,
     });
-    if (error) throw error; return z.string().uuid().parse(data);
+    if (error) throw error; return z.string().guid().parse(data);
   }, onSuccess: async (_id, p) => {
     try { if (sessionStorage.getItem(chavePedido) !== JSON.stringify(p)) throw new Error("Pedido divergente"); sessionStorage.removeItem(chavePedido); }
     catch { setAviso("Pedido processado, mas a tentativa local não foi limpa. Consulte o histórico."); return; }

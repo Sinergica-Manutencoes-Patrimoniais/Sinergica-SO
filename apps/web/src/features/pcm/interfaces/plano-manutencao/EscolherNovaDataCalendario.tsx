@@ -6,7 +6,7 @@ import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { comparacaoImpactoArmazenadaSchema, type ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
 
 type Props = { userId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; comparacao: ComparacaoImpacto };
-const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string(), planoId: z.string(), rascunhoId: z.string().uuid(), preparadaId: z.string().uuid(), planoRevision: z.number().int().positive(), decisaoRevision: z.number().int().nonnegative(), indice: z.number().int().min(0).max(3660000), data: z.string().date(), motivo: z.string().trim().min(1).max(2000), comparacao: comparacaoImpactoArmazenadaSchema }).strict();
+const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string(), planoId: z.string(), rascunhoId: z.string().guid(), preparadaId: z.string().guid(), planoRevision: z.number().int().positive(), decisaoRevision: z.number().int().nonnegative(), indice: z.number().int().min(0).max(3660000), data: z.string().date(), motivo: z.string().trim().min(1).max(2000), comparacao: comparacaoImpactoArmazenadaSchema }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 const candidatoSchema = z.object({ indice: z.number().int().min(0).max(3660000), vencimento: z.string().date() }).strict();
 export function EscolherNovaDataCalendario(props: Props) {

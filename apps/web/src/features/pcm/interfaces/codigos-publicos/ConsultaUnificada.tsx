@@ -14,8 +14,8 @@ import { QrCodigoGrupo } from "./QrCodigoGrupo";
 const resposta = z.union([
   z.object({ situacao: z.literal("nao_encontrado") }).strict(),
   z.object({ situacao: z.literal("ambiguo") }).strict(),
-  z.object({ situacao: z.literal("encontrado"), tipo: z.enum(["sistema", "componente"]), ativoId: z.string().uuid() }).strict(),
-  z.object({ situacao: z.literal("encontrado"), tipo: z.literal("grupo_quantitativo"), ativoId: z.string().uuid(), codigoAtual: z.string().min(1).max(200), codigoHistorico: z.boolean() }).strict(),
+  z.object({ situacao: z.literal("encontrado"), tipo: z.enum(["sistema", "componente"]), ativoId: z.string().guid() }).strict(),
+  z.object({ situacao: z.literal("encontrado"), tipo: z.literal("grupo_quantitativo"), ativoId: z.string().guid(), codigoAtual: z.string().min(1).max(200), codigoHistorico: z.boolean() }).strict(),
 ]);
 
 export function ConsultaUnificada({ userId, clienteId }: { userId: string; clienteId: string }) {
@@ -60,7 +60,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
       const { data, error } = await supabase.schema("pcm").from(tabela).select("id,nome").eq(campoCliente, clienteId)
         .eq("id", selecionado.ativoId).is("deleted_at", null).abortSignal(signal).maybeSingle();
       if (error) throw error;
-      const r = z.object({ id: z.string().uuid(), nome: z.string().min(1).max(200) }).strict().parse(data);
+      const r = z.object({ id: z.string().guid(), nome: z.string().min(1).max(200) }).strict().parse(data);
       if (r.id.toLowerCase() !== selecionado.ativoId.toLowerCase()) throw new Error("Cadastro divergente.");
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");

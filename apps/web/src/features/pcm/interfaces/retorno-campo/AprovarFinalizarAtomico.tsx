@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, retornoId: uuid, conferenciaId: uuid,
   evidencias: z.number().int().nonnegative(), decisao: z.number().int().nonnegative(), justificativa: z.string().trim().min(1).max(2000),
   osId: uuid, status: z.string().min(1), updatedAt: z.string().datetime({ offset: true }) }).strict();

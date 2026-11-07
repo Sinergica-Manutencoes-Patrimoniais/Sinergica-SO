@@ -4,7 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const contagem = z.number().int().nonnegative();
 const resultado = z.object({
-  visitaId: z.string().uuid(),
+  visitaId: z.string().guid(),
   os: z.object({ total: contagem, semTarefaLocal: contagem, estadoPendente: contagem, estadoErro: contagem }).strict(),
   equipe: z.object({ total: contagem, itensFilaPendentes: contagem, itensFilaProcessando: contagem, itensFilaErro: contagem }).strict(),
   situacaoRemota: z.literal("desconhecida"),

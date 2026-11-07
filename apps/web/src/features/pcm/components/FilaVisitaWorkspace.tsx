@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { FilaPreventivaPcm } from "../interfaces/plano-manutencao/FilaPreventivaPcm";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ ciclo_id: uuid, preparada_id: uuid, estado: z.enum(["aguardando", "verificacao", "cancelado"]),
   revisao: z.number().int().positive(), vencimento: z.string().date(), atualizado_em: z.string().datetime({ offset: true }),
   rotina_id: uuid, rotina_nome: z.string().nullable(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: uuid,

@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ImpedimentoMaterialOs } from "./ImpedimentoMaterialOs";
-const schema=z.object({lista_id:z.string().uuid(),revisao:z.number().int().positive(),motivo:z.string(),descricao:z.string(),revisao_linhas:z.number().int().nullable(),posicao:z.number().int().nullable(),ator_id:z.string().uuid(),criado_em:z.string().datetime({offset:true})}).strict();
+const schema=z.object({lista_id:z.string().guid(),revisao:z.number().int().positive(),motivo:z.string(),descricao:z.string(),revisao_linhas:z.number().int().nullable(),posicao:z.number().int().nullable(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
 export function ExcecoesOs({usuario,cliente,os}:{usuario:string;cliente:string;os:string}){
   if(import.meta.env.VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED!=="true")return null;
   return <Conteudo key={JSON.stringify([usuario,cliente,os])} usuario={usuario} cliente={cliente} os={os}/>;

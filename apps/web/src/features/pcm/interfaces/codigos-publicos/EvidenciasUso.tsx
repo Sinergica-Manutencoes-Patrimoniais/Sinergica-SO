@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const respostaSchema = z.object({
-  tipo: z.enum(["sistema", "componente"]), ativoId: z.string().uuid(), clienteId: z.string().uuid(),
+  tipo: z.enum(["sistema", "componente"]), ativoId: z.string().guid(), clienteId: z.string().guid(),
   vinculoAuvoAtual: z.boolean(), referenciaOsObservada: z.boolean(), aliasObservado: z.boolean(), cicloRegistrado: z.boolean(),
   aprovadoEm: z.string().nullable(), sincronizadoEm: z.string().nullable(), etiquetadoEm: z.string().nullable(), referenciadoOsEm: z.string().nullable(),
 }).strict();

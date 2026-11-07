@@ -33,12 +33,12 @@ interface FormState {
 }
 
 const FORM_VAZIO: FormState = { nome: "", descricao: "", ativo: true, permissoes: {} };
-const criacaoGuardadaSchema = z.object({ id: z.string().uuid(), nome: z.string().min(1), descricao: z.string().nullable(),
+const criacaoGuardadaSchema = z.object({ id: z.string().guid(), nome: z.string().min(1), descricao: z.string().nullable(),
   permissoes: z.array(z.object({ modulo: z.enum(["pcm","atendimento","comercial","financeiro","operacao","marketing","growth","gestao","area-cliente"]), nivel: z.enum(["leitura","escrita"]) }).strict()).max(9) }).strict().refine((v) => new Set(v.permissoes.map((p) => p.modulo)).size === v.permissoes.length);
 const permissoesGuardadasSchema = z.array(z.object({ modulo: z.enum(["pcm","atendimento","comercial","financeiro","operacao","marketing","growth","gestao","area-cliente"]), nivel: z.enum(["leitura","escrita"]) }).strict()).max(9)
   .refine((v) => new Set(v.map((p) => p.modulo)).size === v.length);
 const edicaoGuardadaSchema = z.object({
-  requestId: z.string().uuid(), id: z.string().uuid(), ator: z.string().uuid(),
+  requestId: z.string().guid(), id: z.string().guid(), ator: z.string().guid(),
   campos: z.object({ nome: z.string().min(1), descricao: z.string().nullable(), ativo: z.boolean() }).strict(),
   permissoes: permissoesGuardadasSchema,
   estado: z.object({ nome: z.string(), descricao: z.string().nullable(), ativo: z.boolean(), permissoes: permissoesGuardadasSchema }).strict(),

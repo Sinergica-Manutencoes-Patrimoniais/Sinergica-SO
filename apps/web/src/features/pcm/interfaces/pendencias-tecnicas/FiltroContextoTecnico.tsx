@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 type Props = { userId: string; clienteId: string };
 type Filtro = "todas" | "informada" | "nao_informada";
-const linha = z.object({ pendencia_id: z.string().uuid(), alvo_tipo: z.string(), alvo_id: z.string().uuid(), pergunta: z.string(), revisao: z.number().int().positive(), norma: z.string().nullable(), condicao_informada: z.boolean(), contexto_registrado: z.boolean() }).strict();
+const linha = z.object({ pendencia_id: z.string().guid(), alvo_tipo: z.string(), alvo_id: z.string().guid(), pergunta: z.string(), revisao: z.number().int().positive(), norma: z.string().nullable(), condicao_informada: z.boolean(), contexto_registrado: z.boolean() }).strict();
 export function FiltroContextoTecnico(props: Props) {
   if (import.meta.env.VITE_SSO_FILTRO_CONTEXTO_TECNICO_ENABLED !== "true") return null;
   return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props} />;

@@ -9,7 +9,7 @@ export function ComparacaoQuestionario({ userId, clienteId, planoId, revisao, ro
     await conferirSessaoDiagnostico(userId, signal);
     const { data, error } = await supabase.schema("pcm").rpc("sso_comparar_questionario_mediado", { p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_revisao: revisao, p_rotina_logica_id: rotinaId }).abortSignal(signal);
     if (error) throw error;
-    const r = z.object({ revisao: z.number().int().positive(), rotinaLogicaId: z.string().uuid(), estadoComparacao: z.enum(["nao_comparavel", "sem_questionario", "referencia_alterada", "historico_indeterminado", "fonte_atual_indisponivel", "conteudo_integral_igual", "conteudo_integral_diferente"]), impactoOperacionalCalculado: z.literal(false), aprovacaoAutorizada: z.literal(false) }).passthrough().parse(data);
+    const r = z.object({ revisao: z.number().int().positive(), rotinaLogicaId: z.string().guid(), estadoComparacao: z.enum(["nao_comparavel", "sem_questionario", "referencia_alterada", "historico_indeterminado", "fonte_atual_indisponivel", "conteudo_integral_igual", "conteudo_integral_diferente"]), impactoOperacionalCalculado: z.literal(false), aprovacaoAutorizada: z.literal(false) }).passthrough().parse(data);
     if (r.revisao !== revisao || r.rotinaLogicaId.toLowerCase() !== rotinaId.toLowerCase()) throw new Error("Comparação divergente.");
     await conferirSessaoDiagnostico(userId, signal); return r;
   } });

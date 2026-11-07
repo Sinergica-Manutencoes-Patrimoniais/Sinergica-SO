@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 
-const uuid = z.string().uuid();
+const uuid = z.string().guid();
 const linha = z.object({ id: uuid, fonte_id: z.string().min(1).max(200), revisao: z.number().int().positive().safe(), criado_em: z.string().datetime({ offset: true }), reconciliado: z.boolean() }).strict();
 const pedidoSchema = z.object({ atorId: uuid, requestId: uuid, clienteId: uuid, loteId: uuid, revisao: z.number().int().positive().safe(), motivo: z.string().trim().min(1).max(2000) }).strict();
 export type PedidoReconciliacaoCronograma = z.input<typeof pedidoSchema>;

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 
-const id = z.string().uuid();
+const id = z.string().guid();
 const candidato = z
   .object({
     legada_id: id,

@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const pedido = z.object({ requestId: z.string().uuid(), outboxId: z.string().uuid(), componenteId: z.string().uuid(), observacao: z.string().trim().min(1).max(2000) }).strict();
+const pedido = z.object({ requestId: z.string().guid(), outboxId: z.string().guid(), componenteId: z.string().guid(), observacao: z.string().trim().min(1).max(2000) }).strict();
 type Tentativa = { chave: string; texto: string; pedido: z.infer<typeof pedido> };
 export function RecuperarObservacoesReserva({ userId, clienteId }: { userId: string; clienteId: string }) {
   return <Conteudo key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} />;
@@ -28,7 +28,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
       p_ator_id: userId, p_cliente_id: clienteId, p_request_id: p.requestId, p_outbox_id: p.outboxId, p_componente_id: p.componenteId, p_observacao: p.observacao,
     });
     if (error) throw error;
-    const recibo = z.object({ requestId: z.string().uuid(), outboxId: z.string().uuid(), componenteId: z.string().uuid(), criadoEm: z.string().datetime({ offset: true }) }).strict().parse(data);
+    const recibo = z.object({ requestId: z.string().guid(), outboxId: z.string().guid(), componenteId: z.string().guid(), criadoEm: z.string().datetime({ offset: true }) }).strict().parse(data);
     if (recibo.requestId !== p.requestId || recibo.outboxId !== p.outboxId || recibo.componenteId !== p.componenteId) throw new Error("Recibo divergente.");
     const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
     return recibo;

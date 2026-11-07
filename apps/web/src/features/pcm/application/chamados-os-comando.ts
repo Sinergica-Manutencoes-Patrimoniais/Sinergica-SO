@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 export const criarOsChamadoSchema = z.object({
-  requestId: z.string().uuid(),
+  requestId: z.string().guid(),
   expectedRevision: z.number().int().safe().positive(),
-  chamadoId: z.string().uuid(),
-  clienteId: z.string().uuid(),
-  osId: z.string().uuid(),
+  chamadoId: z.string().guid(),
+  clienteId: z.string().guid(),
+  osId: z.string().guid(),
   titulo: z.string().trim().min(1).max(200),
   descricao: z.string().nullable(),
   categoria: z.enum(["preventiva", "corretiva", "emergencial"]),

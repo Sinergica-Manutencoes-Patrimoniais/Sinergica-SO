@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { ObservacoesReserva } from "./ObservacoesReserva";
 import { RecuperarObservacoesReserva } from "./RecuperarObservacoesReserva";
 
-const linha = z.object({ outbox_id: z.string().uuid(), componente_id: z.string().uuid(), nome: z.string().min(1), status_local: z.enum(["pending", "processing", "sent", "error"]), criado_em: z.string().datetime({ offset: true }) }).strict();
+const linha = z.object({ outbox_id: z.string().guid(), componente_id: z.string().guid(), nome: z.string().min(1), status_local: z.enum(["pending", "processing", "sent", "error"]), criado_em: z.string().datetime({ offset: true }) }).strict();
 type Props = { userId: string; clienteId: string };
 function DetalheObservacoes(props: Props & { outboxId: string; componenteId: string }) {
   const [aberto, setAberto] = useState(false);

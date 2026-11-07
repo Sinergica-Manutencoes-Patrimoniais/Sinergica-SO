@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const item = z.object({ id: z.string().uuid(), revisao: z.number().int().positive(), alvo: z.string(), descricao: z.string(),
+const item = z.object({ id: z.string().guid(), revisao: z.number().int().positive(), alvo: z.string(), descricao: z.string(),
   estado: z.enum(["aberta", "risco_aceito", "dispensada", "duplicada", "resolvida"]), publicado_em: z.string(), revogado_em: z.string().nullable() }).strict();
 export function HistoricoPublicacaoPortal({ userId, clienteId, pendenciaId, revisao }: { userId: string; clienteId: string; pendenciaId: string; revisao: number }) {
   const [aberto, setAberto] = useState(false);

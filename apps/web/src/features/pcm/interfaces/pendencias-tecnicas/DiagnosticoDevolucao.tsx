@@ -5,7 +5,7 @@ import { CandidatosDevolucaoCiclo } from "./CandidatosDevolucaoCiclo";
 import { CiclosPosteriores } from "./CiclosPosteriores";
 
 const linhaSchema = z.object({
-  pendencia_id: z.string().uuid(), parcela_id: z.string().uuid(), situacao: z.string(),
+  pendencia_id: z.string().guid(), parcela_id: z.string().guid(), situacao: z.string(),
   suspensao_declarada: z.boolean(), os_atribuida: z.boolean(), interrupcao_declarada: z.boolean(),
   prova_parada_disponivel: z.boolean(),
 }).strict();

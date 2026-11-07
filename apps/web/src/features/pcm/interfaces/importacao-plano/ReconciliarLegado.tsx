@@ -4,7 +4,7 @@ import type { PedidoReconciliacaoCronograma } from "../../infrastructure/supabas
 
 type Lote = { id: string; fonte: string; revisao: number; criadoEm: string; reconciliado: boolean };
 type Props = { userId: string; clienteId: string; lote: Lote; enviar: (pedido: PedidoReconciliacaoCronograma) => Promise<void> };
-const pedidoSchema = z.object({ atorId: z.string().uuid(), requestId: z.string().uuid(), clienteId: z.string().min(1), loteId: z.string().uuid(), revisao: z.number().int().positive().safe(), motivo: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z.object({ atorId: z.string().guid(), requestId: z.string().guid(), clienteId: z.string().min(1), loteId: z.string().guid(), revisao: z.number().int().positive().safe(), motivo: z.string().trim().min(1).max(2000) }).strict();
 
 /** Preparado para composição futura; não consulta nem habilita gates por si só. */
 export function ReconciliarLegado(props: Props) {
