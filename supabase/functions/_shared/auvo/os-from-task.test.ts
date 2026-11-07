@@ -317,7 +317,7 @@ Deno.test("criarOsDaTarefa — E01-S38: resolve técnico quando tecnicoAuvoUserI
     chamadoNumero: "CH-0007",
     chamadoInseridoId: "chamado-novo-1",
     usuarioSistema: { user_id: "user-sistema-1" },
-    osInseridaId: "os-nova-1",
+    osInseridaId: "00000000-0000-4000-8000-000000000002",
   });
   const resultado = await criarOsDaTarefa(db as never, {
     taskId: 999,
@@ -326,7 +326,7 @@ Deno.test("criarOsDaTarefa — E01-S38: resolve técnico quando tecnicoAuvoUserI
     status: "solicitacao",
     tecnicoAuvoUserId: 153005,
   });
-  assertEquals(resultado, { id: "os-nova-1", status: "solicitacao" });
+  assertEquals(resultado, { id: "00000000-0000-4000-8000-000000000002", status: "solicitacao" });
   const insertCall = db.calls.find((c) => c.table === "ordens_servico" && c.method === "insert");
   assertEquals(
     (insertCall?.args[0] as Record<string, unknown>).tecnico_funcionario_id,
