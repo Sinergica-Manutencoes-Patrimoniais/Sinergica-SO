@@ -56,7 +56,7 @@ export function ConferirComposicao({ userId, clienteId, visitaId, bloqueado }: {
   return <section aria-label="Conferência de composição da Visita" className="space-y-2 rounded border border-line p-3">
     <h3>Conferência da composição</h3>
     <p>Confira OS e equipe. Esta conferência não valida todo o conteúdo nem autoriza envio.</p>
-    {consulta.isFetching && <output>Consultando composição...</output>}
+    {consulta.isFetching && <output>Consultando composição…</output>}
     {consulta.isError && <p role="alert">Não foi possível consultar a composição. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {dados && !consulta.isFetching && !consulta.isError && <>
       <p>{dados.situacao === "equivalente" ? "Composição atual equivalente ao último registro." : dados.situacao === "alterada" ? "Composição mudou desde a conferência." : "Composição ainda não conferida."}</p>

@@ -234,7 +234,7 @@ function Conteudo({
                   onChange={(e) => setDescricao(e.target.value)}
                 />
               </label>
-              {snapshot.isFetching && <output>Consultando linhas organizadas...</output>}
+              {snapshot.isFetching && <output>Consultando linhas organizadas…</output>}
               {snapshot.isError && (
                 <p role="alert">
                   Não foi possível consultar linhas.{" "}
@@ -265,7 +265,7 @@ function Conteudo({
           </button>
         </form>
       )}
-      {eventos.isFetching && <output>Consultando histórico...</output>}
+      {eventos.isFetching && <output>Consultando histórico…</output>}
       {eventos.isError && (
         <p role="alert">
           Não foi possível consultar histórico.{" "}

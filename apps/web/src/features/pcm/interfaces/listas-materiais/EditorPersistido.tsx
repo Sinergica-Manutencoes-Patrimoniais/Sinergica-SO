@@ -129,7 +129,7 @@ function Conteudo({
         </button>
       </div>
     );
-  if (dados.isFetching || dados.isPending) return <output>Consultando linhas...</output>;
+  if (dados.isFetching || dados.isPending) return <output>Consultando linhas…</output>;
   if (dados.isError)
     return (
       <p role="alert">

@@ -36,7 +36,7 @@ export function OrcamentosDaOs({ usuario, cliente, ordemServico, listaInicialId 
         Consulta parcial de vínculos canônicos; não inclui necessariamente orçamentos históricos.
         Emissão e decisão ainda não disponíveis.
       </p>
-      {consulta.isFetching && <output>Consultando orçamentos...</output>}
+      {consulta.isFetching && <output>Consultando orçamentos…</output>}
       {consulta.isError && (
         <p role="alert">
           Não foi possível consultar orçamentos.{" "}

@@ -33,7 +33,7 @@ export function EventosOrigem({ userId, clienteId, tipo, id }: { userId: string;
     if(typeof atual === "object" && typeof anterior === "object")return atual.versao<anterior.versao||(atual.versao===anterior.versao&&atual.sequencia<=anterior.sequencia);
     return true;});
   return <section aria-label="Eventos da origem"><p>Eventos locais selecionados; não representam histórico completo nem comprovam estado remoto.</p>
-    {consulta.isFetching && <output>Carregando eventos...</output>}
+    {consulta.isFetching && <output>Carregando eventos…</output>}
     {consulta.isError && <p role="alert">Eventos indisponíveis ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && divergentes && <p role="alert">Páginas divergentes. <button type="button" onClick={()=>void consulta.refetch()}>Reconsultar</button></p>}
     {!consulta.isFetching && !consulta.isError && !divergentes && consulta.data && eventos.length===0 && <p>Nenhum evento nesta fonte.</p>}

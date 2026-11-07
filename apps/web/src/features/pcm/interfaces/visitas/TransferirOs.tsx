@@ -144,7 +144,7 @@ function TransferirOsInterna({ userId, clienteId, visitas, bloqueado }: Props) {
           <label>Destino <select required value={destinoId} onChange={(event) => { setDestinoId(event.target.value); setConfirmacao(null); }}>
             <option value="">Selecione</option>{elegiveis.filter((v) => v.id !== origemId).map((v) => <option key={v.id} value={v.id}>{rotulo(v)}</option>)}
           </select></label>
-          {ordens.isFetching && origem && <output>Carregando OS da origem...</output>}
+          {ordens.isFetching && origem && <output>Carregando OS da origem…</output>}
           {ordens.isError && <p role="alert">Não foi possível carregar as OS. <button type="button" onClick={() => void ordens.refetch()}>Tentar novamente</button></p>}
           {!ordens.isFetching && !ordens.isError && vinculosDuplicados && <p role="alert">OS repetida entre páginas. <button type="button" onClick={() => void ordens.refetch()}>Consultar novamente</button></p>}
           <label>OS <select required disabled={!origem || ordens.isFetching || ordens.isError || vinculosDuplicados} value={vinculoId} onChange={(event) => { setVinculoId(event.target.value); setConfirmacao(null); }}>

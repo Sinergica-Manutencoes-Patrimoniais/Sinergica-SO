@@ -23,7 +23,7 @@ export function InboxOsIncerta({ userId, clienteId }: { userId: string; clienteI
     },
     getNextPageParam: (pagina) => pagina.length === 50 ? pagina.at(-1)?.os_id : undefined });
   return <section aria-label="Caixa de triagem de OS"><h4>Caixa de triagem de OS</h4><p>Candidatos com metadados locais; a lista não comprova situação remota nem contém todas as OS. Declarações são manuais e não verificadas. Sem retentativa externa.</p>
-    {consulta.isFetching && <output>Carregando candidatos...</output>}{consulta.isError && <p role="alert">Caixa indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Reconsultar</button></p>}
+    {consulta.isFetching && <output>Carregando candidatos…</output>}{consulta.isError && <p role="alert">Caixa indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Reconsultar</button></p>}
     {!consulta.isFetching && !consulta.isError && <ul>{consulta.data?.pages.flat().map((x) => <li key={x.os_id}>OS {x.numero} · estado local {x.estado_local ?? "não informado"} · vínculo local {x.vinculo_local ? "presente" : "não identificado"} · declaração {x.declaracao ?? "não registrada"}{x.declarada_em && ` em ${x.declarada_em}`}</li>)}</ul>}
     {consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais candidatos</button>}
   </section>;

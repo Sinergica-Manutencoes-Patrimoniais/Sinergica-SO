@@ -96,7 +96,7 @@ function Conteudo({ userId, clienteId, clienteNome }: Props) {
     gcTime: 0,
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso às Visitas...</output>;
+    return <output>Verificando acesso às Visitas…</output>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -166,7 +166,7 @@ function Conteudo({ userId, clienteId, clienteNome }: Props) {
         <TransferirOs userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />
       )}
       {import.meta.env.VITE_SSO_INTENCAO_OS_ENVIADA_ENABLED === "true" && <IntencaoOsEnviada userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />}
-      {(visitas.isPending || visitas.isFetching) && <output>Carregando Visitas...</output>}
+      {(visitas.isPending || visitas.isFetching) && <output>Carregando Visitas…</output>}
       {visitas.isError && (
         <p role="alert">
           Não foi possível carregar Visitas.{" "}
@@ -305,7 +305,7 @@ function Detalhe({
           Fechar detalhe
         </Button>
       </div>
-      {detalhe.isPending && <output>Carregando detalhe...</output>}
+      {detalhe.isPending && <output>Carregando detalhe…</output>}
       {detalhe.isError && (
         <p role="alert">
           Não foi possível carregar o detalhe.{" "}
@@ -351,7 +351,7 @@ function Detalhe({
             habilitado={import.meta.env.VITE_SSO_DESPESAS_VISITA_ENABLED === "true"}
           />
         )}
-        {(ciencia.isPending || ciencia.isFetching) && <output>Conferindo ciência...</output>}
+        {(ciencia.isPending || ciencia.isFetching) && <output>Conferindo ciência…</output>}
         {ciencia.isError && !ciencia.isFetching && (
           <p role="alert">
             Não foi possível conferir a ciência.{" "}
@@ -381,7 +381,7 @@ function Detalhe({
         )}
         <div>
           <h4 className="font-semibold">Ordens de Serviço</h4>
-          {(os.isPending || os.isFetching) && <output>Carregando OS...</output>}
+          {(os.isPending || os.isFetching) && <output>Carregando OS…</output>}
           {os.isError && !os.isFetching && (
             <p role="alert">
               Não foi possível carregar OS.{" "}
@@ -432,7 +432,7 @@ function Detalhe({
         </div>
         <div>
           <h4 className="font-semibold">Equipe</h4>
-          {(equipe.isPending || equipe.isFetching) && <output>Carregando equipe...</output>}
+          {(equipe.isPending || equipe.isFetching) && <output>Carregando equipe…</output>}
           {equipe.isError && !equipe.isFetching && (
             <p role="alert">
               Não foi possível carregar equipe.{" "}

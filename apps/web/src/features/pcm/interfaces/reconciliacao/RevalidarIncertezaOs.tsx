@@ -21,7 +21,7 @@ export function RevalidarIncertezaOs({ userId, clienteId, osId }: { userId: stri
   });
   return <section aria-label="Revalidação local da OS"><h4>Revalidação local</h4>
     <p>Situação remota desconhecida. Esta consulta não acessa o Auvo e não autoriza retentativa externa.</p>
-    {consulta.isFetching && <output>Consultando fonte local...</output>}
+    {consulta.isFetching && <output>Consultando fonte local…</output>}
     {consulta.isError && <p role="alert">Não foi possível consultar a fonte local. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && <>
       <p>{consulta.data.situacaoLocal === "sem_declaracao" ? "Nenhuma declaração registrada." : consulta.data.situacaoLocal === "fonte_local_alterada" ? "A fonte local mudou após a declaração." : "A fonte local está equivalente à declaração; isso não comprova o estado remoto nem exclui alterações revertidas."}</p>

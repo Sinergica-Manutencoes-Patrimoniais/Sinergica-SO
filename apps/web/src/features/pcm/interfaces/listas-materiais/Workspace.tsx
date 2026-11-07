@@ -127,7 +127,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     }
   }
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando acesso aos materiais...</output>;
+    return <output>Verificando acesso aos materiais…</output>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -191,7 +191,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
           </button>
         </form>
       )}
-      {listas.isFetching && <output>Consultando listas...</output>}
+      {listas.isFetching && <output>Consultando listas…</output>}
       {listas.isError && (
         <p role="alert">
           Não foi possível carregar listas.{" "}

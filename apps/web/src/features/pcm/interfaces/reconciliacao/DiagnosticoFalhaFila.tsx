@@ -10,7 +10,7 @@ export function DiagnosticoFalhaFila({ userId, clienteId, outboxId }: { userId: 
   return <section aria-label="Diagnóstico sanitizado da fila"><h4>Diagnóstico atual</h4>
     {import.meta.env.VITE_SSO_INICIO_PROCESSAMENTO_ENABLED === "true" && <InicioProcessamento userId={userId} clienteId={clienteId} outboxId={outboxId} />}
     <p>Este é o estado atual, não um histórico de falhas. Situação remota desconhecida; sem retentativa externa.</p>
-    {consulta.isFetching && <output>Consultando estado...</output>}{consulta.isError && <p role="alert">Diagnóstico indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
+    {consulta.isFetching && <output>Consultando estado…</output>}{consulta.isError && <p role="alert">Diagnóstico indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && <p>Fila: {consulta.data.estadoFila} · {consulta.data.tentativas} tentativa(s) · {consulta.data.classificacao} · {consulta.data.detalheInternoExistente ? "há detalhe interno não exibido" : "sem detalhe interno registrado"}.</p>}
   </section>;
 }

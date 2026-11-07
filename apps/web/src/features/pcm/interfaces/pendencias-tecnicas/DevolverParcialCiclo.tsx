@@ -109,7 +109,7 @@ export function DevolverParcialCiclo({ userId, clienteId, composicaoId, cicloId,
   }
   return <section aria-label="Retorno parcial da continuidade" className="mt-2 rounded-md border border-line p-3">
     <h5>Retorno parcial</h5><p>Este registro usa somente o restante declarado. Não comprova cobertura, parada remota nem cria execução.</p>
-    {consulta.isFetching && <p role="status">Consultando condições...</p>}{consulta.isError && <p role="alert">Condições indisponíveis. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
+    {consulta.isFetching && <p role="status">Consultando condições…</p>}{consulta.isError && <p role="alert">Condições indisponíveis. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {atual && <><p>Restante: {atual.descricaoRestante} · {atual.minutosRestantes} min. OS {atual.osStatus}; ciclo {atual.cicloEstado}; parcela {atual.parcelaSituacao}.</p>
       <p>Suspensão {atual.suspensaoEstado ?? "ausente"} · interrupção {atual.interrupcaoEstado ?? "ausente"} · revisão humana {atual.revisaoHumana ?? "ausente"} · vínculo {atual.vinculoRequestId ? "declarado" : "ausente"}.</p>
       {!elegivel && <p>Condições carregadas não permitem registrar o retorno neste caminho.</p>}</>}

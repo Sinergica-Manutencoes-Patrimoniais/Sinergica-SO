@@ -201,7 +201,7 @@ export function DetalhePlano({
           onAtualizar={onAtualizar}
         />
       )}
-      {versoes.isFetching && <output>Carregando versões...</output>}
+      {versoes.isFetching && <output>Carregando versões…</output>}
       {versoes.isError && (
         <div role="alert">
           Não foi possível carregar versões.{" "}
@@ -296,7 +296,7 @@ export function DetalhePlano({
           Mais versões
         </Button>
       )}
-      {versao && rotinas.isFetching && <output>Carregando Rotinas...</output>}
+      {versao && rotinas.isFetching && <output>Carregando Rotinas…</output>}
       {versao?.estado === "aprovado" && !rotinas.isError && (
         <p>Dados congelados na aprovação; a situação atual dos alvos pode ser diferente.</p>
       )}

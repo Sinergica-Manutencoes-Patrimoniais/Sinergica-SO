@@ -24,7 +24,7 @@ export function EvidenciasOs({ userId, clienteId, osId }: { userId: string; clie
   });
   return <section aria-label="Evidências declaradas"><h4>Evidências declaradas</h4>
     <p>Declarações humanas não verificadas. Não comprovam o estado remoto nem autorizam nova tentativa.</p>
-    {consulta.isFetching && <output>Carregando declarações...</output>}
+    {consulta.isFetching && <output>Carregando declarações…</output>}
     {consulta.isError && <p role="alert">Não foi possível carregar declarações. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && <ul>{consulta.data?.pages.flat().map((e) => <li key={e.request_id}>{e.criado_em} · resultado declarado: {e.resultado_declarado} · origem: {e.origem} · referência: {e.referencia}
       {import.meta.env.VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED === "true" && <button type="button" onClick={() => setSelecionada(selecionada === e.request_id ? null : e.request_id)}>Avaliação interna</button>}

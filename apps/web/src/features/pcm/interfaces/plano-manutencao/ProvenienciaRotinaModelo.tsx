@@ -32,7 +32,7 @@ export function ProvenienciaRotinaModelo({ userId, clienteId, planoId, versaoId,
     },
   });
   return <aside aria-label="Procedência da Rotina">
-    {consulta.isFetching && <p role="status">Conferindo procedência...</p>}
+    {consulta.isFetching && <p role="status">Conferindo procedência…</p>}
     {consulta.isError && <p role="alert">Procedência indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && consulta.data && (consulta.data.copiada ? <>
       <p>Rotina criada por cópia. Confira questionário, alvo, recorrência e exigências antes da aprovação. Esta consulta não registra a conferência.</p>

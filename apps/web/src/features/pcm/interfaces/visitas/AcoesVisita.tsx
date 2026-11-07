@@ -173,7 +173,7 @@ export function AcoesVisita({ userId, clienteId, visita, bloqueado }: { userId: 
     {escolha === "editarPosicao" && !pendente && !armazenamentoFalhou && <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); void enviar(false); }}>
       <p>Selecione a posição atual ou escolha remover a posição. A seleção usa o cadastro atual; a posição anterior pode ter mudado.</p>
       <label className="block">Buscar Área <input className="input" maxLength={120} value={buscaArea} onChange={(e) => { setBuscaArea(e.target.value); setArea(""); setLocal(""); setBuscaLocal(""); }} /></label>
-      {areas.isPending && <output>Carregando Áreas...</output>}
+      {areas.isPending && <output>Carregando Áreas…</output>}
       {areas.isError && <p role="alert">Não foi possível carregar Áreas. <button type="button" onClick={() => void areas.refetch()}>Tentar novamente</button></p>}
       <label className="block">Área da Visita <select className="input" required value={area} onChange={(e) => { setArea(e.target.value); setLocal(""); setBuscaLocal(""); }}><option value="">Selecione</option><option value="sem">Sem Área e Local</option>
         {!areas.isError && areas.data?.pages.flat().map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select></label>
@@ -181,7 +181,7 @@ export function AcoesVisita({ userId, clienteId, visita, bloqueado }: { userId: 
       {areas.hasNextPage && <Button type="button" variant="secondary" disabled={areas.isFetchingNextPage} onClick={() => void areas.fetchNextPage()}>Mais Áreas</Button>}
       {area && area !== "sem" && <>
         <label className="block">Buscar Local <input className="input" maxLength={120} value={buscaLocal} onChange={(e) => { setBuscaLocal(e.target.value); setLocal(""); }} /></label>
-        {locais.isPending && <output>Carregando Locais...</output>}
+        {locais.isPending && <output>Carregando Locais…</output>}
         {locais.isError && <p role="alert">Não foi possível carregar Locais. <button type="button" onClick={() => void locais.refetch()}>Tentar novamente</button></p>}
         <label className="block">Local da Visita <select className="input" value={local} onChange={(e) => setLocal(e.target.value)}><option value="">Sem Local específico</option>
           {!locais.isError && locais.data?.pages.flat().map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></label>
@@ -202,7 +202,7 @@ export function AcoesVisita({ userId, clienteId, visita, bloqueado }: { userId: 
     </form>}
     {escolha === "desvincularOs" && !pendente && !armazenamentoFalhou && <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); void enviar(false); }}>
       <p>O vínculo fica no histórico; a OS não é excluída.</p>
-      {osVigentes.isPending && <output>Carregando OS vinculadas...</output>}
+      {osVigentes.isPending && <output>Carregando OS vinculadas…</output>}
       {osVigentes.isError && <p role="alert">Não foi possível carregar OS. <button type="button" onClick={() => void osVigentes.refetch()}>Tentar novamente</button></p>}
       <label className="block">Vínculo de OS <select className="input" required value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Selecione</option>
         {!osVigentes.isError && osVigentes.data?.pages.flat().map((o) => <option key={o.id} value={o.id}>{o.numero} — {o.titulo}</option>)}</select></label>
@@ -215,7 +215,7 @@ export function AcoesVisita({ userId, clienteId, visita, bloqueado }: { userId: 
     </form>}
     {escolha === "encerrarMembro" && !pendente && !armazenamentoFalhou && <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); void enviar(false); }}>
       <p>O encerramento preserva o histórico da participação.</p>
-      {equipeVigente.isPending && <output>Carregando equipe...</output>}
+      {equipeVigente.isPending && <output>Carregando equipe…</output>}
       {equipeVigente.isError && <p role="alert">Não foi possível carregar a equipe. <button type="button" onClick={() => void equipeVigente.refetch()}>Tentar novamente</button></p>}
       <label className="block">Participação <select className="input" required value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Selecione</option>
         {!equipeVigente.isError && equipeVigente.data?.pages.flat().map((p) => <option key={p.id} value={p.id}>{p.nome} — {p.papel}</option>)}</select></label>
@@ -230,7 +230,7 @@ export function AcoesVisita({ userId, clienteId, visita, bloqueado }: { userId: 
       <p>{escolha === "associarOs" ? "Selecione uma OS disponível do Cliente. O servidor confere o vínculo ao salvar." : "Selecione uma pessoa ativa. A disponibilidade ainda não é verificada."}</p>
       <label className="block">Buscar {escolha === "associarOs" ? "OS" : "pessoa"} <input className="input" maxLength={120} value={busca} onChange={(e) => { setBusca(e.target.value); setSelecionado(""); }} /></label>
       {escolha === "associarOs" ? <>
-        {osDisponiveis.isPending && <output>Carregando OS disponíveis...</output>}
+        {osDisponiveis.isPending && <output>Carregando OS disponíveis…</output>}
         {osDisponiveis.isError && <p role="alert">Não foi possível buscar OS. <button type="button" onClick={() => void osDisponiveis.refetch()}>Tentar novamente</button></p>}
         <label className="block">Ordem de Serviço <select className="input" required value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Selecione</option>
           {osDisponiveis.data?.pages.flat().map((o) => <option key={o.id} value={o.id}>{o.numero} — {o.titulo} ({o.status})</option>)}</select></label>
@@ -238,7 +238,7 @@ export function AcoesVisita({ userId, clienteId, visita, bloqueado }: { userId: 
         {osDisponiveis.hasNextPage && <Button type="button" variant="secondary" disabled={osDisponiveis.isFetchingNextPage} onClick={() => void osDisponiveis.fetchNextPage()}>Mais OS disponíveis</Button>}
         <label className="block">Sequência da OS <input className="input" type="number" min="1" step="1" required value={sequencia} onChange={(e) => setSequencia(e.target.value)} /></label>
       </> : <>
-        {pessoasDisponiveis.isPending && <output>Carregando pessoas...</output>}
+        {pessoasDisponiveis.isPending && <output>Carregando pessoas…</output>}
         {pessoasDisponiveis.isError && <p role="alert">Não foi possível buscar pessoas. <button type="button" onClick={() => void pessoasDisponiveis.refetch()}>Tentar novamente</button></p>}
         <label className="block">{escolha === "definirResponsavel" ? "Responsável da Visita" : "Pessoa da equipe"} <select className="input" required value={selecionado} onChange={(e) => setSelecionado(e.target.value)}><option value="">Selecione</option>
           {pessoasDisponiveis.data?.pages.flat().map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}</select></label>

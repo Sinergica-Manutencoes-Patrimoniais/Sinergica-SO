@@ -164,7 +164,7 @@ function Conteudo({
         </Button>
       </form>
       {erro && <p role="alert">{erro}</p>}
-      {periodo && ciclos.isFetching && <output>Carregando ciclos...</output>}
+      {periodo && ciclos.isFetching && <output>Carregando ciclos…</output>}
       {periodo && ciclos.isError && (
         <p role="alert">
           Não foi possível consultar ciclos.{" "}

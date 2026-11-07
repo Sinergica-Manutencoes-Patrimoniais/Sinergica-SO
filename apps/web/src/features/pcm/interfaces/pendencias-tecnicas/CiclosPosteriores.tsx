@@ -34,7 +34,7 @@ export function CiclosPosteriores({ userId, clienteId, composicaoId }: { userId:
   return <section aria-label="Ciclos posteriores do Backlog">
     <h5>Ciclos posteriores</h5>
     <p>Histórico separado do vínculo original. Não comprova parada da execução nem sincronização remota; páginas podem mudar.</p>
-    {consulta.isFetching && <p role="status">Consultando ciclos posteriores...</p>}
+    {consulta.isFetching && <p role="status">Consultando ciclos posteriores…</p>}
     {consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && <div hidden={consulta.isFetching || consulta.isError}>{itens.length === 0 ? <p>Nenhum ciclo posterior encontrado.</p> : <ul>{itens.map((item) => <li key={item.ciclo_id}>
       Ciclo {item.ciclo_id} · {item.ciclo_estado} · revisão {item.ciclo_revisao}. Pendência {item.pendencia_id}, Chamado {item.chamado_id}, parcela {item.parcela_id} ({item.situacao}).

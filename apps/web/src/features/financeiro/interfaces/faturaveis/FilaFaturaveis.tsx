@@ -175,7 +175,7 @@ function Conteudo({ usuario, cliente }: Props) {
         </button>
       )}
       {pendente && pendente !== "invalido" && pendente.acao === "cancelar" && !cancelamentoHabilitado && <p>Cancelamento desabilitado; pedido preservado para recuperação.</p>}
-      {consulta.isFetching && <output>Consultando itens...</output>}
+      {consulta.isFetching && <output>Consultando itens…</output>}
       {consulta.isError && (
         <p role="alert">
           Não foi possível consultar itens.{" "}

@@ -105,7 +105,7 @@ export function OsCicloPosterior({ userId, clienteId, composicaoId, cicloId, par
   return <section aria-label={modo === "atribuir" ? "Atribuição de OS ao ciclo" : "Interrupção da parcela do ciclo"} className="mt-2 rounded-md border border-line p-3">
     <h5>{modo === "atribuir" ? "Atribuir OS à parcela" : "Declarar ou revogar interrupção"}</h5>
     <p>O registro não envia tarefa nem comprova execução ou parada remota.</p>
-    {consulta.isFetching && <p role="status">Consultando OS...</p>}
+    {consulta.isFetching && <p role="status">Consultando OS…</p>}
     {consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && paginasDivergentes && <p role="alert">A lista de OS mudou durante a consulta. <button type="button" onClick={() => void consulta.refetch()}>Atualizar lista</button></p>}
     {recuperacao.invalido ? <p role="alert">Tentativa local inválida. Procure suporte.</p> : pendente ? <>

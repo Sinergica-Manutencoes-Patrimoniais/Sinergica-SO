@@ -105,7 +105,7 @@ export function ReconciliacaoCicloPosterior({ userId, clienteId, composicaoId, c
     {cadeiaAtiva && <><label>OS a reconciliar <select className="input" value={osEscolhida} disabled={ocupado || opcoesOs.isFetching || opcoesOs.isError} onChange={(e) => { setOsEscolhida(e.target.value); setEvidenciaId(""); setConfirmacao(null); }}><option value="">Selecione</option>{opcoesAtuais.map((os) => <option key={os.os_id} value={os.os_id}>{os.numero} · {os.os_id}</option>)}</select></label>
       {opcoesOs.isError && <p role="alert">Não foi possível consultar as OS. <button type="button" onClick={() => void opcoesOs.refetch()}>Tentar novamente</button></p>}
       {opcoesOs.hasNextPage && <Button variant="secondary" disabled={opcoesOs.isFetching} onClick={() => void opcoesOs.fetchNextPage()}>Mais OS</Button>}</>}
-    {contexto.isFetching && <p role="status">Consultando contexto...</p>}
+    {contexto.isFetching && <p role="status">Consultando contexto…</p>}
     {contexto.isError && <p role="alert">Contexto indisponível. <button type="button" onClick={() => void contexto.refetch()}>Tentar novamente</button></p>}
     {atual && <p>Parcela {atual.situacao} · OS {atual.osId ?? "ausente"} · suspensão {atual.suspensao ?? "ausente"} · interrupção {atual.interrupcao ?? "ausente"} · revisão {atual.revision}.</p>}
     {historico.isError && <p role="alert">Histórico indisponível.</p>}

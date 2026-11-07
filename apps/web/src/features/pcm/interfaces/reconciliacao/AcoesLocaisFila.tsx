@@ -16,7 +16,7 @@ export function AcoesLocaisFila({ userId, clienteId, outboxId }: { userId: strin
       return r;
     } });
   return <section aria-label="Ações locais da fila"><h4>Ações locais</h4><p>A autorização e o estado são revalidados ao executar; disponibilidade pode mudar.</p>
-    {consulta.isFetching && <output>Consultando ações...</output>}{consulta.isError && <p role="alert">Ações indisponíveis ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Reconsultar</button></p>}
+    {consulta.isFetching && <output>Consultando ações…</output>}{consulta.isError && <p role="alert">Ações indisponíveis ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Reconsultar</button></p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && <><p>Disponíveis nesta triagem: {consulta.data.acoesLocais.includes("consultar_historico") ? "consultar histórico" : ""}{consulta.data.acoesLocais.includes("registrar_anotacao") ? " e registrar anotação" : ""}.</p><p>Retentativa externa, confirmação de vínculo remoto e resolução continuam bloqueadas; estado remoto desconhecido.</p></>}
   </section>;
 }

@@ -12,7 +12,7 @@ export function NotasFiltradas({ userId, clienteId, outboxId }: { userId: string
   return <section aria-label="Notas filtradas"><h4>Histórico filtrado</h4><p>O número de tentativas é um dado observado, não uma revisão da fila.</p>
     <label><input type="checkbox" checked={minhas} onChange={(e) => setMinhas(e.target.checked)} /> Apenas minhas notas</label>{" "}
     <label>Estado observado <select value={estado} onChange={(e) => setEstado(e.target.value)}><option value="">Todos</option><option value="pending">Pendente</option><option value="processing">Processando</option><option value="error">Erro</option><option value="sent">Enviado</option></select></label>
-    {consulta.isFetching && <output>Consultando notas...</output>}{consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
+    {consulta.isFetching && <output>Consultando notas…</output>}{consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isError && <ul>{consulta.data?.pages.flat().map((n) => <li key={n.request_id}>{n.criado_em} · {n.status_observado} · {n.tentativas_observadas} tentativa(s) · {n.observacao}</li>)}</ul>}
     {consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais notas</button>}
   </section>;

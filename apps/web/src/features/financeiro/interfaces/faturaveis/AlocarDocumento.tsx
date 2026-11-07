@@ -97,7 +97,7 @@ function Conteudo({ usuario, cliente, itemId, revisao }: Props) {
       <label>Lançamento de entrada existente <select required value={lancamento} onChange={(e) => setLancamento(e.target.value)}>
         <option value="">Selecione</option>{!opcoes.isFetching && !opcoes.isError && !paginasDivergentes && lancamentos.map((l) => <option key={l.id} value={l.id}>{l.descricao || l.id} · {l.valor_centavos} centavos · {l.competencia}</option>)}</select></label>
       {!opcoes.isFetching && !opcoes.isError && opcoes.hasNextPage && <button type="button" onClick={() => void opcoes.fetchNextPage()}>Mais lançamentos</button>}
-      {previaParcela.isFetching && <output>Consultando documento existente...</output>}
+      {previaParcela.isFetching && <output>Consultando documento existente…</output>}
       {previaParcela.isError && <p role="alert">Prévia indisponível. A autorização e o saldo serão revalidados no servidor.</p>}
       {previaParcela.data && !previaParcela.isFetching && !previaParcela.isError && <p>{previaParcela.data.documento ? `Documento já vinculado: ${previaParcela.data.documento.referencia}, data ${previaParcela.data.documento.data}.` : "Nenhum documento vinculado a este lançamento."} Parcela adicional no mesmo documento: {previaParcela.data.parcelasAdicionaisHabilitadas ? "gate habilitado" : "gate fechado"}. Prévia não reserva saldo.</p>}
       <label>Referência do documento <input maxLength={200} value={documento} onChange={(e) => setDocumento(e.target.value)} /></label>

@@ -37,7 +37,7 @@ export function DiagnosticoHierarquia({ userId, clienteId, loteId, revisao, onRe
   return <section aria-label="Diagnóstico de hierarquia do lote">
     <h4>Hierarquia do lote</h4>
     <p>Referência fora do lote precisa de conferência; ausência de alerta não comprova cadastro oficial ou aprovação.</p>
-    {consulta.isFetching && <p role="status">Consultando hierarquia...</p>}
+    {consulta.isFetching && <p role="status">Consultando hierarquia…</p>}
     {consulta.isError && <p role="alert">Diagnóstico indisponível ou lote alterado. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && consulta.data && (itens.length === 0 ? <p>Nenhuma linha encontrada.</p> : <ul>{itens.map((item) => <li key={item.chave}>
       {item.chave} · {item.tipo} · pai {item.referencia_pai ?? "não informado"} {item.pai_tipo ? `(${item.pai_tipo})` : ""}: {item.problemas.length ? item.problemas.map((p) => descricao[p]).join("; ") : "sem alerta nesta consulta"}.

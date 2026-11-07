@@ -31,7 +31,7 @@ export function RetornosParciais({ userId, clienteId, destaqueId }: { userId: st
     <h4>Retornos parciais experimentais</h4>
     <p>Restantes declarados, separados da fila oficial. Não comprovam cobertura ou parada remota; dados podem mudar entre páginas.</p>
     {destaqueId && !itens.some((item) => item.id === destaqueId) && <p role="status">Retorno selecionado {destaqueId} ainda não consta nas páginas carregadas. Consulte mais páginas ou atualize a lista.</p>}
-    {consulta.isFetching && <p role="status">Consultando retornos parciais...</p>}
+    {consulta.isFetching && <p role="status">Consultando retornos parciais…</p>}
     {consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && <div hidden={consulta.isFetching || consulta.isError}>{itens.length === 0 ? <p>Nenhum retorno parcial encontrado.</p> : <ol>{itens.map((item) => <li key={item.id}>
       {item.id === destaqueId && <strong>Selecionado no ranking. </strong>}<strong>{item.descricao_restante}</strong> · {item.minutos_restantes} min · {item.estado} · revisão {item.revisao}.

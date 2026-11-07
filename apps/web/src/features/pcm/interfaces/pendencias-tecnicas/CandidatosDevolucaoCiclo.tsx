@@ -40,7 +40,7 @@ export function CandidatosDevolucaoCiclo({ userId, clienteId, composicaoId }: { 
   return <section aria-label="Candidatos de devolução por ciclo">
     <h5>Candidatos de devolução por ciclo</h5>
     <p>Diagnóstico do vínculo legado. Não comprova parada remota nem autoriza devolução; os dados podem mudar entre páginas.</p>
-    {consulta.isFetching && <p role="status">Consultando ciclos...</p>}
+    {consulta.isFetching && <p role="status">Consultando ciclos…</p>}
     {consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && <div hidden={consulta.isFetching || consulta.isError}>{itens.length === 0 ? <p>Nenhuma parcela encontrada.</p> : <ul>{itens.map((item) => <li key={item.pendencia_id}>
       Pendência {item.pendencia_id} · parcela {item.parcela_id} ({item.situacao}).

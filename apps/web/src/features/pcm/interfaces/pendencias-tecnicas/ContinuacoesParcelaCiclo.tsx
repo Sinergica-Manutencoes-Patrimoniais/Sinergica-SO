@@ -71,7 +71,7 @@ export function ContinuacoesParcelaCiclo({ userId, clienteId, composicaoId, cicl
   }
   return <section aria-label="Continuidade da parcela" className="mt-2 rounded-md border border-line p-3">
     <h5>Continuidade da parcela</h5><p>Vínculo declarado não comprova cobertura do restante nem autoriza devolução.</p>
-    {consulta.isFetching && <p role="status">Consultando propostas...</p>}
+    {consulta.isFetching && <p role="status">Consultando propostas…</p>}
     {consulta.isError && <p role="alert">Consulta indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {paginasDivergentes && <p role="alert">As propostas mudaram durante a consulta. <button type="button" onClick={() => void consulta.refetch()}>Consultar novamente</button></p>}
     {recuperacao.invalido ? <p role="alert">Tentativa local inválida. Procure suporte.</p> : pendente ? <><p>Pedido pendente para proposta {pendente.propostaId}; a resposta pode ter sido perdida.</p><Button variant="secondary" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</Button></> : <>

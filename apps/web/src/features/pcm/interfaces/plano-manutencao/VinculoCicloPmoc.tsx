@@ -204,7 +204,7 @@ function Conteudo({ userId, clienteId, propostaId, decisaoRevision }: Props) {
         referência não é verificada automaticamente; declare a origem PMOC na Rotina antes de
         vincular.
       </p>
-      {consulta.isFetching && <output>Consultando vínculo...</output>}
+      {consulta.isFetching && <output>Consultando vínculo…</output>}
       {consulta.isError && (
         <p role="alert">
           Vínculo indisponível.{" "}

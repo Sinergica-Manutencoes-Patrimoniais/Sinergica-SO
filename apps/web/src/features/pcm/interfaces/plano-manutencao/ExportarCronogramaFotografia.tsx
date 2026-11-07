@@ -165,7 +165,7 @@ export function ExportarCronogramaFotografia({ userId, clienteId, planoId, versa
     </fieldset>
     <button type="button" disabled={ocupado} onClick={() => void exportar("pdf")}>Exportar cronograma parcial em PDF</button>
     <button type="button" disabled={ocupado} onClick={() => void exportar("xlsx")}>Exportar cronograma parcial em XLSX</button>
-    {ocupado && <output>Preparando e conferindo cronograma...</output>}
+    {ocupado && <output>Preparando e conferindo cronograma…</output>}
     {erro && <p role="alert">{erro}</p>}
   </section>;
 }

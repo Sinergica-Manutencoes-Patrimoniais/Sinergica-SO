@@ -8,7 +8,7 @@ export function DiagnosticoSnapshotOs({ userId, clienteId, osId }: { userId: str
     queryFn: async ({ signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_diagnostico_snapshot_os", { p_cliente_id: clienteId, p_os_id: osId }).abortSignal(signal); if (error) throw error; const r = resultado.parse(data); if (r.osId !== osId) throw new Error("OS divergente"); return r; } });
   return <section aria-label="Snapshot local da OS"><h4>Snapshot local</h4>
     <p>A presença de snapshot não comprova autenticidade ou estado remoto. A ausência não comprova ausência no Auvo. Nenhuma retentativa é autorizada.</p>
-    {consulta.isFetching && <output>Consultando registro local...</output>}
+    {consulta.isFetching && <output>Consultando registro local…</output>}
     {consulta.isError && <p role="alert">Consulta indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && <p>{consulta.data.snapshotLocalEncontrado ? "Snapshot local encontrado para o vínculo atual." : "Nenhum snapshot local encontrado para o vínculo atual."} {consulta.data.ultimaRecepcaoDeclarada && `Última recepção registrada: ${consulta.data.ultimaRecepcaoDeclarada}.`}</p>}
   </section>;

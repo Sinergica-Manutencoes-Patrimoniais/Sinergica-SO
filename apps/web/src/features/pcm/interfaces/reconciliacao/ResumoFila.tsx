@@ -9,7 +9,7 @@ export function ResumoFila({ userId, clienteId }: { userId: string; clienteId: s
     queryFn: async ({ signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_resumo_outbox_reconciliacao", { p_cliente_id: clienteId }).abortSignal(signal); if (error) throw error; return resumo.parse(data); } });
   return <section aria-label="Resumo da fila"><h3>Resumo da fila</h3>
     <p>Estado remoto desconhecido; enviado não significa confirmado. O resumo não acompanha o filtro da lista.</p>
-    {consulta.isFetching && <output>Consultando resumo...</output>}
+    {consulta.isFetching && <output>Consultando resumo…</output>}
     {consulta.isError && <p role="alert">Resumo indisponível ou sem permissão. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && <>
       <p>{consulta.data.pendentes} pendentes · {consulta.data.processando} processando · {consulta.data.erro} com erro · {consulta.data.enviadosNaoConfirmados} enviados não confirmados.</p>
