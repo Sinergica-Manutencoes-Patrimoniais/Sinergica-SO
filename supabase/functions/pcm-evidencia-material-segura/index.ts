@@ -32,6 +32,7 @@ serve(async(req)=>{
     const caminho=await resolver();if(!caminho)return falha(404);const bytes=await baixarLimitado(caminho);
     const jpeg=bytes.length>=3 && bytes[0]===0xff && bytes[1]===0xd8 && bytes[2]===0xff;const png=bytes.length>=8 && [137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
     if(!jpeg && !png)return falha(415);if(await resolver()!==caminho)return falha(404);
-    return new Response(bytes,{headers:{...cors,"Content-Type":jpeg ? "image/jpeg" : "image/png","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Security-Policy":"default-src 'none'; sandbox"}});
+    const corpo = new Uint8Array(bytes.byteLength); corpo.set(bytes);
+    return new Response(corpo,{headers:{...cors,"Content-Type":jpeg ? "image/jpeg" : "image/png","Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Content-Security-Policy":"default-src 'none'; sandbox"}});
   }catch{return falha(503);}
 });

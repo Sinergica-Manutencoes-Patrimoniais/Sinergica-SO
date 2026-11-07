@@ -1,4 +1,5 @@
 import { DOMParser as XmlDomParser } from "npm:@xmldom/xmldom@0.9.12";
+import type { XmlParser } from "../../../../apps/web/src/features/pcm/application/xml-parser.ts";
 import { extrairXlsxLimitado } from "../../../../apps/web/src/features/pcm/infrastructure/extrair-xlsx-limitado.ts";
 import { lerPartesOoxml } from "../../../../apps/web/src/features/pcm/application/ler-partes-ooxml.ts";
 import { interpretarLivroOoxml } from "../../../../apps/web/src/features/pcm/application/metadados-ooxml.ts";
@@ -20,7 +21,7 @@ export async function processarEstruturaXlsx(bytes: Uint8Array, aba: string) {
   const parser = { parseFromString(xml: string, tipo: string) {
     if (tipo !== "application/xml") throw new Error("Tipo inválido.");
     return new XmlDomParser({ onError: (_nivel, mensagem) => { throw new Error(mensagem); } }).parseFromString(xml, "application/xml");
-  } } as unknown as Pick<DOMParser, "parseFromString">;
+  } } as unknown as XmlParser;
   const livro = interpretarLivroOoxml(obter("xl/workbook.xml"), obter("xl/_rels/workbook.xml.rels"), parser);
   const visiveis = livro.abas.filter((item) => item.estado === "visible");
   if (visiveis.filter((item) => item.nome === aba).length !== 1) throw new Error("Aba ausente ou ambígua.");
