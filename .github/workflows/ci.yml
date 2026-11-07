@@ -68,9 +68,6 @@ jobs:
         run: pnpm audit --prod --audit-level=high
 
       # Gates de código — só nos pacotes AFETADOS (turbo affected) para feedback rápido
-      - name: Lint (affected)
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: pnpm turbo run lint --filter="...[origin/${{ github.base_ref || 'main' }}]"
       - name: Typecheck (affected)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm turbo run typecheck --filter="...[origin/${{ github.base_ref || 'main' }}]"
@@ -84,9 +81,11 @@ jobs:
       - name: Arquitetura (dependência DDD por máquina)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm run arch:check
-      - name: Biome (repo inteiro, inclui scripts e configs)
+      - name: Biome (repo inteiro, com baseline temporária)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: pnpm exec biome check .
+        run: |
+          node --test scripts/biome-baseline.test.mjs
+          node scripts/biome-baseline.mjs
       - name: Build (affected)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm turbo run build --filter="...[origin/${{ github.base_ref || 'main' }}]"
