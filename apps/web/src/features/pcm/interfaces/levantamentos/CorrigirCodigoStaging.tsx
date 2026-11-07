@@ -10,7 +10,7 @@ const schema = z
     loteId: z.string().uuid(),
     revision: z.number().int().positive(),
     chave: z.string(),
-    antes: z.record(z.unknown()),
+    antes: z.record(z.string(), z.unknown()),
     codigoRevision: z.number().int().nonnegative(),
     codigo: z.string().min(1).max(200),
     motivo: z.string().min(1).max(2000),

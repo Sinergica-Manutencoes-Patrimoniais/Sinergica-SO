@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const uuid = z.string().uuid();
-const itemSchema = z.object({ requestId: uuid, planoId: uuid, rotinaId: uuid, fotografia: z.record(z.unknown()),
+const itemSchema = z.object({ requestId: uuid, planoId: uuid, rotinaId: uuid, fotografia: z.record(z.string(), z.unknown()),
   modo: z.enum(["calendario", "visita"]), intervalo: z.number().int().min(1).max(10000),
   unidade: z.enum(["dias", "semanas", "meses", "anos"]), dataBase: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   antes: z.number().int().min(0).max(10000), depois: z.number().int().min(0).max(10000) }).strict();
@@ -53,7 +53,7 @@ function Conteudo({ userId, clienteId, planos, disponivel }: Props) {
         p_ator_id: userId, p_cliente_id: clienteId, p_plano_legado_id: planoId,
       }).abortSignal(signal);
       if (error) throw error;
-      const r = z.object({ clienteId: uuid, planoLegadoId: uuid, fotografia: z.record(z.unknown()),
+      const r = z.object({ clienteId: uuid, planoLegadoId: uuid, fotografia: z.record(z.string(), z.unknown()),
         rascunhoExistente: z.boolean(), equivalenciaComprovada: z.literal(false) }).strict().parse(data);
       if (r.clienteId !== clienteId || r.planoLegadoId !== planoId || r.fotografia.id !== planoId || r.fotografia.cliente_id !== clienteId) throw new Error("Fotografia divergente.");
       await conferirSessao(signal); return r;

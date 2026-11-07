@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const itemSchema=z.object({chave:z.string().min(1).max(200),grupoId:z.string().uuid(),grupoRevision:z.number().int().positive().safe(),
-  localId:z.string().uuid(),atributos:z.record(z.unknown()),caracteristicas:z.record(z.string()),motivo:z.string().min(1).max(2000),
+  localId:z.string().uuid(),atributos:z.record(z.string(), z.unknown()),caracteristicas:z.record(z.string(), z.string()),motivo:z.string().min(1).max(2000),
   codigoStaging:z.string().min(1).max(200).nullable(),codigoRevision:z.number().int().nonnegative().safe(),
   revisaoSelecao:z.number().int().positive().safe(),requestId:z.string().uuid()}).strict();
 const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive().safe(),itens:z.array(itemSchema).min(1).max(50)}).strict();

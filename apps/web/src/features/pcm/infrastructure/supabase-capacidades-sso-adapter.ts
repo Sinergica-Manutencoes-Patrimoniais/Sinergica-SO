@@ -9,7 +9,7 @@ const resultadoSchema = z
     revision: z.number().int().nonnegative(),
     state: z.boolean(),
     created: z.boolean(),
-    linkedIds: z.record(z.string()),
+    linkedIds: z.record(z.string(), z.string()),
     warnings: z.array(z.string()),
     requestId: z.string().uuid(),
   })
@@ -63,7 +63,7 @@ const clienteSchema = z.object({ id: z.string().uuid(), nome: z.string() });
 async function listar<T>(
   rpc: string,
   pagina: { inicio: number; limite: number },
-  schema: z.ZodType<T, z.ZodTypeDef, unknown>,
+  schema: z.ZodType<T, unknown>,
 ): Promise<T[]> {
   const { data, error } = await supabase
     .schema("config")

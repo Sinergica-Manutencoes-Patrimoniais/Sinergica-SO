@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 type Linha = { chave: string; tipo: string; atributos: Record<string, unknown> };
 type Props = { userId: string; clienteId: string; loteId: string; revisao: number; linhas: Linha[]; carregando: boolean };
-const itemSchema = z.object({ chave: z.string().min(1).max(200), atributos: z.record(z.unknown()), requestId: z.string().uuid() }).strict();
+const itemSchema = z.object({ chave: z.string().min(1).max(200), atributos: z.record(z.string(), z.unknown()), requestId: z.string().uuid() }).strict();
 const pedidoSchema = z.object({ loteId: z.string().uuid(), revision: z.number().int().positive(), itens: z.array(itemSchema).min(1).max(50), proximo: z.number().int().nonnegative() }).strict().refine(p => p.proximo <= p.itens.length);
 type Pedido = z.infer<typeof pedidoSchema>;
 type Selecionada = { chave: string; tipo: string; atributos: Record<string, unknown>; revision: number };

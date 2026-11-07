@@ -5,7 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 
 const campos=["nome","observacoes","quantidade","codigoInformado","referenciaPai","sistemaProvisorio","localProvisorio","classificacao"] as const;
 const rotulos:Record<(typeof campos)[number],string>={nome:"Nome",observacoes:"Observações",quantidade:"Quantidade",codigoInformado:"Código informado",referenciaPai:"Referência pai",sistemaProvisorio:"Sistema provisório",localProvisorio:"Local provisório",classificacao:"Classificação"};
-const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),chave:z.string().min(1).max(200),revision:z.number().int().positive(),antes:z.record(z.unknown()),alteracoes:z.record(z.string().max(4000).nullable()),motivo:z.string().min(1).max(2000)}).strict();
+const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),chave:z.string().min(1).max(200),revision:z.number().int().positive(),antes:z.record(z.string(), z.unknown()),alteracoes:z.record(z.string(), z.string().max(4000).nullable()),motivo:z.string().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;atributos:Record<string,unknown>;aposParcial?:boolean};
 export function EditarAtributos(props:Props){if(props.aposParcial ? import.meta.env.VITE_SSO_CORRECAO_APOS_PARCIAL_ENABLED!=="true" : import.meta.env.VITE_SSO_EDITAR_ATRIBUTOS_STAGING_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave,props.aposParcial])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,chave,revisao,atributos,aposParcial=false}:Props){

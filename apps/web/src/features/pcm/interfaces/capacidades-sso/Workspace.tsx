@@ -214,7 +214,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
         revision: z.number().int().positive(),
         state: z.boolean(),
         created: z.boolean(),
-        linkedIds: z.record(z.string()),
+        linkedIds: z.record(z.string(), z.string()),
         warnings: z.array(z.string()),
       })
       .strict()

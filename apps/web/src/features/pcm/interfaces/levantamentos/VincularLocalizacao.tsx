@@ -6,7 +6,7 @@ import { useAreasDoCliente, useLocaisDoCliente } from "../../application/ativos-
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
 
 export const pedidoVinculoLocalizacaoSchema = z.object({ requestId: z.string().uuid(), loteId: z.string().uuid(), chave: z.string().min(1).max(200), revisao: z.number().int().positive(),
-  tipo: z.enum(["area", "local", "sublocal"]), entidadeId: z.string().uuid(), snapshot: z.record(z.unknown()), motivo: z.string().trim().min(1).max(2000) }).strict();
+  tipo: z.enum(["area", "local", "sublocal"]), entidadeId: z.string().uuid(), snapshot: z.record(z.string(), z.unknown()), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoVinculoLocalizacaoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
 
@@ -30,7 +30,7 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo }: Props) {
   async function conferirSessao() { const { data, error } = await supabase.auth.getUser(); if (error || data.user?.id !== userId) throw new Error("Sessão alterada."); }
   const snapshot = useQuery({ queryKey: ["levantamentos", userId, clienteId, loteId, chave, "vinculo-localizacao", entidade, revisao], enabled: !!entidade, gcTime: 0, retry: false,
     queryFn: async ({ signal }) => { await conferirSessao(); const { data, error } = await supabase.schema("pcm").rpc("sso_snapshot_localizacao_autorizado", { p_cliente_id: clienteId, p_tipo: tipo, p_entidade_id: entidade }).abortSignal(signal);
-      if (error) throw error; const r = z.record(z.unknown()).parse(data); if (r.id !== entidade || typeof r.nome !== "string") throw new Error("Cadastro divergente.");
+      if (error) throw error; const r = z.record(z.string(), z.unknown()).parse(data); if (r.id !== entidade || typeof r.nome !== "string") throw new Error("Cadastro divergente.");
       await conferirSessao(); if (signal.aborted) throw new Error("Consulta cancelada."); return r; } });
   const fotografia = snapshot.data && !snapshot.isFetching && !snapshot.isError ? JSON.stringify([userId, clienteId, loteId, chave, revisao, tipo, entidade, snapshot.data, motivo.trim()]) : null;
   const envio = useMutation({ mutationFn: async (p: Pedido) => {

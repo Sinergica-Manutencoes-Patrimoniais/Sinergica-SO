@@ -25,7 +25,7 @@ const resultadoSchema = z
     revision: z.number().int().positive(),
     state: z.string(),
     created: z.boolean(),
-    linkedIds: z.record(z.string()),
+    linkedIds: z.record(z.string(), z.string()),
     warnings: z.array(
       z.union([
         z.string(),

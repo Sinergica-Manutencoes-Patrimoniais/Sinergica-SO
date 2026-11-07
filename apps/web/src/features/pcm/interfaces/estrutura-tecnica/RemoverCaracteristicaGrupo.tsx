@@ -6,7 +6,7 @@ import type { GrupoQuantitativo } from "../../application/estrutura-tecnica-gate
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
 type Props = { userId: string; clienteId: string; grupo: GrupoQuantitativo; disponivel: boolean };
 const pedido = z.object({ requestId: z.string().uuid(), userId: z.string().uuid(), clienteId: z.string().uuid(), grupoId: z.string().uuid(), revision: z.number().int().positive(), chave: z.string().min(1).max(200), motivo: z.string().min(1).max(2000) }).strict(); type Pedido = z.infer<typeof pedido>;
-const evento = z.object({ request_id: z.string().uuid(), revisao_anterior: z.number().int().positive(), revisao_nova: z.number().int().positive(), chave: z.string(), motivo: z.string(), antes: z.record(z.unknown()), depois: z.record(z.unknown()), ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict();
+const evento = z.object({ request_id: z.string().uuid(), revisao_anterior: z.number().int().positive(), revisao_nova: z.number().int().positive(), chave: z.string(), motivo: z.string(), antes: z.record(z.string(), z.unknown()), depois: z.record(z.string(), z.unknown()), ator_id: z.string().uuid(), criado_em: z.string().datetime({ offset: true }) }).strict();
 export function RemoverCaracteristicaGrupo(props: Props) { if (import.meta.env.VITE_SSO_REMOVER_CARACTERISTICA_GRUPO_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.grupo.id])} {...props}/>; }
 function Conteudo({ userId, clienteId, grupo, disponivel }: Props) {
   const key = `sso-remover-caracteristica:${JSON.stringify([userId, clienteId, grupo.id])}`; const client = useQueryClient(); const trava = useRef(false);

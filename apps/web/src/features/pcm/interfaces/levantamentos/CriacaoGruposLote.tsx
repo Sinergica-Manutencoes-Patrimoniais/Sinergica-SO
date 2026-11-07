@@ -2,7 +2,7 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
-const itemSchema=z.object({chave:z.string().min(1).max(200),atributos:z.record(z.unknown()),localId:z.string().uuid(),categoriaId:z.string().uuid(),sistemaId:z.string().uuid().nullable(),quantidade:z.number().int().positive().safe(),codigoRevision:z.number().int().nonnegative(),codigo:z.string().min(1).max(200).nullable().optional(),requestId:z.string().uuid()}).strict();
+const itemSchema=z.object({chave:z.string().min(1).max(200),atributos:z.record(z.string(), z.unknown()),localId:z.string().uuid(),categoriaId:z.string().uuid(),sistemaId:z.string().uuid().nullable(),quantidade:z.number().int().positive().safe(),codigoRevision:z.number().int().nonnegative(),codigo:z.string().min(1).max(200).nullable().optional(),requestId:z.string().uuid()}).strict();
 const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 const Contexto=createContext<((item:Item)=>void) | null>(null);

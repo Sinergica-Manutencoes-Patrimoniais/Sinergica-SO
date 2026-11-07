@@ -96,7 +96,7 @@ function Conteudo({ userId, clienteId, osId, envelopeId, disponivel }: Props) {
       const { data, error } = await supabase.functions.invoke("pcm-receber-levantamento-estruturado", { body: { ...p, acao: "prever" } });
       if (error) throw error;
       const r = z.object({ estado: z.literal("preparado"), origem: z.object({ envelopeId: z.string().uuid(), clienteId: z.string().uuid(), osId: z.string().uuid(), taskId: z.string(), questionarioId: z.string(), versao: z.string() }).strict(),
-        linhas: z.array(z.object({ chave: z.string(), tipo: z.string(), atributos: z.record(z.union([z.string(), z.number()])) }).strict()).min(1).max(1000),
+        linhas: z.array(z.object({ chave: z.string(), tipo: z.string(), atributos: z.record(z.string(), z.union([z.string(), z.number()])) }).strict()).min(1).max(1000),
         fotos: z.array(z.object({ chaveLinha: z.string(), referencia: z.string() }).strict()).max(10000) }).strict().parse(data);
       if (r.origem.envelopeId !== envelopeId || r.origem.clienteId !== clienteId || r.origem.osId !== osId || r.origem.taskId !== p.contexto.taskId) throw new Error();
       const depois = await supabase.auth.getUser();

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
 const pedidoSchema=z.object({requestId:z.string().uuid(),clienteId:z.string().uuid(),loteId:z.string().uuid(),chave:z.string().min(1).max(200),
-  revision:z.number().int().positive(),entidadeId:z.string().uuid(),tipo:z.enum(["sistema","equipamento","componente","grupo_quantitativo"]),snapshot:z.record(z.unknown())}).strict();
+  revision:z.number().int().positive(),entidadeId:z.string().uuid(),tipo:z.enum(["sistema","equipamento","componente","grupo_quantitativo"]),snapshot:z.record(z.string(), z.unknown())}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;entidadeId:string;tipo:string;observacoes?:boolean};
 export function AtualizarNome(props:Props){if((props.observacoes ? import.meta.env.VITE_SSO_ATUALIZAR_OBSERVACOES_LEVANTAMENTO_ENABLED : import.meta.env.VITE_SSO_ATUALIZAR_NOME_LEVANTAMENTO_ENABLED)!=="true" || !props.entidadeId)return null;
@@ -15,7 +15,7 @@ function Conteudo({userId,clienteId,loteId,chave,revisao,entidadeId,tipo,observa
   const [confirmado,setConfirmado]=useState(false);const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
   const snapshot=useQuery({queryKey:["levantamentos",userId,clienteId,loteId,chave,entidadeId,observacoes ? "snapshot-observacoes" : "snapshot",revisao],gcTime:0,queryFn:async({signal})=>{
     const {data,error}=await supabase.schema("pcm").rpc(observacoes ? "sso_consultar_ativo_observacoes_levantamento" : "sso_snapshot_ativo_levantamento",{p_cliente_id:clienteId,p_tipo:tipo,p_id:entidadeId}).abortSignal(signal);if(error)throw error;
-    const r=z.record(z.unknown()).parse(data);if(r.id!==entidadeId || typeof r.nome!=="string")throw new Error("Snapshot inválido");return r;}});
+    const r=z.record(z.string(), z.unknown()).parse(data);if(r.id!==entidadeId || typeof r.nome!=="string")throw new Error("Snapshot inválido");return r;}});
   const envio=useMutation({mutationFn:async(p:Pedido)=>{const {data,error}=await supabase.schema("pcm").rpc(observacoes ? "sso_atualizar_observacoes_ativo_levantamento" : "sso_atualizar_nome_ativo_levantamento",{p_request_id:p.requestId,p_lote_id:p.loteId,p_expected_revision:p.revision,p_chave:p.chave,p_entidade_id:p.entidadeId,p_snapshot:p.snapshot});if(error)throw error;
     const r=z.object({aggregateId:z.string().uuid(),revision:z.number().int(),state:z.literal("pendente"),created:z.literal(false),linkedIds:z.object({entidadeId:z.string().uuid(),tipo:z.string()}).strict(),warnings:z.array(z.string()),requestId:z.string().uuid()}).strict().parse(data);
     if(r.aggregateId!==p.loteId || r.revision!==p.revision+1 || r.requestId!==p.requestId || r.linkedIds.entidadeId!==p.entidadeId || r.linkedIds.tipo!==p.tipo || (!observacoes && !r.warnings.includes("somente_nome_atualizado")))throw new Error("Resposta divergente");

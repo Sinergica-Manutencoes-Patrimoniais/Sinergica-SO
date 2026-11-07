@@ -2,7 +2,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { conferirEstruturaXlsxIsolada } from "./estrutura-xlsx-isolada";
 
-const linhaSchema = z.object({ chave: z.string().min(1).max(200), tipo: z.enum(["area", "local", "sublocal", "sistema", "equipamento", "componente", "grupo_quantitativo"]), atributos: z.record(z.string().max(4000)) }).strict();
+const linhaSchema = z.object({ chave: z.string().min(1).max(200), tipo: z.enum(["area", "local", "sublocal", "sistema", "equipamento", "componente", "grupo_quantitativo"]), atributos: z.record(z.string(), z.string().max(4000)) }).strict();
 const pedidoSchema = z.object({ requestId: z.string().uuid(), clienteId: z.string().uuid(), origem: z.string().trim().min(1).max(200), aba: z.string().min(1).max(31), sha256: z.string().regex(/^[0-9a-f]{64}$/), linhas: z.array(linhaSchema).min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 const chaveLocal = (userId: string, clienteId: string) => `sso-xlsx-local:${JSON.stringify([userId, clienteId])}`;

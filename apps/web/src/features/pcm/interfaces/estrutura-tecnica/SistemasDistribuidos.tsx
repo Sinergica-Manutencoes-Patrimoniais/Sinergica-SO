@@ -187,7 +187,7 @@ function Conteudo({
               sistema_id: z.string().uuid().nullable(),
               nome: z.string(),
               quantidade: z.number().int().positive().safe(),
-              caracteristicas: z.record(z.string()),
+              caracteristicas: z.record(z.string(), z.string()),
               revisao: z.number().int().positive(),
             })
             .transform((g) => ({

@@ -5,11 +5,11 @@ import { supabase } from "../../../lib/supabase-client";
 
 const uuid = z.string().uuid();
 const cadastro = z.object({ tipo: z.literal("cadastro"), requestId: uuid, contratoId: uuid, versao: z.string().trim().min(1).max(100),
-  definicao: z.record(z.unknown()), motivo: z.string().trim().min(1).max(2000), evidencia: z.string().trim().min(1).max(2000) }).strict();
+  definicao: z.record(z.string(), z.unknown()), motivo: z.string().trim().min(1).max(2000), evidencia: z.string().trim().min(1).max(2000) }).strict();
 const mudanca = z.object({ tipo: z.literal("estado"), requestId: uuid, contratoId: uuid, anterior: z.boolean(), habilitar: z.boolean(), motivo: z.string().trim().min(1).max(2000) }).strict().refine((p) => p.anterior !== p.habilitar);
 const pedidoSchema = z.union([cadastro, mudanca]);
 type Pedido = z.infer<typeof pedidoSchema>;
-const item = z.object({ id: uuid, versao: z.string(), habilitado: z.boolean(), definicao: z.record(z.unknown()), motivo: z.string().nullable(), evidencia: z.string().nullable(), criado_por: uuid.nullable() }).strict();
+const item = z.object({ id: uuid, versao: z.string(), habilitado: z.boolean(), definicao: z.record(z.string(), z.unknown()), motivo: z.string().nullable(), evidencia: z.string().nullable(), criado_por: uuid.nullable() }).strict();
 
 export function ContratosOrigemCampo({ userId }: { userId: string }) {
   if (import.meta.env.VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED !== "true") return null;

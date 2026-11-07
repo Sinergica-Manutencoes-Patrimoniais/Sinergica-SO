@@ -7,7 +7,7 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 import { QuarentenaCsv } from "./QuarentenaCsv";
 
 const pedidoSchema=z.object({requestId:z.string().uuid(),clienteId:z.string().uuid(),chaveOrigem:z.string().trim().min(1).max(200),
-  linhas:z.array(z.object({chave:z.string().min(1).max(200),tipo:z.enum(["area","local","sublocal","sistema","equipamento","componente","grupo_quantitativo"]),atributos:z.record(z.string())}).strict()).min(1).max(1000)}).strict();
+  linhas:z.array(z.object({chave:z.string().min(1).max(200),tipo:z.enum(["area","local","sublocal","sistema","equipamento","componente","grupo_quantitativo"]),atributos:z.record(z.string(), z.string())}).strict()).min(1).max(1000)}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
 export function ImportacaoCsv(props:{userId:string;clienteId:string;onRecebido?:(loteId:string)=>void}){
   if(import.meta.env.VITE_SSO_IMPORTACAO_ESTRUTURA_CSV_ENABLED!=="true")return null;

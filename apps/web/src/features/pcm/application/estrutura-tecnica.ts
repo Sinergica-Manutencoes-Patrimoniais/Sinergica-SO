@@ -16,7 +16,7 @@ const grupoSchema = z
     sistemaId: z.string().uuid().nullable(),
     nome: z.string().trim().min(1).max(200),
     quantidade: z.number().int().positive().safe(),
-    caracteristicas: z.record(z.string()),
+    caracteristicas: z.record(z.string(), z.string()),
   })
   .strict();
 

@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 
-const itemSchema=z.object({chave:z.string().min(1).max(200),tipo:z.enum(["area","local","sublocal"]),atributos:z.record(z.unknown()),requestId:z.string().uuid()}).strict();
+const itemSchema=z.object({chave:z.string().min(1).max(200),tipo:z.enum(["area","local","sublocal"]),atributos:z.record(z.string(), z.unknown()),requestId:z.string().uuid()}).strict();
 const pedidoSchema=z.object({requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;linhas:{chave:string;tipo:string;atributos:Record<string,unknown>}[]};

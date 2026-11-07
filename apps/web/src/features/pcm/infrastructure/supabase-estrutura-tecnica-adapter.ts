@@ -14,7 +14,7 @@ const resultadoSchema = z
     revision: z.number().int().positive(),
     state: z.boolean(),
     created: z.boolean(),
-    linkedIds: z.record(z.string()),
+    linkedIds: z.record(z.string(), z.string()),
     warnings: z.array(z.string()),
     requestId: z.string().uuid(),
   })
@@ -29,7 +29,7 @@ const grupoSchema = z
     sistema_id: z.string().uuid().nullable(),
     nome: z.string(),
     quantidade: z.number().int().positive().safe(),
-    caracteristicas: z.record(z.string()),
+    caracteristicas: z.record(z.string(), z.string()),
     revisao: z.number().int().positive(),
   })
   .transform((g) => ({
@@ -50,8 +50,8 @@ const historicoSchema = z
     ocorrido_em: z.string(),
     acao: z.string(),
     ator_id: z.string().uuid().nullable(),
-    antes: z.record(z.unknown()).nullable(),
-    depois: z.record(z.unknown()),
+    antes: z.record(z.string(), z.unknown()).nullable(),
+    depois: z.record(z.string(), z.unknown()),
   })
   .transform((e) => ({
     id: e.evento_id,

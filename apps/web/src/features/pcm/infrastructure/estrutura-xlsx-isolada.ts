@@ -3,7 +3,7 @@ import { z } from "zod";
 const diagnostico = z.object({
   numero: z.number().int().min(2).max(1001), chave: z.string().max(200), tipo: z.string().max(200),
   celulas: z.array(z.string().max(4000)).max(10), erros: z.array(z.string()), alertas: z.array(z.string()),
-  linha: z.object({ chave: z.string().min(1).max(200), tipo: z.string().min(1).max(200), atributos: z.record(z.string().max(4000)) }).strict().nullable(),
+  linha: z.object({ chave: z.string().min(1).max(200), tipo: z.string().min(1).max(200), atributos: z.record(z.string(), z.string().max(4000)) }).strict().nullable(),
 }).strict();
 const resultado = z.object({
   ok: z.literal(true), sha256: z.string().regex(/^[0-9a-f]{64}$/), abas: z.array(z.string().min(1).max(31)).min(1).max(100),

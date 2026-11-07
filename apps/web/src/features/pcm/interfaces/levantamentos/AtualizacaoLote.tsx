@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { RecuperarAtualizacaoLote } from "./RecuperarAtualizacaoLote";
 
-const itemSchema = z.object({ chave:z.string().min(1).max(200), tipo:z.enum(["sistema","equipamento","componente"]), entidadeId:z.string().uuid(), snapshot:z.record(z.unknown()), atributos:z.record(z.unknown()), campos:z.record(z.unknown()), revisaoSelecao:z.number().int().positive(), motivo:z.string().min(1).max(2000), requestId:z.string().uuid() }).strict();
+const itemSchema = z.object({ chave:z.string().min(1).max(200), tipo:z.enum(["sistema","equipamento","componente"]), entidadeId:z.string().uuid(), snapshot:z.record(z.string(), z.unknown()), atributos:z.record(z.string(), z.unknown()), campos:z.record(z.string(), z.unknown()), revisaoSelecao:z.number().int().positive(), motivo:z.string().min(1).max(2000), requestId:z.string().uuid() }).strict();
 const pedidoSchema = z.object({ requestId:z.string().uuid(), loteId:z.string().uuid(), revision:z.number().int().positive(), itens:z.array(itemSchema).min(1).max(50) }).strict();
 type Item = z.infer<typeof itemSchema>; type Pedido = z.infer<typeof pedidoSchema>;
 const Contexto = createContext<((item:Item)=>void) | null>(null);

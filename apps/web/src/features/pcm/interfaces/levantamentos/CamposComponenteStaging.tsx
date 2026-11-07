@@ -7,7 +7,7 @@ import { supabaseEquipamentosAdapter } from "../../infrastructure/supabase-equip
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
 import { supabaseCatalogosSimplesAdapter } from "../../infrastructure/supabase-catalogos-simples-adapter";
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; tipo: string };
-const campos = z.record(z.union([z.string(), z.null()]));
+const campos = z.record(z.string(), z.union([z.string(), z.null()]));
 const pedido = z.object({ requestId: z.string().uuid(), loteId: z.string().uuid(), chave: z.string(), revision: z.number().int().positive(), acao: z.enum(["editar", "conferir"]), campos, motivo: z.string().min(1).max(2000) }).strict(); type Pedido = z.infer<typeof pedido>;
 export function CamposComponenteStaging(props: Props) { if (import.meta.env.VITE_SSO_CAMPOS_COMPONENTE_STAGING_ENABLED !== "true" || !["equipamento", "componente"].includes(props.tipo)) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props}/>; }
 function Conteudo({ userId, clienteId, loteId, chave, tipo }: Props) {

@@ -6,7 +6,7 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 import { ReabrirConferencia } from "./ReabrirConferencia";
 const scalar=z.union([z.string(),z.number(),z.boolean(),z.null()]);
 const pedidoSchema=z.discriminatedUnion("tipo",[
-  z.object({tipo:z.literal("linha"),requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive(),chave:z.string().min(1).max(200),atributos:z.record(scalar)}).strict(),
+  z.object({tipo:z.literal("linha"),requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive(),chave:z.string().min(1).max(200),atributos:z.record(z.string(), scalar)}).strict(),
   z.object({tipo:z.literal("lote"),requestId:z.string().uuid(),loteId:z.string().uuid(),revision:z.number().int().positive()}).strict(),
 ]);type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;linha?:{chave:string;atributos:Record<string,unknown>}};

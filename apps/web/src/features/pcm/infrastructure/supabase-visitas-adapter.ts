@@ -4,7 +4,7 @@ import type { CriarVisita, VisitasGateway } from "../application/visitas-gateway
 
 const resultadoSchema = z.object({
   aggregateId: z.string().uuid(), revision: z.number().int().positive(), state: z.string(),
-  created: z.boolean(), linkedIds: z.record(z.string().nullable()), warnings: z.array(z.string()),
+  created: z.boolean(), linkedIds: z.record(z.string(), z.string().nullable()), warnings: z.array(z.string()),
   requestId: z.string().uuid(),
 }).strict();
 
