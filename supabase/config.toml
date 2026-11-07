@@ -516,6 +516,61 @@ verify_jwt = true
 [functions.pcm-foto-verificada-grupo-segura]
 verify_jwt = true
 
+# Rotas de comprovantes, integrações, levantamentos e anexos: são invocadas
+# por usuários autenticados ou por serviços internos com JWT de service_role.
+[functions.faturavel-comprovante-seguro]
+verify_jwt = true
+[functions.financeiro-comprovante-seguro]
+verify_jwt = true
+[functions.integracoes-agendar-fila]
+verify_jwt = true
+[functions.integracoes-agendar-origens]
+verify_jwt = true
+[functions.integracoes-agendar-os]
+verify_jwt = true
+[functions.integracoes-verificar]
+verify_jwt = true
+[functions.integracoes-verificar-os]
+verify_jwt = true
+[functions.pcm-comprovante-ingestao]
+verify_jwt = true
+[functions.pcm-documento-levantamento-seguro]
+verify_jwt = true
+[functions.pcm-documento-localizacao-atualizada-seguro]
+verify_jwt = true
+[functions.pcm-documento-staging-ativo-seguro]
+verify_jwt = true
+[functions.pcm-estrutura-xlsx-receber]
+verify_jwt = true
+[functions.pcm-evidencia-resposta-segura]
+verify_jwt = true
+[functions.pcm-foto-equipamento-segura]
+verify_jwt = true
+[functions.pcm-foto-grupo-segura]
+verify_jwt = true
+[functions.pcm-foto-ingestao-leitura-segura]
+verify_jwt = true
+[functions.pcm-foto-ingestao-segura]
+verify_jwt = true
+[functions.pcm-foto-levantamento-segura]
+verify_jwt = true
+[functions.pcm-foto-localizacao-atualizada-segura]
+verify_jwt = true
+[functions.pcm-foto-retorno-segura]
+verify_jwt = true
+[functions.pcm-foto-staging-ativo-segura]
+verify_jwt = true
+[functions.pcm-origem-campo-processar]
+verify_jwt = true
+[functions.pcm-receber-levantamento-estruturado]
+verify_jwt = true
+[functions.portal-anexo-os-seguro]
+verify_jwt = true
+[functions.portal-anexo-proprio-seguro]
+verify_jwt = true
+[functions.revisao-anexo-os-seguro]
+verify_jwt = true
+
 # Experimental features may be deprecated any time
 [experimental]
 # Configures Postgres storage engine to use OrioleDB (S3)
