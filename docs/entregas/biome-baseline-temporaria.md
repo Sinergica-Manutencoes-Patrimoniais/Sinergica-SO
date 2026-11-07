@@ -1,3 +1,9 @@
+---
+name: biome-baseline-temporaria
+description: Dívida temporária do Biome e regras para controle na CI.
+alwaysApply: false
+---
+
 # Baseline temporária do Biome
 
 A integração acumulada foi autorizada com uma baseline para evitar uma reformatação em massa. Em 2026-11-06, o Biome registrou 2.405 diagnósticos em 1.026 arquivos. A baseline não significa revisão funcional, aprovação de segurança ou homologação das stories.
