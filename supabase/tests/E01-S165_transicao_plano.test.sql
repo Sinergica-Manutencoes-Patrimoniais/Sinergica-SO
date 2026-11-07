@@ -1,6 +1,7 @@
 -- S165 AC-7: transição e retomada mantêm histórico, sem materializar vencidos.
 -- O gate é aberto somente dentro desta transação de teste; nenhum Auvo é chamado.
 begin;
+set local timezone = 'America/Sao_Paulo';
 set local app.auvo_sync_write = 'true';
 select plan(21);
 
