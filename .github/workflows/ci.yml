@@ -67,6 +67,12 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm audit --prod --audit-level=high
 
+      - name: Biome (repo inteiro, com baseline temporária)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          node --test scripts/biome-baseline.test.mjs
+          node scripts/biome-baseline.mjs
+
       # Gates de código — só nos pacotes AFETADOS (turbo affected) para feedback rápido
       - name: Typecheck (affected)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
@@ -81,11 +87,6 @@ jobs:
       - name: Arquitetura (dependência DDD por máquina)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm run arch:check
-      - name: Biome (repo inteiro, com baseline temporária)
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: |
-          node --test scripts/biome-baseline.test.mjs
-          node scripts/biome-baseline.mjs
       - name: Build (affected)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm turbo run build --filter="...[origin/${{ github.base_ref || 'main' }}]"
