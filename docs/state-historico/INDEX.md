@@ -13,6 +13,7 @@ alwaysApply: false
 
 | Período | Arquivo | O que tem |
 |---------|---------|-----------|
+| 2026-10-24 a 2026-11-05 | [2026-10-24-a-2026-11-05.md](2026-10-24-a-2026-11-05.md) | Especificação do programa SSO Terra (22 stories E01-S165–S186, Caderno Técnico v1); implementação/validação do lote S165/S166/S170/S176 (preventivas v2, calendário de ocorrências, governança, estrutura técnica); ensaios remotos isolados de fotos/documentos/Edge; caminho até a PR #72 (CI, E2E, migrations). |
 | 2026-09-29 a 2026-10-01 | [2026-09-29-a-2026-10-01.md](2026-09-29-a-2026-10-01.md) | Cadastro de ativos v2, ondas S154–S161 e handoff histórico de Preventivas na 360; pendências de ambiente retratam a época e precisam ser revalidadas. |
 | 2026-08-19 | [2026-08-19.md](2026-08-19.md) | 4 pedidos em sequência: limpeza de inspeções de teste; fix saúde sync Auvo E01-S146 (achado das 5 migrations `0205`-`0209` nunca commitadas); fix mensagem WhatsApp do celular E02-S32; dashboard geral real na tela Início E01-S147. As 3 branches viraram PRs #61/#62/#63, mergeados. |
 | 2026-08-18 | [2026-08-18.md](2026-08-18.md) | E00-S24 (`/impeccable` — DESIGN.md/PRODUCT.md de `apps/web` + polish Início/Dashboard PCM); lote visual E00-S14..S23 parte 2 (migração mecânica S17/S18, verificação S19/S22, S20/S21/S23 pulados por decisão do Lucas). |
