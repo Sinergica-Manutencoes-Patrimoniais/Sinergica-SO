@@ -65,6 +65,15 @@ Tasks só de documentação (2 por story, ex.: revalidar dependências) não ent
 - **E01-S185 — Reconciliação:** 0 pgTAP e 0 E2E para 80 migrations; 10 tasks sem arquivo planejado; reconciliação com 69 arquivos.
 - **E01-S186 — Migração e homologação:** Depende de todas as outras; 32 migrations e 0 testes; 11 tasks sem código planejado. Só conclui depois das demais.
 
+## Leitura semântica — E01-S184 (2026-11-09)
+
+Primeira story lida de verdade (spec, `tasks.md`, 18 migrations, pgTAP e testes web):
+
+- **AC-1 e AC-2 (projeção pública por allowlist e fechamento de leitura direta/legada):** cobertos por 18 migrations e por `E01-S184_protecao_custos_portal_us1.test.sql` (34 assertions: sentinela fora do JSON aninhado, `pcm.orcamentos_servico` e `comercial.propostas` negados ao Cliente, sessão antiga/revogada, RPCs legadas bloqueadas). O job `db-tests` da CI da PR #72 (run 42716055150, `19bf0e0d`) passou com essa seleção.
+- **AC-5 e metade do AC-6 (custos só para quem tem permissão; comprovante privado):** `…_us3.test.sql` (17 assertions: bucket privado, sem leitura direta do Storage, permissão revogada/reduzida invalida token antigo), também verde na mesma CI.
+- **AC-3 (PDF público sem custo):** `proposta-pdf.ts` e dois arquivos de teste passaram localmente (10 testes, 0 falhas, variáveis Supabase sintéticas).
+- **Lacunas reais:** (1) `E01-S184_protecao_custos_portal_us2.test.sql` não existe (T009: AC-4, histórico privado imutável e projeção pública derivada da mesma versão com trilha da correção); (2) não achei a operação auditada de inventário e retirada de acesso a artefatos públicos antigos com custos (segunda metade do AC-6 e FR-006); (3) testes de aplicação US1/US3 (T003, T013) e `apps/web/e2e/protecao-custos-portal.spec.ts` (T018) ausentes; o e2e existente `comercial-proposta-pdf-portal.spec.ts` pode cobrir parte do AC-3; (4) quickstart e revisão adversarial (T019) não feitos. Nenhuma task foi marcada `[X]`.
+
 ## Próximos passos
 
 1. Auditoria semântica por story na ordem topológica (S184, S167, S171, S168, S177, S178, S169, S172, S173, S174, S175, S179, S180, S181, S182, S183, S185, S186): ler o código existente, mapear cada AC a teste e implementação, marcar `[X]` só com comando e resultado.
