@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@zip.js/zip.js": "npm:@zip.js/zip.js@2.24.0"
+  }
+}

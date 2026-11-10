@@ -1,0 +1,25 @@
+-- Fixtures sintéticas; aplicar migrations somente em transação descartável.
+begin;
+set local app.auvo_sync_write='true';
+select plan(7);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('17980000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','recuperacao-foto@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('17980000-0000-0000-0000-000000000001','colaborador','Recuperação foto',true);
+insert into config.usuario_modulos(user_id,modulo,nivel) values ('17980000-0000-0000-0000-000000000001','pcm','escrita');
+insert into pcm.clientes(id,nome,ativo,created_by) values ('17980000-0000-0000-0000-00000000000a','Cliente recuperação',true,'17980000-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('17980000-0000-0000-0000-000000000001','cadastro.aprovar','17980000-0000-0000-0000-00000000000a');
+insert into pcm.sso_levantamentos(id,cliente_id,origem,chave_origem,conteudo,criado_por) values ('17980000-0000-0000-0000-000000000021','17980000-0000-0000-0000-00000000000a','manual','recuperacao','[]','17980000-0000-0000-0000-000000000001');
+insert into pcm.sso_levantamento_linhas(lote_id,chave,tipo,atributos) values ('17980000-0000-0000-0000-000000000021','a','sistema','{}');
+select throws_ok($$select pcm.sso_recuperar_objeto_ingestao_servico('17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','a',repeat('a',64))$$,'55000',null,'gate fechado');
+select ok(not has_function_privilege('authenticated','pcm.sso_recuperar_objeto_ingestao_servico(uuid,uuid,uuid,text,text)','EXECUTE'),'cliente não acessa nome de objeto');
+update pcm.sso_ingestao_foto_gate set habilitado=true where id;
+update pcm.sso_fotos_levantamento_gate set habilitado=true where id;
+select pcm.sso_ingestao_foto_servico('reservar','17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','a',repeat('a',64),null);
+select is(pcm.sso_recuperar_objeto_ingestao_servico('17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','a',repeat('a',64)),null::jsonb,'objeto ausente permanece pendente');
+insert into storage.objects(id,bucket_id,name) select '17980000-0000-0000-0000-000000000051','sso-levantamento-fotos',nome from pcm.sso_ingestao_foto_reservas where request_id='17980000-0000-0000-0000-000000000041';
+select is(pcm.sso_recuperar_objeto_ingestao_servico('17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','a',repeat('a',64))->>'objetoId','17980000-0000-0000-0000-000000000051','objeto reservado é localizado');
+select throws_ok($$select pcm.sso_recuperar_objeto_ingestao_servico('17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','a',repeat('b',64))$$,'42501',null,'digest divergente é negado');
+select throws_ok($$select pcm.sso_recuperar_objeto_ingestao_servico('17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','outra',repeat('a',64))$$,'42501',null,'linha divergente é negada');
+update config.sso_concessoes set ativa=false where usuario_id='17980000-0000-0000-0000-000000000001';
+select throws_ok($$select pcm.sso_recuperar_objeto_ingestao_servico('17980000-0000-0000-0000-000000000001','17980000-0000-0000-0000-000000000041','17980000-0000-0000-0000-000000000021','a',repeat('a',64))$$,'42501',null,'revogação impede localização');
+select * from finish();
+rollback;

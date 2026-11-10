@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ResultadoPreventivas } from "../application/preventivas-gateway";
 
 const { atualizarPlanoPreventivo, listarPreventivas, listarCatalogoPreventivas } = vi.hoisted(
@@ -23,6 +23,9 @@ vi.mock("../../../lib/supabase-client", () => ({
 }));
 
 import { PreventivasWorkspace } from "./PreventivasWorkspace";
+
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 15, 12)); });
+afterEach(() => { vi.useRealTimers(); });
 
 const dados: ResultadoPreventivas = {
   planos: [

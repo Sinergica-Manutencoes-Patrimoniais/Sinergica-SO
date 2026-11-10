@@ -1,0 +1,73 @@
+-- E01-S184 AC-1/AC-2: dados sintéticos, sem escrita externa.
+begin;
+set local app.auvo_sync_write = 'true';
+select plan(34);
+
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values ('18400000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 's184@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now());
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values ('18400000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'staff-s184@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now()),
+('18400000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin-s184@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now());
+insert into pcm.clientes (id, nome, ativo, created_by) values ('18400000-0000-0000-0000-000000000002', 'Conta S184', true, '18400000-0000-0000-0000-000000000001');
+insert into config.usuarios (user_id, papel, nome, ativo) values ('18400000-0000-0000-0000-000000000001', 'cliente-sindico', 'Síndico S184', true);
+insert into config.usuarios (user_id, papel, nome, ativo) values ('18400000-0000-0000-0000-000000000010', 'colaborador', 'Operador S184', true);
+insert into config.usuarios (user_id, papel, nome, ativo) values ('18400000-0000-0000-0000-000000000011', 'superadmin', 'Admin S184', true);
+insert into config.usuario_modulos (user_id, modulo, nivel) values ('18400000-0000-0000-0000-000000000010', 'comercial', 'escrita');
+insert into config.usuario_cliente (user_id, cliente_id) values ('18400000-0000-0000-0000-000000000001', '18400000-0000-0000-0000-000000000002');
+insert into comercial.etapas_funil (id, nome, ordem, cor, tipo) values ('18400000-0000-0000-0000-000000000003', 'Etapa S184', 9184, '#000000', 'aberta');
+insert into comercial.oportunidades (id, cliente_id, etapa_id, titulo) values ('18400000-0000-0000-0000-000000000004', '18400000-0000-0000-0000-000000000002', '18400000-0000-0000-0000-000000000003', 'Teste S184');
+insert into comercial.propostas (id, oportunidade_id, tipo, status, preco_centavos) values ('18400000-0000-0000-0000-000000000005', '18400000-0000-0000-0000-000000000004', 'simples', 'enviada', 150000);
+insert into comercial.proposta_itens (proposta_id, tipo, descricao, quantidade, custo_unitario_centavos, total_centavos) values ('18400000-0000-0000-0000-000000000005', 'outro', 'Item S184', 1, 1234, 1234);
+insert into comercial.proposta_versoes (proposta_id, versao, payload) values ('18400000-0000-0000-0000-000000000005', 1, '{"proposta":{"tipo":"simples","preco_centavos":150000,"custo_total_centavos":991234,"observacoes":"segredo-s184"},"itens":[{"descricao":"Peça","quantidade":2,"custo_unitario_centavos":991234,"detalhes":{"segredo":"sentinela-s184"}}]}');
+insert into pcm.requisicoes_servico (id, cliente_id, titulo) values ('18400000-0000-0000-0000-000000000006', '18400000-0000-0000-0000-000000000002', 'Requisição');
+insert into pcm.orcamentos_servico (id, requisicao_id, cliente_id, numero, titulo, itens, valor_total_centavos, status) values ('18400000-0000-0000-0000-000000000007', '18400000-0000-0000-0000-000000000006', '18400000-0000-0000-0000-000000000002', 'S184-TESTE', 'Orçamento', '[{"descricao":"Peça","custo":991234,"valor_centavos":881234}]', 150000, 'pendente');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"18400000-0000-0000-0000-000000000001","role":"authenticated","user_role":"cliente-sindico","cliente_id":"18400000-0000-0000-0000-000000000002"}';
+select ok((select payload::text not like '%991234%' from comercial.portal_propostas where id = '18400000-0000-0000-0000-000000000005'), 'proposta pública exclui valores internos');
+select ok((select payload::text not like '%sentinela-s184%' from comercial.portal_propostas where id = '18400000-0000-0000-0000-000000000005'), 'proposta pública exclui dados aninhados não autorizados');
+select is((select count(*)::int from pcm.orcamentos_servico where id = '18400000-0000-0000-0000-000000000007'), 0, 'cliente não lê diretamente orçamento privado');
+select ok((select itens::text not like '%991234%' from pcm.portal_orcamentos_servico where id = '18400000-0000-0000-0000-000000000007'), 'orçamento público exclui custos');
+select ok((select itens::text not like '%881234%' from pcm.portal_orcamentos_servico where id = '18400000-0000-0000-0000-000000000007'), 'valor de item sem natureza de venda comprovada não é público');
+select is((select payload #>> '{proposta,preco_centavos}' from comercial.portal_propostas where id = '18400000-0000-0000-0000-000000000005'), '150000', 'preço de venda permanece visível');
+select throws_ok($$ select comercial.fn_decidir_proposta('18400000-0000-0000-0000-000000000005', 'aceita', null) $$, '42501', null, 'RPC legada não expõe a proposta privada ao cliente');
+select is((select comercial.portal_decidir_proposta('18400000-0000-0000-0000-000000000005', 'aceita', null)), '{"status":"aceita"}'::jsonb, 'decisão pública devolve somente status autorizado');
+select lives_ok($$ select pcm.portal_decidir_orcamento_seguro('18400000-0000-0000-0000-000000000007', 'recusado', 'teste') $$, 'cliente vinculado pode recusar orçamento');
+select is((select status from pcm.portal_orcamentos_servico where id = '18400000-0000-0000-0000-000000000007'), 'recusado', 'decisão legítima permanece funcional');
+set local request.jwt.claims = '{"sub":"18400000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin","user_modulos":{"comercial":"escrita","pcm":"escrita"}}';
+select is((select count(*)::int from comercial.propostas where id = '18400000-0000-0000-0000-000000000005'), 0, 'cliente atual com sessão administrativa antiga não lê proposta privada');
+select is((select count(*)::int from comercial.proposta_versoes where proposta_id = '18400000-0000-0000-0000-000000000005'), 0, 'cliente atual com sessão antiga não lê snapshot privado');
+select is((select count(*)::int from pcm.orcamentos_servico where id = '18400000-0000-0000-0000-000000000007'), 0, 'cliente atual com sessão antiga não lê orçamento privado');
+select throws_ok($$ select comercial.fn_forcar_preco_abaixo_piso('18400000-0000-0000-0000-000000000005', 1000, 'teste') $$, '42501', null, 'RPC antiga de preço não aceita chamadas diretas');
+select throws_ok($$ select comercial.forcar_preco_abaixo_piso_seguro('18400000-0000-0000-0000-000000000005', 1000, 'teste') $$, '42501', null, 'papel atual de cliente não força preço mesmo com token antigo');
+set local request.jwt.claims = '{"sub":"18400000-0000-0000-0000-000000000010","role":"authenticated","user_role":"colaborador","user_modulos":{"comercial":"escrita"}}';
+select is((select count(*)::int from comercial.propostas where id = '18400000-0000-0000-0000-000000000005'), 0, 'leitura comercial geral não libera custos privados');
+select is((select count(*)::int from comercial.proposta_itens where proposta_id = '18400000-0000-0000-0000-000000000005'), 0, 'leitura comercial geral não libera composição interna');
+select is((select count(*)::int from comercial.propostas_sem_custos where id = '18400000-0000-0000-0000-000000000005'), 1, 'funcionário com permissão atual mantém consulta sem custos');
+select ok((select row_to_json(p)::text not like '%custo%' from comercial.propostas_sem_custos p where id = '18400000-0000-0000-0000-000000000005'), 'consulta comercial não contém campos de custo');
+select throws_ok($$ insert into comercial.proposta_itens (proposta_id, tipo, descricao, quantidade, custo_unitario_centavos, total_centavos) values ('18400000-0000-0000-0000-000000000005', 'outro', 'Tentativa', 1, 1, 1) $$, '42501', null, 'escrita comercial geral não cria composição de custos');
+select throws_ok($$ insert into comercial.proposta_versoes (proposta_id, versao, payload) values ('18400000-0000-0000-0000-000000000005', 2, '{}') $$, '42501', null, 'escrita comercial geral não cria snapshot privado');
+select throws_ok($$ insert into comercial.propostas (oportunidade_id, tipo, custo_total_centavos) values ('18400000-0000-0000-0000-000000000004', 'simples', 1) $$, '42501', null, 'escrita comercial geral não cria custos por inserção direta');
+reset role;
+delete from config.usuario_modulos where user_id = '18400000-0000-0000-0000-000000000010' and modulo = 'comercial';
+set local role authenticated;
+select is((select count(*)::int from comercial.propostas where id = '18400000-0000-0000-0000-000000000005'), 0, 'revogar permissão comercial bloqueia token antigo');
+select is((select count(*)::int from comercial.proposta_versoes where proposta_id = '18400000-0000-0000-0000-000000000005'), 0, 'revogar permissão bloqueia snapshots');
+select is((select count(*)::int from comercial.proposta_itens where proposta_id = '18400000-0000-0000-0000-000000000005'), 0, 'revogar permissão bloqueia itens');
+select is((select count(*)::int from comercial.propostas_sem_custos where id = '18400000-0000-0000-0000-000000000005'), 0, 'revogar módulo bloqueia também consulta sem custos');
+set local request.jwt.claims = '{"sub":"18400000-0000-0000-0000-000000000011","role":"authenticated","user_role":"superadmin"}';
+select is((select count(*)::int from comercial.proposta_itens where proposta_id = '18400000-0000-0000-0000-000000000005'), 1, 'administrador ativo mantém acesso a custos');
+select lives_ok($$ select comercial.forcar_preco_abaixo_piso_seguro('18400000-0000-0000-0000-000000000005', 1000, 'teste') $$, 'administrador ativo pode forçar preço pela função segura');
+set local request.jwt.claims = '{"sub":"18400000-0000-0000-0000-000000000099","role":"authenticated","user_role":"cliente-sindico","cliente_id":"18400000-0000-0000-0000-000000000002"}';
+select is((select count(*)::int from comercial.portal_propostas), 0, 'usuário sem vínculo atual não acessa proposta');
+select is((select count(*)::int from pcm.portal_orcamentos_servico), 0, 'usuário sem vínculo atual não acessa orçamento');
+reset role;
+update config.usuarios set ativo = false where user_id = '18400000-0000-0000-0000-000000000001';
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"18400000-0000-0000-0000-000000000001","role":"authenticated","user_role":"cliente-sindico","cliente_id":"18400000-0000-0000-0000-000000000002"}';
+select is((select count(*)::int from comercial.portal_propostas), 0, 'sessão antiga de usuário revogado não acessa proposta');
+select throws_ok($$ select comercial.portal_decidir_proposta('18400000-0000-0000-0000-000000000005', 'aceita', null) $$, '42501', null, 'sessão revogada não decide proposta');
+select throws_ok($$ select pcm.portal_decidir_orcamento('18400000-0000-0000-0000-000000000007', 'recusado', 'teste') $$, '42501', null, 'RPC legada de orçamento indisponível');
+select throws_ok($$ select pcm.portal_decidir_orcamento_seguro('18400000-0000-0000-0000-000000000007', 'recusado', 'teste') $$, '42501', null, 'sessão revogada não decide orçamento');
+select * from finish();
+rollback;

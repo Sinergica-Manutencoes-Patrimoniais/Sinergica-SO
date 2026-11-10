@@ -1,0 +1,30 @@
+-- Migration 0969, migration de mediação e fixture real carregadas na transação de teste.
+begin;
+\ir E01-S168_finalizacao_fixture_real.sql
+select plan(12);
+select ok(has_function_privilege('authenticated','pcm.sso_mediar_previa_finalizacao_os(uuid,uuid)','execute'), 'usuário autenticado alcança mediador, não função interna');
+select ok(not has_function_privilege('anon','pcm.sso_mediar_previa_finalizacao_os(uuid,uuid)','execute'), 'anônimo não alcança mediador');
+select ok(not has_function_privilege('anon','pcm.sso_mediar_finalizacao_os(uuid,uuid,uuid,uuid,uuid,integer,text,timestamptz)','execute'), 'anônimo não alcança finalização');
+select ok(not has_function_privilege('anon','pcm.sso_mediar_consulta_finalizacao_os(uuid,uuid,uuid,uuid,integer,text,timestamptz)','execute'), 'anônimo não alcança reconciliação');
+select ok(not has_function_privilege('authenticated','pcm.sso_finalizar_os_validada_v2(uuid,uuid,uuid,uuid,uuid,integer,text,timestamptz)','execute'), 'função interna permanece sem EXECUTE para usuário');
+select throws_ok($$select pcm.sso_mediar_previa_finalizacao_os('16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000018')$$, '55000', null, 'gate fechado bloqueia prévia');
+update pcm.sso_mediacao_finalizacao_os_gate set habilitado=true where id;
+update pcm.sso_finalizar_os_validada_gate set habilitado=true where id;
+update pcm.sso_atestacao_pcm_gate set habilitado=true where id;
+update pcm.validacao_os_gate set habilitado=true where id;
+update pcm.sso_upload_evidencia_resposta_gate set habilitado=true where id;
+update pcm.sso_validacao_resposta_gate set habilitado=true where id;
+set local request.jwt.claims = '{"sub":"16891000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+set local role authenticated;
+select is((pcm.sso_mediar_previa_finalizacao_os('16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000018')->>'osId'), '16891000-0000-4000-8000-000000000017', 'prévia autenticada usa OS correta');
+select throws_ok($$select pcm.sso_mediar_previa_finalizacao_os('16891000-0000-4000-8000-000000000020','16891000-0000-4000-8000-000000000018')$$, '42501', null, 'Cliente divergente negado');
+select throws_ok($$select pcm.sso_mediar_finalizacao_os('16891000-0000-4000-8000-000000000035','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000018','16891000-0000-4000-8000-000000000020','16891000-0000-4000-8000-000000000034',1,'em_execucao','2026-10-01T10:00:00Z')$$, '40001', null, 'OS divergente negada antes da escrita');
+select is((pcm.sso_mediar_finalizacao_os('16891000-0000-4000-8000-000000000035','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000018','16891000-0000-4000-8000-000000000017','16891000-0000-4000-8000-000000000034',1,'em_execucao','2026-10-01T10:00:00Z')->>'status'), 'finalizado', 'mediador finaliza OS autorizada');
+select is((pcm.sso_mediar_consulta_finalizacao_os('16891000-0000-4000-8000-000000000035','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000018','16891000-0000-4000-8000-000000000034',1,'em_execucao','2026-10-01T10:00:00Z')->>'situacao'), 'encontrada', 'mediador recupera resultado sem repetir escrita');
+reset role;
+update config.sso_concessoes set ativa=false where usuario_id='16891000-0000-4000-8000-000000000001' and acao='execucao.validar';
+set local role authenticated;
+select throws_ok($$select pcm.sso_mediar_consulta_finalizacao_os('16891000-0000-4000-8000-000000000035','16891000-0000-4000-8000-000000000002','16891000-0000-4000-8000-000000000018','16891000-0000-4000-8000-000000000034',1,'em_execucao','2026-10-01T10:00:00Z')$$, '42501', null, 'revogação atual bloqueia consulta e retry');
+reset role;
+select * from finish();
+rollback;

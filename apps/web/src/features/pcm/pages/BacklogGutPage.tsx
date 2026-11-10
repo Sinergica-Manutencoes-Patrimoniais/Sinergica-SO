@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { confirmarChamadoBacklog } from "../application/abrir-ordem-servico";
+import { RecuperarConfirmacaoOs } from "../interfaces/chamados-os/RecuperarConfirmacaoOs";
 import {
   alterarStatusOrdemServico,
   listarBacklogGut,
@@ -152,12 +153,16 @@ export function BacklogGutPage({
     setSalvandoId(ordem.id);
     setErroAcao(null);
     try {
-      await confirmarChamadoBacklog(supabaseOrdemServicoAdapter, {
+      const confirmado = await confirmarChamadoBacklog(supabaseOrdemServicoAdapter, {
         ordemId: ordem.id,
         userId: user.id,
       });
-      if (onAtualizarControlado) await onAtualizarControlado();
-      else await carregar();
+      try {
+        if (onAtualizarControlado) await onAtualizarControlado();
+        else await carregar();
+      } catch {
+        setErroAcao(`Chamado ${confirmado.numero} confirmado, mas o quadro não foi atualizado. Atualize a tela antes de continuar.`);
+      }
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível confirmar o chamado.");
     } finally {
@@ -232,6 +237,8 @@ export function BacklogGutPage({
 
   return (
     <div className="flex flex-col gap-4">
+      {user && <RecuperarConfirmacaoOs key={user.id} usuario={user.id} revisaoTela={salvandoId}
+        aoConcluir={() => onAtualizarControlado ? onAtualizarControlado() : carregar()} />}
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>

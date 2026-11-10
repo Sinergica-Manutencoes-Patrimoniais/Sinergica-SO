@@ -1,0 +1,91 @@
+{
+  "status": "RASCUNHO — aplicável somente no clone descartável S165; nunca aplicar em produção",
+  "base_manifesto": "docs/planejamento/plano-manutencao/recorte-candidato-migrations.json",
+  "base_manifesto_sha256": "3a0d057b18bbbaa66fd57ddd83897b355b6ed700f7ed7b4ae9584189ddbc4204",
+  "base_manifesto_contagem": 640,
+  "story": "E01-S165",
+  "overlay_contagem": 3,
+  "migrations": [
+    {
+      "caminho": "supabase/migrations/1822_E01-S165_guardar_gerador_legado_integrado.sql",
+      "sha256": "84a87062e28a590d2c1bb4e7b296d214d1552c53c8fb1873de78ee5cbfe0df4b",
+      "git_blob": "0060d3cfcd472e9f643c35f3562fcc496cba49bb",
+      "depende_de": [
+        "supabase/migrations/1714_E01-S165_reserva_ciclo_legado.sql",
+        "docs/adr/1680-s165-geracao-legada-por-reserva-e-suspensao.md"
+      ],
+      "razao": "Serializa a geração legada do ciclo explicitamente integrado com estado e transição do Plano SSO."
+    },
+    {
+      "caminho": "supabase/migrations/1823_E01-S165_recibo_reconciliacao_revisionada.sql",
+      "sha256": "dcefdbe51b1c6dbe6c66b8f54572743731e49053c1c647fe073e29750f947326",
+      "git_blob": "ce11e2de3cee4b4b74ad9adb33e015c1e78fe389",
+      "depende_de": [
+        "supabase/migrations/0314_E01-S165_previa_revisionada.sql",
+        "supabase/migrations/0638_E01-S165_diagnostico_os_revisao.sql",
+        "supabase/migrations/0641_E01-S165_os_abertas_revisao.sql",
+        "docs/adr/1681-s165-recibo-reconciliacao-revisao.md"
+      ],
+      "razao": "Expõe recibo mediado de alterações por ciclo, OS com ponte comprovada e bloqueios por fonte incompleta."
+    },
+    {
+      "caminho": "supabase/migrations/1824_E01-S165_aprovacao_exige_recibo_completo.sql",
+      "sha256": "84e7bc8205623db3455bb10e7db2b180fadb57fab5e23abf2f54ab829ad8ebe2",
+      "git_blob": "2acb767ee70cae691870c6d75e37fa63ac61fc48",
+      "depende_de": [
+        "supabase/migrations/1651_E01-S165_aprovacao_revisao_mediada.sql",
+        "supabase/migrations/1804_E01-S165_aprovacao_versao_esperada.sql",
+        "supabase/migrations/1823_E01-S165_recibo_reconciliacao_revisionada.sql",
+        "docs/adr/1681-recibo-completo-reconciliacao-revisao-plano.md"
+      ],
+      "razao": "Revalida no servidor o recibo completo antes de aprovar revisão e deriva o tipo de aprovação do histórico do Plano."
+    }
+  ],
+  "limite": "Não prova vínculo entre Planos preventivos legados sem reserva/ponte e Planos SSO; esses registros seguem com impacto desconhecido.",
+  "pins": [
+    {
+      "caminho": "supabase/tests/E01-S165_revisao_os.test.sql",
+      "sha256": "97222323c37ff95cbc3741efc1e87a1a27df45f2915c9fff721190177049e02c"
+    },
+    {
+      "caminho": "supabase/tests/E01-S165_gerador_legado_suspensao.test.sql",
+      "sha256": "94c8edf17ee008372b7f4be9886ed45f09945899f1ea911781026bbfadbf3a47"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/ReciboReconciliacaoRevisao.tsx",
+      "sha256": "61a95585af14ae4d5fc1cc6ee8f52f68492a8a6f0e5c6b8586e4bad57d9c9c77"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/ReciboReconciliacaoRevisao.test.tsx",
+      "sha256": "76c274948188aec232787e87773a931dce5d2bd0058d1a2aebf6b7bbd3cc34fa"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoPlano.tsx",
+      "sha256": "6a666a4a915fe08b9ff07cf8554c311bbd649b4461f4f9bd2ef00bda2550b3ee"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/PreflightAprovacaoRevisao.tsx",
+      "sha256": "224f47dfe670955db45f4bb74af4c7559dddeba35e2e7d82efd8376d8eedf261"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoRecibo.test.tsx",
+      "sha256": "906e3ed2741e51cb1709a78787f80b8bf50eafe1fcfe68030450a92ff5765684"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/AprovacaoVersao1804.test.tsx",
+      "sha256": "6b5707971aac84ec2ab11b1ca5a457022328226619a92b4c17f9bb10f70f5831"
+    },
+    {
+      "caminho": "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoConcorrencia.test.tsx",
+      "sha256": "ac41d793e8c1b67cede2046a83ea46d38b744c5d497ee5e4ab169fc83cb16a98"
+    },
+    {
+      "caminho": "supabase/manual-tests/s165_limpeza_runner.py",
+      "sha256": "2d1f9fa1a191a24d0aac34234797f2dfa1d4356f63a85e5519d8c0082ecd5769"
+    },
+    {
+      "caminho": ".github/workflows/ensaio-s165-e2e-isolado.yml",
+      "sha256": "a96d006960e8f3d7d4325baf703e23a00e6593c5bd6801852ede7f82922e149c"
+    }
+  ]
+}

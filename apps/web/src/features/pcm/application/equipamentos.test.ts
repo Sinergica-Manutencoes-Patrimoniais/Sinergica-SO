@@ -21,6 +21,26 @@ function gatewayFake(): EquipamentosGateway {
 }
 
 describe("criarEquipamento", () => {
+  it("restaura a sigla se nova reserva falhar após colisão", async () => {
+    const gateway = gatewayFake();
+    gateway.criar = vi.fn().mockRejectedValue(new IdentificadorDuplicadoError("GUA-ELE-BOM-01"));
+    let sigla: string | null = null;
+    const identificador: IdentificadorAtivoGateway = {
+      obterNiveis: async () => ({
+        cliente: { id: "cli-1", nome: "Guainumbí", sigla },
+        area: null,
+        locais: [],
+        categoria: { id: "cat-1", nome: "Elétrica", sigla: "ELE" },
+      }),
+      definirSigla: async (_nivel, _id, valor) => { sigla = valor; },
+      proximoSequencial: vi.fn().mockResolvedValueOnce("01").mockRejectedValueOnce(new Error("reserva indisponível")),
+    };
+    await expect(criarEquipamento(gateway,
+      { nome: "Bomba", categoriaId: "cat-1", clientId: "cli-1", userId: "user-1" },
+      { identificador, siglasInformadas: [{ nivel: "cliente", id: "cli-1", sigla: "GUA" }], identificadorManual: null },
+    )).rejects.toThrow("reserva indisponível");
+    expect(sigla).toBeNull();
+  });
   it("E01-S155 AC-5: exige cliente antes de chamar o gateway", async () => {
     const gateway = gatewayFake();
     await expect(criarEquipamento(gateway, { nome: "Bomba", userId: "user-1" })).rejects.toThrow(
@@ -109,7 +129,7 @@ describe("criarEquipamento", () => {
 });
 
 describe("editarEquipamento — E01-S163", () => {
-  it("persiste siglas aceitas e recalcula o identificador antes de atualizar o ativo", async () => {
+  it("recusa alteração de identificador pela edição comum", async () => {
     const gateway = gatewayFake();
     const identificador: IdentificadorAtivoGateway = {
       obterNiveis: vi.fn(async () => ({
@@ -122,7 +142,7 @@ describe("editarEquipamento — E01-S163", () => {
       proximoSequencial: vi.fn().mockResolvedValue("01"),
     };
 
-    await editarEquipamento(
+    await expect(editarEquipamento(
       gateway,
       {
         id: "item-1",
@@ -139,12 +159,10 @@ describe("editarEquipamento — E01-S163", () => {
         siglasInformadas: [{ nivel: "cliente", id: "cli-1", sigla: "GUA" }],
         identificadorManual: null,
       },
-    );
+    )).rejects.toThrow("Alteração de código deve usar a jornada de códigos públicos.");
 
     expect(identificador.definirSigla).not.toHaveBeenCalled();
-    expect(gateway.editar).toHaveBeenCalledWith(
-      expect.objectContaining({ identificador: "GUA-ELE-BOM-01", alterarIdentificador: true }),
-    );
+    expect(gateway.editar).not.toHaveBeenCalled();
   });
 });
 

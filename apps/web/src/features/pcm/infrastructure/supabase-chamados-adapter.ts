@@ -166,7 +166,12 @@ export const supabaseChamadosAdapter: ChamadosGateway = {
   },
 
   async marcarStatusComOs(chamadoId, status, ordemServicoId, userId): Promise<void> {
-    const { error } = await supabase
+    // O campo singular é um vínculo de compatibilidade, não a lista de OS.
+    // Nunca substituir um vínculo existente por uma OS diferente.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ordemServicoId)) {
+      throw new Error("Identificador de OS inválido.");
+    }
+    const { data, error } = await supabase
       .schema("pcm")
       .from("chamados")
       .update({
@@ -175,8 +180,12 @@ export const supabaseChamadosAdapter: ChamadosGateway = {
         updated_at: new Date().toISOString(),
         updated_by: userId,
       })
-      .eq("id", chamadoId);
+      .eq("id", chamadoId)
+      .or(`ordem_servico_id.is.null,ordem_servico_id.eq.${ordemServicoId}`)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) throw new Error("Chamado indisponível ou vínculo legado divergente; reconcilie antes de continuar.");
     await registrarEvento(chamadoId, status === "convertido_os" ? "os_gerada" : "enviado_backlog", {
       ordemServicoId,
     });

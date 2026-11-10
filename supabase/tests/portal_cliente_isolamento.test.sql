@@ -93,15 +93,15 @@ select is((select count(*) from financeiro.lancamentos), 0::bigint, 'E09-S10: ta
 set local request.jwt.claims = '{"sub":"90000000-0000-0000-0000-000000000003","role":"authenticated","user_role":"cliente-sindico","user_modulos":{"area-cliente":"leitura"}}';
 select is((select count(*) from pcm.clientes), 0::bigint, 'AC-3: síndico sem cliente_id vê zero linhas');
 select throws_ok(
-  $$ select pcm.portal_decidir_orcamento(gen_random_uuid(), 'aprovado', null) $$,
-  '42501', 'somente_cliente_sindico',
+  $$ select pcm.portal_decidir_orcamento_seguro(gen_random_uuid(), 'aprovado', null) $$,
+  '42501', 'orcamento_nao_encontrado_ou_sem_acesso',
   'E09-S09: síndico sem cliente_id não decide orçamento'
 );
 
 set local request.jwt.claims = '{"sub":"90000000-0000-0000-0000-000000000003","role":"authenticated"}';
 select throws_ok(
-  $$ select pcm.portal_decidir_orcamento(gen_random_uuid(), 'aprovado', null) $$,
-  '42501', 'somente_cliente_sindico',
+  $$ select pcm.portal_decidir_orcamento_seguro(gen_random_uuid(), 'aprovado', null) $$,
+  '42501', 'orcamento_nao_encontrado_ou_sem_acesso',
   'E09-S09: authenticated sem claims de portal não decide orçamento'
 );
 

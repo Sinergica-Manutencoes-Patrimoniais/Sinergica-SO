@@ -35,13 +35,15 @@ export interface PatchGrupo {
   descricao?: string | null;
   ativo?: boolean;
   permissoes?: PermissaoModulo[];
+  estadoEsperado?: Grupo;
+  atorEsperado?: string;
 }
 
 export interface ConfigGateway {
   /** Permissões resolvidas do usuário autenticado (config.minhas_permissoes). */
   minhasPermissoes(): Promise<PermissaoModulo[]>;
   listarGrupos(): Promise<Grupo[]>;
-  criarGrupo(nome: string, descricao: string | null, permissoes: PermissaoModulo[]): Promise<Grupo>;
+  criarGrupo(nome: string, descricao: string | null, permissoes: PermissaoModulo[], atorEsperado?: string): Promise<Grupo>;
   editarGrupo(id: string, patch: PatchGrupo): Promise<Grupo>;
   listarUsuarios(): Promise<UsuarioConfig[]>;
   /** Chama a Edge Function config-gerenciar-usuario (cria Auth user + perfil + permissão inicial). */

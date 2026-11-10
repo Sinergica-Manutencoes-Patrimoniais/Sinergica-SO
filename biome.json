@@ -10,6 +10,7 @@
       "test-results/**",
       "playwright-report/**",
       "e2e/.auth/**",
+      "**/s178-documento-isolado/vendor/**",
       ".turbo/**",
       "supabase/.temp/**",
       ".triviaiox-core/**",

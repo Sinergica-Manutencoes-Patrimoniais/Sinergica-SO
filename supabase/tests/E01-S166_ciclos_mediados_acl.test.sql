@@ -1,0 +1,16 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = extensions, public;
+select plan(7);
+select ok(not (select habilitado from pcm.sso_ciclos_uniformes_mediados_gate where id), 'gate mediado inicia fechado');
+select ok(not has_function_privilege('anon', 'pcm.sso_consultar_ciclos_uniformes_mediada(uuid,uuid,uuid,uuid,uuid,uuid,date,date,text,integer)', 'execute'), 'anon não executa mediador');
+select ok(has_function_privilege('authenticated', 'pcm.sso_consultar_ciclos_uniformes_mediada(uuid,uuid,uuid,uuid,uuid,uuid,date,date,text,integer)', 'execute'), 'usuário autenticado alcança mediador');
+select ok(not has_function_privilege('authenticated', 'pcm.sso_consultar_ciclos_uniformes(uuid,uuid,uuid,uuid,date,date,text,integer)', 'execute'), 'núcleo permanece privado');
+select ok(not has_table_privilege('authenticated', 'pcm.sso_ciclos_uniformes_mediados_gate', 'select'), 'usuário não lê gate diretamente');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid = 'pcm.sso_ciclos_uniformes_mediados_gate'::regclass), 'gate tem RLS forçada');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"16600000-0000-4000-8000-000000000001","role":"authenticated"}';
+select throws_ok($$select * from pcm.sso_consultar_ciclos_uniformes_mediada('16600000-0000-4000-8000-000000000001','16600000-0000-4000-8000-000000000002','16600000-0000-4000-8000-000000000003','16600000-0000-4000-8000-000000000004','16600000-0000-4000-8000-000000000005',null,'2026-01-01','2026-12-31',null,20)$$,'55000','consulta_bloqueada','gate fechado recusa consulta');
+reset role;
+select * from finish();
+rollback;

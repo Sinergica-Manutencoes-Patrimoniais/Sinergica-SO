@@ -4,6 +4,7 @@
 import { Card, EmptyState, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { useAuth } from "../../../app/auth-context";
 import type { PeriodoDashboard } from "../application/dashboard-gateway";
 import {
   useCicloVenda,
@@ -21,6 +22,7 @@ import {
   rotuloFonteTicket,
 } from "../domain/metricas-comercial";
 import { supabaseDashboardAdapter } from "../infrastructure/supabase-dashboard-adapter";
+import { PainelGlobalOperacional } from "../interfaces/orcamento-operacional/PainelGlobalOperacional";
 
 function hojeIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -56,6 +58,7 @@ function SemDados() {
 }
 
 export function DashboardComercialPage() {
+  const { user } = useAuth();
   const { podeAcessar } = usePermissoes();
   const temLeitura = podeAcessar("comercial", "leitura");
 
@@ -87,6 +90,7 @@ export function DashboardComercialPage() {
 
   return (
     <div className="space-y-4">
+      {user?.id && <PainelGlobalOperacional usuario={user.id} inicio={periodo.inicio} fim={periodo.fim} />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">Dashboard comercial</h1>

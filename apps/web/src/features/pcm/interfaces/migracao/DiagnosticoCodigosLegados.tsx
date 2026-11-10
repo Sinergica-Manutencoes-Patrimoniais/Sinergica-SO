@@ -1,0 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { supabase } from "../../../../lib/supabase-client";
+const schema=z.array(z.object({codigos_multiplos:z.number().int().nonnegative(),codigos_com_alias:z.number().int().nonnegative(),aliases_repetidos:z.number().int().nonnegative()}).strict()).length(1);
+export function DiagnosticoCodigosLegados({userId,clienteId}:{userId:string;clienteId:string}){
+ const q=useQuery({queryKey:["diagnostico-codigos-legados",userId,clienteId],gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_diagnosticar_colisoes_legadas",{p_cliente_id:clienteId}).abortSignal(signal);if(error)throw error;return schema.parse(data)[0];}});
+ return <section aria-label="Diagnóstico de códigos legados"><h3>Diagnóstico agregado de códigos legados</h3><p>Contagens somente deste Cliente; não exibem códigos nem comprovam unicidade global. Este diagnóstico é posterior à migration 0332 e não substitui o preflight global de aliases por administrador antes da 0332, descrito no ADR-0593.</p>{q.isPending && <output>Consultando diagnóstico…</output>}{q.isError && <p role="alert">Diagnóstico indisponível ou sem permissão. <button type="button" onClick={()=>void q.refetch()}>Tentar novamente</button></p>}{q.data && <ul><li>Códigos com múltiplos registros: {q.data.codigos_multiplos}</li><li>Códigos presentes em cadastro e alias: {q.data.codigos_com_alias}</li><li>Códigos com múltiplos aliases: {q.data.aliases_repetidos}</li></ul>}<p>Resultados não alteram nem resolvem cadastros; ambiguidades exigem análise antes da liberação.</p></section>;
+}

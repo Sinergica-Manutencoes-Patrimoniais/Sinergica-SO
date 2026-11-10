@@ -1014,12 +1014,13 @@ export const supabaseFinanceiroAdapter: FinanceiroGateway = {
     return path;
   },
 
-  async urlAssinadaComprovante(path: string) {
-    const { data, error } = await supabase.storage
-      .from(COMPROVANTES_BUCKET)
-      .createSignedUrl(path, 3600);
+  async baixarComprovante(lancamentoId: string) {
+    const { data, error } = await supabase.functions.invoke<Blob>("financeiro-comprovante-seguro", {
+      body: { lancamentoId },
+    });
     if (error) throw error;
-    return data.signedUrl;
+    if (!(data instanceof Blob)) throw new Error("Resposta de comprovante inválida.");
+    return data;
   },
 
   async corrigirLancamento(input: EditarLancamentoCommand) {

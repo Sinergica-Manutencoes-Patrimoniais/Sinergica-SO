@@ -104,7 +104,7 @@ describe("importação de estrutura", () => {
     );
     expect(plano.temErros).toBe(false);
     expect(plano.resultados.map((resultado) => resultado.linha.numero)).toEqual([2, 3, 4]);
-    expect(plano.resultados[2]?.dependeDe).toContain(3);
+    expect(plano.resultados[2]?.dependeDe).toContain("Locais:3");
   });
 
   it("mostra diffs e bloqueia referências inválidas", () => {

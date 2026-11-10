@@ -89,9 +89,10 @@ export interface PmocAgenda {
   yearRef: number;
   status: PmocStatusAgenda;
   auvoOsId: string | null;
-  /** E01-S05 AC-1: OS já criada a partir desta visita (`ordens_servico.pmoc_schedule_id`) — `null`
-   * = ainda não tem, botão "Criar OS" fica disponível. */
+  /** Referência singular apenas quando há exatamente uma OS vinculada. */
   ordemServicoId: string | null;
+  /** Referências retornadas para a visita; ausência do campo indica consumidor legado. */
+  ordensServicoIds?: string[];
 }
 
 /** E01-S84 AC-3: visão cross-contrato de uma visita PMOC ainda sem OS — usada pela coluna

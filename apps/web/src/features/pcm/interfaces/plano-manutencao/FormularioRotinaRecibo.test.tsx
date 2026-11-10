@@ -1,0 +1,40 @@
+// @vitest-environment jsdom
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { validarRotinaCompleta } from "../../application/plano-manutencao";
+const api = vi.hoisted(() => ({ listarAlvos: vi.fn(), adicionarRotinaCompleta: vi.fn(), editarRotina: vi.fn(), getUser: vi.fn() }));
+vi.mock("../../../../lib/supabase-client", () => ({ supabase: { auth: { getUser: api.getUser } } }));
+vi.mock("../../infrastructure/supabase-plano-manutencao-adapter", () => ({ supabasePlanoManutencaoAdapter: api }));
+import { FormularioRotina } from "./FormularioRotina";
+const id = (n: number) => `16500000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const comando = validarRotinaCompleta({ requestId: id(3), expectedRevision: 1, planoId: id(2), rotinaId: id(4), nome: "Inspeção", alvoTipo: "sistema", alvoId: id(5), modo: "calendario", intervalo: 1, unidade: "meses", dataBase: "2026-11-05", tempoMinutos: null, tipoTempo: null, toleranciaAntes: 0, toleranciaDepois: 0, instrucao: null, questionarioId: null });
+const rotina = { id: id(4), planoId: id(2), versaoId: id(6), nome: "Inspeção", alvoTipo: "sistema" as const, alvoId: id(5), alvoNome: "Alvo", alvoAtivo: true, modo: "calendario" as const, intervalo: 1, unidade: "meses" as const, dataBase: "2026-11-05", tempoMinutos: null, tipoTempo: null, toleranciaAntes: 0, toleranciaDepois: 0, instrucao: null, questionarioId: null, questionarioNome: null };
+const recibo = (criada: boolean) => ({ requestId: comando.requestId, aggregateId: comando.planoId, revision: 2, state: "rascunho", created: criada, linkedIds: { clienteId: id(1), rotinaId: id(4), versaoId: id(6) }, warnings: [] });
+beforeEach(() => { vi.resetAllMocks(); sessionStorage.clear(); api.getUser.mockResolvedValue({ data: { user: { id: "usuario" } }, error: null }); api.listarAlvos.mockResolvedValue([]); });
+afterEach(() => { cleanup(); sessionStorage.clear(); });
+it.each([false, true])("preserva recibo divergente e repete mesmo pedido, edição=%s", async (editar) => {
+  const chave = `sso-rotina-${editar ? `editar:${id(4)}` : "nova"}:usuario:${id(1)}:${id(2)}`;
+  const salvo = JSON.stringify(comando); sessionStorage.setItem(chave, salvo);
+  const enviar = editar ? api.editarRotina : api.adicionarRotinaCompleta;
+  enviar.mockResolvedValueOnce({ ...recibo(!editar), linkedIds: { clienteId: id(1), rotinaId: id(9), versaoId: id(6) } }).mockResolvedValueOnce(recibo(!editar));
+  const fechar = vi.fn();
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><FormularioRotina userId="usuario" clienteId={id(1)} plano={{ id: id(2), clienteId: id(1), nome: "Plano", estado: "rascunho", revisao: 1 }} rotina={editar ? rotina : null} consultaDisponivel onCancelar={fechar} onAtualizar={() => {}} /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Tentar salvar Rotina novamente" }));
+  await waitFor(() => expect(enviar).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+  expect(sessionStorage.getItem(chave)).toBe(salvo); expect(fechar).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Tentar salvar Rotina novamente" }));
+  await waitFor(() => expect(fechar).toHaveBeenCalledTimes(1));
+  expect(enviar.mock.calls[1]?.[0]).toEqual(enviar.mock.calls[0]?.[0]); expect(sessionStorage.getItem(chave)).toBeNull();
+});
+it("troca de sessão após escrita preserva pedido para recuperação", async () => {
+  const chave = `sso-rotina-nova:usuario:${id(1)}:${id(2)}`; const salvo = JSON.stringify(comando); sessionStorage.setItem(chave, salvo);
+  api.adicionarRotinaCompleta.mockImplementationOnce(async () => { api.getUser.mockResolvedValue({ data: { user: { id: "outro" } }, error: null }); return recibo(true); });
+  const fechar = vi.fn();
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><FormularioRotina userId="usuario" clienteId={id(1)} plano={{ id: id(2), clienteId: id(1), nome: "Plano", estado: "rascunho", revisao: 1 }} consultaDisponivel onCancelar={fechar} onAtualizar={() => {}} /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole("button", { name: "Tentar salvar Rotina novamente" }));
+  await waitFor(() => expect(api.adicionarRotinaCompleta).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+  expect(sessionStorage.getItem(chave)).toBe(salvo); expect(fechar).not.toHaveBeenCalled();
+});

@@ -80,8 +80,8 @@ export interface PortalNotificacao {
 }
 
 // E03-S06: proposta comercial vista pelo síndico (via `comercial.portal_propostas`, migration
-// 0188). `payload` é o snapshot da versão vigente (`proposta_versoes.payload`) — é dele que o
-// PDF é montado (AC-2), com `formatarTextoProposta` do domínio `comercial`.
+// 0188/0230). `payload` é a projeção pública do snapshot da versão vigente; nunca a composição
+// privada da proposta. O PDF usa o formatador público compartilhado.
 export interface PortalProposta {
   id: string;
   tipo: string;

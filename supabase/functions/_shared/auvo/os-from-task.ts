@@ -153,7 +153,12 @@ export async function marcarChamadoAutomaticoComOs(
   chamadoId: string,
   ordemServicoId: string,
 ): Promise<void> {
-  const { error } = await db
+  // O campo singular permanece apenas para compatibilidade; não substituir
+  // referência já existente por uma OS diferente durante a transição 1:N.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ordemServicoId)) {
+    throw new Error("Identificador de OS inválido.");
+  }
+  const { data, error } = await db
     .schema("pcm")
     .from("chamados")
     .update({
@@ -161,8 +166,12 @@ export async function marcarChamadoAutomaticoComOs(
       ordem_servico_id: ordemServicoId,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", chamadoId);
+    .eq("id", chamadoId)
+    .or(`ordem_servico_id.is.null,ordem_servico_id.eq.${ordemServicoId}`)
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("Chamado indisponível ou vínculo legado divergente; reconcilie antes de continuar.");
   await db
     .schema("pcm")
     .from("chamados_eventos")
@@ -207,9 +216,9 @@ export async function obterUsuarioSistema(db: UntypedSupabaseClient): Promise<st
 
 export interface OsRowParams {
   clienteId: string;
-  /** E01-S99/ADR-0014: Chamado de origem — o `numero` da OS (CH-XXXX) vem sempre daqui, nunca é
-   * enviado explicitamente (trigger `fn_ordens_servico_sync_numero_chamado`, migration 0151). */
+  /** A OS criada junto a um novo Chamado preserva seu número público (ADR-0864). */
   chamadoId: string;
+  numeroChamado: string;
   systemUserId: string;
   /** E01-S38: null quando o técnico ainda não está sincronizado no PCM (não bloqueia a OS). */
   tecnicoFuncionarioId?: string | null;
@@ -225,6 +234,7 @@ export function montarLinhaOs(
   return {
     client_id: params.clienteId,
     chamado_id: params.chamadoId,
+    numero: params.numeroChamado,
     titulo: input.titulo,
     categoria: "corretiva", // AUTO-DECISION: Auvo não tem campo equivalente a categoria do PCM — ver design.md
     status: input.status,
@@ -241,6 +251,20 @@ export function montarLinhaOs(
     check_out_at: input.checkOutAt ?? null,
     auvo_detalhes: input.detalhes ?? null,
   };
+}
+
+/** Resolve o retorno do lote pelo número, sem depender da ordem do servidor. */
+export function indexarChamadosPorNumero(esperados: string[], retornados: Array<{ id: string; numero: string }>): Map<string, string> {
+  const esperadosUnicos = new Set(esperados);
+  const resultado = new Map<string, string>();
+  const ids = new Set<string>();
+  if (esperadosUnicos.size !== esperados.length || retornados.length !== esperados.length) throw new Error("Retorno de Chamados incompleto ou duplicado.");
+  for (const chamado of retornados) {
+    if (!chamado.id || !esperadosUnicos.has(chamado.numero) || resultado.has(chamado.numero) || ids.has(chamado.id)) throw new Error("Retorno de Chamados divergente.");
+    resultado.set(chamado.numero, chamado.id);
+    ids.add(chamado.id);
+  }
+  return resultado;
 }
 
 /** Cria a OS a partir de uma tarefa Auvo sem `auvo_task_id` local correspondente. Devolve `null`
@@ -268,7 +292,7 @@ export async function criarOsDaTarefa(
   const { data, error } = await db
     .schema("pcm")
     .from("ordens_servico")
-    .insert(montarLinhaOs(input, { clienteId, chamadoId: chamado.id, systemUserId, tecnicoFuncionarioId }))
+    .insert(montarLinhaOs(input, { clienteId, chamadoId: chamado.id, numeroChamado: chamado.numero, systemUserId, tecnicoFuncionarioId }))
     .select("id")
     .single();
   if (error) throw error;

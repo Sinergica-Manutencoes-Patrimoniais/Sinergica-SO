@@ -1,0 +1,3 @@
+-- ADR-0355: marco da regra em 0530, migration preparada ainda não aplicada.
+-- A mudança operacional foi integrada no corpo da função 0530 ainda não implantada;
+-- se 0530 já existir em qualquer ambiente, publicar CREATE OR REPLACE revisado em nova migration.

@@ -1,0 +1,9 @@
+---
+name: "docs-adr-0481-acoes-locais-reconciliacao-md"
+description: "Documento Sinérgica SO: ADR-0481 — ações locais da triagem"
+alwaysApply: false
+---
+
+# ADR-0481 — ações locais da triagem
+
+Status: proposto; gates e grants fechados, não aplicado nem homologado. Para um item da fila com Cliente comprovado, a consulta lista ações locais de observação e anotação, mantendo os comandos proprietários responsáveis por revalidar estado e autorização na execução. Retry, vínculo remoto e resolução continuam bloqueados: a seleção não comprova sucesso nem aciona integração. A disponibilidade pode mudar após a consulta. Não representa todas as integrações ou a totalidade dos AC de recuperação S185; testes de permissões e concorrência continuam obrigatórios.

@@ -7,10 +7,11 @@ export async function criarGrupo(
   nome: string,
   descricao: string | null,
   permissoes: PermissaoModulo[],
+  atorEsperado?: string,
 ): Promise<Grupo> {
   const nomeLimpo = nome.trim();
   if (!nomeLimpo) throw new NomeGrupoObrigatorioError();
 
   const descricaoLimpa = descricao?.trim() || null;
-  return gateway.criarGrupo(nomeLimpo, descricaoLimpa, permissoes);
+  return atorEsperado ? gateway.criarGrupo(nomeLimpo, descricaoLimpa, permissoes, atorEsperado) : gateway.criarGrupo(nomeLimpo, descricaoLimpa, permissoes);
 }

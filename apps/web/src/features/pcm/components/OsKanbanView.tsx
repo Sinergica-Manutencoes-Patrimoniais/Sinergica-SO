@@ -17,6 +17,8 @@ import {
   rotuloNumeroOrdem,
 } from "../domain/ordens-servico";
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
+import type { ResumoChamadoCard } from "../domain/progresso-chamado";
+import { ProgressoChamadoCard } from "./ProgressoChamadoCard";
 
 const DRAG_MIME = "application/x-sinergica-os-id";
 
@@ -50,6 +52,7 @@ export function OsKanbanView({
   onMoverColuna,
   onAlternarVisibilidadeColuna,
   preventivas,
+  resumosChamados,
 }: {
   ordens: OrdemServicoOperacional[];
   temEscrita: boolean;
@@ -62,6 +65,7 @@ export function OsKanbanView({
   onMoverColuna: (id: ColunaKanbanId, direcao: "cima" | "baixo") => void;
   onAlternarVisibilidadeColuna: (id: ColunaKanbanId) => void;
   preventivas: PmocPreventivaResumo[];
+  resumosChamados?: Record<string, ResumoChamadoCard>;
 }) {
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
 
@@ -214,6 +218,7 @@ export function OsKanbanView({
                               {ordem.titulo}
                             </p>
                             <p className="mt-1 text-caption text-ink-3">{ordem.clienteNome}</p>
+                            <ProgressoChamadoCard resumo={ordem.chamadoId ? resumosChamados?.[ordem.chamadoId] ?? null : null} />
                             {ordem.tecnicoNome && (
                               <p className="mt-1 text-micro text-ink-3">
                                 Técnico: {ordem.tecnicoNome}

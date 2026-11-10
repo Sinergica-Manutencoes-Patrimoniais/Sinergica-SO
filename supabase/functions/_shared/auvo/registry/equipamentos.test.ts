@@ -55,12 +55,20 @@ Deno.test("equipamentosDescriptor — E01-S71 captura urlImage e uriAnexos do Au
     urlImage: "https://auvo-s3.example.com/equipments/42.jpg",
     uriAnexos: ["https://auvo-s3.example.com/equipments/42-manual.pdf"],
   });
-  assertEquals(linha.url_imagem, "https://auvo-s3.example.com/equipments/42.jpg");
-  assertEquals(linha.uri_anexos, ["https://auvo-s3.example.com/equipments/42-manual.pdf"]);
+  assertEquals(
+    linha.url_imagem,
+    "https://auvo-s3.example.com/equipments/42.jpg",
+  );
+  assertEquals(linha.uri_anexos, [
+    "https://auvo-s3.example.com/equipments/42-manual.pdf",
+  ]);
 });
 
 Deno.test("equipamentosDescriptor — sem urlImage/uriAnexos vira null/array vazio", () => {
-  const linha = equipamentosDescriptor.fromAuvo({ equipmentId: 43, name: "Bomba" });
+  const linha = equipamentosDescriptor.fromAuvo({
+    equipmentId: 43,
+    name: "Bomba",
+  });
   assertEquals(linha.url_imagem, null);
   assertEquals(linha.uri_anexos, []);
 });
@@ -92,4 +100,22 @@ Deno.test("equipamentosDescriptor — E01-S85 AC-1: sem auvo_localizacao cai pro
     auvo_localizacao: null,
   });
   assertEquals(payload.location, "Térreo (texto livre legado)");
+});
+
+Deno.test("identificador legado de Componente não muda ao alterar nome e localização no payload", () => {
+  const anterior = equipamentosDescriptor.toAuvo({
+    id: "e1",
+    nome: "Bomba",
+    identificador: "Cli-Bom-001",
+    auvo_localizacao: "Torre A",
+  });
+  const depois = equipamentosDescriptor.toAuvo({
+    id: "e1",
+    nome: "Bomba principal",
+    identificador: "Cli-Bom-001",
+    auvo_localizacao: "Torre B",
+  });
+  assertEquals(anterior.identifier, "Cli-Bom-001");
+  assertEquals(depois.identifier, "Cli-Bom-001");
+  assertEquals(depois.location, "Torre B");
 });

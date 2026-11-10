@@ -104,7 +104,19 @@ export async function criarRelatorioPdf(
   let y = PAGINA_ALTURA - ALTURA_CABECALHO - 28;
 
   function escreverParagrafo(texto: string): void {
-    const partes = texto.match(new RegExp(`.{1,${LARGURA_MAX_LINHA}}(?:\\s|$)`, "g")) ?? [texto];
+    const partes: string[] = [];
+    let restante = texto.trim();
+    while (restante.length > 0) {
+      let fim = Math.min(LARGURA_MAX_LINHA, restante.length);
+      while (fim > 1 && fonte.widthOfTextAtSize(restante.slice(0, fim), 10) > PAGINA_LARGURA - 2 * MARGEM_X) fim--;
+      if (fim < restante.length) {
+        const espaco = restante.lastIndexOf(" ", fim);
+        if (espaco > 0) fim = espaco;
+      }
+      partes.push(restante.slice(0, fim));
+      restante = restante.slice(fim).trimStart();
+    }
+    if (partes.length === 0) partes.push("");
     for (const parte of partes) {
       if (y < ALTURA_RODAPE) {
         pagina = novaPagina();

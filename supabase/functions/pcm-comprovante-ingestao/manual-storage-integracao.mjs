@@ -1,0 +1,23 @@
+// SOMENTE cluster e Storage sintéticos isolados; não usa o index HTTP nem autenticação real.
+import { createRequire } from "node:module";
+import { createHmac } from "node:crypto";
+import { criarIngestaoDigest } from "./ingestao-digest.ts";
+import { criarAdaptador } from "./adapter.ts";
+const require=createRequire("/app/package.json"), {Client}=require("pg");
+const user="16891000-0000-4000-8000-000000000001",despesa="16891000-0000-4000-8000-000000000054",request="16891000-0000-4000-8000-000000000090";
+const secret="synthetic-only-secret-with-at-least-32-characters",b=(v)=>Buffer.from(JSON.stringify(v)).toString("base64url"),h=b({alg:"HS256",typ:"JWT"}),p=b({role:"service_role",exp:Math.floor(Date.now()/1000)+300}),token=`${h}.${p}.${createHmac("sha256",secret).update(`${h}.${p}`).digest("base64url")}`;
+const headers={Authorization:`Bearer ${token}`};
+const db=new Client({host:"sso_s180_e2e_db",port:5432,user:"postgres",password:"synthetic-only",database:"postgres"});await db.connect();
+const rpc=async(op,a)=>{await db.query("begin");try{await db.query("set local role service_role");await db.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify({role:"service_role"})]);const r=await db.query("select pcm.sso_ingestao_comprovante_servico($1,$2,$3,$4,$5,$6) as resultado",[op,a.p_usuario_id,a.p_request_id,a.p_despesa_id,a.p_digest,a.p_objeto_id]);await db.query("commit");return r.rows[0].resultado;}catch(e){await db.query("rollback");throw e;}};
+const upload=async(path,bytes,tipo,upsert)=>{if(upsert)throw Error("sobrescrita");const r=await fetch(`http://127.0.0.1:5000/object/sso-despesas-visita/${path}`,{method:"POST",headers:{...headers,"Content-Type":tipo},body:bytes});if(!r.ok)throw Error(`upload ${r.status}`);const x=await r.json();return{id:x.Id,path:x.Key.replace(/^sso-despesas-visita\//,"")};};
+const download=async(path)=>{const r=await fetch(`http://127.0.0.1:5000/object/authenticated/sso-despesas-visita/${path}`,{headers});if(!r.ok)throw Error(`download ${r.status}`);return new Uint8Array(await r.arrayBuffer());};
+const corpo=new Uint8Array([37,80,68,70,45,49]), req=()=>new Request("http://localhost",{method:"POST",headers:{"x-request-id":request,"x-despesa-id":despesa},body:corpo});
+const handler=()=>criarIngestaoDigest({...criarAdaptador({rpc,upload,download}),autenticar:async()=>({usuario:user}),habilitado:async()=>true,limitar:async()=>true});
+const primeira=await handler()(req());if(primeira.status!==200)throw Error(`primeiro ${primeira.status}`);
+const repetida=await handler()(req());if(repetida.status!==200)throw Error(`retry ${repetida.status}`);
+const caminho=`16891000-0000-4000-8000-000000000002/${despesa}/${request}`;
+const alterar=await fetch(`http://127.0.0.1:5000/object/sso-despesas-visita/${caminho}`,{method:"PUT",headers:{...headers,"Content-Type":"application/pdf","x-upsert":"true"},body:"%PDF-2 adulterado"});if(!alterar.ok)throw Error(`adulteracao ${alterar.status}`);
+const adulterada=await handler()(req());if(adulterada.status!==409)throw Error(`adulterado ${adulterada.status}`);
+await db.query("update config.usuarios set ativo=false where user_id=$1",[user]);
+const revogada=await handler()(req());if(revogada.status!==503 && revogada.status!==404)throw Error(`revogado ${revogada.status}`);
+console.log("OK: upload real, retry sem reupload, alteração detectada, revogação negada");await db.end();

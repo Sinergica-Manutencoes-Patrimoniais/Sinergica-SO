@@ -1,0 +1,13 @@
+---
+name: "docs-adr-0239-anexos-publicos-mediados-os-md"
+description: "Documento Sinérgica SO: ADR-0239 — Publicação e leitura mediada de anexo da OS"
+alwaysApply: false
+---
+
+# ADR-0239 — Publicação e leitura mediada de anexo da OS
+
+**Estado:** preparação fechada, sem homologação nem implantação.
+
+PCM publica explicitamente um anexo já referenciado por nota da mesma OS/Conta e existente no bucket privado `os-anexos`. Publicação guarda identidade do objeto, caminho e metadados observados, título público revisado, autor e data; decisão de publicar e retirada são auditadas e reversíveis logicamente. Consulta no Portal retorna apenas título, data e ID da publicação. Download é mediado por função autenticada, que verifica contato ativo e vínculo atual, publicação não revogada, objeto privado e metadados observados antes e depois do acesso; não fornece URL assinada. Nenhum anexo de despesa, custo ou comprovante financeiro é publicado por essa rota.
+
+O conteúdo deve ser examinado integralmente por pessoa autorizada: metadados, nome e extensão não provam ausência de custos, PII ou malware. Comparação de ID/metadados/data não é hash criptográfico nem comprova imutabilidade de bytes; não ativar até garantir integridade e retenção. Políticas e URLs legadas de `os-anexos` já permitem acesso direto ao Cliente por pasta, independentemente desta publicação: é obrigatória remediação coordenada dos acessos e links existentes antes de declarar proteção concluída. Gate e RPCs ficam fechados. Validar autorização, concorrência, revogação, integridade, controle de anexos, testes integrados e revisão adversarial antes de habilitar.

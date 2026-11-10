@@ -1,5 +1,5 @@
 import { Button, ConfirmDialog, Modal } from "@sinergica/ui";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { baixarPlanilha, lerPlanilha } from "../../../lib/sheetjs";
 import type { RelatorioImportacao } from "../application/importacao-estrutura";
 import {
@@ -29,8 +29,15 @@ export function ImportacaoEstruturaModal({
   const [confirmando, setConfirmando] = useState(false);
   const [progresso, setProgresso] = useState<{ atual: number; total: number } | null>(null);
   const [relatorio, setRelatorio] = useState<RelatorioImportacao[] | null>(null);
+  const leituraAtual = useRef(0);
 
   async function importar(file: File | undefined) {
+    const leitura = ++leituraAtual.current;
+    setPlano(null);
+    setAbas(null);
+    setErrosGerais([]);
+    setRelatorio(null);
+    setConfirmando(false);
     if (!file || !/\.xlsx?$/i.test(file.name)) {
       setErro("Arquivo inválido. Use a planilha exportada pelo SO.");
       return;
@@ -39,11 +46,13 @@ export function ImportacaoEstruturaModal({
       setErro(null);
       setRelatorio(null);
       const planilha = await lerPlanilha(file);
+      if (leitura !== leituraAtual.current) return;
       const lida = parsearPlanilhaEstrutura(planilha);
       setAbas(planilha);
       setErrosGerais(lida.errosGerais);
       setPlano(planejarImportacao(lida.linhas, estado));
     } catch (causa) {
+      if (leitura !== leituraAtual.current) return;
       setErro(
         causa instanceof Error ? causa.message : "Não foi possível carregar o leitor de planilhas.",
       );
@@ -63,7 +72,7 @@ export function ImportacaoEstruturaModal({
   }
   async function baixarRelatorio() {
     if (!abas || !relatorio) return;
-    const porLinha = new Map(relatorio.map((linha) => [linha.numero, linha]));
+    const porLinha = new Map(relatorio.map((linha) => [`${linha.aba}:${linha.numero}`, linha]));
     const relatorioAbas = Object.fromEntries(
       Object.entries(CABECALHOS).map(([aba, cabecalhos]) => {
         const original = abas[aba] ?? [];
@@ -72,7 +81,7 @@ export function ImportacaoEstruturaModal({
           [
             [...cabecalhos, "Resultado"],
             ...original.slice(1).map((linha, indice) => {
-              const resultado = porLinha.get(indice + 2);
+              const resultado = porLinha.get(`${aba}:${indice + 2}`);
               return [...linha, resultado ? `${resultado.status}: ${resultado.mensagem}` : ""];
             }),
           ],
@@ -125,8 +134,8 @@ export function ImportacaoEstruturaModal({
               <>
                 <div className="max-h-40 overflow-auto">
                   {relatorio.map((linha) => (
-                    <p key={linha.numero} className="text-ink-2">
-                      Linha {linha.numero}: {linha.status} — {linha.mensagem}
+                    <p key={`${linha.aba}:${linha.numero}`} className="text-ink-2">
+                      {linha.aba} linha {linha.numero}: {linha.status} — {linha.mensagem}
                     </p>
                   ))}
                 </div>

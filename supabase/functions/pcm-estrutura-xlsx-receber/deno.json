@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "dom.iterable"]
+  },
+  "imports": {
+    "@zip.js/zip.js": "npm:@zip.js/zip.js@2.24.0"
+  }
+}

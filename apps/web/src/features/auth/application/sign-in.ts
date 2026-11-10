@@ -33,7 +33,7 @@ export async function signIn(
 
   const perfil = await gateway.getPerfil(sessao.userId);
   if (!perfil || !isPapel(perfil.papel)) {
-    await gateway.signOut();
+    await gateway.signOut(sessao.userId);
     throw new ContaSemPerfilError();
   }
 

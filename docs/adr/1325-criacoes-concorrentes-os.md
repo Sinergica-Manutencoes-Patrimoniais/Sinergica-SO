@@ -1,0 +1,17 @@
+---
+name: "docs-adr-1325-criacoes-concorrentes-os-md"
+description: "Documento Sinérgica SO: ADR-1325 — Reconciliação restrita de criações concorrentes de OS"
+alwaysApply: false
+---
+
+# ADR-1325 — Reconciliação restrita de criações concorrentes de OS
+
+Estado: preparação local; não habilita criação 1:N nem resolve a divergência contratual pendente da ADR-0870.
+
+A S167 pede criações distintas concorrentes, mas a criação simples ainda recusa qualquer revisão anterior. Preparar a mesma exceção restrita da conversão integral para criações simples: sob trava do Chamado, do escopo e das OS vinculadas, uma revisão anterior só pode ser aceita quando cada revisão intermediária for comprovadamente uma criação de OS, com comando, Cliente, identidade, resultado e fotografia íntegra da OS. Criações simples também registram e comparam o hash do escopo; o registro anterior sem fotografia não comprova a exceção. Repetição do mesmo pedido mantém o payload e o recibo legados. A conversão integral deve adquirir as travas de escopo antes das OS para manter a mesma ordem.
+
+A criação usada dentro de uma continuação não é considerada adição simples: o comando composto altera também a proposta. A prova deve recusá-la, assim como qualquer revisão sem comprovação, edição da OS, mudança de Cliente, revisão futura ou histórico com intervalo. Não inferir parcela atendida ou escopo completo a partir de uma OS criada. Gates e restrições legadas continuam fechados.
+
+A criação concorrente com escopo conferido também reutiliza a prova de todas as revisões intermediárias, depois de conferir seu hash e travar as OS, permitindo mistura de criações simples e integrais quando toda a sequência for comprovada. Essa prova admite intervalos de até 100 revisões e verifica cada revisão individualmente; isso difere da contagem anterior, que exigia revisão imediatamente anterior em cada recibo integral. A comparação do hash é exigida para as criações simples novas; não transforma, por si só, conversões integrais antigas em operações com escopo conferido.
+
+A reconciliação ainda depende de contrato genérico revisado, inventário dos escritores de OS/escopo e prova de que mudanças independentes respeitam as travas. Antes de habilitar: três sessões, mistura de comandos, continuação, alteração de OS, autorização/revogação, retry, rollback, RLS/FORCE, CI e revisão adversarial. Não aplicar à operação por esta decisão. Para rollback, manter a coluna de fotografias e os recibos; restaurar as funções anteriores somente após drenar chamadas e conferir dependências.

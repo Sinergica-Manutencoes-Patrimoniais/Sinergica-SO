@@ -14,9 +14,11 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { supabase } from "../../../lib/supabase-client";
 import { useDebouncedValue } from "../../../lib/use-debounced-value";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { criarChamado } from "../application/chamados";
+import { carregarResumosChamados } from "../application/resumos-chamados-lote";
 import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../application/kanban-colunas";
 import type { ConsultaOperacao } from "../application/operacao-gateway";
 import {
@@ -30,6 +32,7 @@ import {
   dadosFeedParaOrdens,
   mesclarDetalhe,
   operacaoQueryKeys,
+  resumoParaOrdem,
   useAlterarStatusOperacao,
   useDetalheOperacao,
   useFeedOperacao,
@@ -47,7 +50,10 @@ import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { NovoChamadoModal } from "../components/NovoChamadoModal";
 import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
+import { QuadroGerencial } from "../interfaces/chamados-os/QuadroGerencial";
+import { CentralMateriaisGlobal } from "../interfaces/listas-materiais/Central";
 import { OsTimelineView } from "../components/OsTimelineView";
+import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
 import type { ChamadoFormData } from "../domain/chamados";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
@@ -82,7 +88,7 @@ import {
 } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
-import { supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
+import { obterResumoOsDoCliente, supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { BacklogGutPage } from "./BacklogGutPage";
@@ -115,6 +121,7 @@ export function OrdensServicoPage({
   abaInicial,
   osIdInicialToken,
   filtrosIniciais,
+  painelOrcamentoOs,
 }: {
   refreshKey?: number;
   onNovaOs: () => void;
@@ -127,11 +134,13 @@ export function OrdensServicoPage({
    * a página sempre remonta ao navegar pra cá (branch diferente no switch de `pcmView`), então
    * seed-no-mount basta, sem precisar do padrão seq/useEffect do `osIdInicialToken`. */
   filtrosIniciais?: Partial<FiltrosOrdens>;
+  painelOrcamentoOs?: (osId: string) => ReactNode;
 }) {
   const { user } = useAuth();
   useState(() => marcarInicioNavegacaoChamados());
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
+  const [origemCentral, setOrigemCentral] = useState<{ cliente: string; os: string } | null>(null);
   const [conversaoPendente, setConversaoPendente] = useState<{
     chamadoId: string;
     statusDestino: Exclude<StatusOrdemServico, "solicitacao">;
@@ -215,6 +224,14 @@ export function OrdensServicoPage({
   const mutacaoStatus = useAlterarStatusOperacao(supabaseOperacaoAdapter);
   const paginasFeed = visao === "kanban" ? feedsKanban.pages : feed.data?.pages;
   const ordensCarregadas = useMemo(() => dadosFeedParaOrdens(paginasFeed), [paginasFeed]);
+  const chamadosParaResumo = useMemo(() => [...new Set((paginasFeed ?? []).flatMap((pagina) => pagina.itens.map((item) => item.chamadoId).filter((id): id is string => !!id)))].sort(), [paginasFeed]);
+  const resumoChamados = useQuery({
+    queryKey: ["s167-resumo-chamados", user?.id, chamadosParaResumo],
+    queryFn: ({ signal }) => carregarResumosChamados(chamadosParaResumo, signal),
+    enabled: consultasAtivas && visao === "kanban" && import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length > 0,
+    staleTime: 0,
+    refetchInterval: 30000,
+  });
   const detalhe = useDetalheOperacao(
     supabaseOperacaoAdapter,
     selecionadaId,
@@ -233,8 +250,9 @@ export function OrdensServicoPage({
     await Promise.all([
       visao === "kanban" ? feedsKanban.refetch() : feed.refetch(),
       queryKpis.refetch(),
+      ...(import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length ? [resumoChamados.refetch()] : []),
     ]);
-  }, [visao, feedsKanban.refetch, feed.refetch, queryKpis.refetch]);
+  }, [visao, feedsKanban.refetch, feed.refetch, queryKpis.refetch, chamadosParaResumo.length, resumoChamados.refetch]);
   const primeiraPinturaMarcada = useRef(false);
   useEffect(() => {
     if (!paginasFeed || primeiraPinturaMarcada.current) return;
@@ -265,7 +283,7 @@ export function OrdensServicoPage({
   // independente do filtro ativo (`selecionada` busca no array completo, não no filtrado).
   useEffect(() => {
     const osId = osIdInicialToken?.split("::")[0];
-    if (osId) setSelecionadaId(osId);
+    if (osId) { setOrigemCentral(null); setSelecionadaId(osId); }
   }, [osIdInicialToken]);
 
   // E01-S84 AC-1/AC-2: preferência de colunas do Kanban é por usuário — carrega só quando a visão
@@ -322,10 +340,27 @@ export function OrdensServicoPage({
       .sort((a, b) => a.nome.localeCompare(b.nome));
   }, [ordensCarregadas]);
 
+  const resumoCentral = useQuery({
+    queryKey: ["operacao", "resumo-central", user?.id, origemCentral?.cliente, origemCentral?.os],
+    queryFn: async ({ signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || !user?.id || antes.data.user?.id !== user.id || signal.aborted) throw new Error("Sessão alterada.");
+      const resumo = await obterResumoOsDoCliente(origemCentral?.cliente ?? "", origemCentral?.os ?? "", signal);
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== user.id || signal.aborted) throw new Error("Sessão alterada.");
+      return resumo;
+    },
+    enabled: Boolean(user?.id && consultasAtivas && origemCentral && origemCentral.cliente === filtros.clienteId && origemCentral.os === selecionadaId),
+    gcTime: 0,
+    retry: false,
+  });
   const selecionada = useMemo(() => {
-    const resumo = ordensCarregadas.find((ordem) => ordem.id === selecionadaId) ?? null;
+    if (origemCentral && (origemCentral.cliente !== filtros.clienteId || origemCentral.os !== selecionadaId)) return null;
+    const resumo = origemCentral
+      ? (!resumoCentral.isFetching && !resumoCentral.isError && resumoCentral.data ? resumoParaOrdem(resumoCentral.data) : null)
+      : (ordensCarregadas.find((ordem) => ordem.id === selecionadaId) ?? null);
     return resumo ? mesclarDetalhe(resumo, detalhe.data) : null;
-  }, [ordensCarregadas, selecionadaId, detalhe.data]);
+  }, [ordensCarregadas, selecionadaId, detalhe.data, origemCentral, filtros.clienteId, resumoCentral.data, resumoCentral.isFetching, resumoCentral.isError]);
 
   const kpis = queryKpis.data ?? OPERACAO_KPI_VAZIO;
   const totalFiltrado = visao === "kanban" ? feedsKanban.total : (feed.data?.pages[0]?.total ?? 0);
@@ -350,6 +385,7 @@ export function OrdensServicoPage({
 
   // E01-S118 AC-6: clicar num card (Kanban/Timeline/Calendário) seleciona e abre o modal de detalhe.
   function abrirDetalheCard(id: string) {
+    setOrigemCentral(null);
     setSelecionadaId(id);
     setModalDetalheSeq((seq) => seq + 1);
   }
@@ -388,6 +424,7 @@ export function OrdensServicoPage({
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível aplicar em lote.");
     } finally {
+      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length) await resumoChamados.refetch();
       setSalvando(false);
     }
   }
@@ -397,6 +434,7 @@ export function OrdensServicoPage({
     if (ehCardChamadoAberto(id)) {
       if (status === "solicitacao") return;
       const chamadoId = id.replace("chamado-aberto:", "");
+      setOrigemCentral(null);
       setSelecionadaId(id);
       setConversaoPendente({ chamadoId, statusDestino: status });
       return;
@@ -408,11 +446,13 @@ export function OrdensServicoPage({
       if (!resultado?.sucesso) throw new Error(resultado?.erro ?? "Status não atualizado.");
       // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
       // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
-      const atual = ordensCarregadas.find((ordem) => ordem.id === id);
-      if (status === "planejamento" && atual?.auvoTaskId == null) setAberturaAuvoOsId(id);
+      const atual = ordensCarregadas.find((ordem) => ordem.id === id) ?? (selecionada?.id === id ? selecionada : null);
+      if (origemCentral?.os === id) await resumoCentral.refetch();
+      if (status === "planejamento" && atual && atual.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
+      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length) await resumoChamados.refetch();
       setSalvando(false);
     }
   }
@@ -683,6 +723,14 @@ export function OrdensServicoPage({
             </button>
           </div>
 
+          {user && filtros.clienteId !== "todos" && (
+            <CentralMateriaisGlobal usuario={user.id} cliente={filtros.clienteId} onAbrirOs={(os) => {
+              setOrigemCentral({ cliente: filtros.clienteId, os });
+              setSelecionadaId(os);
+              setVisao("lista");
+            }} />
+          )}
+
           {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-orange bg-orange-soft px-4 py-3">
               <p className="text-body font-semibold text-warning">
@@ -716,6 +764,9 @@ export function OrdensServicoPage({
 
           {visao !== "lista" && (
             <div className="bg-card rounded-xl border border-line p-4">
+              {visao === "kanban" && user && filtros.clienteId !== "todos" && import.meta.env.VITE_SSO_QUADRO_CHAMADOS_ENABLED === "true" && <QuadroGerencial key={`${user.id}:${filtros.clienteId}`} usuario={user.id} cliente={filtros.clienteId} onAbrirOs={(id) => { setOrigemCentral({ cliente: filtros.clienteId, os: id }); setSelecionadaId(id); setVisao("lista"); }} />}
+              {visao === "kanban" && user && filtros.clienteId !== "todos" && import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && <PainelLateralBacklog key={`${user.id}:${filtros.clienteId}`} userId={user.id} clienteId={filtros.clienteId} />}
+              {visao === "kanban" && user && filtros.clienteId === "todos" && import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && <p>Selecione um Cliente para consultar seu backlog de escopo.</p>}
               {visao === "kanban" && (
                 <OsKanbanView
                   ordens={ordensFiltradas}
@@ -729,6 +780,7 @@ export function OrdensServicoPage({
                   onMoverColuna={onMoverColunaKanban}
                   onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
                   preventivas={preventivas}
+                  resumosChamados={!salvando && !feedBuscando && !resumoChamados.isFetching && !resumoChamados.isError ? resumoChamados.data : undefined}
                 />
               )}
               {visao === "timeline" && (
@@ -747,6 +799,7 @@ export function OrdensServicoPage({
           {visao !== "lista" && selecionada && (
             <section className="bg-card rounded-xl border border-line">
               <DetalheOs
+                key={selecionada.id}
                 selecionada={selecionada}
                 temEscrita={temEscrita}
                 salvando={salvando}
@@ -754,7 +807,12 @@ export function OrdensServicoPage({
                 onEditar={() => setEditando(true)}
                 dadosOs={dadosOs}
                 onRecarregar={carregar}
+                onAbrirOsVinculada={(cliente, os) => {
+                  setFiltros((atual) => ({ ...atual, clienteId: cliente }));
+                  setOrigemCentral({ cliente, os }); setSelecionadaId(os); setVisao("lista");
+                }}
                 onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
+                painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
                 aberturaModalSeq={modalDetalheSeq}
                 destinoConversao={
                   selecionada.chamadoId === conversaoPendente?.chamadoId
@@ -820,7 +878,7 @@ export function OrdensServicoPage({
                           // biome-ignore lint/a11y/useKeyWithClickEvents: mesmo padrão de linha clicável do BacklogGutPage — checkbox interno já é acessível via teclado.
                           <tr
                             key={ordem.id}
-                            onClick={() => setSelecionadaId(ordem.id)}
+                            onClick={() => { setOrigemCentral(null); setSelecionadaId(ordem.id); }}
                             aria-selected={ordem.id === selecionadaId}
                             className={`cursor-pointer border-l-2 ${
                               ordem.id === selecionadaId
@@ -887,14 +945,20 @@ export function OrdensServicoPage({
               <section className="rounded-xl border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
                 {selecionada ? (
                   <DetalheOs
+                    key={selecionada.id}
                     selecionada={selecionada}
                     temEscrita={temEscrita}
                     salvando={salvando}
                     onAlterarStatus={onAlterarStatus}
                     onEditar={() => setEditando(true)}
                     dadosOs={dadosOs}
-                    onRecarregar={carregar}
+                    onRecarregar={async () => { await carregar(); if (origemCentral) await resumoCentral.refetch(); }}
+                    onAbrirOsVinculada={(cliente, os) => {
+                      setFiltros((atual) => ({ ...atual, clienteId: cliente }));
+                      setOrigemCentral({ cliente, os }); setSelecionadaId(os); setVisao("lista");
+                    }}
                     onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
+                    painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
                     destinoConversao={
                       selecionada.chamadoId === conversaoPendente?.chamadoId
                         ? conversaoPendente.statusDestino
@@ -903,7 +967,7 @@ export function OrdensServicoPage({
                     onConversaoFinalizada={() => setConversaoPendente(null)}
                   />
                 ) : (
-                  <div className="p-8 text-body text-ink-3">Selecione uma OS.</div>
+                  <div className="p-8 text-body text-ink-3">{origemCentral && resumoCentral.isFetching ? "Carregando OS…" : origemCentral && (resumoCentral.isError || resumoCentral.data === null) ? "OS indisponível neste Cliente." : "Selecione uma OS."}</div>
                 )}
               </section>
             </div>
@@ -930,6 +994,7 @@ export function OrdensServicoPage({
           onEditada={() => {
             setEditando(false);
             carregar();
+            if (origemCentral) void resumoCentral.refetch();
           }}
         />
       )}
@@ -1011,10 +1076,12 @@ function DetalheOs({
   onEditar,
   dadosOs,
   onRecarregar,
+  onAbrirOsVinculada,
   onAbrirAuvo,
   aberturaModalSeq = 0,
   destinoConversao = null,
   onConversaoFinalizada,
+  painelOrcamento,
 }: {
   selecionada: OrdemServicoOperacional;
   temEscrita: boolean;
@@ -1025,12 +1092,14 @@ function DetalheOs({
   dadosOs: DadosAberturaOs | null;
   /** E01-S118 T7: refetch do board após uma ação do Chamado (gerar OS, cancelar). */
   onRecarregar: () => void;
+  onAbrirOsVinculada: (clienteId: string, osId: string) => void;
   onAbrirAuvo: (osId?: string) => void;
   /** E01-S118 AC-6: clicar num card do Kanban/Timeline/Calendário abre este modal direto. O pai
    * incrementa `aberturaModalSeq` a cada clique (mesmo card duas vezes seguidas ainda reabre). */
   aberturaModalSeq?: number;
   destinoConversao?: Exclude<StatusOrdemServico, "solicitacao"> | null;
   onConversaoFinalizada?: () => void;
+  painelOrcamento?: ReactNode;
 }) {
   // E01-S75 AC-2: "Expandir" abre a mesma info + abas ricas do Auvo (questionários/fotos) num
   // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
@@ -1207,6 +1276,7 @@ function DetalheOs({
           dadosOs={dadosOs}
           temEscrita={temEscrita}
           onMutou={onRecarregar}
+          onAbrirOsVinculada={onAbrirOsVinculada}
           onOsPlanejada={onAbrirAuvo}
           auvoTaskId={selecionada.auvoTaskId}
           destinoConversao={destinoConversao}
@@ -1246,7 +1316,7 @@ function DetalheOs({
             )}
           </div>
         </div>
-        <Tooltip content="Identificador do Chamado (CH) — a OS é a evolução dele. Sem CH, mostra o ID do Auvo.">
+        <Tooltip content="Identificador da OS ou do Chamado. O vínculo com várias OS está em preparação; sem identificador CH, pode aparecer o ID do Auvo.">
           <p className="mt-1 inline-block text-caption font-brand tabular-nums text-ink-3">
             {rotuloNumeroOrdem(selecionada)}
           </p>
@@ -1258,7 +1328,7 @@ function DetalheOs({
         </p>
       </div>
 
-      <div className="space-y-3 p-4">{corpo}</div>
+      <div className="space-y-3 p-4">{corpo}{!expandido && !ehChamadoSemOs && painelOrcamento}</div>
 
       {expandido && (
         <Modal
@@ -1269,7 +1339,7 @@ function DetalheOs({
           titulo={selecionada.titulo}
           descricao={
             <>
-              <Tooltip content="Identificador do Chamado (CH) — a OS é a evolução dele. Sem CH, mostra o ID do Auvo.">
+              <Tooltip content="Identificador da OS ou do Chamado. O vínculo com várias OS está em preparação; sem identificador CH, pode aparecer o ID do Auvo.">
                 <span className="inline-block font-brand tabular-nums">
                   {rotuloNumeroOrdem(selecionada)}
                 </span>
@@ -1285,6 +1355,7 @@ function DetalheOs({
               {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
             </p>
             {corpo}
+            {!ehChamadoSemOs && painelOrcamento}
           </div>
         </Modal>
       )}

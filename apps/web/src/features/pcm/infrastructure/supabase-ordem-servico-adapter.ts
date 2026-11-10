@@ -65,7 +65,10 @@ async function marcarChamadoAutomaticoComOs(
   ordemServicoId: string,
   updatedBy: string,
 ): Promise<void> {
-  await supabase
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ordemServicoId)) {
+    throw new Error("Identificador de OS inválido.");
+  }
+  const { data, error } = await supabase
     .schema("pcm")
     .from("chamados")
     .update({
@@ -74,24 +77,73 @@ async function marcarChamadoAutomaticoComOs(
       updated_at: new Date().toISOString(),
       updated_by: updatedBy,
     })
-    .eq("id", chamadoId);
+    .eq("id", chamadoId)
+    .or(`ordem_servico_id.is.null,ordem_servico_id.eq.${ordemServicoId}`)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Chamado indisponível ou vínculo legado divergente; reconcilie antes de continuar.");
   await supabase
     .schema("pcm")
     .from("chamados_eventos")
     .insert({ chamado_id: chamadoId, tipo: "os_gerada", metadata: { ordemServicoId } });
 }
 
+async function confirmarChamadoAtomico(input: { ordemId: string; userId: string; somenteRepetir?: boolean }): Promise<{ numero: string }> {
+  const chave = `sso-confirmar-chamado-os:${JSON.stringify([input.userId, input.ordemId])}`;
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(input.ordemId) || !uuid.test(input.userId)) throw new Error("Contexto inválido.");
+  const sessao = async () => {
+    const atual = await supabase.auth.getUser();
+    if (atual.error || atual.data.user?.id !== input.userId) throw new Error("Sessão alterada.");
+  };
+  await sessao();
+  let requestId: string;
+  const anterior = sessionStorage.getItem(chave);
+  if (anterior === null) {
+    if (input.somenteRepetir) throw new Error("Tentativa não encontrada; nenhuma operação enviada.");
+    requestId = crypto.randomUUID();
+    sessionStorage.setItem(chave, requestId);
+  } else {
+    if (!uuid.test(anterior)) throw new Error("Tentativa local ilegível. Procure suporte.");
+    requestId = anterior;
+  }
+  if (sessionStorage.getItem(chave) !== requestId) throw new Error("Tentativa alterada.");
+  const { data, error } = await supabase.schema("pcm").rpc("sso_confirmar_chamado_os_atomico", {
+    p_request_id: requestId, p_os_id: input.ordemId,
+  });
+  if (error) throw error;
+  if (!data || data.requestId !== requestId || data.osId !== input.ordemId ||
+    typeof data.chamadoId !== "string" || !uuid.test(data.chamadoId) ||
+    typeof data.numero !== "string" || !data.numero.trim() || typeof data.numeroOs !== "string")
+    throw new Error("Resposta divergente; mantenha a tentativa e procure suporte.");
+  await sessao();
+  if (sessionStorage.getItem(chave) !== requestId) throw new Error("Tentativa alterada; procure suporte.");
+  sessionStorage.removeItem(chave);
+  return { numero: data.numero };
+}
+
 export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
   async listarEquipamentosDoCliente(clienteId) {
-    const { data, error } = await supabase
-      .schema("pcm")
-      .from("equipamentos")
-      .select("id,nome")
-      .eq("client_id", clienteId)
-      .is("deleted_at", null)
-      .order("nome", { ascending: true });
-    if (error) throw error;
-    return (data ?? []).map((row) => ({ id: row.id as string, nome: row.nome as string }));
+    const itens: { id: string; nome: string }[] = [];
+    let cursor: string | null = null;
+    for (let pagina = 0; pagina < 1000; pagina++) {
+      let consulta = supabase.schema("pcm").from("equipamentos").select("id,nome")
+        .eq("client_id", clienteId).is("deleted_at", null).order("id", { ascending: true }).limit(100);
+      if (cursor) consulta = consulta.gt("id", cursor);
+      const { data, error } = await consulta;
+      if (error) throw error;
+      const linhas = data ?? [];
+      if (linhas.length === 0) return itens.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR") || a.id.localeCompare(b.id));
+      for (const row of linhas) {
+        if (typeof row.id !== "string" || typeof row.nome !== "string" || (cursor && row.id <= cursor)) {
+          throw new Error("Paginação de Componentes inválida.");
+        }
+        cursor = row.id;
+        itens.push({ id: row.id, nome: row.nome });
+      }
+    }
+    throw new Error("Limite de páginas de Componentes excedido.");
   },
 
   async carregarDadosAbertura(): Promise<DadosAberturaOs> {
@@ -146,6 +198,7 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
 
   async criarOrdemServico(input): Promise<OrdemServicoCriada> {
     let chamadoId = input.chamadoId ?? null;
+    let numeroChamado: string | null = null;
     // E01-S151: item de backlog puro (semChamado) nasce sem Chamado — a trigger
     // fn_ordens_servico_sync_numero_chamado (0209) gera o placeholder PRE-XXXXXXXX sozinha.
     if (!chamadoId && !input.semChamado) {
@@ -158,15 +211,27 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         fotoUrls: input.fotoUrls,
       });
       chamadoId = chamadoAutomatico.id;
+      numeroChamado = chamadoAutomatico.numero;
+    } else if (chamadoId) {
+      const { data: chamado, error: chamadoError } = await supabase.schema("pcm").from("chamados")
+        .select("numero,cliente_id").eq("id", chamadoId).is("deleted_at", null).single();
+      if (chamadoError) throw chamadoError;
+      if (!chamado || chamado.cliente_id !== input.clientId || typeof chamado.numero !== "string" || !chamado.numero.trim()) {
+        throw new Error("Chamado incompatível com Cliente.");
+      }
+      numeroChamado = chamado.numero;
     }
+
+    const ordemId = crypto.randomUUID();
+    const numero = numeroChamado ?? `PRE-${ordemId.slice(0, 8).toUpperCase()}`;
 
     const { data, error } = await supabase
       .schema("pcm")
       .from("ordens_servico")
       .insert({
+        id: ordemId,
+        numero,
         client_id: input.clientId,
-        // `numero` não é enviado: a trigger `fn_ordens_servico_sync_numero_chamado` (0151/0209)
-        // preenche sozinha — CH-XXXX do `chamado_id` acima, ou PRE-XXXXXXXX se ele for null.
         titulo: input.titulo,
         descricao: montarDescricao(input),
         categoria: input.categoria,
@@ -213,13 +278,22 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
   // depender de estado desatualizado em memória. UPDATE não passa pela trigger de sync (0151/0209,
   // só `before insert`) — `numero` precisa ser setado explicitamente aqui.
   async confirmarChamado(input): Promise<{ numero: string }> {
+    // Uma tentativa atômica incerta nunca pode cair no fluxo legado se a flag mudar.
+    const chaveAtomica = `sso-confirmar-chamado-os:${JSON.stringify([input.userId, input.ordemId])}`;
+    if (input.somenteRepetir || import.meta.env.VITE_SSO_CONFIRMAR_CHAMADO_OS_ATOMICO_ENABLED === "true" || sessionStorage.getItem(chaveAtomica) !== null) {
+      return confirmarChamadoAtomico(input);
+    }
     const { data: ordem, error: ordemError } = await supabase
       .schema("pcm")
       .from("ordens_servico")
-      .select("client_id,titulo,descricao,local_descricao,foto_urls")
+      .select("client_id,titulo,descricao,local_descricao,foto_urls,chamado_id")
       .eq("id", input.ordemId)
+      .is("deleted_at", null)
       .single();
     if (ordemError) throw ordemError;
+    if (ordem.chamado_id !== null) {
+      throw new Error("Esta OS já possui Chamado. Consulte o vínculo existente antes de continuar.");
+    }
 
     const chamadoAutomatico = await criarChamadoAutomatico({
       clienteId: ordem.client_id as string,
@@ -229,12 +303,18 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       local: ordem.local_descricao as string | null,
       fotoUrls: (ordem.foto_urls as string[] | null) ?? [],
     });
-    const { error } = await supabase
+    const { data: atualizada, error } = await supabase
       .schema("pcm")
       .from("ordens_servico")
       .update({ chamado_id: chamadoAutomatico.id, numero: chamadoAutomatico.numero })
-      .eq("id", input.ordemId);
+      .eq("id", input.ordemId)
+      .eq("client_id", ordem.client_id)
+      .is("chamado_id", null)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!atualizada) throw new Error("A OS mudou durante a confirmação. Consulte o vínculo e reconcilie o Chamado criado antes de repetir.");
     await marcarChamadoAutomaticoComOs(chamadoAutomatico.id, input.ordemId, input.userId);
     return { numero: chamadoAutomatico.numero };
   },
@@ -246,9 +326,13 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       .select("id,numero")
       .eq("chamado_id", chamadoId)
       .is("deleted_at", null)
-      .maybeSingle();
+      .limit(2);
     if (error) throw error;
-    return data ? { id: data.id as string, numero: data.numero as string } : null;
+    if ((data?.length ?? 0) > 1) {
+      throw new Error("Este Chamado possui mais de uma OS; consulte as Ordens vinculadas antes de continuar.");
+    }
+    const unica = data?.[0];
+    return unica ? { id: unica.id as string, numero: unica.numero as string } : null;
   },
 
   async editarOrdemServico(input: EditarOrdemServicoInput): Promise<void> {

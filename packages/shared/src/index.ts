@@ -8,6 +8,11 @@
 
 export const SHARED_PACKAGE = "@sinergica/shared";
 
+export * from "./protecao-custos-portal-contracts";
+export * from "./despesas-visita-contracts";
+export * from "./faturaveis-contracts";
+export * from "./portal-operacional-contracts";
+
 export type OrdemServicoCategoria = "corretiva" | "preventiva" | "emergencial";
 export type OrdemServicoPrioridade = "baixa" | "normal" | "media" | "alta" | "critica";
 
@@ -22,3 +27,4 @@ export interface OrdemServicoInput {
   origem_ref_id: string;
   solicitante?: string;
 }
+export * from "./orcamento-operacional-contracts";

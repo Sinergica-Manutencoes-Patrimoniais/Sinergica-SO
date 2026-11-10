@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S164_
+_75 concluídas no histórico · maior ID usado: E01-S186_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -138,6 +138,29 @@ _75 concluídas no histórico · maior ID usado: E01-S164_
 | E01-S141 | Relatório de Inspeção: item vira Chamado pendente | Claude (sessão Lucas) | Superada por E01-S143 (2026-08-10) — Lu… | [spec](../../specs/E01-S141-inspecao-item-vira-chamado/spec.md) |
 | E01-S145 | Fluidez e performance de Chamados/OS | Codex | Implementado localmente (2026-08-10). M… | [spec](../../specs/E01-S145-fluidez-performance-chamados/product.md) |
 | E01-S163 | Cliente 360 como cockpit operacional | Codex | Spec, plano e tarefas prontos para Terra (2026-10-06) | [spec](../../specs/E01-S163-cliente-360-cockpit-operacional/spec.md) |
+| E01-S165 | Plano multialvo, versões de Rotina e questionários referenciados | Terra | Em andamento — fundação isolada (2026-10-27) | [spec](../../specs/E01-S165-plano-versoes-rotinas/spec.md) |
+| E01-S166 | Calendário contratual, recorrência por modo e ocorrências idempotentes | Terra | Em andamento — fundação e cadastro inicial (2026-10-27) | [spec](../../specs/E01-S166-calendario-ocorrencias-capacidade/spec.md) |
+| E01-S167 | Chamado 1:N OS, continuidade e encerramento integral | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S167-chamados-os-visitas/spec.md) |
+| E01-S168 | Auvo T−24, serialização e validação PCM | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S168-auvo-t24-validacao/spec.md) |
+| E01-S169 | Importação e exportação dos Planos Rimini e I Home | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S169-importacao-despesas-exportacao/spec.md) |
+| E01-S170 | Permissões por ação e governança configurável do programa | Terra | Em andamento — fundação de capacidades (2026-10-26) | [spec](../../specs/E01-S170-governanca-plano/spec.md) |
+
+| E01-S171 | Visita operacional e associação histórica de OS | Terra | Em andamento — fundação isolada (2026-10-27) | [spec](../../specs/E01-S171-visitas-operacionais/spec.md) |
+| E01-S172 | Agenda oficial e capacidade por técnico, Cliente e semana | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S172-agenda-capacidade-consolidada/spec.md) |
+| E01-S173 | Pendências técnicas atômicas, resultados e agrupamento por ativo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S173-pendencias-tecnicas/spec.md) |
+| E01-S174 | Backlog canônico e conversões de escopo sem perda | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S174-backlog-escopo-rastreavel/spec.md) |
+| E01-S175 | OS de origem Auvo e triagem do Chamado provisório | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S175-origem-campo-auvo/spec.md) |
+| E01-S176 | Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos | Terra | Em andamento — integridade de hierarquia (2026-10-26) | [spec](../../specs/E01-S176-estrutura-tecnica-grupos/spec.md) |
+| E01-S177 | Código público protegido, aliases e política de Equipment Auvo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S177-codigos-publicos-alias/spec.md) |
+| E01-S178 | Levantamentos de planilha/Auvo e aprovação PCM em staging | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S178-levantamentos-staging-aprovacao/spec.md) |
+| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
+| E01-S180 | Despesas previstas/realizadas por Visita | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S180-despesas-visita/spec.md) |
+| E01-S181 | Orçamento operacional canônico no Comercial | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S181-orcamentos-operacionais/spec.md) |
+| E01-S182 | Fila A Faturar e efetivação por origem única | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S182-faturaveis-origem/spec.md) |
+| E01-S183 | Portal de materiais, orçamento e cobrança | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S183-portal-operacional/spec.md) |
+| E01-S184 | Proteção imediata de custos no Portal e documentos | Terra | Em andamento — proteção parcial (2026-10-26) | [spec](../../specs/E01-S184-protecao-custos-portal/spec.md) |
+| E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
+| E01-S186 | Migração auditável, pilotos por ondas e homologação do programa | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S186-migracao-pilotos-homologacao/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S34_

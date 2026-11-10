@@ -46,7 +46,10 @@ Deno.test("sistemasDescriptor — E01-S158 prioriza descrição completa calcula
     descricao: "Descrição legada",
     auvo_descricao: "Guainumbí - Torre A - Hidráulica - Sistema Hidrante",
   });
-  assertEquals(payload.description, "Guainumbí - Torre A - Hidráulica - Sistema Hidrante");
+  assertEquals(
+    payload.description,
+    "Guainumbí - Torre A - Hidráulica - Sistema Hidrante",
+  );
 });
 
 Deno.test("sistemasDescriptor — E01-S85 AC-4: sem Área vinculada, location some do payload", () => {
@@ -60,7 +63,11 @@ Deno.test("sistemasDescriptor — E01-S85 AC-4: sem Área vinculada, location so
 
 Deno.test("sistemasDescriptor — inbound preserva id Auvo, código e status ativo", () => {
   assertEquals(
-    sistemasDescriptor.fromAuvo({ equipmentId: 55, name: "Sistema X", identifier: "SX-1" }),
+    sistemasDescriptor.fromAuvo({
+      equipmentId: 55,
+      name: "Sistema X",
+      identifier: "SX-1",
+    }),
     {
       auvo_equipment_id: 55,
       nome: "Sistema X",
@@ -68,4 +75,22 @@ Deno.test("sistemasDescriptor — inbound preserva id Auvo, código e status ati
       ativo: true,
     },
   );
+});
+
+Deno.test("código legado de Sistema não muda ao alterar nome e localização no payload", () => {
+  const anterior = sistemasDescriptor.toAuvo({
+    id: "s1",
+    nome: "Extintores",
+    codigo: "Cli-Ext-001",
+    auvo_localizacao: "Torre A",
+  });
+  const depois = sistemasDescriptor.toAuvo({
+    id: "s1",
+    nome: "Sistema de Extintores",
+    codigo: "Cli-Ext-001",
+    auvo_localizacao: "Torre B",
+  });
+  assertEquals(anterior.identifier, "Cli-Ext-001");
+  assertEquals(depois.identifier, "Cli-Ext-001");
+  assertEquals(depois.location, "Torre B");
 });

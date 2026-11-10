@@ -8,6 +8,7 @@ export interface DataTableColumn<T> {
   chave: string;
   cabecalho: ReactNode;
   render: (item: T) => ReactNode;
+  cabecalhoLinha?: boolean;
   numerica?: boolean;
   ordenavel?: boolean;
   larguraMin?: string;
@@ -123,14 +124,24 @@ export function DataTable<T>({
                         : ""
                     }`}
                   >
-                    {colunas.map((coluna) => (
-                      <td
-                        key={coluna.chave}
-                        className={`px-2 py-2 ${coluna.numerica ? "text-right font-brand tabular-nums" : ""}`}
-                      >
-                        {coluna.render(item)}
-                      </td>
-                    ))}
+                    {colunas.map((coluna) =>
+                      coluna.cabecalhoLinha ? (
+                        <th
+                          key={coluna.chave}
+                          scope="row"
+                          className={`px-2 py-2 ${coluna.numerica ? "text-right font-brand tabular-nums" : "text-left"}`}
+                        >
+                          {coluna.render(item)}
+                        </th>
+                      ) : (
+                        <td
+                          key={coluna.chave}
+                          className={`px-2 py-2 ${coluna.numerica ? "text-right font-brand tabular-nums" : ""}`}
+                        >
+                          {coluna.render(item)}
+                        </td>
+                      ),
+                    )}
                   </tr>
                 ))}
         </tbody>

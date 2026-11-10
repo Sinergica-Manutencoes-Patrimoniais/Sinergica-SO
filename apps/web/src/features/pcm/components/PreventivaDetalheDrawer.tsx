@@ -197,7 +197,7 @@ function OcorrenciasSecao({
           {ocorrencias.map((item) => (
             <li key={item.id} className="px-3 py-2 text-caption text-ink-2">
               {dataHoraBr(item.visita_em ?? item.vencimento)} · {item.os_numero ?? "Sem OS"} ·{" "}
-              {resultado(item.resultado_estado)}
+              {item.reconciliacao_legada === "substituida" ? "Substituída por ciclo SSO" : resultado(item.resultado_estado)}
             </li>
           ))}
         </ul>

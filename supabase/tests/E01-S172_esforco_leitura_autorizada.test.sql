@@ -1,0 +1,11 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(5);
+select has_function('pcm','sso_consultar_esforco_autorizado',array['uuid','text','uuid'],'leitura tem entrada serializada');
+select ok(coalesce(has_function_privilege('authenticated',to_regprocedure('pcm.sso_consultar_esforco_autorizado(uuid,text,uuid)'),'execute'),false),'usuário autenticado pode consultar');
+select ok(not coalesce(has_function_privilege('anon',to_regprocedure('pcm.sso_consultar_esforco_autorizado(uuid,text,uuid)'),'execute'),true),'anônimo não pode consultar');
+select ok(not has_function_privilege('authenticated','pcm.sso_consultar_esforco_declarado(uuid,text,uuid)','execute'),'leitura antiga de OS e calendário é privada');
+select ok(not has_function_privilege('authenticated','pcm.sso_consultar_esforco_ocorrencia_visita(uuid,uuid)','execute'),'leitura antiga de Visita é privada');
+select * from finish();
+rollback;

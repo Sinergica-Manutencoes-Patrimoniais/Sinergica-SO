@@ -1,0 +1,35 @@
+-- Apenas banco descartável; cria metadados sintéticos, não envia bytes ao Storage.
+begin;
+set local app.auvo_sync_write = 'true';
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(10);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+values ('18060000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','upload-180@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('18060000-0000-0000-0000-000000000001','superadmin','Upload S180',true);
+insert into pcm.clientes(id,nome,ativo,created_by) values ('18060000-0000-0000-0000-00000000000a','Cliente upload S180',true,'18060000-0000-0000-0000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('18060000-0000-0000-0000-000000000001','despesa_visita.gerir','18060000-0000-0000-0000-00000000000a');
+insert into pcm.visitas(id,cliente_id,inicio_em,fim_em,fuso,natureza,created_by) values ('18060000-0000-0000-0000-000000000021','18060000-0000-0000-0000-00000000000a','2026-11-01 11:00+00','2026-11-01 13:00+00','America/Sao_Paulo','regular','18060000-0000-0000-0000-000000000001');
+insert into pcm.despesa_tipos(id,auvo_id,nome) values ('18060000-0000-0000-0000-000000000041',-1806001,'Categoria upload S180');
+insert into pcm.despesas_visita(id,visita_id,cliente_id,categoria_id,data,descricao,previsto_centavos,realizado_centavos,created_by) values ('18060000-0000-0000-0000-000000000051','18060000-0000-0000-0000-000000000021','18060000-0000-0000-0000-00000000000a','18060000-0000-0000-0000-000000000041','2026-11-01','Despesa sintética',100,100,'18060000-0000-0000-0000-000000000001');
+insert into storage.objects(id,bucket_id,name,owner_id) values ('18060000-0000-0000-0000-000000000071','sso-despesas-visita','18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081','18060000-0000-0000-0000-000000000001');
+set local request.jwt.claims = '{"sub":"18060000-0000-0000-0000-000000000001","role":"authenticated","user_role":"superadmin"}';
+set local role authenticated;
+select is(pcm.sso_autorizar_upload_comprovante('18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081'),false,'gate fechado impede upload');
+select throws_ok($$select pcm.sso_resolver_upload_comprovante_autorizado('18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081')$$,'42501',null,'gate fechado impede resolver');
+reset role;
+update pcm.sso_upload_comprovante_gate set habilitado=true where id;
+set local role authenticated;
+select is(pcm.sso_autorizar_upload_comprovante('18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081'),true,'permite despesa realizada ativa');
+select is(pcm.sso_resolver_upload_comprovante_autorizado('18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081'),'18060000-0000-0000-0000-000000000071'::uuid,'resolve metadado próprio');
+select lives_ok($$insert into storage.objects(id,bucket_id,name,owner_id) values ('18060000-0000-0000-0000-000000000072','sso-despesas-visita','18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000082','18060000-0000-0000-0000-000000000001')$$,'política de upload aceita objeto próprio');
+select is((select count(*)::integer from storage.objects where id='18060000-0000-0000-0000-000000000071'),0,'leitura direta continua negada');
+select throws_ok($$select pcm.sso_resolver_comprovante_upload('18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081')$$,'42501',null,'resolvedor interno permanece revogado');
+select is(pcm.sso_autorizar_upload_comprovante('malformado'),false,'caminho inválido é negado');
+select is(pcm.sso_autorizar_upload_comprovante('18060000-0000-0000-0000-00000000000b/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081'),false,'Cliente divergente é negado');
+reset role;
+update config.usuarios set ativo=false where user_id='18060000-0000-0000-0000-000000000001';
+set local role authenticated;
+select is(pcm.sso_autorizar_upload_comprovante('18060000-0000-0000-0000-00000000000a/18060000-0000-0000-0000-000000000051/18060000-0000-0000-0000-000000000081'),false,'revogação desativa autorização');
+select * from finish();
+rollback;

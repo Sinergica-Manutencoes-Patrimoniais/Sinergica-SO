@@ -28,6 +28,8 @@ import { byWebhookEntity } from "../_shared/auvo/registry/index.ts";
 import type { AuvoEntityDescriptor } from "../_shared/auvo/registry/types.ts";
 import { resolveWebhookDispatch } from "../_shared/auvo/webhook-dispatch.ts";
 import { criarOsDaTarefa, resolverFuncionarioIdPorAuvoId } from "../_shared/auvo/os-from-task.ts";
+import { capturarEnvelopeCampo, resolverEnvelopeCampo } from "../_shared/auvo/captura-inbox.ts";
+import { registrarConflitoChamado } from "../_shared/auvo/conflito-chamado.ts";
 import { auvoNaiveToUtc } from "../_shared/auvo/datetime.ts";
 import { auvoGet } from "../_shared/auvo/client.ts";
 import { classificarRelatorioInspecao } from "../_shared/classificar-relatorio-inspecao.ts";
@@ -88,13 +90,12 @@ serve(async (req) => {
       throw new HttpError(401, "Assinatura inválida");
     }
 
-    // 3) Corpo malformado (não é JSON válido) — Casos de borda da spec: responde 400, loga o
-    // corpo bruto para diagnóstico, nunca derruba a função.
+    // 3) Corpo malformado: responde 400 sem registrar o conteúdo recebido em logs.
     let payload: unknown;
     try {
       payload = JSON.parse(rawBody);
     } catch {
-      console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "corpo do webhook não é JSON válido", rawBody: rawBody.slice(0, 2000) }));
+      console.error(JSON.stringify({ ...logBase, nivel: "error", msg: "corpo do webhook não é JSON válido" }));
       throw new HttpError(400, "Corpo do webhook não é JSON válido");
     }
 
@@ -105,7 +106,7 @@ serve(async (req) => {
     const parsed = WebhookEventSchema.safeParse(payload);
     if (!parsed.success) {
       console.warn(
-        JSON.stringify({ ...logBase, nivel: "warn", msg: "payload de webhook com shape não reconhecido — ignorado", rawBody: rawBody.slice(0, 2000) }),
+        JSON.stringify({ ...logBase, nivel: "warn", msg: "payload de webhook com shape não reconhecido — ignorado" }),
       );
       return json(200, { ok: true, ignored: true, reason: "unrecognized_payload" }, cors);
     }
@@ -179,10 +180,24 @@ serve(async (req) => {
 
     // 7) Resolve o taskId do Auvo referenciado pelo evento — defensivo quanto ao nome do campo
     // (shape de entrega não confirmado neste ambiente, ver nota no topo do arquivo).
+    const inboxExclusiva = Deno.env.get("SSO_ORIGEM_CAMPO_INBOX_EXCLUSIVA_ENABLED") === "true";
+    const capturaHabilitada = Deno.env.get("SSO_CAPTURA_INBOX_CAMPO_WEBHOOK_ENABLED") === "true";
+    const resolucaoHabilitada = Deno.env.get("SSO_RESOLUCAO_INBOX_CAMPO_ENABLED") === "true";
+    if ((inboxExclusiva || resolucaoHabilitada) && !capturaHabilitada) throw new HttpError(503, "Captura de origem indisponível");
     const taskId = extractTaskId(evento);
     if (taskId == null) {
-      console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "evento de Task sem taskId reconhecível — ignorado", rawBody: rawBody.slice(0, 2000) }));
+      if (inboxExclusiva) throw new HttpError(503, "Identidade da tarefa indisponível");
+      console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "evento de Task sem taskId reconhecível — ignorado" }));
       return json(200, { ok: true, ignored: true, reason: "task_id_not_found" }, cors);
+    }
+
+    if (capturaHabilitada) {
+      const urlCaptura = Deno.env.get("SUPABASE_URL") ?? "";
+      if (!urlCaptura) throw new HttpError(500, "Ambiente Supabase incompleto");
+      const bancoCaptura = createClient(urlCaptura, getSupabaseServiceKey(), { auth: { persistSession: false, autoRefreshToken: false } });
+      const captura = await capturarEnvelopeCampo(bancoCaptura, { taskId, clienteExternoId: extractCustomerId(evento), payload: evento });
+      if (resolucaoHabilitada) await resolverEnvelopeCampo(bancoCaptura, captura.envelopeId);
+      if (inboxExclusiva) return json(202, { ok: true, estado: "capturado_pendente", envelopeId: captura.envelopeId, eventoAplicado: false }, cors);
     }
 
     // 8) Máquina de transição de status (AC-2, AC-3, AC-4). Ver SPEC_DEVIATION em tasks.md: o
@@ -258,7 +273,18 @@ serve(async (req) => {
         .neq("status", targetStatus)
         .select("id")
         .maybeSingle();
-      if (updateError) throw updateError;
+      if (updateError) {
+        const captura = await registrarConflitoChamado(
+          updateError,
+          (args) => db.schema("pcm").rpc("sso_registrar_conflito_webhook_chamado", args),
+          osExistente.id, taskId, targetStatus,
+        );
+        if (captura !== "nao_aplicavel") {
+          console.warn(JSON.stringify({ ...logBase, nivel: "warn", msg: "conflito de Chamado encerrado", captura }));
+        }
+        // Mesmo com captura confirmada, manter resposta de falha anterior: retry Auvo não é conhecido.
+        throw updateError;
+      }
 
       os = osExistente;
       transicionou = updated != null;

@@ -1,4 +1,5 @@
 import { supabase } from "../../../lib/supabase-client";
+import { listarPaginasPreventivas } from "./supabase-preventivas-adapter";
 import type {
   AtualizarStatusNcInput,
   CriarAnaliseMicrobioInput,
@@ -229,7 +230,21 @@ function mapSugestoesAuvo(params: {
     .sort((a, b) => Number(a.jaImportado) - Number(b.jaImportado) || a.nome.localeCompare(b.nome));
 }
 
-function mapAgenda(row: ScheduleRow, osPorSchedule: Map<string, string>): PmocAgenda {
+export function agruparOrdensPmoc(linhas: readonly { id: string; pmoc_schedule_id: string }[]): Map<string, string[]> {
+  const resultado = new Map<string, string[]>();
+  const ids = new Set<string>();
+  for (const linha of linhas) {
+    if (!linha.id || !linha.pmoc_schedule_id || ids.has(linha.id.toLowerCase())) throw new Error("Vínculo de OS PMOC inválido.");
+    ids.add(linha.id.toLowerCase());
+    const ordens = resultado.get(linha.pmoc_schedule_id) ?? [];
+    ordens.push(linha.id);
+    resultado.set(linha.pmoc_schedule_id, ordens);
+  }
+  return resultado;
+}
+
+function mapAgenda(row: ScheduleRow, osPorSchedule: Map<string, string[]>): PmocAgenda {
+  const ordens = osPorSchedule.get(row.id) ?? [];
   return {
     id: row.id,
     contractId: row.contract_id,
@@ -240,7 +255,8 @@ function mapAgenda(row: ScheduleRow, osPorSchedule: Map<string, string>): PmocAg
     yearRef: row.year_ref,
     status: row.status,
     auvoOsId: row.auvo_os_id,
-    ordemServicoId: osPorSchedule.get(row.id) ?? null,
+    ordemServicoId: ordens.length === 1 ? ordens[0]! : null,
+    ordensServicoIds: ordens,
   };
 }
 
@@ -407,12 +423,9 @@ async function carregarDataset() {
       .order("analysis_date", { ascending: false }),
     supabase.schema("pcm").from("pmoc_nonconformity_log").select(NC_COLS),
     // E01-S05 AC-1: mapeia visitas que já têm OS criada (botão "Criar OS" da agenda).
-    supabase
-      .schema("pcm")
-      .from("ordens_servico")
-      .select("id,pmoc_schedule_id")
-      .not("pmoc_schedule_id", "is", null)
-      .is("deleted_at", null),
+    listarPaginasPreventivas<{ id: string; pmoc_schedule_id: string }>((inicio, fim) => supabase
+      .schema("pcm").from("ordens_servico").select("id,pmoc_schedule_id", { count: "exact" })
+      .not("pmoc_schedule_id", "is", null).is("deleted_at", null).order("id").range(inicio, fim) as unknown as PromiseLike<{ data: Array<{ id: string; pmoc_schedule_id: string }> | null; count: number | null; error: unknown }>),
   ]);
 
   if (clientes.error) throw clientes.error;
@@ -436,7 +449,7 @@ async function carregarDataset() {
       agenda: [],
       microbiologia: [],
       ncs: [],
-      osPorSchedule: new Map<string, string>(),
+      osPorSchedule: new Map<string, string[]>(),
     };
   }
   if (properties.error) throw properties.error;
@@ -446,14 +459,7 @@ async function carregarDataset() {
   if (agenda.error) throw agenda.error;
   if (microbiologia.error) throw microbiologia.error;
   if (ncs.error) throw ncs.error;
-  if (osDeVisitas.error) throw osDeVisitas.error;
-
-  const osPorSchedule = new Map<string, string>(
-    ((osDeVisitas.data ?? []) as Array<{ id: string; pmoc_schedule_id: string }>).map((row) => [
-      row.pmoc_schedule_id,
-      row.id,
-    ]),
-  );
+  const osPorSchedule = agruparOrdensPmoc(osDeVisitas);
 
   return {
     clientes: (clientes.data ?? []) as ClienteRow[],

@@ -1,0 +1,47 @@
+-- Banco isolado, migration em transação revertida; gates reais jamais são abertos.
+begin;
+set local app.auvo_sync_write='true';
+create extension if not exists pgtap with schema extensions;
+set local search_path=extensions,public;
+select plan(13);
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('16797001-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s167-mediacao@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
+insert into config.usuarios(user_id,papel,nome,ativo) values ('16797001-0000-4000-8000-000000000001','superadmin','Gestor sintético',true);
+insert into pcm.clientes(id,nome,created_by) values ('16797001-0000-4000-8000-00000000000a','Cliente A','16797001-0000-4000-8000-000000000001');
+insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('16797001-0000-4000-8000-000000000001','chamado.os.criar','16797001-0000-4000-8000-00000000000a');
+insert into pcm.chamados(id,numero,cliente_id,titulo,created_by) values ('16797001-0000-4000-8000-000000000011','CH-S167-MEDIACAO','16797001-0000-4000-8000-00000000000a','Chamado A','16797001-0000-4000-8000-000000000001');
+select set_config('request.jwt.claims','{"sub":"16797001-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}',true);
+do $test$
+declare v_original text; v_copia text;
+begin
+ select pg_get_functiondef('pcm.sso_criar_os_chamado(uuid,bigint,uuid,uuid,uuid,text,text,text)'::regprocedure) into v_original;
+ v_copia:=replace(v_original,'FUNCTION pcm.sso_criar_os_chamado(', 'FUNCTION pg_temp.sso_criar_os_chamado(');
+ v_copia:=replace(v_copia,'if not coalesce((select habilitado from pcm.chamado_os_gate where id), false) then','if false then');
+ if position('if false then' in v_copia)=0 then raise exception 'cópia do núcleo inválida'; end if;
+ execute v_copia;
+ select pg_get_functiondef('pcm.sso_criar_os_chamado_autorizado(uuid,bigint,uuid,uuid,uuid,text,text,text)'::regprocedure) into v_original;
+ v_copia:=replace(v_original,'FUNCTION pcm.sso_criar_os_chamado_autorizado(', 'FUNCTION pg_temp.sso_criar_os_chamado_autorizado(');
+ v_copia:=replace(v_copia,'if not coalesce((select habilitado from pcm.sso_criacao_os_mediada_gate where id),false) then','if false then');
+ if position('if false then' in v_copia)=0 then raise exception 'cópia do wrapper inválida'; end if;
+ execute v_copia;
+ v_copia:=replace(v_copia,'FUNCTION pg_temp.sso_criar_os_chamado_autorizado(', 'FUNCTION pg_temp.sso_criar_os_chamado_autorizado_transicao(');
+ v_copia:=replace(v_copia,'return pcm.sso_criar_os_chamado(', 'return pg_temp.sso_criar_os_chamado(');
+ execute v_copia;
+end $test$;
+select throws_ok($$select pcm.sso_criar_os_chamado_autorizado(null,null,null,null,null,null,null,null)$$,'55000','criacao_mediada_bloqueada','wrapper real permanece bloqueado');
+select ok(has_function_privilege('authenticated','pcm.sso_criar_os_chamado_autorizado(uuid,bigint,uuid,uuid,uuid,text,text,text)','execute') and not has_function_privilege('anon','pcm.sso_criar_os_chamado_autorizado(uuid,bigint,uuid,uuid,uuid,text,text,text)','execute'),'wrapper é apenas autenticado');
+select ok(not has_function_privilege('authenticated','pcm.sso_criar_os_chamado(uuid,bigint,uuid,uuid,uuid,text,text,text)','execute'),'núcleo continua privado');
+select throws_ok($$select pg_temp.sso_criar_os_chamado_autorizado('16797001-0000-4000-8000-000000000031',1,'16797001-0000-4000-8000-000000000011','16797001-0000-4000-8000-00000000000a','16797001-0000-4000-8000-000000000021','OS',null,'corretiva')$$,'55000','criacao_multipla_bloqueada','cópia do wrapper não contorna gate do núcleo');
+select throws_ok($$select pg_temp.sso_criar_os_chamado_autorizado_transicao('16797001-0000-4000-8000-000000000031',1,'16797001-0000-4000-8000-000000000011','16797001-0000-4000-8000-00000000000a','16797001-0000-4000-8000-000000000021','OS',null,'corretiva')$$,'55000','transicao_legada_incompleta','mesmo nas cópias, índice e trigger impedem transição');
+select throws_ok($$select pg_temp.sso_criar_os_chamado_autorizado('16797001-0000-4000-8000-000000000031',1,'16797001-0000-4000-8000-000000000099','16797001-0000-4000-8000-00000000000a','16797001-0000-4000-8000-000000000021','OS',null,'corretiva')$$,'42501','chamado_nao_encontrado_ou_sem_acesso','Chamado divergente é rejeitado');
+select set_config('request.jwt.claims','{"sub":"16797001-0000-4000-8000-000000000099","role":"authenticated"}',true);
+select throws_ok($$select pg_temp.sso_criar_os_chamado_autorizado('16797001-0000-4000-8000-000000000031',1,'16797001-0000-4000-8000-000000000011','16797001-0000-4000-8000-00000000000a','16797001-0000-4000-8000-000000000021','OS',null,'corretiva')$$,'42501','chamado_nao_encontrado_ou_sem_acesso','usuário não autorizado é rejeitado');
+set local role authenticated;
+select throws_ok($$select pcm.sso_criar_os_chamado(null,null,null,null,null,null,null,null)$$,'42501',null,'usuário não pode chamar núcleo diretamente');
+select throws_ok($$select pcm.sso_criar_os_chamado_autorizado(null,null,null,null,null,null,null,null)$$,'55000','criacao_mediada_bloqueada','usuário autenticado encontra gate do wrapper fechado');
+reset role;
+select ok(to_regclass('pcm.uq_ordens_servico_chamado') is not null,'índice legado preservado');
+select ok(exists(select 1 from pg_trigger where tgrelid='pcm.ordens_servico'::regclass and tgname='trg_ordens_servico_numero_chamado' and not tgisinternal),'trigger de número preservada');
+select is((select count(*)::int from pcm.ordens_servico where id='16797001-0000-4000-8000-000000000021'),0,'nenhuma OS criada');
+select is((select count(*)::int from pcm.auvo_sync_outbox where row_id='16797001-0000-4000-8000-000000000021'),0,'nenhuma intenção Auvo');
+select * from finish();
+rollback;

@@ -6,6 +6,8 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local — CI job `db-tests`).
 
 begin;
+-- Este teste valida posição, não integração; impede enqueue externo durante fixtures.
+set local app.auvo_sync_write = 'true';
 select plan(11);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)

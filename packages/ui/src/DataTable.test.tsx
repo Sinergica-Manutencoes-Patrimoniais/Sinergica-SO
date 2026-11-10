@@ -27,6 +27,20 @@ describe("DataTable — E00-S15 AC-5", () => {
     expect(screen.getByText("100")).toBeInTheDocument();
   });
 
+  it("preserva o cabeçalho da linha quando solicitado", () => {
+    render(
+      <DataTable
+        colunas={[
+          { chave: "nome", cabecalho: "Nome", cabecalhoLinha: true, render: (l: Linha) => l.nome },
+        ]}
+        itens={[{ id: "1", nome: "Cliente A", valor: 100 }]}
+        chaveLinha={(l) => l.id}
+        vazio="Nada aqui"
+      />,
+    );
+    expect(screen.getByRole("rowheader", { name: "Cliente A" })).toHaveAttribute("scope", "row");
+  });
+
   it("carregando renderiza linhas fantasma, não os itens (após 200ms — E00-S17 AC-2)", () => {
     vi.useFakeTimers();
     render(

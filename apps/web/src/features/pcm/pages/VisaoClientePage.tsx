@@ -67,6 +67,7 @@ import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { NovoChamadoModal } from "../components/NovoChamadoModal";
 import { OrdemServicoDetalheDrawer } from "../components/OrdemServicoDetalheDrawer";
 import { PainelBacklog } from "../components/PainelBacklog";
+import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
 import { PainelFerramentasCliente as PainelFerramentasClienteTab } from "../components/PainelFerramentasCliente";
 import { PainelHistorico } from "../components/PainelHistorico";
@@ -83,6 +84,10 @@ import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-ada
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
+import { CalendarioContratualWorkspace } from "../interfaces/calendario-contratual/Workspace";
+import { PendenciasTecnicasWorkspace } from "../interfaces/pendencias-tecnicas/Workspace";
+import { PlanoManutencaoWorkspace } from "../interfaces/plano-manutencao/Workspace";
+import { VisitasWorkspace } from "../interfaces/visitas/Workspace";
 import { EstruturaClientePage } from "./EstruturaClientePage";
 
 type Estado =
@@ -94,6 +99,7 @@ type Aba360 =
   | "resumo"
   | "timeline"
   | "os"
+  | "visitas"
   | "preventivas"
   | "qualidade"
   | "assessment"
@@ -122,6 +128,7 @@ const ABAS: Array<{ id: Aba360; label: string; icon: LucideIcon; grupo: GrupoAba
   { id: "timeline", label: "Timeline", icon: RefreshCw, grupo: "operacao" },
   { id: "os", label: "OS", icon: ClipboardList, grupo: "operacao" },
   { id: "preventivas", label: "Preventivas", icon: Calendar, grupo: "operacao" },
+  { id: "visitas", label: "Visitas", icon: Calendar, grupo: "operacao" },
   { id: "qualidade", label: "Inspeções", icon: Calendar, grupo: "operacao" },
   // E01-S90 AC-4: assessment vigente do cliente (documento de estado, distinto de Inspeções ABNT).
   { id: "assessment", label: "Assessment", icon: ClipboardCheck, grupo: "operacao" },
@@ -159,6 +166,7 @@ export function VisaoClientePage({
   onAbrirOs,
   periodo,
   painelComercial,
+  painelOrcamentoOs,
 }: {
   clienteId: string;
   onAbrirOs?: (osId: string) => void;
@@ -167,6 +175,8 @@ export function VisaoClientePage({
    * `features/comercial` (regra de fronteira do CLAUDE.md — features de domínios diferentes não
    * se conhecem). Ausente (ex.: usuário sem o módulo), a aba simplesmente não aparece. */
   painelComercial?: ReactNode;
+  /** Composição opcional do orçamento por OS, fornecida pelo shell. */
+  painelOrcamentoOs?: (ordemServicoId: string) => ReactNode;
   /** E01-S75 AC-5: vindo do Apontamento de Horas — abre direto na aba "OS" filtrando backlog e
    * histórico ao período por `createdAt` (client-side, sobre o dado já carregado; o gateway não
    * tem parâmetro de data). `createdAt` é o campo disponível em `OrdemServicoResumo` — não é
@@ -486,6 +496,7 @@ export function VisaoClientePage({
 
       {aba === "os" && (
         <div className="flex flex-col gap-3">
+          {user && import.meta.env.VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED === "true" && <PainelLateralBacklog key={`${user.id}:${cliente.id}`} userId={user.id} clienteId={cliente.id} />}
           {periodo && (
             <p className="text-caption text-ink-3">
               Filtrado por período (OS criadas entre{" "}
@@ -507,17 +518,36 @@ export function VisaoClientePage({
         </div>
       )}
 
+      {aba === "visitas" && user && (
+        <VisitasWorkspace userId={user.id} clienteId={cliente.id} clienteNome={cliente.nome} />
+      )}
+
       {aba === "preventivas" && user && (
-        <PreventivasWorkspace
-          key={cliente.id}
-          clienteId={cliente.id}
-          clienteNome={cliente.nome}
-          temEscrita={temEscrita}
-          userId={user.id}
-          compacto
-          abrirNovoToken={abrirPreventivaToken}
-          onAbrirOs={abrirDetalheOs}
-        />
+        <>
+          <CalendarioContratualWorkspace
+            key={`calendario-${user.id}-${cliente.id}`}
+            clienteId={cliente.id}
+            clienteNome={cliente.nome}
+            userId={user.id}
+          />
+          <PlanoManutencaoWorkspace
+            key={`plano-${cliente.id}`}
+            clienteId={cliente.id}
+            clienteNome={cliente.nome}
+            userId={user.id}
+          />
+          <PendenciasTecnicasWorkspace key={`pendencias-${user.id}-${cliente.id}`} userId={user.id} clienteId={cliente.id} />
+          <PreventivasWorkspace
+            key={cliente.id}
+            clienteId={cliente.id}
+            clienteNome={cliente.nome}
+            temEscrita={temEscrita}
+            userId={user.id}
+            compacto
+            abrirNovoToken={abrirPreventivaToken}
+            onAbrirOs={abrirDetalheOs}
+          />
+        </>
       )}
 
       {aba === "qualidade" && <PainelQualidade qualidade={qualidade} />}
@@ -546,7 +576,7 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <EstruturaClientePage cliente={cliente} temEscrita={temEscrita} userId={user.id} />
+        <EstruturaClientePage key={`${user.id}:${cliente.id}`} cliente={cliente} temEscrita={temEscrita} userId={user.id} onAbrirOs={abrirDetalheOs} />
       )}
 
       {aba === "sistemas" && user && (
@@ -587,6 +617,7 @@ export function VisaoClientePage({
           originElementId={detalheOs.originElementId}
           onFechar={() => setDetalheOs(null)}
           onMutada={carregar}
+          painelOrcamento={painelOrcamentoOs?.(detalheOs.ordem.id)}
         />
       )}
       {novoChamado && user && (

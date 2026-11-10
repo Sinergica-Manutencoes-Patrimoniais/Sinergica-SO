@@ -24,10 +24,12 @@ import {
   AuvoApiError,
   auvoGet,
   auvoPost,
+  auvoPostUmaVez,
   buildParamFilter,
 } from "../_shared/auvo/client.ts";
 import { resolveAuvoTaskTypeId } from "../_shared/auvo/task-type-map.ts";
 import { resolveAuvoPriority } from "../_shared/auvo/priority-map.ts";
+import { envioLegadoBloqueado } from "../_shared/auvo/trava-envio-legado.ts";
 
 const FN = "pcm-auvo-create-task";
 
@@ -125,6 +127,24 @@ serve(async (req) => {
     if (osError) throw osError;
     if (!os) throw new HttpError(404, `OS ${input.osId} não encontrada`);
 
+    const protegerMaterial = Deno.env.get("SSO_RESERVA_ENVIO_LEGADO_MATERIAL_ENABLED") === "true";
+    let reservaId: string | null = null;
+    const confirmarReserva = async (taskId: number) => {
+      if (!reservaId) return;
+      let ultimaFalha: unknown;
+      // A confirmação é idempotente; essa repetição nunca envia outro POST ao Auvo.
+      for (let tentativa = 0; tentativa < 2; tentativa++) {
+        try {
+          const { error } = await db.schema("pcm").rpc("sso_confirmar_envio_legado_material", {
+            p_os_id: input.osId, p_reserva_id: reservaId, p_tarefa_id: taskId,
+          });
+          if (error) throw error;
+          return;
+        } catch (erro) { ultimaFalha = erro; }
+      }
+      throw ultimaFalha;
+    };
+
     // AC-5: idempotente — já sincronizada, no-op (sem nova chamada ao Auvo).
     if (os.auvo_task_id != null) {
       return json(
@@ -132,6 +152,10 @@ serve(async (req) => {
         { ok: true, taskId: os.auvo_task_id, created: false },
         cors,
       );
+    }
+
+    if (envioLegadoBloqueado(Deno.env.get("SSO_BLOQUEAR_ENVIO_LEGADO_AUVO"))) {
+      throw new HttpError(409, "Abertura legada bloqueada durante a transição Auvo.");
     }
 
     // E01-S40: prefere o tipo de tarefa escolhido na criação da OS (tipo_tarefa_id →
@@ -158,6 +182,7 @@ serve(async (req) => {
         db,
         input.osId,
         `taskTypeId não configurado para categoria ${os.categoria}`,
+        protegerMaterial,
       );
       return json(200, {
         ok: false,
@@ -246,7 +271,25 @@ serve(async (req) => {
         }
         taskId = existenteId;
       } else {
-        const criada = await auvoPost<unknown>(
+        if (protegerMaterial) {
+          reservaId = crypto.randomUUID();
+          let reservada = false;
+          let ultimaFalha: unknown;
+          // Repetir somente a mesma reserva; o POST ainda não foi iniciado.
+          for (let tentativa = 0; tentativa < 2; tentativa++) {
+            try {
+              const { error } = await db.schema("pcm").rpc("sso_reservar_envio_legado_material", {
+                p_os_id: input.osId, p_reserva_id: reservaId,
+              });
+              if (error) throw error;
+              reservada = true;
+              break;
+            } catch (erro) { ultimaFalha = erro; }
+          }
+          if (!reservada) throw ultimaFalha;
+        }
+        const postar = protegerMaterial ? auvoPostUmaVez : auvoPost;
+        const criada = await postar<unknown>(
           "/tasks",
           montarPayloadTaskAuvo({
             externalId: input.osId,
@@ -264,8 +307,14 @@ serve(async (req) => {
         taskId = criadaId;
       }
 
+      // Identificadores recebidos como número precisam ser exatos antes da gravação.
+      // Se a criação já ocorreu e a resposta é inválida, a reserva permanece pendente.
+      if (protegerMaterial && (!Number.isSafeInteger(taskId) || taskId <= 0)) {
+        throw new Error("Identificador Auvo inválido; reconciliação necessária.");
+      }
+
       // 6) Grava sucesso.
-      const { error: updateError } = await db
+      let atualizacao = db
         .schema("pcm")
         .from("ordens_servico")
         .update({
@@ -276,7 +325,11 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq("id", input.osId);
+      if (protegerMaterial) atualizacao = atualizacao.is("auvo_task_id", null).is("deleted_at", null);
+      const { data: atualizadas, error: updateError } = await atualizacao.select("id");
       if (updateError) throw updateError;
+      if (protegerMaterial && atualizadas?.length !== 1) throw new Error("OS alterada após envio; reconciliação necessária.");
+      await confirmarReserva(taskId);
 
       return json(200, { ok: true, taskId, created: !existente }, cors);
     } catch (inner) {
@@ -300,7 +353,7 @@ serve(async (req) => {
         }),
       );
 
-      await markFailed(db, input.osId, detail);
+      await markFailed(db, input.osId, detail, protegerMaterial);
       return json(200, { ok: false, reason: "sync_failed", detail }, cors);
     }
   } catch (e) {
@@ -360,8 +413,9 @@ async function markFailed(
   db: SupabaseClient,
   osId: string,
   errorMessage: string,
+  preservarTarefaVinculada = false,
 ): Promise<void> {
-  const { error } = await db
+  let atualizacao = db
     .schema("pcm")
     .from("ordens_servico")
     .update({
@@ -370,6 +424,9 @@ async function markFailed(
       updated_at: new Date().toISOString(),
     })
     .eq("id", osId);
+  // Outra chamada pode ter vinculado uma tarefa enquanto esta falhava.
+  if (preservarTarefaVinculada) atualizacao = atualizacao.is("auvo_task_id", null).is("deleted_at", null);
+  const { error } = await atualizacao;
   if (error) {
     console.error(
       JSON.stringify({

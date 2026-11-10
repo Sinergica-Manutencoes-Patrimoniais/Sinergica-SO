@@ -1,0 +1,58 @@
+-- Rodar uma vez após manual_s167_concorrencia_setup.sql, somente em cópia descartável sem rede.
+\set ON_ERROR_STOP on
+do $$ begin
+  if current_database() <> 'sso_s167_concorrencia' or current_setting('cron.launch_active_jobs') <> 'off' then raise exception 'ambiente_inadequado'; end if;
+  if exists(select 1 from pcm.chamado_os_comandos where request_id in ('16710000-0000-4000-8000-000000000101','16710000-0000-4000-8000-000000000102')) then raise exception 'fixture_ja_utilizada'; end if;
+end $$;
+create extension if not exists pgtap with schema extensions;
+create extension if not exists dblink with schema extensions;
+set search_path=extensions,public;
+select plan(17);
+select extensions.dblink_connect('s167_a',format('hostaddr=%s port=%s dbname=%L user=postgres password=postgres connect_timeout=5',inet_server_addr(),inet_server_port(),current_database()));
+select extensions.dblink_connect('s167_b',format('hostaddr=%s port=%s dbname=%L user=postgres password=postgres connect_timeout=5',inet_server_addr(),inet_server_port(),current_database()));
+create temporary table s167_sessoes as select pid from extensions.dblink('s167_b','select pg_backend_pid()') as t(pid integer);
+select extensions.dblink_exec('s167_a',$remote$begin; set local role authenticated; set local request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}'$remote$);
+select extensions.dblink_exec('s167_b',$remote$begin; set local role authenticated; set local request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}'$remote$);
+select is((select resposta::jsonb->>'osId' from extensions.dblink('s167_a',$remote$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000101',1,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000021','Primeira',null,'corretiva')::text$remote$) as t(resposta text)), '16710000-0000-4000-8000-000000000021', 'primeiro pedido criou OS e mantém transação aberta');
+select is(extensions.dblink_send_query('s167_b',$remote$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000102',1,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000022','Segunda',null,'corretiva')::text$remote$),1,'segunda solicitação iniciada');
+do $$ declare i integer; begin for i in 1..40 loop exit when exists(select 1 from s167_sessoes where cardinality(pg_blocking_pids(pid))>0); perform pg_sleep(0.05); end loop; end $$;
+select ok(exists(select 1 from s167_sessoes where cardinality(pg_blocking_pids(pid))>0),'segunda solicitação aguarda a primeira');
+select extensions.dblink_exec('s167_a','commit');
+select is((select resposta::jsonb->>'osId' from extensions.dblink_get_result('s167_b') as t(resposta text)), '16710000-0000-4000-8000-000000000022', 'segunda solicitação distinta preserva a revisão inicial');
+select * from extensions.dblink_get_result('s167_b') as t(resposta text);
+select extensions.dblink_exec('s167_b','commit');
+select extensions.dblink_disconnect('s167_b');
+select is((select count(*)::int from pcm.ordens_servico where chamado_id='16710000-0000-4000-8000-000000000011'),2,'duas solicitações distintas criam duas OS');
+select extensions.dblink_connect('s167_b',format('hostaddr=%s port=%s dbname=%L user=postgres password=postgres connect_timeout=5',inet_server_addr(),inet_server_port(),current_database()));
+delete from s167_sessoes;
+insert into s167_sessoes select pid from extensions.dblink('s167_b','select pg_backend_pid()') as t(pid integer);
+select extensions.dblink_exec('s167_a',$remote$begin; set local role authenticated; set local request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}'$remote$);
+select extensions.dblink_exec('s167_b',$remote$begin; set local role authenticated; set local request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}'$remote$);
+select is((select resposta::jsonb->>'osId' from extensions.dblink('s167_a',$remote$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000103',3,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000023','Terceira',null,'corretiva')::text$remote$) as t(resposta text)), '16710000-0000-4000-8000-000000000023', 'novo pedido cria terceira OS');
+select is(extensions.dblink_send_query('s167_b',$remote$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000103',3,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000023','Terceira',null,'corretiva')::text$remote$),1,'replay simultâneo iniciado');
+do $$ declare i integer; begin for i in 1..40 loop exit when exists(select 1 from s167_sessoes where cardinality(pg_blocking_pids(pid))>0); perform pg_sleep(0.05); end loop; end $$;
+select ok(exists(select 1 from s167_sessoes where cardinality(pg_blocking_pids(pid))>0),'replay aguarda conclusão original');
+select extensions.dblink_exec('s167_a','commit');
+select is((select resposta::jsonb->>'osId' from extensions.dblink_get_result('s167_b') as t(resposta text)), '16710000-0000-4000-8000-000000000023', 'replay simultâneo devolve mesma OS');
+select extensions.dblink_disconnect('s167_b');
+select is((select count(*)::int from pcm.ordens_servico where chamado_id='16710000-0000-4000-8000-000000000011'),3,'replay não duplica terceira OS');
+select extensions.dblink_connect('s167_b',format('hostaddr=%s port=%s dbname=%L user=postgres password=postgres connect_timeout=5',inet_server_addr(),inet_server_port(),current_database()));
+delete from s167_sessoes;
+insert into s167_sessoes select pid from extensions.dblink('s167_b','select pg_backend_pid()') as t(pid integer);
+select extensions.dblink_exec('s167_a',$remote$begin; set local role authenticated; set local request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}'$remote$);
+select extensions.dblink_exec('s167_b','begin');
+select is((select resposta::jsonb->>'osId' from extensions.dblink('s167_a',$remote$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000104',4,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000024','Quarta',null,'corretiva')::text$remote$) as t(resposta text)), '16710000-0000-4000-8000-000000000024', 'operação autorizada mantém transação aberta');
+select is(extensions.dblink_send_query('s167_b',$remote$update config.sso_concessoes set ativa=false where usuario_id='16710000-0000-4000-8000-000000000001' and acao='chamado.os.criar' returning 1$remote$),1,'revogação concorrente iniciada');
+select throws_ok($$select * from extensions.dblink_get_result('s167_b') as t(alterada integer)$$,'55P03','autorizacao_em_alteracao','revogação falha fechada durante operação autorizada');
+select extensions.dblink_disconnect('s167_b');
+select extensions.dblink_exec('s167_a','commit');
+with alteradas as (update config.sso_concessoes set ativa=false where usuario_id='16710000-0000-4000-8000-000000000001' and acao='chamado.os.criar' returning 1)
+select is(count(*)::int,1,'revogação prossegue após commit') from alteradas;
+set request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+set role authenticated;
+select throws_ok($$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000105',5,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000025','Depois',null,'corretiva')$$,'42501',null,'pedido posterior à revogação é recusado');
+reset role;
+select is((select count(*)::int from pcm.ordens_servico where chamado_id='16710000-0000-4000-8000-000000000011'),4,'revogação não cria OS adicional');
+select is((select count(*)::int from pcm.auvo_sync_outbox where row_id in ('16710000-0000-4000-8000-000000000021','16710000-0000-4000-8000-000000000022','16710000-0000-4000-8000-000000000023','16710000-0000-4000-8000-000000000024','16710000-0000-4000-8000-000000000025')),0,'nenhuma intenção Auvo');
+select extensions.dblink_disconnect('s167_a');
+select * from finish();
