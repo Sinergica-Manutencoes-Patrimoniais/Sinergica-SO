@@ -140,7 +140,7 @@ _75 concluídas no histórico · maior ID usado: E01-S187_
 | E01-S163 | Cliente 360 como cockpit operacional | Codex | Spec, plano e tarefas prontos para Terra (2026-10-06) | [spec](../../specs/E01-S163-cliente-360-cockpit-operacional/spec.md) |
 | E01-S165 | Plano multialvo, versões de Rotina e questionários referenciados | Terra | Em andamento — fundação isolada (2026-10-27) | [spec](../../specs/E01-S165-plano-versoes-rotinas/spec.md) |
 | E01-S166 | Calendário contratual, recorrência por modo e ocorrências idempotentes | Terra | Em andamento — fundação e cadastro inicial (2026-10-27) | [spec](../../specs/E01-S166-calendario-ocorrencias-capacidade/spec.md) |
-| E01-S167 | Chamado 1:N OS, continuidade e encerramento integral | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S167-chamados-os-visitas/spec.md) |
+| E01-S167 | Chamado 1:N OS, continuidade e encerramento integral | Terra | Em andamento — US1 pronta (banco+UI), gate fechado; US2/e2e/revisão pendentes (2026-11-10) | [spec](../../specs/E01-S167-chamados-os-visitas/spec.md) |
 | E01-S168 | Auvo T−24, serialização e validação PCM | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S168-auvo-t24-validacao/spec.md) |
 | E01-S169 | Importação e exportação dos Planos Rimini e I Home | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S169-importacao-despesas-exportacao/spec.md) |
 | E01-S170 | Permissões por ação e governança configurável do programa | Terra | Em andamento — fundação de capacidades (2026-10-26) | [spec](../../specs/E01-S170-governanca-plano/spec.md) |
