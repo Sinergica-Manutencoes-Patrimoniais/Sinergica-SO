@@ -1,6 +1,6 @@
 # Tasks — E01-S171: Visita operacional e associação histórica de OS
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10): story mais adiantada já vista no programa — nomes planejados em tasks.md **existem de verdade** (`domain/visitas.ts`, `application/visitas.ts`, `infrastructure/supabase-visitas-adapter.ts`, `interfaces/visitas/Workspace.tsx` com `NovaVisita`/`AcoesVisita`/`TransicaoVisita`/`PublicarVisitaPortal`), 59 migrations E01-S171 (0282→1551), 291 assertions pgTAP já na seleção oficial de `db-tests` (confirmado por mim: `E01-S171_visitas.test.sql` 217, `_transferencia_os_enviada` 21, `_transicao_visita_mediada` 17, `_triagem_intencao_mediada` 16, `_intencao_os_mediada` 12, `_transferencia_identidade` 8). Ver notas por AC abaixo. Nenhum PASS, CI por story ou homologação ainda.
 
 ## Phase 1 — Setup
 
@@ -8,18 +8,20 @@
 
 ## Phase 2 — Foundation
 
-- [ ] T002 Escrever testes pgTAP que falham para constraints, autorização permitida/negada, isolamento Cliente, requestId/revisão e concorrência em `supabase/tests/E01-S171_visitas.test.sql` (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
-- [ ] T003 Criar migration aditiva E01-S171 em `supabase/migrations/`, alocando próxima sequência real; aplicar constraints e transições de `specs/E01-S171-visitas-operacionais/data-model.md`, RLS FORCE, auditoria append-only e chave requestId/revisão transacional; preservar IDs/backfill de compatibilidade antes de retirar restrições (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
+- [X] T002 Escrever testes pgTAP que falham para constraints, autorização permitida/negada, isolamento Cliente, requestId/revisão e concorrência em `supabase/tests/E01-S171_visitas.test.sql` (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Confirmado por mim em 2026-11-10: arquivo existe, `plan(217)`, já na seleção oficial de `db-tests`. Não li o conteúdo linha a linha — confirma que existe e que o plano bate, não que cada assertion prova o AC certo.
+- [X] T003 Criar migration aditiva E01-S171 em `supabase/migrations/`, alocando próxima sequência real; aplicar constraints e transições de `specs/E01-S171-visitas-operacionais/data-model.md`, RLS FORCE, auditoria append-only e chave requestId/revisão transacional; preservar IDs/backfill de compatibilidade antes de retirar restrições (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Feito: 59 migrations (0282→1551). `pcm.visitas.estado` (0282:15) tem check constraint literal com os 9 estados do AC-6; índice único parcial `uq_visita_os_vigente` (0282:56) garante "segundo vínculo vigente negado" (AC-1) no próprio schema, não só em RPC.
 
 ## Phase 3 — US1: Agrupar e confirmar várias OS na Visita
 
 **Independent Test:** Agrupar preventiva, corretiva, PMOC e solicitação do mesmo Cliente em equipe/Visita e testar ciência padrão e obrigatória.
 
-- [ ] T004 [US1] Escrever teste unitário falho para criar agregado Visita com equipe, composição OS de mesmo Cliente e confirmação versionada segundo ciência efetiva em `apps/web/src/features/pcm/domain/visitas-us1.test.ts`, usando todos os cenários desta US (AC-1, AC-2, AC-3).
-- [ ] T005 [US1] Escrever testes falhos de comando, rollback, Cliente divergente e repetição em `apps/web/src/features/pcm/application/visitas-us1.test.ts` conforme `specs/E01-S171-visitas-operacionais/contracts/commands.md` (AC-1, AC-2, AC-3).
-- [ ] T006 [US1] Implementar criar agregado Visita com equipe, composição OS de mesmo Cliente e confirmação versionada segundo ciência efetiva em `apps/web/src/features/pcm/domain/visitas.ts`, preservando constraints de `specs/E01-S171-visitas-operacionais/data-model.md` e decisões de `spec.md` (AC-1, AC-2, AC-3).
-- [ ] T007 [US1] Implementar casos de uso/RPCs de US1 em `apps/web/src/features/pcm/application/visitas.ts` e `apps/web/src/features/pcm/infrastructure/supabase-visitas-adapter.ts`, com autorização atual, revisão, idempotência e auditoria na transação (AC-1, AC-2, AC-3).
-- [ ] T008 [US1] Implementar consultas/invalidação em `apps/web/src/features/pcm/application/visitas-queries.ts` e jornada US1 em `apps/web/src/features/pcm/interfaces/visitas/Workspace.tsx`, compondo superfícies existentes citadas em plan.md com loading/vazio/erro/retry, teclado e foco (AC-1, AC-2, AC-3).
+- [X] T004 [US1] Escrever teste unitário falho para criar agregado Visita com equipe, composição OS de mesmo Cliente e confirmação versionada segundo ciência efetiva em `apps/web/src/features/pcm/domain/visitas-us1.test.ts`, usando todos os cenários desta US (AC-1, AC-2, AC-3). Arquivo existe (confirmado, 2.6K) — nome bate exatamente com o plano, diferente do padrão de outras stories desta sessão. Conteúdo não lido a fundo.
+- [X] T005 [US1] Escrever testes falhos de comando, rollback, Cliente divergente e repetição em `apps/web/src/features/pcm/application/visitas-us1.test.ts` conforme `specs/E01-S171-visitas-operacionais/contracts/commands.md` (AC-1, AC-2, AC-3). Arquivo existe (11.0K) — nome bate exatamente. Conteúdo não lido a fundo.
+- [X] T006 [US1] Implementar criar agregado Visita com equipe, composição OS de mesmo Cliente e confirmação versionada segundo ciência efetiva em `apps/web/src/features/pcm/domain/visitas.ts`, preservando constraints de `specs/E01-S171-visitas-operacionais/data-model.md` e decisões de `spec.md` (AC-1, AC-2, AC-3). Arquivo existe (2.0K), nome bate exatamente.
+- [X] T007 [US1] Implementar casos de uso/RPCs de US1 em `apps/web/src/features/pcm/application/visitas.ts` e `apps/web/src/features/pcm/infrastructure/supabase-visitas-adapter.ts`, com autorização atual, revisão, idempotência e auditoria na transação (AC-1, AC-2, AC-3). Ambos existem (7.5K e 15.6K), nomes batem exatamente — único entre as stories auditadas nesta sessão com os dois nomes certos.
+- [X] T008 [US1] Implementar consultas/invalidação em `apps/web/src/features/pcm/application/visitas-queries.ts` e jornada US1 em `apps/web/src/features/pcm/interfaces/visitas/Workspace.tsx`, compondo superfícies existentes citadas em plan.md com loading/vazio/erro/retry, teclado e foco (AC-1, AC-2, AC-3). Nome real é `visitas-gateway.ts` (não `visitas-queries.ts`), confirmado existir; `Workspace.tsx` existe com `NovaVisita`/`AcoesVisita`/`TransicaoVisita`/`PublicarVisitaPortal`. Confirmar wiring real (não código morto) fica pendente.
+
+**AC-3 (Cliente 360/agenda global, mesmo caso de uso) não verificado** — exigiria ler `Workspace.tsx`/`visitas-gateway.ts` a fundo e confirmar reuso entre as duas superfícies de entrada.
 
 ## Phase 4 — US2: Reprogramar e cancelar com rastro
 
@@ -30,6 +32,10 @@
 - [ ] T011 [US2] Implementar versionar reprogramação/cancelamento/associações e invalidar confirmação obsoleta preservando tarefa e calendário contratual em `apps/web/src/features/pcm/domain/visitas.ts`, preservando constraints de `specs/E01-S171-visitas-operacionais/data-model.md` e decisões de `spec.md` (AC-4, AC-5, AC-6).
 - [ ] T012 [US2] Implementar casos de uso/RPCs de US2 em `apps/web/src/features/pcm/application/visitas.ts` e `apps/web/src/features/pcm/infrastructure/supabase-visitas-adapter.ts`, com autorização atual, revisão, idempotência e auditoria na transação (AC-4, AC-5, AC-6).
 - [ ] T013 [US2] Implementar consultas/invalidação em `apps/web/src/features/pcm/application/visitas-queries.ts` e jornada US2 em `apps/web/src/features/pcm/interfaces/visitas/Workspace.tsx`, compondo superfícies existentes citadas em plan.md com loading/vazio/erro/retry, teclado e foco (AC-4, AC-5, AC-6).
+  - **T009–T013 não marcadas** (precisam de leitura própria dos testes/UI de US2), mas as RPCs centrais já foram lidas e confirmadas em 2026-11-10:
+    - **AC-5 (invalidar confirmação ao editar):** achei e descartei a hipótese inicial — `pcm.sso_editar_visita` (migration 0289) só edita em `estado in ('rascunho','planejada')` e recusa (`visita_nao_editavel`, 22023) se já `confirmada`; **não é** o mecanismo do AC-5. O mecanismo real é `pcm.sso_transicionar_visita_preparada` (migration 0409): aceita `estado in ('rascunho','planejada','confirmada')`, e ao reprogramar uma visita `confirmada` o novo estado vira `'planejada'` (nunca permanece `'confirmada'`) — ou seja, a confirmação é invalidada de verdade, exigindo nova chamada a `sso_confirmar_visita`. Revisão otimista (`revisao<>p_expected_revision` → 40001) cobre "cancelamento concorrente impede envio de revisão antiga". Gate `pcm.visita_transicao_gate` fechado.
+    - **AC-4 (preservar tarefa Auvo, só intenção):** `sso_transicionar_visita_preparada` (0409) **recusa** (`efeito_remoto_exige_reconciliacao`, 23514) se alguma OS vinculada já tem `auvo_task_id`/`auvo_sync_status` — nesse caso o caminho é outro, mediado: `pcm.sso_exigir_intencao_os_mediada` (migration 1065), comentário explícito "ADR-0880: intenção interna, sem modificar OS ou tarefa remota; gate permanece fechado" — confirma que nunca dispara Auvo real, só registra intenção pra E01-S168 processar depois.
+    - **AC-6 (estado "extra" não muda regra contratual semanal):** não verificado ainda — não li a parte do schema/RPC que distingue Visita regular de "extra".
 
 ## Phase 5 — Integration and Gates
 
