@@ -55,16 +55,29 @@ create function pcm.sso_devolver_parcela_chamado_backlog(
 ) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_ator uuid := auth.uid(); v_anterior pcm.sso_devolucoes_escopo_chamado%rowtype; v_parcela pcm.chamado_escopo_parcelas%rowtype;
   v_composicao_id uuid; v_backlog_id uuid; v_payload jsonb; v_resultado jsonb; v_motivo text := nullif(btrim(p_motivo), '');
+  v_cliente_alvo uuid;
 begin
   if not coalesce((select habilitado from pcm.sso_devolucao_escopo_backlog_gate where id), false) then
     raise exception 'devolucao_desabilitada' using errcode = '55000';
   end if;
   if v_ator is null or p_request_id is null or p_cliente_id is null or p_chamado_id is null or p_parcela_id is null
-    or p_alvo_tipo is null or p_alvo_tipo not in ('sistema', 'componente', 'grupo') or p_alvo_id is null or v_motivo is null
+    or p_alvo_tipo is null or p_alvo_tipo not in ('sistema', 'componente', 'grupo') or p_alvo_id is null
+    or v_motivo is null or length(v_motivo) not between 1 and 2000
   then raise exception 'parametros_invalidos' using errcode = '22023'; end if;
   if config.sso_autorizar_acao('chamado.escopo.gerir', p_cliente_id) is distinct from true then
     raise exception 'sem_acesso' using errcode = '42501';
   end if;
+  -- Mesmo padrão de validação de alvo_tipo/alvo_id já usado em pcm.sso_criar_rotina_rascunho (0261):
+  -- aceitar qualquer UUID sem verificar que é um ativo real do Cliente poluiria o Backlog com
+  -- composições apontando pra sistema/componente/grupo inexistente ou de outro Cliente.
+  if p_alvo_tipo = 'sistema' then
+    select s.cliente_id into v_cliente_alvo from pcm.sistemas s where s.id = p_alvo_id and s.ativo and s.deleted_at is null for share;
+  elsif p_alvo_tipo = 'componente' then
+    select e.client_id into v_cliente_alvo from pcm.equipamentos e where e.id = p_alvo_id and e.ativo and e.deleted_at is null for share;
+  else
+    select g.cliente_id into v_cliente_alvo from pcm.grupos_quantitativos g where g.id = p_alvo_id and g.ativo and g.deleted_at is null for share;
+  end if;
+  if v_cliente_alvo is distinct from p_cliente_id then raise exception 'alvo_invalido_ou_de_outro_cliente' using errcode = '23514'; end if;
   v_payload := jsonb_build_object('clienteId', p_cliente_id, 'chamadoId', p_chamado_id, 'parcelaId', p_parcela_id,
     'alvoTipo', p_alvo_tipo, 'alvoId', p_alvo_id, 'motivo', v_motivo);
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('devolucao-escopo-chamado:' || p_request_id::text, 0));
