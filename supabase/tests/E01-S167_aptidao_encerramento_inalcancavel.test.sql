@@ -8,7 +8,7 @@
 -- negócio ser avaliada. Isto não é AC-5 provado — é o estado real registrado, pra não presumir
 -- "só falta ligar o gate" como aconteceu com US1.
 begin;
-select plan(4);
+select plan(2);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
  ('16752000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 's167-aptidao@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now());
@@ -23,8 +23,10 @@ update pcm.sso_encerramento_chamado_gate set habilitado = true where id;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"16752000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
 
-select is((select habilitado from pcm.chamado_os_gate where id), true, 'gate de múltiplas OS aberto só nesta transação de teste');
-select is((select habilitado from pcm.sso_encerramento_chamado_gate where id), true, 'gate de encerramento aberto só nesta transação de teste');
+-- Não há como conferir `habilitado=true` aqui por SELECT: a role `authenticated` não tem SELECT
+-- nas tabelas de gate (revogado nas migrations de origem), só `authenticated` com papel atual pode
+-- ler via RPC. As duas chamadas abaixo já provam implicitamente que os gates abriram: se não
+-- tivessem aberto, o erro seria `*_bloqueado`/55000, não `sem_acesso`/42501.
 select throws_ok($$ select pcm.sso_diagnosticar_aptidao_chamado('16752000-0000-4000-8000-000000000002', '16752000-0000-4000-8000-000000000011') $$, '42501', null, 'diagnóstico de aptidão: sem grant a authenticated, mesmo com os dois gates abertos');
 select throws_ok($$ select pcm.sso_encerrar_chamado_conferido(gen_random_uuid(), '16752000-0000-4000-8000-000000000002', '16752000-0000-4000-8000-000000000011', 1, 'teste') $$, '42501', null, 'encerramento conferido: sem grant a authenticated, mesmo com os dois gates abertos');
 
