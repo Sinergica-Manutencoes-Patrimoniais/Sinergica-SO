@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S186_
+_75 concluídas no histórico · maior ID usado: E01-S187_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -161,6 +161,7 @@ _75 concluídas no histórico · maior ID usado: E01-S186_
 | E01-S184 | Proteção imediata de custos no Portal e documentos | Terra | Em andamento — proteção parcial (2026-10-26) | [spec](../../specs/E01-S184-protecao-custos-portal/spec.md) |
 | E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
 | E01-S186 | Migração auditável, pilotos por ondas e homologação do programa | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S186-migracao-pilotos-homologacao/spec.md) |
+| E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S34_
