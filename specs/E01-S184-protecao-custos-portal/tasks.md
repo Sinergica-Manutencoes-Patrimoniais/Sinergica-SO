@@ -1,6 +1,6 @@
 # Tasks — E01-S184: Proteção de custos em respostas e documentos do Portal
 
-**Status**: Em andamento (2026-11-10). AC-1 a AC-6 provados por CI (`db-tests`, PR #73) e revisão adversarial sem achado alto/médio nos 6 AC. Falta T018 (e2e Portal/cliente-sindico — bloqueado, ver nota) e homologação (S186) antes de PASS.
+**Status**: Em andamento (2026-11-10). AC-1 a AC-6 provados por CI (`db-tests`, PR #73) e revisão adversarial sem achado alto/médio nos 6 AC. T018 (e2e Portal/cliente-sindico) escrito mas não executado (sem acesso a produção nesta sessão; roda contra produção — `SEC-006`); falta rodar de verdade e homologação (S186) antes de PASS.
 **Input**: spec.md, plan.md, research.md, data-model.md e contracts/commands.md.
 **Dependências**: Independente; correção crítica prévia à E01-S181/E01-S183.
 **Tests**: Obrigatórios por AC; escrever e observar falha antes de implementar. Não executar escrita externa real.
@@ -48,7 +48,9 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 ## Phase 6 — Integração e evidências
 
 - [ ] T018 Cobrir jornada crítica, acesso direto e sessão revogada em apps/web/e2e/protecao-custos-portal.spec.ts (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
-  - Bloqueado (2026-11-10): este repositório não tem nenhum e2e Playwright que autentique como `cliente-sindico` — `e2e/auth.setup.ts` só salva sessão de um usuário de teste único (via `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`). Exige segundo usuário de teste com papel `cliente-sindico` vinculado a Cliente, e decisão sobre workflow isolado dedicado (como S165/S166/S170/S176) já que `ci.yml` não roda e2e. `apps/web/e2e/comercial-proposta-pdf-portal.spec.ts` cobre a metade Comercial do AC-3 (criar/aprovar/baixar PDF/enviar); falta a metade Portal/Cliente.
+  - Escrito em 2026-11-10 (Lucas autorizou criar login de teste em produção — `SEC-006`: este repositório não tem Supabase local/staging para e2e). Abre uma segunda sessão de navegador como `cliente-sindico` de verdade, criada pela própria jornada via "Criar acesso ao portal" (Visão 360) — não precisa de segundo usuário pré-cadastrado nem segredo novo em `.env.local`; confirmado na Edge Function `config-gerenciar-usuario` que `email_confirm: true` permite login imediato. Cobre AC-1/AC-2/AC-3 (Cliente vê preço de venda, nenhuma das palavras `Custo`/`Margem`/`Fornecedor`/`Piso` aparece) e AC-5 (decisão só pela RPC segura, "Aceitar").
+  - **Não executado** (sem acesso a produção nesta sessão): seletores (textos exatos de botão/heading) foram conferidos lendo o código-fonte das telas, não por execução real. Primeira rodada precisa revisão humana atenta antes de confiar no resultado.
+  - Ainda falta nesta tarefa: cenário de sessão revogada em navegador (não achei UI para desativar usuário — só a Edge Function/pgTAP, já provados); `ci.yml` não roda e2e, então rodar isto exige execução manual ou um novo workflow isolado (como S165/S166/S170/S176).
 - [X] T019 Executar quickstart, revisão adversarial e registrar comandos/resultados/ressalvas em specs/E01-S184-protecao-custos-portal/quickstart.md antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Revisão adversarial sem achado alto/médio nos 6 AC desta story; dois achados médios pré-existentes de E03-S04 registrados em `docs/SECURITY_DEBT.md` (SEC-009/SEC-010), não bloqueiam. PASS da story ainda depende de T018 (ver bloqueio acima) e homologação (S186).
 
 ## Dependencies & Execution Order
