@@ -1,6 +1,7 @@
 # Quickstart — E01-S184
 
-Status: roteiro futuro, **não executado** nesta etapa documental.
+Status: parcialmente executado (2026-11-10, PR #73). AC-1 a AC-6 têm evidência de comando/resultado
+abaixo; falta T018 (e2e dedicado) e o aceite formal do Fabrício/homologação (S186).
 
 ## Pré-requisitos
 
@@ -27,4 +28,19 @@ Repetir dez comandos iguais e duas edições concorrentes; conferir unicidade e 
 ## Evidência e saída
 
 Mapear CT-024 e CT-027 e todos AC-1, AC-2, AC-3, AC-4, AC-5, AC-6 a teste/comando/resultado. Registrar commit, ambiente, executor, data, IDs sintéticos, logs sem dados internos, contagens/saldos antes/depois e ressalvas. Revisão adversarial arquitetural e CI incluindo db-tests precisam ficar verdes na implementação. Não confundir aceite documental com homologação.
+
+## Evidência executada (2026-11-10, Claude, PR #73)
+
+| AC | Comando | Resultado |
+|---|---|---|
+| AC-1, AC-2 | `supabase test db` (CI `db-tests`, seleção inclui `E01-S184_protecao_custos_portal_us1.test.sql`) | pass — [run 42828439686](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42828439686/job/129871790303), 34 assertions (proposta/orçamento sanitizados, acesso direto negado, sessão revogada negada) |
+| AC-1, AC-2 (aplicação) | `cd apps/web && VITE_SUPABASE_URL=… VITE_SUPABASE_ANON_KEY=sintetica pnpm exec vitest run src/features/area-cliente/application/protecao-custos-portal-us1.test.ts src/features/area-cliente/domain/itens-orcamento-publico.test.ts` | PASS local — adapter só lê `portal_propostas`/`portal_orcamentos_servico`, nenhuma seleção de coluna de custo |
+| AC-3 | `pnpm exec vitest run src/features/area-cliente/application/proposta-publica-pdf-integracao.test.ts` | PASS local — PDF real (pdf-lib) sem custo/margem/fornecedor, usa valores da versão baixada, não da composição atual |
+| AC-3, AC-4 | `supabase test db` (CI `db-tests`, `E01-S184_protecao_custos_portal_us2.test.sql`, novo) | pass — [run 42828439686](https://github.com/Sinergica-Manutencoes-Patrimoniais/Sinergica-SO/actions/runs/42828439686/job/129871790303), 20 assertions — correção via `fn_duplicar_proposta` (E03-S04/0184), `proposta_versoes` imutável por GRANT nem para superadmin, trilha privada, projeção pública por versão própria |
+| AC-5, AC-6 (1ª metade) | `supabase test db` (CI `db-tests`, `E01-S184_protecao_custos_portal_us3.test.sql`) | pass — 17 assertions (comprovante privado só por rota autorizada, sessão revogada negada) |
+| AC-5, AC-6 (aplicação) | `pnpm exec vitest run src/features/area-cliente/application/protecao-custos-portal-us3.test.ts` | PASS local — decisão só pelas RPCs seguras (`portal_decidir_proposta`/`portal_decidir_orcamento_seguro`), adapter nunca referencia o bucket `financeiro-comprovantes` |
+| AC-6 (2ª metade, FR-006) | `supabase test db` (CI `db-tests`, `E01-S184_auditoria_anexos_publicados.test.sql`, novo; migration 1829) | pass — inventário cross-Cliente de anexos publicados reusa publicação/revogação auditada de 0465/E01-S183; em produção retorna vazio (gate fechado desde a origem) |
+| — | `gh pr checks 73` | `qualidade` pass, `migrations` pass, `db-tests` pass — run 42828439686 |
+
+**Ressalvas:** nenhum teste pgTAP rodou localmente nesta sessão (Docker/Colima indisponível); toda prova de banco vem do job `db-tests` da CI acima. T018 (`apps/web/e2e/protecao-custos-portal.spec.ts`) não foi escrito: este repositório não tem precedente de sessão Playwright como `cliente-sindico` (login único de teste, superadmin, salvo em `e2e/.auth/user.json`) — exige segundo usuário de teste e possivelmente workflow isolado dedicado (como os de S165/S166/S170/S176), decisão do Lucas antes de construir. `typecheck`/`arch:check` do portal não rodaram localmente (conflito Deno×pnpm já registrado em sessões anteriores); dependem da CI.
 

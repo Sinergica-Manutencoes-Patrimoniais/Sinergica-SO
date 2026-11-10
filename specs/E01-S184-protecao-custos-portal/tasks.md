@@ -18,7 +18,7 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 
 **Independent test**: Semear custo sentinela no snapshot, consultar como Cliente e inspecionar JSON bruto.
 
-- [ ] T003 [US1] Escrever testes falhando de receber somente campos públicos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us1.test.ts (AC-1, AC-2).
+- [X] T003 [US1] Escrever testes falhando de receber somente campos públicos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us1.test.ts (AC-1, AC-2). Evidência: `pnpm exec vitest run` local, PASS — adapter só lê `portal_propostas`/`portal_orcamentos_servico`, nenhuma seleção de coluna de custo; ver `quickstart.md`.
 - [ ] T004 [US1] Escrever pgTAP permitido/negado, repetição e vínculo das regras US1 em supabase/tests/E01-S184_protecao_custos_portal_us1.test.sql (AC-1, AC-2).
 - [ ] T005 [US1] Implementar projeções públicas allowlist e fechar leituras diretas/legadas por servidor em apps/web/src/features/area-cliente/domain/protecao-custos-portal.ts e migration aditiva E01-S184 em supabase/migrations/ conforme data-model.md, preservando constraints e auditoria (AC-1, AC-2).
 - [ ] T006 [US1] Expor comandos autorizados US1 em apps/web/src/features/area-cliente/application/protecao-custos-portal.ts e apps/web/src/features/area-cliente/infrastructure/supabase-protecao-custos-portal-adapter.ts conforme contracts/commands.md (AC-1, AC-2).
@@ -38,7 +38,7 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 
 **Independent test**: Comparar usuário interno com e sem ver custos; verificar link de anexo.
 
-- [ ] T013 [US3] Escrever testes falhando de proteger acesso interno autorizado e anexos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us3.test.ts (AC-5, AC-6).
+- [X] T013 [US3] Escrever testes falhando de proteger acesso interno autorizado e anexos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us3.test.ts (AC-5, AC-6). Evidência: `pnpm exec vitest run` local, PASS — decisão só pelas RPCs seguras, adapter nunca referencia o bucket `financeiro-comprovantes`; ver `quickstart.md`.
 - [ ] T014 [US3] Escrever pgTAP permitido/negado, repetição e vínculo das regras US3 em supabase/tests/E01-S184_protecao_custos_portal_us3.test.sql (AC-5, AC-6).
   - Segunda metade do AC-6/FR-006 (inventariar e retirar acesso de artefato público antigo com custo) fechada em migration 1829 (`pcm.sso_auditoria_anexos_publicados`, reusa publicação/revogação auditada de 0465/E01-S183) + `supabase/tests/E01-S184_auditoria_anexos_publicados.test.sql`. Evidência: `gh pr checks 73` → `db-tests` pass (run 42828439686, job 129871790303), PR #73.
 - [ ] T015 [US3] Implementar leitura interna restrita, política de anexos e remediação auditada de artefatos em apps/web/src/features/area-cliente/domain/protecao-custos-portal.ts e migration aditiva E01-S184 em supabase/migrations/ conforme data-model.md, preservando constraints e auditoria (AC-5, AC-6).
@@ -48,6 +48,7 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 ## Phase 6 — Integração e evidências
 
 - [ ] T018 Cobrir jornada crítica, acesso direto e sessão revogada em apps/web/e2e/protecao-custos-portal.spec.ts (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
+  - Bloqueado (2026-11-10): este repositório não tem nenhum e2e Playwright que autentique como `cliente-sindico` — `e2e/auth.setup.ts` só salva sessão de um usuário de teste único (via `SUPABASE_TEST_EMAIL`/`SUPABASE_TEST_PASSWORD`). Exige segundo usuário de teste com papel `cliente-sindico` vinculado a Cliente, e decisão sobre workflow isolado dedicado (como S165/S166/S170/S176) já que `ci.yml` não roda e2e. `apps/web/e2e/comercial-proposta-pdf-portal.spec.ts` cobre a metade Comercial do AC-3 (criar/aprovar/baixar PDF/enviar); falta a metade Portal/Cliente.
 - [ ] T019 Executar quickstart, revisão adversarial e registrar comandos/resultados/ressalvas em specs/E01-S184-protecao-custos-portal/quickstart.md antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
 
 ## Dependencies & Execution Order
