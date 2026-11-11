@@ -4,7 +4,7 @@
 -- revertido) é recusado → listagem reflete o estorno. Continuação do fechamento de S182 (111
 -- migrations, cobertura pgTAP ainda fina).
 begin;
-select plan(15);
+select plan(16);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
  ('18210000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 's182-alocacao@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now());
@@ -113,6 +113,12 @@ select throws_ok(
 select is(
   (select estornada from financeiro.sso_listar_alocacoes_mediada('18210000-0000-4000-8000-000000000001', '18210000-0000-4000-8000-000000000002', '18210000-0000-4000-8000-000000000004', null) limit 1),
   true, 'listagem reflete a alocação como estornada'
+);
+
+reset role;
+select throws_ok(
+  $$ update financeiro.sso_faturavel_estornos set motivo = 'editado' where true $$,
+  '23514', null, 'histórico de estorno é append-only, nunca editado (migration 1836)'
 );
 
 select * from finish();
