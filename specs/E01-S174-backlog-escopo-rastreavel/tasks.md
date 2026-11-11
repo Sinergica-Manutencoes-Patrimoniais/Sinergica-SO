@@ -1,6 +1,11 @@
 # Tasks — E01-S174: Backlog canônico e conversões de escopo sem perda
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, tasks.md estava catastroficamente desatualizado. Realidade: **85 migrations** (0375→1449), **109 funções `pcm.sso_*` distintas** (composição, priorização GUTD, suspensão, interrupção, atribuição, reconciliação, continuação em cadeia, promoção parcial/integral, retornos privados/parciais). pgTAP oficial: `E01-S174_divisao_promocao_guardas.test.sql` (plan 24) em `db-tests`.
+- `domain/backlog-escopo.ts` (72 linhas) + `backlog-escopo-us1.test.ts` (3) + `backlog-escopo-us2.test.ts` (3); `domain/priorizacao-backlog.ts` (150 linhas) + teste (23) — **nomes batem o plano exatamente**, diferente da maioria das stories auditadas hoje. Rodado de dentro de `apps/web/`: **29/29 passed**.
+- UI: `pages/BacklogGutPage.tsx` (537 linhas), `components/PainelBacklog.tsx` (86 linhas), `interfaces/pendencias-tecnicas/PainelLateralBacklog.tsx` (AC-6, painel lateral compartilhado Kanban/360) compondo 5 subcomponentes atrás de feature flags.
+- **AC-5** (devolver só restante): migration 1830 desta sessão (E01-S167) é **compatível** — alargou `pendencia_id` pra opcional e adicionou `origem='chamado_devolvido'` sem tocar nas colunas/constraints do fluxo original; sem colisão.
+- **Hipótese não verificada / possível gap**: `application/backlog-escopo.ts` e `infrastructure/supabase-backlog-escopo-adapter.ts` planejados em T007/T012 **não existem com esse nome**; `BacklogGutPage.tsx` usa `supabaseHubOsAdapter`/`supabaseOrdemServicoAdapter` em vez disso, com só 1 chamada `.rpc(` direta — não confirmado quantos dos 109 RPCs têm chamador TS real. Antes de fechar T016, confirmar isso é a pergunta que decide se há gap de verdade ou só de rastreio.
+- Não reimplementar. T014-T016 (integração/e2e/homologação) não confirmados.
 
 ## Phase 1 — Setup
 

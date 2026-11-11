@@ -1,6 +1,13 @@
 # Tarefas — E01-S175
 
-Especificada; todas pendentes para Terra. Dependências: E01-S167, E01-S170. Testes antes da implementação de cada regra. Sem rede real por padrão.
+**Status** (auditoria de código em 2026-11-10, madrugada): diferente da maioria das stories auditadas hoje, aqui o gap é **real, não só de rastreamento**. Código extenso existe (38 migrations `E01-S175`, 0357→1613, 17 ADRs dedicados, edge function `pcm-origem-campo-processar/index.ts`, módulos `_shared/auvo/{os-from-task,processar-origem-campo,composicao-origem-campo,lote-origem-campo,projecao-origem-campo}.ts`, 14 componentes TSX em `interfaces/origem-campo/`), mas **cobertura de teste é majoritariamente nula**:
+- **AC-1/AC-2** (ingestão com referência de Chamado): REAL-E-TESTADO — `_shared/auvo/os-from-task.ts` + `os-from-task.test.ts` (12 testes, `deno test` → 12 passed, confirmado). Cobre criação de Chamado automático (`origem=auvo_sync`, padrão 0151/0209), cliente não sincronizado devolve null sem lançar. **Mas os outros 4 módulos de edge function (`processar-origem-campo.ts`, `composicao-origem-campo.ts`, `lote-origem-campo.ts`, `projecao-origem-campo.ts`) não têm nenhum teste** — gap real confirmado.
+- **AC-3/AC-4** (triagem/união/cancelamento não destrutivo): migrations `1428`/`1429`/`1430` e UI (`Triagem.tsx`, `TriagemChamadoProvisorio.tsx`, `UnirChamadoCampo.tsx`, `CancelarChamadoCampo.tsx`) existem, código real — **mas zero teste em qualquer camada** (nem pgTAP, nem colocado na UI). Gap real confirmado.
+- **AC-5** (dedup/concorrência webhook+polling): migrations `1419`/`1420`/`1424`/`1609` existem, schema parece desenhado certo — **zero pgTAP comprovando** (busca por nome de função em `supabase/tests/*.test.sql` não retornou nada). Gap real confirmado, não hipótese.
+- **AC-6** (levantamento → staging E01-S178): não localizado nesta auditoria — pode estar implementado dentro de E01-S178 (a própria spec de S178 já diz que ela faz conferência/aprovação do staging). Hipótese não verificada.
+- **Conclusão**: maior risco de teste entre todas as stories auditadas nesta sessão — 38 migrations de schema/RPC com cobertura pgTAP praticamente nula. Candidata prioritária pra escrever pgTAP real (não para reimplementar código, que já existe) numa próxima sessão.
+
+Dependências: E01-S167, E01-S170. Testes antes da implementação de cada regra. Sem rede real por padrão.
 
 ## Preparação e fundação
 

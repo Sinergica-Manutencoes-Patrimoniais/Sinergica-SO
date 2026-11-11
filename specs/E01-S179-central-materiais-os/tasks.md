@@ -1,6 +1,10 @@
 # Tasks — E01-S179: Central de Materiais, parser determinístico e exceções de campo
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, tasks.md estava desatualizado. Realidade: **29 migrations** (0322→1558), **24 arquivos TS/TSX (2123 linhas)** em `interfaces/listas-materiais/` (Workspace, Central, EditorMateriais, EditorPersistido, DisponibilidadeMateriais, ExcecoesOs, ObservacoesExcecao, EvidenciasExcecao, ImpedimentoMaterialOs, HistoricoVersoes, DetalheEvento, PublicarPortal, VisibilidadePortal), todos com teste colocado.
+- **AC-1/2/3** (US1 — lista/parser/Central): REAL-E-TESTADO. `domain/listas-materiais.ts` + `listas-materiais-us1.test.ts` (5 testes). Vitest de dentro de `apps/web/`: **7 arquivos, 22 testes, todos passando**. pgTAP: `E01-S179_central_mediada`(10), `_criacao_mediada`(11), `_edicao_mediada`(9), `_eventos_mediados`(10), `_listagem_os_mediada`(9) = 49 assertions, seleção oficial `db-tests`.
+- **AC-4/5/6** (US2 — disponibilidade/exceção/impedimento): código REAL (`sso_declarar_impedimento_material_os` retorna `efeitoRemoto:false,osAlterada:false`, confirma "preserva tarefa Auvo"), UI passa no vitest acima — **mas gap real de cobertura pgTAP confirmado**: nenhuma das 17 migrations de US2 tem pgTAP dedicado (`supabase/tests/` não tem arquivo com "excecao"/"disponibilidade"/"impedimento"/"ingestao" pra S179). Isolamento de Cliente/RLS/concorrência dessas 17 migrations **não verificado em SQL**, só coberto por teste de componente que mocka a RPC.
+- Camada `application/` ausente por padrão arquitetural repetido nesta sessão (componentes chamam RPC direto, estilo "mediada"), não é lacuna isolada de S179.
+- Candidata, junto com S175, a receber pgTAP real numa próxima sessão (não reimplementar código).
 
 ## Phase 1 — Setup
 

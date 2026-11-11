@@ -1,6 +1,12 @@
 # Tasks — E01-S173: Pendências técnicas atômicas, resultados e agrupamento por ativo
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, tasks.md estava gravemente desatualizado. Realidade: **33 migrations** (0341→1694), 4 pgTAP oficiais em `db-tests` (`consultas_mediadas` 21, `origem_pendencia_divergente` 3, `retorno_aprovado_fixture` 12 = 36 assertions), **65 componentes TSX + domain.ts** em `interfaces/pendencias-tecnicas/` (3836 linhas), `Workspace.tsx` (257 linhas) orquestrando tudo.
+- **AC-1/AC-2/AC-3** (US1 — constatação → pendência rastreável): `domain/pendencias-tecnicas.ts` (85 linhas) + `pendencias-tecnicas-us1.test.ts` (154 linhas, 8 testes) — PASS de dentro de `apps/web/`. Migrations `0341`, `0371` (núcleo), `0380`, `0583-0605` (diagnóstico/criticidade/condição). UI: `ContextoTecnico.tsx`, `CriticidadePendencia.tsx`, `CondicoesNaoInformadas.tsx`, `ResolucaoHumana.tsx`.
+- **AC-4/AC-5/AC-6** (US2 — consultar/decidir por ativo): `PendenciasDoAlvo.tsx` (132 linhas), `FiltroCriticidade.tsx`/`FiltroContextoTecnico.tsx` (AC-4), `SelecaoComposicao.tsx`+teste e `PreviaSelecao.tsx`+teste (AC-5, seleção parcial sem criar Chamado/OS automático), `RastreabilidadePendencia.tsx`/`DiagnosticoResolucao.tsx` (AC-6). 6 arquivos de teste rodados: 19/19 passed.
+- **Gap real pequeno confirmado**: não existe `application/pendencias-tecnicas*.ts` dedicado — componentes chamam RPC direto (mesmo padrão aceito em S171); `infrastructure/supabase-pendencias-tecnicas-adapter.ts` existe (37 linhas, fino) mas sem `application/`. Pode ser aceitável (mesmo padrão de S171), não necessariamente bug.
+- **Hipótese não verificada**: vínculo pendência→parcela→Backlog (`VinculoChamado.tsx`, único consumidor de `sso_vincular_pendencia_parcela`, S174) sem teste colocado dedicado a esse arquivo.
+- Superfície extra não mapeada por AC literal (ciclos de devolução, continuação, GUTD, portal) pertence a decisões posteriores do Fabrício/S174 que se apoiam em S173 — não é gap, é escopo que cresceu depois da spec original.
+- Não reimplementar. Ação recomendada: confirmar se a ausência de `application/` é aceitável antes de fechar T007.
 
 ## Phase 1 — Setup
 

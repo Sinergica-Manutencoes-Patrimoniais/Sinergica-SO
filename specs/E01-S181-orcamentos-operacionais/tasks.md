@@ -1,6 +1,12 @@
 # Tasks — E01-S181: Orçamento operacional canônico no Comercial
 
-**Status**: Especificada — implementação não iniciada.
+**Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, "0% implementado" estava completamente errado. Realidade: **56 migrations** `E01-S181` (0336→1561): origem operacional sem oportunidade, criação/publicação de orçamento, snapshot de itens públicos (proteção S184), dispensa+revogação, exceção de preço mediada (1561), decisão PCM versionada com barreira (0908/0909), assessment de cliente, composição mista (fonte aquisição + parcela de despesa), retificação de fonte de aquisição, correlação de gasto, histórico legado (OS e pré-OS) separado. UI real: **28 arquivos em `interfaces/orcamento-operacional/`** (2113 linhas), `infrastructure/supabase-orcamento-operacional-adapter.ts` (188 linhas), `packages/shared/src/orcamento-operacional-contracts.ts`. Wiring confirmado real: `DashboardComercialPage.tsx:25` importa `PainelGlobalOperacional` (não é código morto).
+- **AC-1/AC-2** (US1, formar preço): REAL via `sso_preparar_orcamento_operacional`/`PrepararOrcamento.tsx` — **sem pgTAP dedicado confirmado**.
+- **AC-3/AC-4** (US2, versionar/dispensar): REAL via `sso_decidir_orcamento_pcm` (testado: `E01-S181_decisao_pcm_cliente.test.sql` plan 15) + `sso_dispensar_orcamento` (não testado) + `TransicionarOperacional.tsx`/`DispensarOrcamento.tsx` (testados em TS).
+- **AC-5/AC-6** (US3, unificar legado): REAL via migrations de histórico legado (0899/0901/1350/1373/1374) + `HistoricoLegadoOs.tsx`/`HistoricoLegadoPreOs.tsx` — sem pgTAP dedicado.
+- **GAP-REAL-CONFIRMADO**: só 2 arquivos pgTAP tagueados (`E01-S181_assessment_cliente.test.sql` plan 9, `_decisao_pcm_cliente.test.sql` plan 15 = 24 assertions) pra 56 migrations. `sso_retificar_fonte_aquisicao`, `sso_declarar_correlacao_gasto`, `sso_dispensar_orcamento`, `sso_excepcionar_preco_mediado`, `sso_listar_orcamentos_os` e a maior parte do resto **não têm nenhum pgTAP**. `domain/`/`application/orcamento-operacional.ts` planejados em T005/T006/T010/T011/T015/T016 **não existem** — UI chama RPC direto (mesmo padrão "mediada" visto em várias stories hoje).
+- Vitest rodado (4 arquivos de dentro de `apps/web/`): **15 passed**.
+- Gap real não é "construir" — é escrever pgTAP pras ~50 RPCs sem teste, ou documentar o desvio arquitetural (sem domain/application) como aceito. Não reimplementar.
 **Input**: spec.md, plan.md, research.md, data-model.md e contracts/commands.md.
 **Dependências**: E01-S179 (materiais), E01-S170 (autorização) e E01-S184 (proteção de custos).
 **Tests**: Obrigatórios por AC; escrever e observar falha antes de implementar. Não executar escrita externa real.

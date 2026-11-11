@@ -1,6 +1,12 @@
 # Tasks — E01-S177: Código público protegido, aliases e política de Equipment Auvo
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, tasks.md estava desatualizado. Divergência de nome de arquivo do plano (sem `domain/codigos-publicos.ts`/`application/codigos-publicos.ts` dedicados; lógica mora em `infrastructure/supabase-codigos-publicos-adapter.ts` + componentes de interface direto), mas cobertura real:
+- **AC-1/AC-2/AC-3** (proteger identidade no primeiro uso): migrations `0363` (edição em rascunho), `0818`/`0822`/`1146` (diagnóstico de colisão, busca por código/alias), `1150` (evidências de uso travam edição). UI: `EdicaoRascunho.tsx`, `EvidenciasUso.tsx`, `ConsultaUnificada.tsx`/`ConsultaCodigoGrupo.tsx`, `ObservacoesReserva.tsx`. pgTAP: `E01-S177_codigo_rascunho_isolamento.test.sql`, `_inventario_codigos.test.sql`, `_busca_alias_codigo.test.sql`, na seleção oficial de `db-tests`.
+- **AC-4** (substituição administrativa com alias atômico): `0332` cria `pcm.sso_substituir_codigo_publico`, grant `authenticated` confirmado na própria migration (linha 128); variante Grupo em `1399`/`1402`. UI `Substituicao.tsx` + teste: **2/2 passed** (rodado de dentro de `apps/web/`). pgTAP: `_substituicao_codigo_funcional.test.sql`, `_mediadores_codigo_transacao.test.sql`.
+- **AC-5** (QR antigo/novo, alias nunca apagado): UI `AliasesAtivo.tsx` + teste: **4/4 passed**; `QrCodigoGrupo.tsx`, `DeclaracaoEtiqueta.tsx`, `HistoricoCodigoGrupo.tsx`. pgTAP: `_aliases_ativo.test.sql`. Caminho negativo exato (reimpressão após falha de sync) não confirmado linha a linha — hipótese não verificada se tem pgTAP dedicado.
+- **AC-6** (política por categoria — Sistema=Equipment): `PoliticaEquipment.tsx` wired de verdade em `EstruturaClientePage.tsx:58,497` (não é código morto). Não achei pgTAP com nome óbvio pra essa regra — gap possível, não confirmado (pode estar sob nome de S178, mesmo schema).
+- Testes TS rodados (`pnpm vitest run src/features/pcm/interfaces/codigos-publicos/` de dentro de `apps/web/`): `Test Files 3 passed, Tests 8 passed`.
+- **T015 (e2e) e T016 (ci:local/homologação) seguem genuinamente pendentes**, mesmo padrão de gap visto em todas as stories desta sessão. Não reimplementar; próxima sessão deve só fechar AC-6/e2e/homologação.
 
 ## Phase 1 — Setup
 

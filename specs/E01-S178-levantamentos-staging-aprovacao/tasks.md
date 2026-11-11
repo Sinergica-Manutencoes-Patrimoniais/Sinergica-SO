@@ -1,6 +1,14 @@
 # Tasks — E01-S178: Levantamentos de planilha/Auvo e aprovação PCM em staging
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, tasks.md estava desatualizado de forma extrema. Realidade: **155 migrations** `E01-S178` (0315→1816), **86 arquivos** em `apps/web/src/features/pcm/interfaces/levantamentos/`, camada domain/application/infrastructure completa (`levantamentos.ts`, `levantamentos-us2.test.ts`, `recepcao-levantamento.ts`+test, `supabase-levantamentos-adapter.ts`+test, `diagnostico-recepcao-levantamento.ts`), 3 edge functions (`pcm-documento-levantamento-seguro`, `pcm-foto-levantamento-segura`, `pcm-receber-levantamento-estruturado`). UI real wired via `Conectado.tsx` (84 linhas, importado por `EstruturaClientePage.tsx` — jornada de verdade, não código morto).
+- **AC-1** (staging lista erros antes de gravar estrutura oficial): `0315` (recepção staging), `0403`/`1144`/`1432` (diagnóstico de lote/hierarquia/ancestral). pgTAP: `_levantamentos_recepcao.test.sql` (7), `_ordem_gate_objetos.test.sql` (24).
+- **AC-2** (Auvo preserva pendente, reentrega não duplica): `0968` (reserva ingestão foto), `0984`/`0986`/`0987` (cancelamento). pgTAP `_reserva_ingestao_foto` (11), `_cancelar_antes_reserva` (9). `FotosLevantamento.tsx` + teste: 3/3 passed.
+- **AC-3** (contrato futuro Campo, tipado) — **hipótese não verificada / candidato a gap real**: só `1452_mediar_referencias_campo.sql` (925 bytes, pequeno) + `_proveniencia.test.sql` (plan 1). Spec já chama isso de "contrato futuro" — pode ser escopo consciente, não confirmado a fundo.
+- **AC-4** (aprovar linha/lote, validar antes de incorporar): `0883`/`0892` (aprovação parcial, reserva de código), `0352`/`0359`/`1017` (incorporação). pgTAP `_mediacao_incorporacao_autorizacao` (4), `_incorporacao_revogacao_sequencial` (25).
+- **AC-5** (pai rejeitado não entra dependente, histórico preservado): `0346` (rejeitar linha), `0469`/`0472` (reabrir conferência/rejeição). pgTAP adjacente `_mediacao_conferencia.test.sql` (18).
+- **AC-6** (concorrência/retry/revisão obsoleta): `0887`/`0889`/`1015`/`0741`. pgTAP `_cancelamento_tentativa_fluxo`, `_atualizacao_grupos_lote_integracao`.
+- Total: 27 arquivos pgTAP dedicados (≈288 assertions); 4 arquivos TS/TSX testados de dentro de `apps/web/`: 16/16 passed.
+- **Veredito**: gap de rastreamento, não de código. Único ponto genuinamente incerto é AC-3 — merece leitura mais funda antes de declarar fechado. Não reimplementar.
 
 ## Phase 1 — Setup
 
