@@ -31,7 +31,7 @@ set local request.jwt.claims = '{"sub":"16760000-0000-4000-8000-000000000001","r
 
 select throws_ok(format($f$ select pcm.sso_devolver_parcela_chamado_backlog(%L,%L,%L,%L,'sistema','16760000-0000-4000-8000-000000000099',%L) $f$,
   gen_random_uuid(), '16760000-0000-4000-8000-000000000002', '16760000-0000-4000-8000-000000000011', '16760000-0000-4000-8000-000000000021', 'teste'),
-  '23514', 'chamado_nao_suspenso', 'chamado só retomado (não suspenso) recusa devolução');
+  '23514', 'chamado_nao_suspenso_nem_cancelado', 'chamado só retomado (nem suspenso, nem cancelado) recusa devolução');
 
 reset role;
 update pcm.sso_suspensoes_chamado set estado = 'suspenso' where chamado_id = '16760000-0000-4000-8000-000000000011';
