@@ -1,4 +1,4 @@
--- 1831_E02-S35_cofre_referencia_opaca.sql — Sinérgica SO
+-- 1847_E02-S35_cofre_referencia_opaca.sql — Sinérgica SO
 -- Estende o cofre de 0103 (`config.fn_definir_segredo_integracao`, chave fixa tipo 'email') com
 -- escrita/leitura/remoção por REFERÊNCIA OPACA E GERAÇÃO (ADR-1686/ADR-0037 do TriviAtende,
 -- adaptado): E02-S35 grava N segredos por canal (API key do servidor, token da instância, segredo

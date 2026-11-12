@@ -1,4 +1,4 @@
--- 1829_E02-S35_canal_provedor_estado_saude.sql — Sinérgica SO
+-- 1845_E02-S35_canal_provedor_estado_saude.sql — Sinérgica SO
 -- Canal Evolution confiável (ADR-1686). `status_conexao` (0057) só distingue
 -- conectado/desconectado/erro — não sustenta "instância criada mas webhook falhou" vs.
 -- "desconectado com credencial anterior" (reescanear) vs. "sem credencial" (configurar do zero),

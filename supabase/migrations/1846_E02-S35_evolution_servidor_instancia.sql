@@ -1,4 +1,4 @@
--- 1830_E02-S35_evolution_servidor_instancia.sql — Sinérgica SO
+-- 1846_E02-S35_evolution_servidor_instancia.sql — Sinérgica SO
 -- Canal Evolution confiável (ADR-1686). Servidor atestado (SSRF) + matriz de compatibilidade +
 -- instância criada pelo produto, com token por canal no Vault (referência opaca, nunca o valor).
 -- Só superadmin administra — isto não é tela de colaborador.
