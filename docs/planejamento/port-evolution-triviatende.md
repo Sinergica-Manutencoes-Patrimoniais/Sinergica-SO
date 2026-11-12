@@ -1,6 +1,7 @@
 ---
 name: "docs-planejamento-port-evolution-triviatende-md"
 description: "Análise de porte do Evolution/TriviAtende para a Sinérgica — mapa citado pelas specs E02-S35..S41"
+alwaysApply: false
 ---
 
 # Port Evolution + visão de conversa — TriviAtende → Sinérgica SO
