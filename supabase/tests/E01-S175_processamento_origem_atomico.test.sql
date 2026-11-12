@@ -1,7 +1,8 @@
 -- E01-S175 AC-1/AC-2/AC-5 (processar tarefa de campo de forma atômica, migration 1420) — prova
 -- real do núcleo que decide entre OS já existente, adoção de OS externa por referência, ou
--- criação provisória (hoje bloqueada pelo guard legado 1:1, confirmando que esse caminho não
--- está habilitado em produção). Idempotência real por (integracao,task_id): reentrega nunca
+-- criação provisória (liberada pela migration 1842, que concluiu a transição 1:1 -> 1:N; antes
+-- dela o caminho recusava com `transicao_legada_incompleta`).
+-- Idempotência real por (integracao,task_id): reentrega nunca
 -- duplica Chamado/OS. Continuação do fechamento de S175 (gap de 38 migrations quase sem pgTAP).
 begin;
 select plan(14);
@@ -109,11 +110,17 @@ select is(
 set local role service_role;
 set local request.jwt.claims = '{"role":"service_role"}';
 
-select (pcm.sso_receber_envelope_origem_campo('auvo', 1750999, 'evt-proc-provisorio', '1750101', now(), '{}'::jsonb)) as recibo_provisorio \gset
-select throws_ok(
-  format($f$ select pcm.sso_processar_tarefa_campo_atomica((%L::jsonb->>'envelopeId')::uuid,%L,'{"titulo":"t","statusCampo":"aberta","referenciaInvalida":false,"ordemExterna":"1"}'::jsonb) $f$,
-    :'recibo_provisorio', '17500000-0000-4000-8000-000000000103'),
-  '55000', 'transicao_legada_incompleta', 'sem referência e sem OS existente, criação provisória de Chamado/OS continua bloqueada pelo guard legado 1:1 em produção'
+-- Criação provisória: sem referência e sem OS existente, o núcleo cria Chamado+OS do zero.
+-- Até a migration 1842 este caminho recusava com `55000 transicao_legada_incompleta` — ele checa
+-- explicitamente se `pcm.uq_ordens_servico_chamado` ou `trg_ordens_servico_numero_chamado` ainda
+-- existem. O corte removeu os dois, então o caminho ficou alcançável e passou a ser provável aqui.
+select (pcm.sso_receber_envelope_origem_campo('auvo', 1750999, 'evt-proc-provisorio', '1750101', now(),
+  '{"taskId":"1750999","clienteId":"1750101","titulo":"Tarefa sem referência","status":"aberta","ordem":"9"}'::jsonb)) as recibo_provisorio \gset
+select (pcm.sso_processar_tarefa_campo_atomica((:'recibo_provisorio'::jsonb->>'envelopeId')::uuid, '17500000-0000-4000-8000-000000000103',
+  '{"titulo":"Tarefa sem referência","statusCampo":"aberta","referenciaInvalida":false,"ordemExterna":"9"}'::jsonb)) as resultado_provisorio \gset
+select is(
+  :'resultado_provisorio'::jsonb->>'motivo', 'referencia_ausente',
+  'sem referência e sem OS existente, o corte 1:N liberou a criação provisória de Chamado+OS'
 );
 
 reset role;

@@ -23,12 +23,11 @@ insert into pcm.ordens_servico (id, client_id, chamado_id, numero, titulo, categ
  ('16770000-0000-4000-8000-000000000012', '16770000-0000-4000-8000-000000000002', '16770000-0000-4000-8000-000000000011', 'OS-CANCFORC-REMOTA', 'OS com Auvo', 'corretiva', 'solicitacao', 918273, '16770000-0000-4000-8000-000000000001');
 
 -- Chamado B: OS aberta sem efeito remoto + OS já finalizada + parcela pendente — cenário de sucesso.
--- Duas OS pro mesmo Chamado exige o ensaio 1:N (mesmo padrão de E01-S167_ensaio_multiplas_os.test.sql):
--- em produção `trg_ordens_servico_numero_chamado` (0151) ainda sobrescreve `numero` da OS com o do
--- Chamado em todo INSERT, o que colidiria na segunda OS. Exercício reversível só neste banco isolado.
-drop index pcm.uq_ordens_servico_chamado;
-drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
-update pcm.sso_guarda_multiplas_os_gate set habilitado = true where id;
+-- Duas OS pro mesmo Chamado: até a migration 1842 isso exigia simular o corte 1:1 -> 1:N aqui
+-- dentro (drop do índice legado e da trigger de numeração legada, que sobrescrevia `numero` com o
+-- do Chamado e colidiria na segunda OS). O corte agora faz parte do schema; a numeração vem de
+-- `pcm.sso_numero_os_chamado_compativel()` (1500), que com token de comando gera
+-- `<numero-do-chamado>-OS-<uuid>`. O `numero` da fixture é rótulo de leitura, nunca asserido.
 insert into pcm.chamados (id, numero, cliente_id, titulo, created_by) values
  ('16770000-0000-4000-8000-000000000016', 'CH-CANCFORC-B', '16770000-0000-4000-8000-000000000002', 'Chamado cancelamento forçado', '16770000-0000-4000-8000-000000000001');
 -- `sso_guardar_novo_vinculo_chamado_os` (1499) só permite a segunda OS do mesmo Chamado via o

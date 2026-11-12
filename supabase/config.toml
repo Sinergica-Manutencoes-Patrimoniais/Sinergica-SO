@@ -468,6 +468,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.pcm-auvo-sync-all]
 verify_jwt = true
+[functions.pcm-auvo-t24-despachar]
+verify_jwt = true
 [functions.pcm-auvo-tasks-import]
 verify_jwt = true
 

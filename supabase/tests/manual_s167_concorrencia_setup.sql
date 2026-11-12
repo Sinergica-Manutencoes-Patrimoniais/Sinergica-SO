@@ -8,8 +8,9 @@ do $$ begin
 end $$;
 begin;
 set local app.auvo_sync_write='true';
-drop index pcm.uq_ordens_servico_chamado;
-drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
+-- O corte 1:1 -> 1:N deixou de ser simulado aqui: a migration 1842 removeu o índice legado
+-- `pcm.uq_ordens_servico_chamado` e a trigger `trg_ordens_servico_numero_chamado` do schema,
+-- e abriu `pcm.sso_guarda_multiplas_os_gate`. O banco descartável já nasce no estado final.
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values ('16710000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','concorrencia-s167@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
 insert into config.usuarios(user_id,papel,nome,ativo) values ('16710000-0000-4000-8000-000000000001','superadmin','Teste concorrente',true);

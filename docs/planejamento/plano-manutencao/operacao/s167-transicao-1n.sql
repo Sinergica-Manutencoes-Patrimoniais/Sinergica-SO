@@ -1,5 +1,13 @@
--- MANUAL; NÃO EXECUTAR EM PRODUÇÃO SEM HOMOLOGAÇÃO, REVISÃO ADVERSARIAL E AUTORIZAÇÃO OPERACIONAL.
--- Drenar previamente todos os produtores e requisições em voo; a trava SQL não alcança efeitos externos.
+-- SUPERADO por `supabase/migrations/1842_E01-S167_transicao_1n_chamado_os.sql`. NÃO EXECUTE.
+-- Este script era MANUAL e, por isso, nunca rodou: a transição 1:1 -> 1:N ficou pronta e parada,
+-- com toda a engenharia dependente recusando com `55000 transicao_legada_incompleta`. O conteúdo
+-- virou migration versionada (mesmas pré-condições, mesma ordem de aplicação), testada em CI por
+-- `supabase/tests/E01-S167_transicao_1n_invariantes.test.sql`. Mantido aqui só como registro
+-- histórico do desenho do corte. A reversão segue em `s167-reverter-transicao-1n.sql`.
+--
+-- Cuidado operacional que a migration herda: `lock table ... in access exclusive mode nowait`
+-- falha de imediato se houver escrita em voo em pcm.chamados/pcm.ordens_servico. Drenar os
+-- produtores antes do deploy; a trava SQL não alcança efeitos externos.
 begin;
 lock table pcm.chamados, pcm.ordens_servico in access exclusive mode nowait;
 do $validacao$

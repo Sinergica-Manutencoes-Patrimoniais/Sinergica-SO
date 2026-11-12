@@ -23,13 +23,12 @@ insert into pcm.chamado_escopo_parcelas (id, chamado_id, descricao, situacao, cr
 
 set local request.jwt.claims = '{"sub":"16790000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
 
--- Exercício reversível apenas neste banco isolado (mesmo precedente de
--- E01-S167_ensaio_multiplas_os.test.sql): precisamos de 2 OS no mesmo Chamado pra testar a
--- listagem/atribuição direta, e a guarda legada de 1:1 Chamado:OS ainda está presente no schema.
-drop index pcm.uq_ordens_servico_chamado;
-drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
-update pcm.sso_guarda_multiplas_os_gate set habilitado = true where id;
-
+-- Precisamos de 2 OS no mesmo Chamado pra testar a listagem/atribuição direta. Até a migration
+-- 1842 isso exigia simular o corte 1:1 -> 1:N aqui dentro (drop do índice legado e da trigger de
+-- numeração legada); o corte agora faz parte do schema, então a fixture só precisa do token de
+-- comando da guarda (1499) pra segunda OS, como qualquer escritor real.
+-- O `numero` abaixo é sobrescrito por `pcm.sso_numero_os_chamado_compativel()` (1500) e nunca é
+-- asserido — serve só de rótulo de leitura da fixture.
 insert into pcm.ordens_servico (id, client_id, chamado_id, numero, titulo, categoria, status, updated_at, created_by) values
  ('16790000-0000-4000-8000-000000000007', '16790000-0000-4000-8000-000000000002', '16790000-0000-4000-8000-000000000004', 'OS-S167-ATRDIR-ABERTA', 'OS aberta do mesmo Chamado', 'corretiva', 'em_execucao', now(), '16790000-0000-4000-8000-000000000001');
 insert into pcm.sso_guarda_multiplas_os_tokens(txid, ator_id, chamado_id, cliente_id, os_id) values

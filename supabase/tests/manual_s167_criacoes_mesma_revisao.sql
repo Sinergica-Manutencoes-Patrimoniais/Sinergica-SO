@@ -17,8 +17,9 @@ insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('16750000-
 insert into pcm.chamados(id,numero,cliente_id,titulo,origem,status,created_by) values ('16750000-0000-4000-8000-000000000011','CH-S167-CRIA','16750000-0000-4000-8000-00000000000a','Chamado','manual','aberto','16750000-0000-4000-8000-000000000001');
 update pcm.sso_criacao_os_mediada_gate set habilitado=true where id;
 update pcm.chamado_os_gate set habilitado=true where id;
-drop index pcm.uq_ordens_servico_chamado;
-drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
+-- O corte 1:1 -> 1:N deixou de ser simulado aqui: a migration 1842 removeu o índice legado
+-- `pcm.uq_ordens_servico_chamado` e a trigger `trg_ordens_servico_numero_chamado` do schema,
+-- e abriu `pcm.sso_guarda_multiplas_os_gate`. O banco descartável já nasce no estado final.
 create temporary table s167_outbox_antes as select count(*) n from pcm.auvo_sync_outbox;
 set local request.jwt.claims = '{"sub":"16750000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
 set local role authenticated;
