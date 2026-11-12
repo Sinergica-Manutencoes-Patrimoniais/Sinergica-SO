@@ -6,6 +6,8 @@
 -- existindo, sincronizado por trigger a partir de `estado_conexao`, até todo consumidor migrar.
 --
 -- Reverso:
+--   drop trigger if exists trg_derivar_provedor_do_tipo on atendimento.canais_externos;
+--   drop function if exists atendimento.fn_derivar_provedor_do_tipo();
 --   drop trigger if exists trg_sincronizar_status_conexao_legado on atendimento.canais_externos;
 --   drop function if exists atendimento.fn_sincronizar_status_conexao_legado();
 --   alter table atendimento.canais_externos
@@ -66,6 +68,29 @@ alter table atendimento.canais_externos
 alter table atendimento.canais_externos validate constraint canais_externos_provedor_valido;
 alter table atendimento.canais_externos validate constraint canais_externos_estado_valido;
 alter table atendimento.canais_externos validate constraint canais_externos_saude_valida;
+
+-- Backfill (acima) cobre só as linhas que já existiam. Canal NOVO (`tipo` conhecido) precisa
+-- derivar `provedor` no mesmo instante — não é palpite, é mapeamento 1:1 determinístico
+-- (`evolution`→`evolution-api`, `meta_wa`→`meta-whatsapp`); 'desconhecido' fica só para `tipo`
+-- sem mapeamento ainda (instagram/messenger) ou linha legada sem prova (AC-10).
+create or replace function atendimento.fn_derivar_provedor_do_tipo()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.provedor := case
+    when new.tipo = 'evolution' then 'evolution-api'
+    when new.tipo = 'meta_wa'   then 'meta-whatsapp'
+    else new.provedor
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_derivar_provedor_do_tipo on atendimento.canais_externos;
+create trigger trg_derivar_provedor_do_tipo
+  before insert on atendimento.canais_externos
+  for each row execute function atendimento.fn_derivar_provedor_do_tipo();
 
 -- `status_conexao` legado é projeção de `estado_conexao`, nunca o contrário — é a fonte nova de
 -- verdade. Mapa: qualquer estado "em progresso" ou "conectado" vira 'conectado' só quando
