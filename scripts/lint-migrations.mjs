@@ -95,8 +95,38 @@ const squawkInstalled = () => {
   }
 };
 
+// Squawk roda só nas migrations NOVAS desta branch, não no diretório inteiro.
+// Motivo: migration já aplicada é imutável neste projeto (convenção do CLAUDE.md — nunca
+// editada), então achado nela é irreparável por definição; apontá-lo a cada push só faz o gate
+// nascer vermelho e ensinar a equipe a passar `--no-verify`, que é pior do que não ter gate.
+// Mesmo raciocínio já registrado em `.squawk.toml` para as regras excluídas ("só disparavam em
+// 0001/0002, JÁ APLICADAS em produção ... não há como 'corrigir' o achado").
+// Fora de um repositório git, ou se o `git diff` falhar, volta a varrer tudo — ruidoso é melhor
+// do que cego. As convenções da Trivia (DROP com reverso, CREATE POLICY com GRANT) continuam
+// checadas no diretório inteiro: lá o estado CUMULATIVO é justamente o que importa.
+function migrationsDaBranch() {
+  try {
+    const base = execSync("git merge-base HEAD origin/main", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    const saida = execSync(`git diff --name-only --diff-filter=ACMR ${base} -- ${DIRS.join(" ")}`, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    const novas = new Set(
+      saida.split("\n").map((l) => l.trim()).filter((l) => l.endsWith(".sql")).map((l) => resolve(ROOT, l)),
+    );
+    return files.filter((f) => novas.has(resolve(f)));
+  } catch {
+    return files;
+  }
+}
+
 function runSquawk() {
   if (files.length === 0) return;
+  const alvo = migrationsDaBranch();
+  if (alvo.length === 0) {
+    console.log("✓ Squawk: nenhuma migration nova nesta branch (nada a checar).\n");
+    return;
+  }
   if (!squawkInstalled()) {
     console.log("… Squawk não instalado — segurança de migration só será checada na CI.");
     console.log("  (rode `pnpm install` — squawk-cli é devDependency — para o gate completo no pre-push)\n");
@@ -107,7 +137,7 @@ function runSquawk() {
     // migration dentro de uma transação — sem a flag, Squawk avisa "sem transação" em toda
     // migration (falso positivo para este ambiente).
     execSync(
-      `pnpm exec squawk --assume-in-transaction ${files.map((f) => `"${f}"`).join(" ")}`,
+      `pnpm exec squawk --assume-in-transaction ${alvo.map((f) => `"${f}"`).join(" ")}`,
       { stdio: "inherit" },
     );
     console.log("✓ Squawk: migrations seguras (sem lock/breaking-change bloqueante).\n");
