@@ -1,9 +1,13 @@
--- Somente ensaio em transação descartável. Não autoriza remover restrições em rollout.
+-- Nasceu como ensaio em transação descartável (a transição 1:1 -> 1:N ainda não tinha sido
+-- aplicada, e o teste simulava o corte dropando índice e trigger legados dentro da própria
+-- transação). A migration 1842 aplicou o corte de verdade no schema, então a simulação saiu e o
+-- que resta aqui é o comportamento real de produção: várias OS por Chamado, cada uma criada pelo
+-- caminho autorizado, com o gate de feature `pcm.chamado_os_gate` aberto.
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=extensions,public;
 set local app.auvo_sync_write='true';
-select plan(14);
+select plan(13);
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('16710000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','multiplas-s167@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
 insert into config.usuarios(user_id,papel,nome,ativo) values ('16710000-0000-4000-8000-000000000001','superadmin','Teste',true);
 insert into pcm.clientes(id,nome,ativo,created_by) values ('16710000-0000-4000-8000-00000000000a','Cliente teste',true,'16710000-0000-4000-8000-000000000001');
@@ -16,14 +20,10 @@ update pcm.chamados set ordem_servico_id='16710000-0000-4000-8000-000000000023',
 set local request.jwt.claims='{"sub":"16710000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
 update pcm.sso_criacao_os_mediada_gate set habilitado=true where id;
 update pcm.chamado_os_gate set habilitado=true where id;
-set local role authenticated;
-select throws_ok($$select pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000101',1,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000021','Primeira',null,'corretiva')$$,'55000','transicao_legada_incompleta','restrições reais impedem geração antes da transição');
-reset role;
--- Exercício reversível apenas neste banco isolado, não proposta de rollout.
-drop index pcm.uq_ordens_servico_chamado;
-drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
--- A guarda aditiva participa da mesma transição reversível neste ensaio.
-update pcm.sso_guarda_multiplas_os_gate set habilitado=true where id;
+-- Nenhuma simulação aqui: índice legado, trigger legada e gate de guarda já estão no estado
+-- pós-1842. Se alguém reverter o corte, estas asserções voltam a falhar com
+-- `transicao_legada_incompleta` (índice de volta) ou `guarda_multiplas_os_desabilitada` (gate
+-- fechado sem índice) — que é exatamente o alarme que queremos.
 create temporary table s167_outbox_antes as select count(*) n from pcm.auvo_sync_outbox;
 set local role authenticated;
 select is(pcm.sso_criar_os_chamado_autorizado('16710000-0000-4000-8000-000000000101',1,'16710000-0000-4000-8000-000000000011','16710000-0000-4000-8000-00000000000a','16710000-0000-4000-8000-000000000021','Primeira',null,'corretiva')->>'osId','16710000-0000-4000-8000-000000000021','cria primeira OS no ensaio');

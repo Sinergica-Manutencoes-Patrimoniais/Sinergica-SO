@@ -20,8 +20,9 @@ update pcm.chamado_os_gate set habilitado=true where id;
 update pcm.sso_conversao_integral_mediada_gate set habilitado=true where id;
 update pcm.sso_conversao_escopo_gate set habilitado=true where id;
 update pcm.sso_os_concorrente_gate set habilitado=true where id;
-drop index pcm.uq_ordens_servico_chamado;
-drop trigger trg_ordens_servico_numero_chamado on pcm.ordens_servico;
+-- O corte 1:1 -> 1:N deixou de ser simulado aqui: a migration 1842 removeu o índice legado
+-- `pcm.uq_ordens_servico_chamado` e a trigger `trg_ordens_servico_numero_chamado` do schema,
+-- e abriu `pcm.sso_guarda_multiplas_os_gate`. O banco descartável já nasce no estado final.
 grant execute on function pcm.sso_converter_os_concorrente(uuid,bigint,uuid,uuid,uuid,jsonb,text,text,text,uuid) to authenticated;
 create temporary table s167_misto_dados as select
  pcm.sso_hash_escopo_chamado('16760000-0000-4000-8000-000000000011') as hash,

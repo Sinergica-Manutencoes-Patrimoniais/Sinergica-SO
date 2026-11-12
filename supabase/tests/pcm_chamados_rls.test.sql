@@ -80,12 +80,16 @@ select ok(
   'AC-3: OS grava chamado_id e herda numero do Chamado'
 );
 
--- 7) FK rejeita chamado_id inexistente (defesa em profundidade)
+-- 7) chamado_id inexistente é rejeitado (defesa em profundidade).
+-- Antes da migration 1842 quem recusava era a FK `ordens_servico_chamado_id_fkey` (23503). Com o
+-- corte 1:1 -> 1:N, o gate da guarda passou a ficar aberto e `sso_guardar_novo_vinculo_chamado_os`
+-- (BEFORE UPDATE, 1499) resolve o Chamado antes de a FK ser conferida — o Chamado não existe, e a
+-- recusa vem dali, com erro nomeado. A FK continua no schema; só deixou de ser quem fala primeiro.
 select throws_ok(
   $$ update pcm.ordens_servico set chamado_id = '00000000-0000-0000-0000-00000000dead' where id = '00000000-0000-0000-0000-000000000bc3' $$,
-  '23503',
-  null,
-  'FK ordens_servico_chamado_id_fkey rejeita chamado inexistente'
+  '23514',
+  'chamado_ou_cliente_invalido',
+  'vínculo para Chamado inexistente é rejeitado (guarda fala antes da FK)'
 );
 
 reset role;
