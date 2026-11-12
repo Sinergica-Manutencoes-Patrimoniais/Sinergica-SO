@@ -34,6 +34,10 @@ alter table pcm.listas_materiais drop constraint listas_materiais_estado_check;
 -- Reverso: alter table pcm.listas_materiais drop constraint listas_materiais_estado_check;
 --          alter table pcm.listas_materiais add constraint listas_materiais_estado_check
 --            check (estado in ('levantada','informada_disponivel','parcial','indisponivel'));
+-- O `check` novo é SUPERCONJUNTO estrito do que acabou de cair: toda linha existente já o
+-- satisfaz, então a varredura não pode falhar. Fazer `not valid` numa migration e `validate`
+-- em outra abriria uma janela com a tabela sem restrição nenhuma — pior do que a varredura.
+-- squawk-ignore constraint-missing-not-valid
 alter table pcm.listas_materiais add constraint listas_materiais_estado_check
   check (estado in ('levantada', 'aguardando_aquisicao', 'informada_disponivel', 'parcial',
                     'indisponivel', 'dispensada', 'concluida'));
@@ -42,6 +46,10 @@ alter table pcm.sso_lista_materiais_eventos drop constraint sso_lista_materiais_
 -- Reverso: alter table pcm.sso_lista_materiais_eventos drop constraint sso_lista_materiais_eventos_tipo_check;
 --          alter table pcm.sso_lista_materiais_eventos add constraint sso_lista_materiais_eventos_tipo_check
 --            check (tipo in ('disponibilidade','excecao'));
+-- O `check` novo é SUPERCONJUNTO estrito do que acabou de cair: toda linha existente já o
+-- satisfaz, então a varredura não pode falhar. Fazer `not valid` numa migration e `validate`
+-- em outra abriria uma janela com a tabela sem restrição nenhuma — pior do que a varredura.
+-- squawk-ignore constraint-missing-not-valid
 alter table pcm.sso_lista_materiais_eventos add constraint sso_lista_materiais_eventos_tipo_check
   check (tipo in ('disponibilidade', 'excecao', 'aquisicao', 'dispensa', 'conclusao'));
 
