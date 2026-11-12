@@ -6,6 +6,8 @@ begin;
 select plan(6);
 
 -- anon/authenticated não executam (sem GRANT)
+set local role authenticated;
+
 select throws_ok(
   $$ select config.fn_gravar_segredo_referenciado('SINERGICA_TESTE_1_00000000000000000000000000000000', 'valor') $$,
   '42501',

@@ -74,8 +74,15 @@ security definer
 set search_path = atendimento, public
 as $$
 begin
+  -- `evolution_instancia.estado` e `canais_externos.estado_conexao` (migration 1845) tem enums
+  -- quase iguais, mas não idênticos: 'criando' só existe do lado da instância (credencial já
+  -- existe, a criação remota ainda está em voo) — mapeia para 'configurado', o estado mais
+  -- próximo que o CHECK de canais_externos aceita. Os demais batem 1:1.
   update atendimento.canais_externos
-     set estado_conexao = new.estado,
+     set estado_conexao = case
+           when new.estado = 'criando' then 'configurado'
+           else new.estado
+         end,
          updated_at = now()
    where id = new.canal_id;
   return new;
