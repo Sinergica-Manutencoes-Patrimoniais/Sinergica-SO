@@ -115,9 +115,7 @@ export function criarOperacoesValidacaoOs(
   function validar(valor: unknown): OperacaoValidacaoOs {
     const operacao = operacaoSchema.parse(valor);
     if (operacao.comando.clienteId !== contexto.clienteId) throw new Error("Cliente divergente.");
-    const retornoId =
-      operacao.tipo === "classificar" ? operacao.comando.retornoId : operacao.comando.retornoId;
-    if (retornoId !== contexto.retornoId) throw new Error("Retorno divergente.");
+    if (operacao.comando.retornoId !== contexto.retornoId) throw new Error("Retorno divergente.");
     return operacao;
   }
   function pendente(): OperacaoValidacaoOs | null {
