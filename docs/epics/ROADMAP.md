@@ -164,7 +164,7 @@ _75 concluídas no histórico · maior ID usado: E01-S187_
 | E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 
 ### E02 — Atendimento · Zé
-_6 concluídas no histórico · maior ID usado: E02-S34_
+_6 concluídas no histórico · maior ID usado: E02-S41_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -196,6 +196,13 @@ _6 concluídas no histórico · maior ID usado: E02-S34_
 | E02-S26 | Agente entrevistador de cadastro cliente/estrutura + "Editar com IA" | — (livre) | Só schema (2026-07-28), migration 0160.… | [spec](../../specs/E02-S26-agente-entrevistador-cadastro/product.md) |
 | E02-S27 | Configurar Evolution no SO (URL + chave) + expor webhook | Codex | Implementado localmente (2026-08-06). U… | [spec](../../specs/E02-S27-fix-cadastro-evolution-api/spec.md) |
 | E02-S30 | Comunicação com MCPs — agente ganha acesso a servidor(es) MCP como ferramenta | Claude (sessão Lucas) | Design escrito (2026-08-07). Implementa… | [spec](../../specs/E02-S30-mcp-tool-calling/product.md) |
+| E02-S35 | Canal Evolution confiável: servidor atestado (SSRF), matriz de compatibilidade, instância e token por canal no Vault, estados e saúde | — | Spec+plan+tasks escritos (2026-11-12). Tier arquitetural: exige ADR 1686 | [spec](../../specs/E02-S35-canal-evolution-confiavel/spec.md) |
+| E02-S36 | Webhook Evolution por canal: canal no caminho, segredo próprio em tempo constante, idempotência (canal, evento, id) | — | Spec+plan+tasks escritos (2026-11-12). Tier arquitetural: exige ADR 1687. Depende de S35 | [spec](../../specs/E02-S36-webhook-evolution-por-canal/spec.md) |
+| E02-S37 | Mídia recebida: imagem, vídeo, documento, figurinha e avisos visíveis; proxy de anexo autenticado; transcrição uma vez só | — | Spec+plan+tasks escritos (2026-11-12). Tier arquitetural. Depende de S36 | [spec](../../specs/E02-S37-midia-recebida-evolution/spec.md) |
+| E02-S38 | Citação e reação na conversa | — | Spec+plan+tasks escritos (2026-11-12). Depende de S37 | [spec](../../specs/E02-S38-citacao-e-reacao/spec.md) |
+| E02-S39 | Mensagem do aparelho tira o Zé — inclui AC-0: diagnosticar por que a mensagem do celular não aparece hoje | — | Spec+plan+tasks escritos (2026-11-12). Tier arquitetural: exige ADR 1688. Depende de S36 | [spec](../../specs/E02-S39-aparelho-tira-o-ze/spec.md) |
+| E02-S40 | Foto do WhatsApp do contato no atendimento | — | Spec+plan+tasks escritos (2026-11-12). Depende de S36 | [spec](../../specs/E02-S40-foto-do-contato/spec.md) |
+| E02-S41 | Visão de conversa nova: workspace, fila com escopo, timeline tipada, contexto do cliente | — | Spec+design+plan+tasks escritos (2026-11-12). Tier arquitetural; design.md com 3 questões em aberto para o Lucas. Depende de S37 e S38 | [spec](../../specs/E02-S41-visao-de-conversa/spec.md) |
 
 ### E03 — Comercial
 _7 concluídas no histórico · maior ID usado: E03-S14_
