@@ -30,34 +30,42 @@
 --   • `dispensada` só é revertida por `excecao` com motivo `novo_levantamento` (vocabulário que
 --     o próprio §8.2 já define), voltando a `levantada`. Qualquer outro evento é recusado.
 
-alter table pcm.listas_materiais drop constraint listas_materiais_estado_check;
--- Reverso: alter table pcm.listas_materiais drop constraint listas_materiais_estado_check;
---          alter table pcm.listas_materiais add constraint listas_materiais_estado_check
---            check (estado in ('levantada','informada_disponivel','parcial','indisponivel'));
--- O `check` novo é SUPERCONJUNTO estrito do que acabou de cair: toda linha existente já o
--- satisfaz, então a varredura não pode falhar. Fazer `not valid` numa migration e `validate`
--- em outra abriria uma janela com a tabela sem restrição nenhuma — pior do que a varredura.
+-- As duas trocas de `check` abaixo moram num único bloco `do`, e não soltas, porque a GitHub
+-- Integration do Supabase NÃO roda cada migration dentro de uma transação (descoberto no deploy
+-- da 1842, que falhou com `25P01`; a CLI roda, a Integration não). Soltas, uma falha entre o
+-- `drop constraint` e o `add constraint` deixaria `pcm.listas_materiais` sem NENHUMA restrição de
+-- estado — pior do que a migration não ter rodado. Um bloco `do` é um statement só.
+--
+-- O `check` novo é SUPERCONJUNTO estrito do que cai: toda linha existente já o satisfaz, então a
+-- varredura não pode falhar. Fazer `not valid` numa migration e `validate` em outra abriria a
+-- mesma janela sem restrição que este bloco existe para fechar.
 -- squawk-ignore constraint-missing-not-valid
-alter table pcm.listas_materiais add constraint listas_materiais_estado_check
-  check (estado in ('levantada', 'aguardando_aquisicao', 'informada_disponivel', 'parcial',
-                    'indisponivel', 'dispensada', 'concluida'));
+do $restricoes$
+begin
+  -- Reverso: trocar as duas listas de volta para os valores originais, na mesma forma.
+  if exists(select 1 from pg_catalog.pg_constraint
+      where conrelid = 'pcm.listas_materiais'::regclass and conname = 'listas_materiais_estado_check') then
+    execute 'alter table pcm.listas_materiais drop constraint listas_materiais_estado_check';
+  end if;
+  execute $sql$alter table pcm.listas_materiais add constraint listas_materiais_estado_check
+    check (estado in ('levantada', 'aguardando_aquisicao', 'informada_disponivel', 'parcial',
+                      'indisponivel', 'dispensada', 'concluida'))$sql$;
 
-alter table pcm.sso_lista_materiais_eventos drop constraint sso_lista_materiais_eventos_tipo_check;
--- Reverso: alter table pcm.sso_lista_materiais_eventos drop constraint sso_lista_materiais_eventos_tipo_check;
---          alter table pcm.sso_lista_materiais_eventos add constraint sso_lista_materiais_eventos_tipo_check
---            check (tipo in ('disponibilidade','excecao'));
--- O `check` novo é SUPERCONJUNTO estrito do que acabou de cair: toda linha existente já o
--- satisfaz, então a varredura não pode falhar. Fazer `not valid` numa migration e `validate`
--- em outra abriria uma janela com a tabela sem restrição nenhuma — pior do que a varredura.
--- squawk-ignore constraint-missing-not-valid
-alter table pcm.sso_lista_materiais_eventos add constraint sso_lista_materiais_eventos_tipo_check
-  check (tipo in ('disponibilidade', 'excecao', 'aquisicao', 'dispensa', 'conclusao'));
+  if exists(select 1 from pg_catalog.pg_constraint
+      where conrelid = 'pcm.sso_lista_materiais_eventos'::regclass
+        and conname = 'sso_lista_materiais_eventos_tipo_check') then
+    execute 'alter table pcm.sso_lista_materiais_eventos drop constraint sso_lista_materiais_eventos_tipo_check';
+  end if;
+  execute $sql$alter table pcm.sso_lista_materiais_eventos add constraint sso_lista_materiais_eventos_tipo_check
+    check (tipo in ('disponibilidade', 'excecao', 'aquisicao', 'dispensa', 'conclusao'))$sql$;
+end;
+$restricoes$;
 
 -- Defesa em profundidade: `sso_informar_material` não é o único escritor de
 -- `pcm.listas_materiais` (0325 salva linhas, 0436 registra observação, 0568 informa pelo portal
 -- do síndico). Nenhum deles conhece os estados terminais. A trigger fecha isso de uma vez, para
 -- todos os escritores presentes e futuros, em vez de depender de cada função lembrar da regra.
-create function pcm.sso_guardar_estado_terminal_lista_materiais() returns trigger
+create or replace function pcm.sso_guardar_estado_terminal_lista_materiais() returns trigger
 language plpgsql volatile security definer set search_path = '' as $$
 begin
   if old.estado = 'concluida' then
@@ -73,6 +81,7 @@ end;
 $$;
 revoke all on function pcm.sso_guardar_estado_terminal_lista_materiais()
   from public, anon, authenticated, service_role;
+drop trigger if exists sso_guardar_estado_terminal_lista_materiais on pcm.listas_materiais;
 create trigger sso_guardar_estado_terminal_lista_materiais before update on pcm.listas_materiais
   for each row execute function pcm.sso_guardar_estado_terminal_lista_materiais();
 -- Reverso: drop trigger sso_guardar_estado_terminal_lista_materiais on pcm.listas_materiais;
