@@ -1,6 +1,14 @@
 # Tasks — E01-S180: Despesas previstas e realizadas por Visita
 
-**Status**: Especificada — implementação não iniciada.
+**Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, "implementação não iniciada" estava errado. Realidade: **39 migrations** `E01-S180` (0323→1498, por nome de arquivo — conteúdo SQL não usa a tag), pilha TS completa (`domain/despesas-visita.ts`+teste, `application/despesas-visita.ts`+`despesas-visita-contrato.test.ts`, `infrastructure/supabase-despesas-visita-adapter.ts`+teste), 8 componentes em `interfaces/despesas-visita/` + `interfaces/reconciliacao/OrigensDespesaIncompletas.tsx`, 5 edge functions `despesa-visita-comprovante-*` (não lidas a fundo).
+- **AC-1** (previsão+realizado, sem dupla soma): REAL-E-TESTADO. `sso_criar_despesa_visita` (0323), `sso_realizar_despesa_visita`/`sso_realizar_despesa_ingestao` (0362/1007).
+- **AC-2** (idempotência/concorrência): REAL-E-TESTADO parcial. `E01-S180_reserva_digest_comprovante.test.sql` (plan 40). SC-002 (10 reenvios simultâneos) não confirmado como caso específico — hipótese não verificada.
+- **AC-3** (rateio exato, sem duplicar por OS): REAL-E-TESTADO. `sso_ratear_despesa_visita`/`sso_consultar_rateio_despesa` (0372); `E01-S180_rateio_integridade.test.sql` (plan 10) prova total preservado e rejeição de rateio inválido.
+- **AC-4** (retirada exclusiva vs despesa compartilhada): hipótese não verificada — pode estar em `0410`/`0412`, não lido a fundo.
+- **AC-5** (cancelar preserva histórico; já efetivada exige estorno): REAL-E-TESTADO. `0349_E01-S180_alterar_previsao.sql:52` — `if v_despesa.realizado_centavos is not null then raise exception 'realizado_exige_fluxo_financeiro'` bate literalmente com o AC.
+- **AC-6** (acesso negado/permitido, técnico não registra): gap possível, não confirmado — não achei pgTAP específico de autorização negada/permitida nos 3 arquivos de teste existentes (55 assertions no total); pode estar coberto genericamente em outro arquivo RLS não nomeado "despesa".
+- Vitest de dentro de `apps/web/` (3 de 4 arquivos testados): **19 testes verdes**; `supabase-despesas-visita-adapter.test.ts` falhou ao coletar por `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` ausentes neste shell — parece ambiente, não bug de código, não investigado a fundo.
+- Não reimplementar. Confirmar AC-4/AC-6 antes de fechar T016.
 **Input**: spec.md, plan.md, research.md, data-model.md e contracts/commands.md.
 **Dependências**: E01-S171 (Visita) e E01-S170 (autorização).
 **Tests**: Obrigatórios por AC; escrever e observar falha antes de implementar. Não executar escrita externa real.

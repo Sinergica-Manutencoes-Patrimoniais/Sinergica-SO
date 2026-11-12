@@ -1,6 +1,11 @@
 # Tasks — E01-S183: Portal operacional de materiais, orçamento e cobrança
 
-**Status**: Especificada — implementação não iniciada.
+**Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, "implementação não iniciada" estava errado. Mesma superfície `area-cliente`/`PortalShell.tsx` citada em E01-S184 (não é feature paralela — o próprio research.md já previa reuso de `portal-gateway.ts`/`supabase-portal-adapter.ts`).
+- **AC-1/AC-2** (disponibilidade de materiais): REAL-E-TESTADO. `components/MateriaisOsPortal.tsx`+teste. Migrations: `0374`, `0568`, `1382`, `1383`. RPCs: `sso_portal_listar_materiais`/`_mediada`, `sso_portal_informar_material`/`_mediado`, `sso_portal_recibo_disponibilidade_material`.
+- **AC-3/AC-4** (decidir versão/cobrança): REAL-E-TESTADO. `components/PropostasOsPortal.tsx`+teste, `CobrancasOsPortal.tsx`, `DocumentosCobranca.tsx`. Migrations: `0378`, `0381`, `0576`, `1378`/`1379`. RPCs: `sso_portal_propostas_os`/`_mediada`, `sso_portal_decidir_proposta_versionada`/`_mediada`, `sso_portal_cobrancas_os` (schema `financeiro`).
+- **AC-5/AC-6** (isolar Conta/revogar contato): REAL mas cobertura rasa — `PortalShell.isolamento.test.tsx` existe e passa, só 2 testes pros 2 ACs.
+- **GAP-REAL-CONFIRMADO**: pgTAP dedicado a S183 (`E01-S183_portal_operacional_us{1,2,3}.test.sql`, planejado em T004/T009/T014) **não existe**. A prova server-side específica dessas RPCs (RLS permitido/negado, Cliente B recusado, revogação de contato) não está confirmada na seleção oficial; pode estar coberta indiretamente por S179/S181/S184 — não confirmado.
+- Não reimplementar. Confirmar cobertura server-side real de AC-5/AC-6 antes de fechar T016.
 **Input**: spec.md, plan.md, research.md, data-model.md e contracts/commands.md.
 **Dependências**: E01-S179, E01-S181, E01-S182, E01-S184 e E01-S170.
 **Tests**: Obrigatórios por AC; escrever e observar falha antes de implementar. Não executar escrita externa real.

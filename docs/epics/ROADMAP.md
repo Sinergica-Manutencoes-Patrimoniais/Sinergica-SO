@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S186_
+_75 concluídas no histórico · maior ID usado: E01-S187_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -140,7 +140,7 @@ _75 concluídas no histórico · maior ID usado: E01-S186_
 | E01-S163 | Cliente 360 como cockpit operacional | Codex | Spec, plano e tarefas prontos para Terra (2026-10-06) | [spec](../../specs/E01-S163-cliente-360-cockpit-operacional/spec.md) |
 | E01-S165 | Plano multialvo, versões de Rotina e questionários referenciados | Terra | Em andamento — fundação isolada (2026-10-27) | [spec](../../specs/E01-S165-plano-versoes-rotinas/spec.md) |
 | E01-S166 | Calendário contratual, recorrência por modo e ocorrências idempotentes | Terra | Em andamento — fundação e cadastro inicial (2026-10-27) | [spec](../../specs/E01-S166-calendario-ocorrencias-capacidade/spec.md) |
-| E01-S167 | Chamado 1:N OS, continuidade e encerramento integral | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S167-chamados-os-visitas/spec.md) |
+| E01-S167 | Chamado 1:N OS, continuidade e encerramento integral | Terra | Em andamento — US1 pronta (banco+UI), gate fechado; US2/e2e/revisão pendentes (2026-11-10) | [spec](../../specs/E01-S167-chamados-os-visitas/spec.md) |
 | E01-S168 | Auvo T−24, serialização e validação PCM | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S168-auvo-t24-validacao/spec.md) |
 | E01-S169 | Importação e exportação dos Planos Rimini e I Home | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S169-importacao-despesas-exportacao/spec.md) |
 | E01-S170 | Permissões por ação e governança configurável do programa | Terra | Em andamento — fundação de capacidades (2026-10-26) | [spec](../../specs/E01-S170-governanca-plano/spec.md) |
@@ -161,6 +161,7 @@ _75 concluídas no histórico · maior ID usado: E01-S186_
 | E01-S184 | Proteção imediata de custos no Portal e documentos | Terra | Em andamento — proteção parcial (2026-10-26) | [spec](../../specs/E01-S184-protecao-custos-portal/spec.md) |
 | E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
 | E01-S186 | Migração auditável, pilotos por ondas e homologação do programa | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S186-migracao-pilotos-homologacao/spec.md) |
+| E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S34_

@@ -1,6 +1,14 @@
 # Tasks — E01-S172: Agenda oficial e capacidade por técnico, Cliente e semana
 
-**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status:** todas tarefas de implementação pendentes; não executar nesta entrega documental.
+**Input:** spec.md, plan.md, research.md, data-model.md, contracts/commands.md. **Status** (auditoria de código em 2026-11-10, madrugada): **story essencialmente pronta**, tasks.md estava desatualizado ("todas pendentes" não reflete a realidade). Evidência por AC:
+- **AC-1** (HH = duração×técnicos×quantidade, sem duplicar): `domain/capacidade-agenda.ts` + `capacidade-agenda-us1.test.ts` (7 testes). Deduplicação de esforço em `consolidar-esforco-visitas.ts:83-97` (`internosMinutos`/`execucaoPropriaMinutos`) + teste colocado.
+- **AC-2** (disponibilidade configurada, desconta reservas/ausências): migrations `0334` (disponibilidade semanal), `0443` (intervalos declarados), `0994` (snapshot); UI `IntervalosDeclarados.tsx` + teste (4 testes), `VinculoIntervalo.tsx` + teste.
+- **AC-3** (terceiro separa execução externa de acompanhamento interno): `consolidar-esforco-visitas.ts:10-11,94-97` — `terceirosMinutos` fica fora de `internosMinutos`; testado em `consolidar-esforco-visitas.test.ts`.
+- **AC-4** (alerta não bloqueia, exige confirmação consciente): `SimulacaoManual.tsx` (264 linhas), consumido de verdade por `TransicaoVisita.tsx` (E01-S171, confirma reuso cross-story real). Migrations `1191`/`1192`; UI `HistoricoAlertasReprogramacao.tsx`.
+- **AC-5** (saldo HH não prova composição viável — simultaneidade/especialidade): `capacidade-agenda.ts:76,87,107` (`simultaneidade_incompativel` como alerta distinto); `capacidade-agenda-us2.test.ts:12-51` (6 testes) cobre o caso exato da spec.
+- **AC-6** (comparar semanas origem/destino, segunda-domingo, virada anual): `domain/semana-capacidade.ts` + teste; `ComparacaoCapacidade` dentro de `TransicaoVisita.tsx` já consome isso de verdade lado a lado com `SnapshotCapacidade.tsx` (415 linhas, 11 testes).
+- pgTAP: 21 arquivos `E01-S172_*.test.sql` na seleção oficial de `db-tests` (não rodados nesta auditoria, banco local em uso por outro processo). Vitest (`pnpm vitest run` de dentro de `apps/web/`, 12 arquivos cobrindo domain+application+interfaces): **12 passed, 58 testes passed**.
+- **Nenhum gap real confirmado nos ACs centrais.** Pendentes genuínos: T014 (integração com duas sessões concorrentes), T015 (e2e), T016 (ci:local/homologação) — mesmo padrão visto em todas as stories desta sessão, não específico de S172.
 
 ## Phase 1 — Setup
 

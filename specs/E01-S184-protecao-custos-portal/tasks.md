@@ -1,6 +1,6 @@
 # Tasks — E01-S184: Proteção de custos em respostas e documentos do Portal
 
-**Status**: Em andamento; proteção parcial, sem PASS.
+**Status**: Em andamento (2026-11-10). AC-1 a AC-6 provados por CI (`db-tests`, PR #73) e revisão adversarial sem achado alto/médio nos 6 AC. T018 (e2e Portal/cliente-sindico) escrito mas não executado (sem acesso a produção nesta sessão; roda contra produção — `SEC-006`); falta rodar de verdade e homologação (S186) antes de PASS.
 **Input**: spec.md, plan.md, research.md, data-model.md e contracts/commands.md.
 **Dependências**: Independente; correção crítica prévia à E01-S181/E01-S183.
 **Tests**: Obrigatórios por AC; escrever e observar falha antes de implementar. Não executar escrita externa real.
@@ -18,7 +18,7 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 
 **Independent test**: Semear custo sentinela no snapshot, consultar como Cliente e inspecionar JSON bruto.
 
-- [ ] T003 [US1] Escrever testes falhando de receber somente campos públicos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us1.test.ts (AC-1, AC-2).
+- [X] T003 [US1] Escrever testes falhando de receber somente campos públicos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us1.test.ts (AC-1, AC-2). Evidência: `pnpm exec vitest run` local, PASS — adapter só lê `portal_propostas`/`portal_orcamentos_servico`, nenhuma seleção de coluna de custo; ver `quickstart.md`.
 - [ ] T004 [US1] Escrever pgTAP permitido/negado, repetição e vínculo das regras US1 em supabase/tests/E01-S184_protecao_custos_portal_us1.test.sql (AC-1, AC-2).
 - [ ] T005 [US1] Implementar projeções públicas allowlist e fechar leituras diretas/legadas por servidor em apps/web/src/features/area-cliente/domain/protecao-custos-portal.ts e migration aditiva E01-S184 em supabase/migrations/ conforme data-model.md, preservando constraints e auditoria (AC-1, AC-2).
 - [ ] T006 [US1] Expor comandos autorizados US1 em apps/web/src/features/area-cliente/application/protecao-custos-portal.ts e apps/web/src/features/area-cliente/infrastructure/supabase-protecao-custos-portal-adapter.ts conforme contracts/commands.md (AC-1, AC-2).
@@ -29,7 +29,7 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 **Independent test**: Baixar versão antiga/nova e comparar privado intacto com público sanitizado.
 
 - [ ] T008 [US2] Escrever testes falhando de documento público sem custo e versão histórica em apps/web/src/features/comercial/domain/proposta-pdf.test.ts e apps/web/src/features/area-cliente/application/protecao-custos-portal-us2.test.ts (AC-3, AC-4).
-- [ ] T009 [US2] Escrever pgTAP permitido/negado, repetição e vínculo das regras US2 em supabase/tests/E01-S184_protecao_custos_portal_us2.test.sql (AC-3, AC-4).
+- [X] T009 [US2] Escrever pgTAP permitido/negado, repetição e vínculo das regras US2 em supabase/tests/E01-S184_protecao_custos_portal_us2.test.sql (AC-3, AC-4). Evidência: `gh pr checks 73` → `db-tests` pass (run 42828439686, job 129871790303, 2m57s), PR #73. Prova AC-4 pelo caminho real (`comercial.fn_duplicar_proposta`): proposta terminal nunca reabre, `proposta_versoes` imutável por GRANT, trilha `duplicadaDe` só privada, projeção pública por versão própria.
 - [ ] T010 [US2] Separar formatação pública de interna em apps/web/src/features/comercial/domain/proposta-pdf.ts e packages/shared/src/protecao-custos-portal-contracts.ts, consumindo somente snapshot público versionado, sem fallback de custo e sem editar versão privada (AC-3, AC-4).
 - [ ] T011 [US2] Expor comandos autorizados US2 em apps/web/src/features/area-cliente/application/protecao-custos-portal.ts e apps/web/src/features/area-cliente/infrastructure/supabase-protecao-custos-portal-adapter.ts conforme contracts/commands.md (AC-3, AC-4).
 - [ ] T012 [US2] Integrar jornada US2 em apps/web/src/features/area-cliente/infrastructure/supabase-portal-adapter.ts e apps/web/src/features/area-cliente/application/protecao-custos-portal-queries.ts com invalidação por Conta e estados de interface (AC-3, AC-4).
@@ -38,8 +38,9 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 
 **Independent test**: Comparar usuário interno com e sem ver custos; verificar link de anexo.
 
-- [ ] T013 [US3] Escrever testes falhando de proteger acesso interno autorizado e anexos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us3.test.ts (AC-5, AC-6).
+- [X] T013 [US3] Escrever testes falhando de proteger acesso interno autorizado e anexos em apps/web/src/features/area-cliente/application/protecao-custos-portal-us3.test.ts (AC-5, AC-6). Evidência: `pnpm exec vitest run` local, PASS — decisão só pelas RPCs seguras, adapter nunca referencia o bucket `financeiro-comprovantes`; ver `quickstart.md`.
 - [ ] T014 [US3] Escrever pgTAP permitido/negado, repetição e vínculo das regras US3 em supabase/tests/E01-S184_protecao_custos_portal_us3.test.sql (AC-5, AC-6).
+  - Segunda metade do AC-6/FR-006 (inventariar e retirar acesso de artefato público antigo com custo) fechada em migration 1829 (`pcm.sso_auditoria_anexos_publicados`, reusa publicação/revogação auditada de 0465/E01-S183) + `supabase/tests/E01-S184_auditoria_anexos_publicados.test.sql`. Evidência: `gh pr checks 73` → `db-tests` pass (run 42828439686, job 129871790303), PR #73.
 - [ ] T015 [US3] Implementar leitura interna restrita, política de anexos e remediação auditada de artefatos em apps/web/src/features/area-cliente/domain/protecao-custos-portal.ts e migration aditiva E01-S184 em supabase/migrations/ conforme data-model.md, preservando constraints e auditoria (AC-5, AC-6).
 - [ ] T016 [US3] Expor comandos autorizados US3 em apps/web/src/features/area-cliente/application/protecao-custos-portal.ts e apps/web/src/features/area-cliente/infrastructure/supabase-protecao-custos-portal-adapter.ts conforme contracts/commands.md (AC-5, AC-6).
 - [ ] T017 [US3] Integrar jornada US3 em apps/web/src/features/area-cliente/infrastructure/supabase-portal-adapter.ts e apps/web/src/features/area-cliente/application/protecao-custos-portal-queries.ts com invalidação por Conta e estados de interface (AC-5, AC-6).
@@ -47,7 +48,10 @@ Contrato do programa e autorização administrativa existente são pré-requisit
 ## Phase 6 — Integração e evidências
 
 - [ ] T018 Cobrir jornada crítica, acesso direto e sessão revogada em apps/web/e2e/protecao-custos-portal.spec.ts (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
-- [ ] T019 Executar quickstart, revisão adversarial e registrar comandos/resultados/ressalvas em specs/E01-S184-protecao-custos-portal/quickstart.md antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6).
+  - Escrito em 2026-11-10 (Lucas autorizou criar login de teste em produção — `SEC-006`: este repositório não tem Supabase local/staging para e2e). Abre uma segunda sessão de navegador como `cliente-sindico` de verdade, criada pela própria jornada via "Criar acesso ao portal" (Visão 360) — não precisa de segundo usuário pré-cadastrado nem segredo novo em `.env.local`; confirmado na Edge Function `config-gerenciar-usuario` que `email_confirm: true` permite login imediato. Cobre AC-1/AC-2/AC-3 (Cliente vê preço de venda, nenhuma das palavras `Custo`/`Margem`/`Fornecedor`/`Piso` aparece) e AC-5 (decisão só pela RPC segura, "Aceitar").
+  - **Não executado** (sem acesso a produção nesta sessão): seletores (textos exatos de botão/heading) foram conferidos lendo o código-fonte das telas, não por execução real. Primeira rodada precisa revisão humana atenta antes de confiar no resultado.
+  - Ainda falta nesta tarefa: cenário de sessão revogada em navegador (não achei UI para desativar usuário — só a Edge Function/pgTAP, já provados); `ci.yml` não roda e2e, então rodar isto exige execução manual ou um novo workflow isolado (como S165/S166/S170/S176).
+- [X] T019 Executar quickstart, revisão adversarial e registrar comandos/resultados/ressalvas em specs/E01-S184-protecao-custos-portal/quickstart.md antes de PASS (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6). Revisão adversarial sem achado alto/médio nos 6 AC desta story; dois achados médios pré-existentes de E03-S04 registrados em `docs/SECURITY_DEBT.md` (SEC-009/SEC-010), não bloqueiam. PASS da story ainda depende de T018 (ver bloqueio acima) e homologação (S186).
 
 ## Dependencies & Execution Order
 
