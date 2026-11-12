@@ -47,6 +47,12 @@ function montar() {
     </QueryClientProvider>,
   );
 }
+/** Primeira (e única) chamada ao adapter, já estreitada — `mock.calls[0]` é opcional no tipo. */
+function comandoEnviado() {
+  const chamada = api.informar.mock.calls[0];
+  if (!chamada) throw new Error("O adapter não foi chamado.");
+  return chamada[0] as { evento: unknown; expectedRevision: number };
+}
 function registrar() {
   // A confirmação é recalculada a cada mudança de campo, então só pode ser marcada no fim.
   fireEvent.click(screen.getByLabelText(/Conferi a lista, revisão e informação/));
@@ -67,8 +73,8 @@ it("envia aquisição sem observação quando o campo opcional fica vazio", asyn
   registrar();
   await waitFor(() => expect(api.informar).toHaveBeenCalledTimes(1));
   // `observacao` em branco não pode ir no payload: o banco recusa string vazia.
-  expect(api.informar.mock.calls[0][0].evento).toEqual({ tipo: "aquisicao", dados: {} });
-  expect(api.informar.mock.calls[0][0].expectedRevision).toBe(3);
+  expect(comandoEnviado().evento).toEqual({ tipo: "aquisicao", dados: {} });
+  expect(comandoEnviado().expectedRevision).toBe(3);
 });
 
 it("envia o motivo da dispensa no campo que o banco exige", async () => {
@@ -79,7 +85,7 @@ it("envia o motivo da dispensa no campo que o banco exige", async () => {
   });
   registrar();
   await waitFor(() => expect(api.informar).toHaveBeenCalledTimes(1));
-  expect(api.informar.mock.calls[0][0].evento).toEqual({
+  expect(comandoEnviado().evento).toEqual({
     tipo: "dispensa",
     dados: { motivo: "Cliente retirou o item do escopo" },
   });
@@ -94,7 +100,7 @@ it("avisa que concluir é definitivo antes de o usuário confirmar", async () =>
   });
   registrar();
   await waitFor(() => expect(api.informar).toHaveBeenCalledTimes(1));
-  expect(api.informar.mock.calls[0][0].evento).toEqual({
+  expect(comandoEnviado().evento).toEqual({
     tipo: "conclusao",
     dados: { observacao: "Material aplicado na OS" },
   });
