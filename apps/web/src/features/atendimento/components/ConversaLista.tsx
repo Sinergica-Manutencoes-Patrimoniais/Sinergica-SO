@@ -55,8 +55,10 @@ export function ConversaLista({
               key={conversa.id}
               type="button"
               onClick={() => onSelecionar(conversa)}
-              className={`flex w-full flex-col gap-1 border-b border-line-soft px-3 py-3 text-left hover:bg-line-soft ${
-                conversa.id === conversaSelecionadaId ? "bg-orange-soft/40" : ""
+              className={`flex min-h-[72px] w-full flex-col justify-center gap-1 border-b border-line-soft border-l-2 px-3 py-3 text-left transition-colors duration-[var(--duration-fast)] ease-out hover:bg-line-soft ${
+                conversa.id === conversaSelecionadaId
+                  ? "border-l-orange bg-orange-soft/50"
+                  : "border-l-transparent"
               }`}
             >
               <div className="flex items-center justify-between gap-2">

@@ -2,6 +2,7 @@ import { Skeleton, ToastProvider, TooltipProvider } from "@sinergica/ui";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { PortalShell } from "../features/area-cliente/PortalShell";
 import { deveUsarPortal } from "../features/area-cliente/domain/roteamento";
+import { PreviewVisualS41 } from "../features/atendimento/components/PreviewVisualS41";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { UiGaleriaPage } from "../features/guia/UiGaleriaPage";
 import { HomePage } from "./HomePage";
@@ -94,6 +95,9 @@ export function App() {
                       </RequireAuth>
                     }
                   />
+                  {/* TEMPORÁRIO (E02-S41): vitrine do restilo da bolha/fila para demo, sem
+                      auth/backend. Remove na troca de rota da tela nova (plan.md fase 4). */}
+                  <Route path="/preview-s41" element={<PreviewVisualS41 />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </BrowserRouter>
