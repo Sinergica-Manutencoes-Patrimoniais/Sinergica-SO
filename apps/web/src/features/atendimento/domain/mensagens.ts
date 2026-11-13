@@ -64,7 +64,7 @@ export interface MensagemItem {
    * no retorno do OpenRouter). */
   custoIa: CustoIaMensagem | null;
   /** E02-S37: legenda da mídia (só do cliente); conteudoRecebido diz O QUE era quando não é texto
-   * puro (imagem/vídeo/.../aviso); anexoEstado diz se o arquivo foi guardado de fato. */
+   * puro (imagem/vídeo/…/aviso); anexoEstado diz se o arquivo foi guardado de fato. */
   legenda: string | null;
   conteudoRecebido: ConteudoRecebido | null;
   anexoEstado: AnexoEstado | null;

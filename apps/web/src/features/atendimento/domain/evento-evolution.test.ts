@@ -11,7 +11,12 @@ function evento(message: Record<string, unknown>, extra: Extra = {}) {
   return {
     event: "MESSAGES_UPSERT",
     data: {
-      key: { remoteJid: "5511999999999@s.whatsapp.net", id: "ABC123", fromMe: false, ...chaveExtra },
+      key: {
+        remoteJid: "5511999999999@s.whatsapp.net",
+        id: "ABC123",
+        fromMe: false,
+        ...chaveExtra,
+      },
       message,
       ...resto,
     },
@@ -73,7 +78,10 @@ describe("classificarEventoEvolution — ignorados explícitos", () => {
 describe("classificarEventoEvolution — aparelho (fromMe)", () => {
   it("fromMe true vira aparelho mesmo em grupo/broadcast (checado antes)", () => {
     const r = classificarEventoEvolution(
-      evento({ conversation: "oi" }, { key: { remoteJid: "5511999999999@s.whatsapp.net", id: "x", fromMe: true } }),
+      evento(
+        { conversation: "oi" },
+        { key: { remoteJid: "5511999999999@s.whatsapp.net", id: "x", fromMe: true } },
+      ),
     );
     expect(r.tipo).toBe("aparelho");
   });

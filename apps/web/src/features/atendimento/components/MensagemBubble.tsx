@@ -174,7 +174,7 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
         )}
         {mensagem.reacao && (
           <span
-            className="-bottom-2 absolute right-2 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-card text-[13px] shadow-raised"
+            className="-bottom-2 absolute right-2 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-card text-body-sm shadow-raised"
             aria-label={`Cliente reagiu com ${mensagem.reacao}`}
           >
             {mensagem.reacao}
