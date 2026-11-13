@@ -74,6 +74,11 @@ function mensagem(
     payload: {},
     origemEnvio: null,
     custoIa: null,
+    legenda: null,
+    conteudoRecebido: null,
+    anexoEstado: null,
+    citacao: null,
+    reacao: null,
     ...parcial,
   };
 }

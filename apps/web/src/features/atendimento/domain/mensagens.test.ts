@@ -26,6 +26,11 @@ function mensagem(overrides: Partial<MensagemItem>): MensagemItem {
     payload: {},
     origemEnvio: null,
     custoIa: null,
+    legenda: null,
+    conteudoRecebido: null,
+    anexoEstado: null,
+    citacao: null,
+    reacao: null,
     ...overrides,
   };
 }

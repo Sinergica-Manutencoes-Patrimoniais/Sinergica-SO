@@ -40,6 +40,9 @@ function clientFake(opts: {
             }),
           };
         },
+        rpc: async (_fn: string, _args: Record<string, unknown>) => ({
+          error: opts.rpcErro ?? null,
+        }),
       };
     },
   };
@@ -96,6 +99,10 @@ function serviceClientTabelas(
               return { eq: async () => cfg.update ?? { error: null } };
             },
           };
+        },
+        rpc: async (fn: string, args: Record<string, unknown>) => {
+          chamadasRpc.push({ fn, args });
+          return rpc[fn] ?? { data: null, error: null };
         },
       };
     },
