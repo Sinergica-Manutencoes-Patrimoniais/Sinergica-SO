@@ -141,3 +141,9 @@ jobs:
         # Arquivos manuais de setup/concorrência e remote_promotion_smoke.sql não são casos pgTAP
         # da suíte local; este glob seleciona os testes automatizados com plano .test.sql.
         run: supabase test db supabase/tests/*.test.sql
+      - name: E01-S188 — flags do registro de jornadas existem no front
+        # Camadas 'gate'/'grant' já são verificadas por pgTAP (to_regclass/to_regprocedure contra
+        # o schema real, acima). 'flag' não tem equivalente dentro do Postgres — o banco não vê o
+        # código do front — por isso este script roda aqui, sem dependência além do Node da
+        # imagem padrão do runner, com o Supabase local já de pé.
+        run: node scripts/check-jornadas-flags.mjs
