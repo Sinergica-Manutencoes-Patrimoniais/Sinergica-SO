@@ -1,9 +1,12 @@
--- evolution_inbox_canal.test.sql — pgTAP (E02-S36, AC-5)
--- Idempotência por canal: mesmo remote_id em canais diferentes NÃO colide; duplicata no mesmo
--- canal não duplica mensagem. Rodar com `supabase test db` (requer Docker/Supabase local).
+-- evolution_inbox_canal.test.sql — pgTAP (E02-S36)
+-- Idempotência por canal: reentrega do mesmo (canal, evento, id) não duplica mensagem.
+-- SPEC_DEVIATION (ver 1848): wa_message_id segue com unicidade GLOBAL, não por canal — um
+-- remote_id colidindo entre dois canais diferentes (teórico, Baileys inclui aleatoriedade por
+-- dispositivo no id) faz a segunda mensagem ser descartada pelo ON CONFLICT DO NOTHING global.
+-- Rodar com `supabase test db` (requer Docker/Supabase local).
 
 begin;
-select plan(6);
+select plan(7);
 
 insert into atendimento.canais_externos (id, tipo, label, identificador_externo, ativo)
 values
@@ -29,21 +32,29 @@ select ok(
   'reentrega do mesmo (canal, evento, id) é duplicada'
 );
 
--- 3: MESMO remote_id em CANAL DIFERENTE não é duplicado (AC-5)
+-- 3: remote_id DIFERENTE em canal diferente registra normalmente (inbox é escopado por canal)
+select ok(
+  (select not duplicado from atendimento.fn_registrar_mensagem_evolution(
+    '00000000-0000-0000-0000-000000000362', 'MESSAGES_UPSERT', 'REMOTE-2',
+    'inst-b-s36', '5511900000002@s.whatsapp.net', 'Ciclana', 'oi de outro canal'
+  )),
+  'remote_id diferente em canal diferente registra (não duplicado)'
+);
+
+-- 4: SPEC_DEVIATION — mesmo remote_id em canal diferente COLIDE na unicidade global de
+-- wa_message_id; a reserva no inbox (escopada por canal) ainda passa, mas o INSERT em
+-- mensagens é descartado pelo ON CONFLICT DO NOTHING, e nenhuma segunda mensagem nasce.
 select ok(
   (select not duplicado from atendimento.fn_registrar_mensagem_evolution(
     '00000000-0000-0000-0000-000000000362', 'MESSAGES_UPSERT', 'REMOTE-1',
-    'inst-b-s36', '5511900000002@s.whatsapp.net', 'Ciclana', 'oi de outro canal'
+    'inst-b-s36', '5511900000004@s.whatsapp.net', 'Beltrano', 'oi colidindo com canal A'
   )),
-  'mesmo remote_id em canal diferente NÃO colide'
+  'inbox reserva por canal mesmo quando wa_message_id colide globalmente (duplicado=false na reserva)'
 );
-
--- 4: cada canal gerou sua própria conversa/mensagem (sem cruzar)
 select is(
-  (select count(distinct conversa_id)::int from atendimento.mensagens
-    where wa_message_id = 'REMOTE-1'),
-  2,
-  'duas conversas distintas para o mesmo remote_id em canais diferentes'
+  (select count(*)::int from atendimento.mensagens where wa_message_id = 'REMOTE-1'),
+  1,
+  'wa_message_id colidindo entre canais não cria segunda mensagem (unicidade global, SPEC_DEVIATION)'
 );
 
 -- 5: conversa nova já nasce com canal_id preenchido
@@ -58,7 +69,7 @@ set local role authenticated;
 
 select throws_ok(
   $$ select atendimento.fn_registrar_mensagem_evolution(
-       '00000000-0000-0000-0000-000000000361', 'MESSAGES_UPSERT', 'REMOTE-2',
+       '00000000-0000-0000-0000-000000000361', 'MESSAGES_UPSERT', 'REMOTE-3',
        'inst-a-s36', '5511900000003@s.whatsapp.net', null, 'oi') $$,
   '42501',
   null,
