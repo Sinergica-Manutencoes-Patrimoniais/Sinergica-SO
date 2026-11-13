@@ -38,12 +38,14 @@ select ok(
 );
 
 -- 3: aviso vira texto, sem midia_url
+select atendimento.fn_registrar_midia_evolution(
+  '00000000-0000-0000-0000-000000000371', 'MESSAGES_UPSERT', 'MIDIA-2', 'inst-s37',
+  '5511988888888@s.whatsapp.net', 'texto', 'localizacao', null, '[localização]',
+  null, null, null, null
+);
 select is(
-  (select tipo_conteudo from atendimento.fn_registrar_midia_evolution(
-    '00000000-0000-0000-0000-000000000371', 'MESSAGES_UPSERT', 'MIDIA-2', 'inst-s37',
-    '5511988888888@s.whatsapp.net', 'texto', 'localizacao', null, '[localização]',
-    null, null, null, null
-  ) f join atendimento.mensagens m on m.id = f.mensagem_id),
+  (select tipo_conteudo from atendimento.mensagens
+    where wa_message_id = 'MIDIA-2' and canal_id = '00000000-0000-0000-0000-000000000371'),
   'texto',
   'aviso de localização vira mensagem de texto, sem anexo'
 );
