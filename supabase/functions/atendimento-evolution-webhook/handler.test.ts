@@ -337,7 +337,7 @@ Deno.test("E02-S37 — localização vira aviso, sem download, sem conteúdo", a
   assertEquals(chamada?.args.p_conteudo, "[localização]");
 });
 
-Deno.test("E02-S37 — áudio e reação continuam só reconhecidos (S38), não viram texto", async () => {
+Deno.test("E02-S37 — áudio continua só reconhecido (transcrição não existe, fica pra depois)", async () => {
   const { serviceClient } = serviceClientFake({});
   const handler = criarHandler({ serviceClient });
   const resposta = await handler(
@@ -354,6 +354,50 @@ Deno.test("E02-S37 — áudio e reação continuam só reconhecidos (S38), não 
   const corpo = await resposta.json();
   assertEquals(corpo.ignorado, true);
   assertEquals(corpo.tipo, "audio");
+});
+
+Deno.test("E02-S38 — reação registra via fn_registrar_reacao_evolution, nunca cria mensagem", async () => {
+  const { serviceClient, chamadas } = serviceClientFake({});
+  const handler = criarHandler({ serviceClient });
+  const resposta = await handler(
+    req({
+      body: {
+        event: "MESSAGES_UPSERT",
+        data: {
+          key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M1", fromMe: false },
+          message: { reactionMessage: { key: { id: "MSG_REAGIDA" }, text: "👍" } },
+        },
+      },
+    }),
+  );
+  assertEquals(resposta.status, 200);
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_reacao_evolution");
+  assertEquals(chamada?.args.p_remote_id_reagido, "MSG_REAGIDA");
+  assertEquals(chamada?.args.p_emoji, "👍");
+  assertEquals(
+    chamadas.some((c) => c.fn === "fn_registrar_mensagem_evolution"),
+    false,
+  );
+});
+
+Deno.test("E02-S38 — texto citando outra mensagem passa citacaoRemoteId pra RPC", async () => {
+  const { serviceClient, chamadas } = serviceClientFake({});
+  const handler = criarHandler({ serviceClient });
+  await handler(
+    req({
+      body: {
+        event: "MESSAGES_UPSERT",
+        data: {
+          key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M2", fromMe: false },
+          message: {
+            extendedTextMessage: { text: "esse valor?", contextInfo: { stanzaId: "MSG_CITADA" } },
+          },
+        },
+      },
+    }),
+  );
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_mensagem_evolution");
+  assertEquals(chamada?.args.p_citada_remote_id, "MSG_CITADA");
 });
 
 Deno.test("mensagem do aparelho (fromMe) vai para fn_registrar_mensagem_do_aparelho (E02-S39)", async () => {

@@ -235,8 +235,21 @@ export function criarHandler(deps: DependenciasDoWebhook) {
       return json(200, { ok: true, mensagemId: resultadoMidia.mensagemId });
     }
 
+    // E02-S38: reação do cliente — nunca cria mensagem, nunca aciona o Zé.
+    if (evento.tipo === "reacao") {
+      const { error: erroReacao } = await deps.serviceClient
+        .schema("atendimento")
+        .rpc("fn_registrar_reacao_evolution", {
+          p_canal_id: canalId,
+          p_remote_id_reagido: evento.remoteIdReagido,
+          p_emoji: evento.emoji,
+        });
+      if (erroReacao) return json(502, { codigo: "erro_interno" });
+      return json(200, { ok: true, reacao: true });
+    }
+
     if (evento.tipo !== "texto") {
-      // Áudio e reação (E02-S38): reconhecidos e respondidos, persistência fica para depois.
+      // Áudio: reconhecido e respondido, persistência fica para depois.
       return json(200, { ignorado: true, tipo: evento.tipo });
     }
 
@@ -250,6 +263,7 @@ export function criarHandler(deps: DependenciasDoWebhook) {
         p_remote_jid: evento.remoteJid,
         p_contato_nome: evento.pushName ?? null,
         p_conteudo: evento.texto,
+        p_citada_remote_id: evento.citacaoRemoteId ?? null,
       });
     if (erroRegistro) {
       console.error(
