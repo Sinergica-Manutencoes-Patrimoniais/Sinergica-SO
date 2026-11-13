@@ -218,7 +218,7 @@ Deno.test("mídia reconhecida mas não persistida nesta story -> 200 ignorado", 
   assertEquals(corpo.tipo, "midia");
 });
 
-Deno.test("mensagem do aparelho (fromMe) vai para fn_registrar_mensagem_celular", async () => {
+Deno.test("mensagem do aparelho (fromMe) vai para fn_registrar_mensagem_do_aparelho (E02-S39)", async () => {
   const { serviceClient, chamadas } = serviceClientFake({});
   const handler = criarHandler({ serviceClient });
   const resposta = await handler(
@@ -233,10 +233,8 @@ Deno.test("mensagem do aparelho (fromMe) vai para fn_registrar_mensagem_celular"
     }),
   );
   assertEquals(resposta.status, 200);
-  assertEquals(
-    chamadas.some((c) => c.fn === "fn_registrar_mensagem_celular"),
-    true,
-  );
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_mensagem_do_aparelho");
+  assertEquals(chamada?.args.p_texto, "respondi pelo celular");
   assertEquals(
     chamadas.some((c) => c.fn === "fn_registrar_mensagem_evolution"),
     false,

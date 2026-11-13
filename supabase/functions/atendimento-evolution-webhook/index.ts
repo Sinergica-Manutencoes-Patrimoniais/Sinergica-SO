@@ -22,7 +22,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSupabaseServiceKey } from "../_shared/auth.ts";
 import { constantTimeEqual } from "../_shared/crypto.ts";
-import { extractEvolutionMessage } from "../_shared/evolution-webhook.ts";
+import { horarioDoAparelho, textoDoAparelho } from "../_shared/evolution-aparelho.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { classificarEventoEvolution } from "./classificar.ts";
 
@@ -170,22 +170,25 @@ export function criarHandler(deps: DependenciasDoWebhook) {
       return json(200, { ignorado: true, motivo: evento.motivo });
     }
 
-    // Mensagem do aparelho (fromMe): caminho legado intacto (S39 cuida de tirar o Zé).
+    // Mensagem do aparelho (fromMe) — E02-S39/ADR-1688: grava, reconhece eco/automática/atraso,
+    // pausa e atribui a conversa, cancela a fila do Zé. Nunca usa pushName (nome da empresa).
     if (evento.tipo === "aparelho") {
-      const mensagemLegada = extractEvolutionMessage(
-        (leitura.payload ?? {}) as Record<string, unknown>,
-      );
-      const { error: erroCelular } = await deps.serviceClient
+      const bruta = objeto(objeto(leitura.payload)?.data) as Record<string, unknown> | null;
+      const mensagemBruta = objeto(bruta?.message) ?? {};
+      const texto = textoDoAparelho(mensagemBruta);
+      const enviadaEm = horarioDoAparelho(bruta?.messageTimestamp) ?? new Date();
+
+      const { error: erroAparelho } = await deps.serviceClient
         .schema("atendimento")
-        .rpc("fn_registrar_mensagem_celular", {
+        .rpc("fn_registrar_mensagem_do_aparelho", {
+          p_canal_id: canalId,
           p_instance_id: canalRow.identificador_externo ?? "",
           p_remote_jid: evento.remoteJid,
-          p_contato_nome: mensagemLegada.contactName,
-          p_conteudo: mensagemLegada.content,
-          p_wa_message_id: evento.remoteId,
-          p_enviado_em: mensagemLegada.receivedAt ?? new Date().toISOString(),
+          p_remote_id: evento.remoteId,
+          p_texto: texto,
+          p_enviada_em: enviadaEm.toISOString(),
         });
-      if (erroCelular) return json(502, { codigo: "erro_interno" });
+      if (erroAparelho) return json(502, { codigo: "erro_interno" });
       return json(200, { ok: true, aparelho: true });
     }
 
