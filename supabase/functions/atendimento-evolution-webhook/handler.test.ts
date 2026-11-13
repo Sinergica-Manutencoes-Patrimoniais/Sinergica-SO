@@ -11,6 +11,8 @@ interface Config {
   rateLimitPermitido?: boolean;
   registrarResultado?: { data: unknown; error: unknown };
   celularErro?: unknown;
+  comCredenciaisDeInstancia?: boolean;
+  registrarMidiaResultado?: { data: unknown; error: unknown };
 }
 
 function serviceClientFake(cfg: Config) {
@@ -26,6 +28,12 @@ function serviceClientFake(cfg: Config) {
             eq() {
               return this;
             },
+            order() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
             maybeSingle: async () => {
               if (tabela === "canais_externos") {
                 return { data: cfg.canal === undefined ? { id: CANAL_ID, identificador_externo: "inst-1", ativo: true } : cfg.canal, error: null };
@@ -34,12 +42,20 @@ function serviceClientFake(cfg: Config) {
                 return {
                   data:
                     cfg.webhookSecretRef === undefined
-                      ? { webhook_secret_ref: "SINERGICA_EVOWEBHOOK_1_ref" }
+                      ? {
+                          webhook_secret_ref: "SINERGICA_EVOWEBHOOK_1_ref",
+                          ...(cfg.comCredenciaisDeInstancia !== false
+                            ? { token_ref: "SINERGICA_EVOTOKEN_1_ref", nome_remoto: "sinergica-canal" }
+                            : {}),
+                        }
                       : cfg.webhookSecretRef === null
                         ? null
                         : { webhook_secret_ref: cfg.webhookSecretRef },
                   error: null,
                 };
+              }
+              if (tabela === "evolution_servidor") {
+                return { data: { url_base: "https://evolution.exemplo.com.br" }, error: null };
               }
               return { data: null, error: null };
             },
@@ -59,13 +75,39 @@ function serviceClientFake(cfg: Config) {
           if (fn === "fn_registrar_mensagem_evolution") {
             return cfg.registrarResultado ?? { data: [{ mensagem_id: "msg-1", conversa_id: "conv-1", duplicado: false }], error: null };
           }
+          if (fn === "fn_registrar_midia_evolution") {
+            return (
+              cfg.registrarMidiaResultado ?? {
+                data: [{ mensagem_id: "msg-midia-1", conversa_id: "conv-1", duplicado: false }],
+                error: null,
+              }
+            );
+          }
           return { data: null, error: null };
         },
       };
     },
+    storage: {
+      from(_bucket: string) {
+        return {
+          upload: async (_caminho: string, _bytes: unknown, _opts: unknown) => ({ error: null }),
+        };
+      },
+    },
   };
   // deno-lint-ignore no-explicit-any
   return { serviceClient: serviceClient as any, chamadas };
+}
+
+/** Resposta da Evolution para `/chat/getBase64FromMediaMessage/...` com um JPEG minúsculo. */
+function fetchEvolutionComMidiaFake(base64: string = "/9j/4AAQSkZJRg=="): typeof fetch {
+  return async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("getBase64FromMediaMessage")) {
+      return new Response(JSON.stringify({ base64, mimetype: "image/jpeg" }), { status: 200 });
+    }
+    return new Response("{}", { status: 200 });
+  };
 }
 
 function req(
@@ -198,7 +240,104 @@ Deno.test("evento ignorável -> 200 { ignorado: true }", async () => {
   assertEquals(corpo.ignorado, true);
 });
 
-Deno.test("mídia reconhecida mas não persistida nesta story -> 200 ignorado", async () => {
+Deno.test("E02-S37 — imagem com legenda é baixada, guardada e registrada", async () => {
+  const { serviceClient, chamadas } = serviceClientFake({});
+  const handler = criarHandler({ serviceClient, fetchEvolution: fetchEvolutionComMidiaFake() });
+  const resposta = await handler(
+    req({
+      body: {
+        event: "MESSAGES_UPSERT",
+        data: {
+          key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M1", fromMe: false },
+          message: { imageMessage: { mimetype: "image/jpeg", caption: "foto" } },
+        },
+      },
+    }),
+  );
+  assertEquals(resposta.status, 200);
+  const corpo = await resposta.json();
+  assertEquals(corpo.ok, true);
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_midia_evolution");
+  assertEquals(chamada?.args.p_anexo_estado, "guardado");
+  assertEquals(chamada?.args.p_legenda, "foto");
+  assertEquals(chamada?.args.p_conteudo, "[imagem] legenda: foto"); // o que o Zé lê, nunca o arquivo
+});
+
+Deno.test("E02-S37 — mídia acima do limite vira texto com aviso, sem baixar", async () => {
+  const { serviceClient, chamadas } = serviceClientFake({});
+  let chamouFetch = false;
+  const handler = criarHandler({
+    serviceClient,
+    fetchEvolution: async () => {
+      chamouFetch = true;
+      return new Response("{}", { status: 200 });
+    },
+  });
+  const resposta = await handler(
+    req({
+      body: {
+        event: "MESSAGES_UPSERT",
+        data: {
+          key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M1", fromMe: false },
+          message: { videoMessage: { mimetype: "video/mp4", fileLength: 99 * 1024 * 1024 } },
+        },
+      },
+    }),
+  );
+  assertEquals(resposta.status, 200);
+  assertEquals(chamouFetch, false); // tamanho declarado já reprova, nunca baixa
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_midia_evolution");
+  assertEquals(chamada?.args.p_anexo_estado, "acima_do_limite");
+  assertEquals(chamada?.args.p_tipo_conteudo, "texto");
+});
+
+Deno.test("E02-S37 — figurinha NUNCA tem legenda, mesmo se o campo vier preenchido", async () => {
+  const { serviceClient, chamadas } = serviceClientFake({});
+  const handler = criarHandler({ serviceClient, fetchEvolution: fetchEvolutionComMidiaFake() });
+  await handler(
+    req({
+      body: {
+        event: "MESSAGES_UPSERT",
+        data: {
+          key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M1", fromMe: false },
+          message: { stickerMessage: { mimetype: "image/webp", caption: "deveria ser ignorado" } },
+        },
+      },
+    }),
+  );
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_midia_evolution");
+  assertEquals(chamada?.args.p_legenda, null);
+  assertEquals(chamada?.args.p_conteudo, "[figurinha]");
+});
+
+Deno.test("E02-S37 — localização vira aviso, sem download, sem conteúdo", async () => {
+  const { serviceClient, chamadas } = serviceClientFake({});
+  let chamouFetch = false;
+  const handler = criarHandler({
+    serviceClient,
+    fetchEvolution: async () => {
+      chamouFetch = true;
+      return new Response("{}", { status: 200 });
+    },
+  });
+  const resposta = await handler(
+    req({
+      body: {
+        event: "MESSAGES_UPSERT",
+        data: {
+          key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M1", fromMe: false },
+          message: { locationMessage: {} },
+        },
+      },
+    }),
+  );
+  assertEquals(resposta.status, 200);
+  assertEquals(chamouFetch, false);
+  const chamada = chamadas.find((c) => c.fn === "fn_registrar_midia_evolution");
+  assertEquals(chamada?.args.p_conteudo, "[localização]");
+});
+
+Deno.test("E02-S37 — áudio e reação continuam só reconhecidos (S38), não viram texto", async () => {
   const { serviceClient } = serviceClientFake({});
   const handler = criarHandler({ serviceClient });
   const resposta = await handler(
@@ -207,15 +346,14 @@ Deno.test("mídia reconhecida mas não persistida nesta story -> 200 ignorado", 
         event: "MESSAGES_UPSERT",
         data: {
           key: { remoteJid: "5511999999999@s.whatsapp.net", id: "M1", fromMe: false },
-          message: { imageMessage: { caption: "foto" } },
+          message: { audioMessage: { mimetype: "audio/ogg" } },
         },
       },
     }),
   );
-  assertEquals(resposta.status, 200);
   const corpo = await resposta.json();
   assertEquals(corpo.ignorado, true);
-  assertEquals(corpo.tipo, "midia");
+  assertEquals(corpo.tipo, "audio");
 });
 
 Deno.test("mensagem do aparelho (fromMe) vai para fn_registrar_mensagem_do_aparelho (E02-S39)", async () => {

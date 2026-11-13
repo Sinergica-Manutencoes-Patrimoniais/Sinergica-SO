@@ -23,9 +23,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSupabaseServiceKey } from "../_shared/auth.ts";
 import { constantTimeEqual } from "../_shared/crypto.ts";
 import { horarioDoAparelho, textoDoAparelho } from "../_shared/evolution-aparelho.ts";
+import { midiaDaMensagem } from "../_shared/evolution-midia.ts";
 import { atualizarFotoDoContato } from "../_shared/foto-do-contato.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { classificarEventoEvolution } from "./classificar.ts";
+import { ingerirAviso, ingerirMidia } from "./ingerir-midia.ts";
 
 const FN = "atendimento-evolution-webhook";
 const TAMANHO_MAXIMO_DO_WEBHOOK = 256 * 1024;
@@ -58,6 +60,8 @@ export interface DependenciasDoWebhook {
     conversaId: string;
     remoteJid: string;
   }) => Promise<void>;
+  /** E02-S37 — injetável para teste; nunca bate em rede real fora do ambiente real. */
+  fetchEvolution?: typeof fetch;
 }
 
 async function lerPayloadLimitado(
@@ -199,9 +203,40 @@ export function criarHandler(deps: DependenciasDoWebhook) {
       return json(200, { ok: true, aparelho: true });
     }
 
+    // E02-S37: mídia e aviso agora são guardados/mostrados, não só reconhecidos. Áudio e reação
+    // (S38) seguem só reconhecidos nesta rodada — nunca viram texto por omissão.
+    if (evento.tipo === "midia" || evento.tipo === "aviso") {
+      const credenciais = await buscarCredenciaisDoCanal(deps.serviceClient, canalId);
+      const comuns = {
+        canalId,
+        instanceId: canalRow.identificador_externo ?? "",
+        remoteJid: evento.remoteJid,
+        remoteId: evento.remoteId,
+        urlBaseEvolution: credenciais?.urlBase ?? "",
+        tokenInstancia: credenciais?.tokenInstancia ?? "",
+        nomeRemotoDaInstancia: credenciais?.nomeRemoto ?? "",
+      };
+
+      const depsIngestao = { serviceClient: deps.serviceClient, fetchEvolution: deps.fetchEvolution ?? fetch };
+
+      if (evento.tipo === "aviso") {
+        const resultadoAviso = await ingerirAviso(depsIngestao, comuns, evento.aviso);
+        if (resultadoAviso.duplicado) return json(200, { duplicado: true });
+        return json(200, { ok: true, mensagemId: resultadoAviso.mensagemId });
+      }
+
+      if (credenciais === null) return json(502, { codigo: "canal_sem_credencial" });
+      const bruta = objeto(objeto(objeto(leitura.payload)?.data)?.message) ?? {};
+      const midia = midiaDaMensagem(bruta, evento.remoteId);
+      if (midia === null) return json(200, { ignorado: true, motivo: "midia_nao_reconhecida" });
+
+      const resultadoMidia = await ingerirMidia(depsIngestao, comuns, midia);
+      if (resultadoMidia.duplicado) return json(200, { duplicado: true });
+      return json(200, { ok: true, mensagemId: resultadoMidia.mensagemId });
+    }
+
     if (evento.tipo !== "texto") {
-      // Mídia, áudio, aviso e reação: reconhecidos e respondidos, persistência fica para
-      // E02-S37/S38 (plan.md). Nunca viram mensagem de texto por omissão.
+      // Áudio e reação (E02-S38): reconhecidos e respondidos, persistência fica para depois.
       return json(200, { ignorado: true, tipo: evento.tipo });
     }
 
@@ -259,6 +294,48 @@ function dispararFotoDoPerfil(
     .EdgeRuntime;
   if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(tarefa);
   else void tarefa;
+}
+
+interface CredenciaisDoCanal {
+  urlBase: string;
+  nomeRemoto: string;
+  tokenInstancia: string;
+}
+
+/** Busca a instância (nome remoto, token) e o servidor compatível mais recente do canal — usado
+ * por mídia (E02-S37) e foto (E02-S40). `null` quando o canal ainda não tem instância pronta. */
+async function buscarCredenciaisDoCanal(
+  serviceClient: UntypedSupabaseClient,
+  canalId: string,
+): Promise<CredenciaisDoCanal | null> {
+  const { data: instancia } = await serviceClient
+    .schema("atendimento")
+    .from("evolution_instancia")
+    .select("nome_remoto, token_ref")
+    .eq("canal_id", canalId)
+    .maybeSingle();
+  if (!instancia?.token_ref) return null;
+
+  const { data: servidor } = await serviceClient
+    .schema("atendimento")
+    .from("evolution_servidor")
+    .select("url_base")
+    .eq("estado", "compativel")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!servidor?.url_base) return null;
+
+  const { data: tokenInstancia } = await serviceClient
+    .schema("config")
+    .rpc("fn_ler_segredo_referenciado", { p_ref: instancia.token_ref });
+  if (typeof tokenInstancia !== "string" || tokenInstancia.trim() === "") return null;
+
+  return {
+    urlBase: servidor.url_base as string,
+    nomeRemoto: instancia.nome_remoto as string,
+    tokenInstancia,
+  };
 }
 
 function criarAtualizarFoto(
