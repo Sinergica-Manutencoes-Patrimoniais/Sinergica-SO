@@ -90,6 +90,12 @@ jobs:
       - name: Build (affected)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm turbo run build --filter="...[origin/${{ github.base_ref || 'main' }}]"
+      - name: Sem prévia simulada no bundle de produção (E02-S42)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY: test-only-public-key
+        run: pnpm run check:sem-previa-em-producao
 
       # Gates de design (movidos do pre-push local para cá; rodam todos e listam todas as falhas)
       - name: Gates de design (tokens, primitivas, diálogos, catch, reticência, sombras, movimento, tipografia, div clicável)
