@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S187_
+_75 concluídas no histórico · maior ID usado: E01-S192_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -162,9 +162,14 @@ _75 concluídas no histórico · maior ID usado: E01-S187_
 | E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
 | E01-S186 | Migração auditável, pilotos por ondas e homologação do programa | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S186-migracao-pilotos-homologacao/spec.md) |
 | E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
+| E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
+| E01-S189 | Alcance dos sete escritores sem gate (orçamento, despesas, cobrança, grupos) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S189-alcance-escritores-sem-gate/spec.md) |
+| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) — **exige aceite do Fabrício** | — | Especificada — bloqueada por decisão (2026-11-13) | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
+| E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
+| E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
 
 ### E02 — Atendimento · Zé
-_6 concluídas no histórico · maior ID usado: E02-S41_
+_6 concluídas no histórico · maior ID usado: E02-S42_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -203,6 +208,7 @@ _6 concluídas no histórico · maior ID usado: E02-S41_
 | E02-S39 | Mensagem do aparelho tira o Zé — inclui AC-0: diagnosticar por que a mensagem do celular não aparece hoje | — | Spec+plan+tasks escritos (2026-11-12). Tier arquitetural: exige ADR 1688. Depende de S36 | [spec](../../specs/E02-S39-aparelho-tira-o-ze/spec.md) |
 | E02-S40 | Foto do WhatsApp do contato no atendimento | — | Spec+plan+tasks escritos (2026-11-12). Depende de S36 | [spec](../../specs/E02-S40-foto-do-contato/spec.md) |
 | E02-S41 | Visão de conversa nova: workspace, fila com escopo, timeline tipada, contexto do cliente | — | Spec+design+plan+tasks escritos (2026-11-12). Tier arquitetural; design.md com 3 questões em aberto para o Lucas. Depende de S37 e S38 | [spec](../../specs/E02-S41-visao-de-conversa/spec.md) |
+| E02-S42 | Retirar a rota de prévia simulada `/preview-s41` do build de produção | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E02-S42-remover-preview-simulado/spec.md) |
 
 ### E03 — Comercial
 _7 concluídas no histórico · maior ID usado: E03-S14_
