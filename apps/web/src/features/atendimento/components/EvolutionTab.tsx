@@ -14,6 +14,8 @@ import type {
   EvolutionCriarForm,
   EvolutionInstancia,
 } from "../domain/evolution";
+import { supabaseConfiguracaoEvolutionAdapter } from "../infrastructure/supabase-configuracao-evolution-adapter";
+import { ConfiguracaoEvolutionCanal } from "./ConfiguracaoEvolutionCanal";
 
 const CORES_STATUS: Record<EvolutionInstancia["status"], string> = {
   conectado: "bg-success-soft text-success",
@@ -193,6 +195,11 @@ export function EvolutionTab({
   return (
     <div className="flex flex-col gap-4">
       <ConfiguracaoEvolution temEscrita={temEscrita} />
+      <ConfiguracaoEvolutionCanal
+        porta={supabaseConfiguracaoEvolutionAdapter}
+        canais={instancias.map((instancia) => ({ id: instancia.id, label: instancia.label }))}
+        temEscrita={temEscrita}
+      />
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-heading font-semibold text-ink-2">Conexões Evolution</h2>

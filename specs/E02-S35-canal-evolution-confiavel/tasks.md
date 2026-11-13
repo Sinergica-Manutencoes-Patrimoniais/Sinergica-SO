@@ -21,10 +21,10 @@ alwaysApply: false
 | 9  | **`evolution-configurar`** (função NOVA, não `atendimento-evolution` — SPEC_DEVIATION abaixo): ação `salvar_servidor` | AC-1, AC-2, AC-3 | 4, 5, 7, 8 | `deno test supabase/functions/evolution-configurar/evolution-configurar.test.ts` | done |
 | 10 | `evolution-configurar`: ação `criar_instancia` idempotente, nome derivado, token no cofre | AC-4 | 9 | idem (16 testes, mesmo arquivo) | done |
 | 11 | `evolution-configurar`: ação `instalar_webhook` + estado `configuracao_incompleta` na falha | AC-5 | 10 | idem | done |
-| 12 | `application/configurar-evolution.ts` (sequência atômica) + `verificar-canal.ts` | AC-5, AC-7 | 3 | `pnpm vitest run apps/web/src/features/atendimento/application/configurar-evolution.test.ts` | todo |
-| 13 | Adapter `supabase-evolution-adapter.ts`: novas ações, sem segredo na resposta | AC-3 | 11, 12 | `pnpm vitest run apps/web/src/features/atendimento/infrastructure/supabase-evolution-adapter.test.ts` | todo |
-| 14 | `components/ConfiguracaoEvolution.tsx` (máquina de vistas + textos de erro) | AC-1, AC-2, AC-5, AC-8 | 13 | `pnpm vitest run apps/web/src/features/atendimento/components/ConfiguracaoEvolution.test.tsx` | todo |
-| 15 | `EvolutionTab.tsx` consome a nova máquina, mantendo a lista atual `[P]` | AC-8 | 14 | `pnpm vitest run apps/web/src/features/atendimento/components/EvolutionTab.test.tsx` | todo |
+| 12 | `application/configurar-evolution.ts` (sequência atômica) + `verificar-canal.ts` | AC-5, AC-7 | 3 | `pnpm vitest run apps/web/src/features/atendimento/application/configurar-evolution.test.ts apps/web/src/features/atendimento/application/verificar-canal.test.ts` | done |
+| 13 | Adapter **novo** `supabase-configuracao-evolution-adapter.ts` (não estende o legado — SPEC_DEVIATION abaixo) | AC-3 | 11, 12 | típado + consumido pelos testes de componente (task 14/15) | done |
+| 14 | `components/ConfiguracaoEvolutionCanal.tsx` (SPEC_DEVIATION abaixo — nome trocado) | AC-1, AC-2, AC-5, AC-8 | 13 | `pnpm vitest run apps/web/src/features/atendimento/components/ConfiguracaoEvolutionCanal.test.tsx` | done |
+| 15 | `EvolutionTab.tsx` consome a nova máquina, mantendo a lista atual `[P]` | AC-8 | 14 | `pnpm vitest run apps/web/src/features/atendimento/components/ConfiguracaoEvolutionCanal.test.tsx` (sem teste próprio pra `EvolutionTab.tsx` — só import/render, cobertura real é do componente filho) | done |
 | 16 | Registrar débito em `docs/SECURITY_DEBT.md` (token global do webhook; exclusão a pedido) | — | 1 | revisão humana | todo |
 | 17 | Glossário: canal, provedor, instância, servidor Evolution, saúde do canal | — | 1 | `grep` dos termos em `docs/glossary.md` | todo |
 | 18 | `/revisao-adversarial` (tier arquitetural) | todos | 15 | achado reproduzido vira teste | todo |
@@ -50,6 +50,26 @@ alwaysApply: false
       continua servindo o `EvolutionTab` atual sem mudança, e a nova tem seu próprio schema de
       entrada (`salvar_servidor`/`criar_instancia`/`instalar_webhook`), sem risco de regressão
       na tela em produção. Resolução: `plan.md` atualizado para refletir o nome real.
+- [x] Task 13 · `plan.md` dizia "estende `supabase-evolution-adapter.ts`". Esse arquivo é o
+      adapter LEGADO (`EvolutionGateway`, função `atendimento-evolution`), ainda em uso real pelo
+      `EvolutionTab`. Criado adapter **novo** `supabase-configuracao-evolution-adapter.ts` em vez
+      de estender — mesmo raciocínio da task 9-11 (zero risco de regressão na tela em produção).
+      Resolução: nome mantido nesta tasks.md.
+- [x] Task 14 · `plan.md` chamava o componente de `ConfiguracaoEvolution.tsx`, mas esse nome já
+      existe como componente interno (não exportado) dentro de `EvolutionTab.tsx` (formulário
+      simples de URL/chave do fluxo legado). Renomeado para `ConfiguracaoEvolutionCanal.tsx`
+      pra não colidir. Resolução: nome mantido nesta tasks.md.
+- [x] Tasks 12-15 (achado em produção, fora do plan.md original) · o fluxo original de
+      `criar_instancia` deriva um nome de instância NOVO (`sinergica-<canalId>`) e chama
+      `/instance/create` na Evolution — rodar isso contra um canal que JÁ TEM uma instância
+      conectada pelo fluxo legado criaria uma SEGUNDA instância, exigindo novo pareamento por QR
+      e derrubando a sessão real em produção. Adicionado em `evolution-configurar/index.ts`: se
+      `canais_externos.identificador_externo` já está preenchido, `criar_instancia` ADOTA esse
+      nome remoto sem nenhuma chamada à Evolution (zero risco à conexão), e `instalar_webhook`
+      usa a apikey GLOBAL do servidor (não um token por instância) pra instalar o webhook dessa
+      instância adotada, mantendo o estado `conectado_verificado` (nunca regride pra
+      `aguardando_pareamento`). Testado em `evolution-configurar.test.ts` (2 testes novos).
+      Resolução: código ajustado; `plan.md` não alterado (achado de produção, não de design).
 - [ ] <task # · motivo · resolução: corrigir código OU atualizar spec/ADR>
 
 ## Checklist de Definition of Done

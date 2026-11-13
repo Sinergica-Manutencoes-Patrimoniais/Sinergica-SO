@@ -70,6 +70,7 @@ function serviceClientTabelas(
 ) {
   const chamadasRpc: Array<{ fn: string; args: Record<string, unknown> }> = [];
   const atualizacoes: Array<{ tabela: string; valores: Record<string, unknown> }> = [];
+  const insercoes: Array<{ tabela: string; valores: Record<string, unknown> }> = [];
   const serviceClient = {
     rpc: async (fn: string, args: Record<string, unknown>) => {
       chamadasRpc.push({ fn, args });
@@ -93,7 +94,10 @@ function serviceClientTabelas(
               return this;
             },
             maybeSingle: async () => cfg.maybeSingle ?? { data: null, error: null },
-            insert: async (_valores: Record<string, unknown>) => cfg.insert ?? { error: null },
+            insert: async (valores: Record<string, unknown>) => {
+              insercoes.push({ tabela: tableName, valores });
+              return cfg.insert ?? { error: null };
+            },
             update(valores: Record<string, unknown>) {
               atualizacoes.push({ tabela: tableName, valores });
               return { eq: async () => cfg.update ?? { error: null } };
@@ -108,7 +112,7 @@ function serviceClientTabelas(
     },
   };
   // deno-lint-ignore no-explicit-any
-  return { serviceClient: serviceClient as any, chamadasRpc, atualizacoes };
+  return { serviceClient: serviceClient as any, chamadasRpc, atualizacoes, insercoes };
 }
 
 const userClientSuperadmin = {
@@ -522,4 +526,71 @@ Deno.test("instalar_webhook — caminho feliz: segredo por canal, URL com canalI
   const atualizacao = atualizacoes.find((a) => a.tabela === "evolution_instancia");
   assertEquals(atualizacao?.valores.estado, "aguardando_pareamento");
   assertEquals(typeof atualizacao?.valores.webhook_secret_ref, "string");
+});
+
+// ───────── criar_instancia — adoção de instância legada (E02-S35..S41, achado em produção) ─────────
+
+Deno.test("criar_instancia — canal com identificador_externo adota sem chamar Evolution", async () => {
+  const { serviceClient, insercoes } = serviceClientTabelas({
+    evolution_instancia: { maybeSingle: { data: null, error: null }, insert: { error: null } },
+    canais_externos: {
+      maybeSingle: { data: { id: "canal-1", identificador_externo: "numero-ja-conectado" }, error: null },
+    },
+  });
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    // qualquer chamada de rede aqui seria um bug grave (criaria segunda instância/derrubaria sessão)
+    fetchEvolution: (() => {
+      throw new Error("não deveria chamar a Evolution ao adotar instância existente");
+    }) as unknown as typeof fetch,
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const resultado = await handler(
+    { acao: "criar_instancia", canalId: crypto.randomUUID() },
+    "user-1",
+  );
+  assertEquals(resultado, { estado: "conectado_verificado", jaExistia: false, adotada: true });
+  const insercao = insercoes.find((i) => i.tabela === "evolution_instancia");
+  assertEquals(insercao?.valores.nome_remoto, "numero-ja-conectado");
+  assertEquals(insercao?.valores.token_ref, null);
+  assertEquals(insercao?.valores.estado, "conectado_verificado");
+});
+
+Deno.test("instalar_webhook — instância adotada usa apikey global e mantém conectado_verificado", async () => {
+  const canalId = crypto.randomUUID();
+  let apikeyUsada = "";
+  const { serviceClient, atualizacoes } = serviceClientTabelas(
+    {
+      evolution_instancia: {
+        maybeSingle: { data: { nome_remoto: "numero-ja-conectado", token_ref: null }, error: null },
+        update: { error: null },
+      },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    {
+      fn_ler_segredo_referenciado: { data: "apikey-global", error: null },
+      fn_gravar_segredo_referenciado: { error: null },
+    },
+  );
+  const fetchEvolution: typeof fetch = async (_input, init) => {
+    apikeyUsada = (init?.headers as Record<string, string>).apikey;
+    return new Response("{}", { status: 200 });
+  };
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution,
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const resultado = await handler({ acao: "instalar_webhook", canalId }, "user-1");
+  assertEquals(resultado, { estado: "conectado_verificado" });
+  assertEquals(apikeyUsada, "apikey-global");
+
+  const atualizacao = atualizacoes.find((a) => a.tabela === "evolution_instancia");
+  assertEquals(atualizacao?.valores.estado, "conectado_verificado");
 });

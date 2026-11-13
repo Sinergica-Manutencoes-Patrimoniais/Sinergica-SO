@@ -233,12 +233,19 @@ async function gravarSegredo(
  * Sequência atômica do ADR-1686: cria a instância remota (sem webhook ainda), guarda o token
  * sob referência opaca, grava `criando`. Idempotente — repetir com instância já existente não
  * cria uma segunda (AC-4); o que falhar aqui nunca marca o canal como conectado.
+ *
+ * SPEC_DEVIATION (não previsto no plan.md original — achado na migração de produção, E02-S35..S41):
+ * um canal que já tem `identificador_externo` preenchido corresponde a uma instância Evolution
+ * JÁ CRIADA E CONECTADA pelo fluxo legado (`atendimento-evolution`). Chamar `/instance/create` de
+ * novo criaria uma SEGUNDA instância (nome derivado `sinergica-<canalId>` diverge do nome real),
+ * exigindo novo pareamento por QR code e derrubando a sessão que já funciona. Nesse caso, ADOTA o
+ * nome remoto existente sem nenhuma chamada à Evolution — zero risco à conexão já pareada.
  */
 async function criarInstancia(
   deps: DependenciasDoHandler,
   userId: string,
   canalId: string,
-): Promise<{ estado: string; jaExistia: boolean }> {
+): Promise<{ estado: string; jaExistia: boolean; adotada?: boolean }> {
   const { data: existente, error: erroExistente } = await deps.serviceClient
     .schema("atendimento")
     .from("evolution_instancia")
@@ -251,11 +258,28 @@ async function criarInstancia(
   const { data: canal, error: erroCanal } = await deps.serviceClient
     .schema("atendimento")
     .from("canais_externos")
-    .select("id")
+    .select("id, identificador_externo")
     .eq("id", canalId)
     .maybeSingle();
   if (erroCanal) throw erroCanal;
   if (!canal) throw new HttpError(404, "canal_nao_encontrado");
+
+  const identificadorExistente = (canal as { identificador_externo?: string | null })
+    .identificador_externo;
+  if (typeof identificadorExistente === "string" && identificadorExistente.trim() !== "") {
+    const { error: erroAdocao } = await deps.serviceClient
+      .schema("atendimento")
+      .from("evolution_instancia")
+      .insert({
+        canal_id: canalId,
+        nome_remoto: identificadorExistente,
+        token_ref: null,
+        estado: "conectado_verificado",
+        created_by: userId,
+      });
+    if (erroAdocao) throw erroAdocao;
+    return { estado: "conectado_verificado", jaExistia: false, adotada: true };
+  }
 
   const servidor = await buscarServidorCompativel(deps.serviceClient);
   const apikeyGlobal = await lerSegredo(deps.serviceClient, servidor.credencial_ref);
@@ -311,14 +335,18 @@ async function instalarWebhook(
   const { data: instancia, error: erroInstancia } = await deps.serviceClient
     .schema("atendimento")
     .from("evolution_instancia")
-    .select("nome_remoto, token_ref")
+    .select("nome_remoto, token_ref, estado")
     .eq("canal_id", canalId)
     .maybeSingle();
   if (erroInstancia) throw erroInstancia;
   if (!instancia) throw new HttpError(404, "instancia_nao_encontrada");
 
   const servidor = await buscarServidorCompativel(deps.serviceClient);
-  const tokenInstancia = await lerSegredo(deps.serviceClient, instancia.token_ref as string);
+  // Instância ADOTADA (sem token próprio — ver SPEC_DEVIATION em criarInstancia) usa a apikey
+  // GLOBAL do servidor pra chamar /webhook/set, igual ao fluxo legado já fazia.
+  const tokenInstancia = instancia.token_ref
+    ? await lerSegredo(deps.serviceClient, instancia.token_ref as string)
+    : await lerSegredo(deps.serviceClient, servidor.credencial_ref);
 
   const segredoWebhook = base64Url(crypto.getRandomValues(new Uint8Array(32)));
   const webhookRef = novaReferencia("EVOWEBHOOK", 1);
@@ -362,14 +390,17 @@ async function instalarWebhook(
     throw new HttpError(502, "webhook_falhou");
   }
 
+  // Instância adotada já estava pareada — instalar o webhook não a desconecta, então o estado
+  // continua `conectado_verificado` (nunca regride pra `aguardando_pareamento`, que pediria QR).
+  const novoEstado = instancia.token_ref ? "aguardando_pareamento" : "conectado_verificado";
   const { error: erroAtualizar } = await deps.serviceClient
     .schema("atendimento")
     .from("evolution_instancia")
-    .update({ webhook_secret_ref: webhookRef, estado: "aguardando_pareamento" })
+    .update({ webhook_secret_ref: webhookRef, estado: novoEstado })
     .eq("canal_id", canalId);
   if (erroAtualizar) throw erroAtualizar;
 
-  return { estado: "aguardando_pareamento" };
+  return { estado: novoEstado };
 }
 
 export function criarHandler(deps: DependenciasDoHandler) {
