@@ -2,12 +2,6 @@ import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/asser
 import { HttpError } from "../_shared/auth.ts";
 import { criarHandler } from "./index.ts";
 
-interface RespostaSimulada {
-  schema: string;
-  table: string;
-  resultado: { data: unknown; error: unknown };
-}
-
 function clientFake(opts: {
   perfil?: { papel: string; ativo: boolean } | null;
   rpcErro?: unknown;
@@ -58,6 +52,76 @@ function fetchFake(status: number, corpo: unknown) {
   return async (): Promise<Response> =>
     new Response(JSON.stringify(corpo), { status, headers: { "content-type": "application/json" } });
 }
+
+interface RespostaTabela {
+  maybeSingle?: { data: unknown; error: unknown };
+  insert?: { error: unknown };
+  update?: { error: unknown };
+}
+
+/** Fake com várias tabelas e RPCs — para os fluxos de criar_instancia/instalar_webhook, que
+ * tocam canais_externos, evolution_servidor e evolution_instancia em sequência. */
+function serviceClientTabelas(
+  tabelas: Record<string, RespostaTabela>,
+  rpc: Record<string, { data?: unknown; error?: unknown }> = {},
+) {
+  const chamadasRpc: Array<{ fn: string; args: Record<string, unknown> }> = [];
+  const atualizacoes: Array<{ tabela: string; valores: Record<string, unknown> }> = [];
+  const serviceClient = {
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      chamadasRpc.push({ fn, args });
+      return rpc[fn] ?? { data: null, error: null };
+    },
+    schema(_schemaName: string) {
+      return {
+        from(tableName: string) {
+          const cfg = tabelas[tableName] ?? {};
+          return {
+            select() {
+              return this;
+            },
+            eq() {
+              return this;
+            },
+            order() {
+              return this;
+            },
+            limit() {
+              return this;
+            },
+            maybeSingle: async () => cfg.maybeSingle ?? { data: null, error: null },
+            insert: async (_valores: Record<string, unknown>) => cfg.insert ?? { error: null },
+            update(valores: Record<string, unknown>) {
+              atualizacoes.push({ tabela: tableName, valores });
+              return { eq: async () => cfg.update ?? { error: null } };
+            },
+          };
+        },
+      };
+    },
+  };
+  // deno-lint-ignore no-explicit-any
+  return { serviceClient: serviceClient as any, chamadasRpc, atualizacoes };
+}
+
+const userClientSuperadmin = {
+  schema(_s: string) {
+    return {
+      from(_t: string) {
+        return {
+          select() {
+            return this;
+          },
+          eq() {
+            return this;
+          },
+          maybeSingle: async () => ({ data: { papel: "superadmin", ativo: true }, error: null }),
+        };
+      },
+    };
+    // deno-lint-ignore no-explicit-any
+  },
+} as any;
 
 Deno.test("salvar_servidor — recusa colaborador (não-superadmin)", async () => {
   const { userClient, serviceClient } = clientFake({ perfil: { papel: "colaborador", ativo: true } });
@@ -180,18 +244,275 @@ Deno.test("salvar_servidor — servidor indisponível (probe falha)", async () =
   assertEquals((erro as HttpError).message, "servidor_indisponivel");
 });
 
-Deno.test("criar_instancia / instalar_webhook — ainda não implementadas, falham explícito (501)", async () => {
-  const { userClient, serviceClient } = clientFake({});
+// ───────── criar_instancia ─────────
+
+const SERVIDOR_COMPATIVEL = {
+  maybeSingle: {
+    data: { url_base: "https://evolution.exemplo.com.br", credencial_ref: "SINERGICA_EVOSERVIDOR_1_ref" },
+    error: null,
+  },
+};
+
+Deno.test("criar_instancia — idempotente: instância já existe, não recria", async () => {
+  const { serviceClient, chamadasRpc } = serviceClientTabelas({
+    evolution_instancia: { maybeSingle: { data: { estado: "aguardando_pareamento" }, error: null } },
+  });
   const handler = criarHandler({
-    userClient,
+    userClient: userClientSuperadmin,
     serviceClient,
     fetchEvolution: fetchFake(200, {}),
     resolverDns: async () => ["200.1.1.1"],
     permitirRedePrivada: false,
   });
 
-  await assertRejects(
+  const resultado = await handler({ acao: "criar_instancia", canalId: crypto.randomUUID() }, "user-1");
+  assertEquals(resultado, { estado: "aguardando_pareamento", jaExistia: true });
+  assertEquals(chamadasRpc.length, 0); // não tocou o cofre de novo
+});
+
+Deno.test("criar_instancia — canal inexistente", async () => {
+  const { serviceClient } = serviceClientTabelas({
+    evolution_instancia: { maybeSingle: { data: null, error: null } },
+    canais_externos: { maybeSingle: { data: null, error: null } },
+  });
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(200, {}),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const erro = await assertRejects(
     () => handler({ acao: "criar_instancia", canalId: crypto.randomUUID() }, "user-1"),
     HttpError,
   );
+  assertEquals((erro as HttpError).message, "canal_nao_encontrado");
+});
+
+Deno.test("criar_instancia — sem servidor compatível", async () => {
+  const { serviceClient } = serviceClientTabelas({
+    evolution_instancia: { maybeSingle: { data: null, error: null } },
+    canais_externos: { maybeSingle: { data: { id: "canal-1" }, error: null } },
+    evolution_servidor: { maybeSingle: { data: null, error: null } },
+  });
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(200, {}),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const erro = await assertRejects(
+    () => handler({ acao: "criar_instancia", canalId: crypto.randomUUID() }, "user-1"),
+    HttpError,
+  );
+  assertEquals((erro as HttpError).message, "servidor_incompativel");
+});
+
+Deno.test("criar_instancia — Evolution fora do ar vira instancia_falhou", async () => {
+  const { serviceClient } = serviceClientTabelas(
+    {
+      evolution_instancia: { maybeSingle: { data: null, error: null } },
+      canais_externos: { maybeSingle: { data: { id: "canal-1" }, error: null } },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    { fn_ler_segredo_referenciado: { data: "apikey-global", error: null } },
+  );
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(503, {}),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const erro = await assertRejects(
+    () => handler({ acao: "criar_instancia", canalId: crypto.randomUUID() }, "user-1"),
+    HttpError,
+  );
+  assertEquals((erro as HttpError).message, "instancia_falhou");
+});
+
+Deno.test("criar_instancia — resposta sem token reconhecido falha fechado", async () => {
+  const { serviceClient } = serviceClientTabelas(
+    {
+      evolution_instancia: { maybeSingle: { data: null, error: null } },
+      canais_externos: { maybeSingle: { data: { id: "canal-1" }, error: null } },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    { fn_ler_segredo_referenciado: { data: "apikey-global", error: null } },
+  );
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(200, { instance: { instanceName: "x" } }), // sem hash
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const erro = await assertRejects(
+    () => handler({ acao: "criar_instancia", canalId: crypto.randomUUID() }, "user-1"),
+    HttpError,
+  );
+  assertEquals((erro as HttpError).message, "instancia_sem_token");
+});
+
+Deno.test("criar_instancia — caminho feliz: grava token no cofre, estado 'criando'", async () => {
+  const { serviceClient, chamadasRpc } = serviceClientTabelas(
+    {
+      evolution_instancia: { maybeSingle: { data: null, error: null }, insert: { error: null } },
+      canais_externos: { maybeSingle: { data: { id: "canal-1" }, error: null } },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    {
+      fn_ler_segredo_referenciado: { data: "apikey-global", error: null },
+      fn_gravar_segredo_referenciado: { error: null },
+    },
+  );
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(200, { hash: "token-da-instancia" }),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const resultado = await handler(
+    { acao: "criar_instancia", canalId: crypto.randomUUID() },
+    "user-1",
+  );
+  assertEquals(resultado, { estado: "criando", jaExistia: false });
+  const gravou = chamadasRpc.find((c) => c.fn === "fn_gravar_segredo_referenciado");
+  assertEquals(gravou?.args.p_valor, "token-da-instancia");
+  // a resposta nunca inclui o token (AC-4: resposta crua é descartada)
+  assertEquals(JSON.stringify(resultado).includes("token-da-instancia"), false);
+});
+
+Deno.test("criar_instancia — aceita hash como objeto { apikey }", async () => {
+  const { serviceClient } = serviceClientTabelas(
+    {
+      evolution_instancia: { maybeSingle: { data: null, error: null }, insert: { error: null } },
+      canais_externos: { maybeSingle: { data: { id: "canal-1" }, error: null } },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    {
+      fn_ler_segredo_referenciado: { data: "apikey-global", error: null },
+      fn_gravar_segredo_referenciado: { error: null },
+    },
+  );
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(200, { hash: { apikey: "token-objeto" } }),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const resultado = await handler(
+    { acao: "criar_instancia", canalId: crypto.randomUUID() },
+    "user-1",
+  );
+  assertEquals(resultado, { estado: "criando", jaExistia: false });
+});
+
+// ───────── instalar_webhook ─────────
+
+Deno.test("instalar_webhook — instância inexistente", async () => {
+  const { serviceClient } = serviceClientTabelas({
+    evolution_instancia: { maybeSingle: { data: null, error: null } },
+  });
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(200, {}),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const erro = await assertRejects(
+    () => handler({ acao: "instalar_webhook", canalId: crypto.randomUUID() }, "user-1"),
+    HttpError,
+  );
+  assertEquals((erro as HttpError).message, "instancia_nao_encontrada");
+});
+
+Deno.test("instalar_webhook — falha remota deixa configuracao_incompleta, não conectado", async () => {
+  const { serviceClient, atualizacoes } = serviceClientTabelas(
+    {
+      evolution_instancia: {
+        maybeSingle: { data: { nome_remoto: "sinergica-canal-1", token_ref: "ref-token" }, error: null },
+        update: { error: null },
+      },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    {
+      fn_ler_segredo_referenciado: { data: "token-da-instancia", error: null },
+      fn_gravar_segredo_referenciado: { error: null },
+    },
+  );
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution: fetchFake(502, {}),
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const erro = await assertRejects(
+    () => handler({ acao: "instalar_webhook", canalId: crypto.randomUUID() }, "user-1"),
+    HttpError,
+  );
+  assertEquals((erro as HttpError).message, "webhook_falhou");
+  const atualizacao = atualizacoes.find((a) => a.tabela === "evolution_instancia");
+  assertEquals(atualizacao?.valores.estado, "configuracao_incompleta");
+});
+
+Deno.test("instalar_webhook — caminho feliz: segredo por canal, URL com canalId no caminho", async () => {
+  const canalId = crypto.randomUUID();
+  let corpoCapturado: unknown;
+  let urlCapturada = "";
+  const { serviceClient, atualizacoes } = serviceClientTabelas(
+    {
+      evolution_instancia: {
+        maybeSingle: { data: { nome_remoto: "sinergica-canal-1", token_ref: "ref-token" }, error: null },
+        update: { error: null },
+      },
+      evolution_servidor: SERVIDOR_COMPATIVEL,
+    },
+    {
+      fn_ler_segredo_referenciado: { data: "token-da-instancia", error: null },
+      fn_gravar_segredo_referenciado: { error: null },
+    },
+  );
+  const fetchEvolution: typeof fetch = async (input, init) => {
+    urlCapturada = String(input);
+    corpoCapturado = JSON.parse(String(init?.body ?? "{}"));
+    return new Response("{}", { status: 200 });
+  };
+  const handler = criarHandler({
+    userClient: userClientSuperadmin,
+    serviceClient,
+    fetchEvolution,
+    resolverDns: async () => ["200.1.1.1"],
+    permitirRedePrivada: false,
+  });
+
+  const resultado = await handler({ acao: "instalar_webhook", canalId }, "user-1");
+  assertEquals(resultado, { estado: "aguardando_pareamento" });
+
+  const webhook = (corpoCapturado as { webhook: Record<string, unknown> }).webhook;
+  assertEquals(webhook.enabled, true);
+  assertEquals(webhook.base64, false);
+  assertEquals((webhook.url as string).endsWith(`/atendimento-evolution-webhook/${canalId}`), true);
+  // segredo em cabeçalho customizado, nunca em query string (ADR-1686 §5)
+  const headers = webhook.headers as Record<string, string>;
+  assertEquals(typeof headers["x-sinergica-evolution-webhook"], "string");
+  assertEquals(urlCapturada.includes("x-sinergica-evolution-webhook="), false);
+  assertEquals(urlCapturada.includes("?"), false);
+
+  const atualizacao = atualizacoes.find((a) => a.tabela === "evolution_instancia");
+  assertEquals(atualizacao?.valores.estado, "aguardando_pareamento");
+  assertEquals(typeof atualizacao?.valores.webhook_secret_ref, "string");
 });

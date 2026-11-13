@@ -21,7 +21,7 @@ apps/web/src/features/atendimento/
 supabase/functions/
   _shared/evolution-url.ts              (novo)  anti-SSRF: validarUrlDoServidor, resolverEnderecosPublicos
   _shared/evolution-matriz.ts           (novo)  ESPELHO de domain/evolution-compatibilidade.ts
-  atendimento-evolution/index.ts        (altera) ações salvar_servidor | criar_instancia | instalar_webhook
+  evolution-configurar/index.ts       (novo)   ações salvar_servidor | criar_instancia | instalar_webhook
 ```
 
 > **Espelho obrigatório.** Deno não importa do bundle Vite. `_shared/evolution-matriz.ts` é cópia literal
@@ -198,7 +198,7 @@ export interface VerificadorDeCanal {
 export async function verificarCanal(v: VerificadorDeCanal, canal: Canal, agora?): Promise<CanalVerificado>
 ```
 
-### Edge Function `atendimento-evolution` — ações novas
+### Edge Function `evolution-configurar (função nova)` — ações novas
 
 | Ação | Corpo | Resposta | Erros |
 |---|---|---|---|
