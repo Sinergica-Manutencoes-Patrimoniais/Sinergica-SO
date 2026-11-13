@@ -10,17 +10,17 @@ alwaysApply: false
 
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 1  | ADR `1686-evolution-configurada-pela-ui.md` | — | — | revisão humana | todo |
-| 2  | `domain/evolution-compatibilidade.ts` + matriz inicial | AC-2 | 1 | `pnpm vitest run apps/web/src/features/atendimento/domain/evolution-compatibilidade.test.ts` | todo |
-| 3  | `domain/canal-evolution.ts` (estados, saúde, transições) | AC-6, AC-7, AC-8 | 1 | `pnpm vitest run apps/web/src/features/atendimento/domain/canal-evolution.test.ts` | todo |
-| 4  | `_shared/evolution-url.ts` anti-SSRF `[P]` | AC-1 | 1 | `deno test supabase/functions/_shared/evolution-url.test.ts` | todo |
-| 5  | `_shared/evolution-matriz.ts` (espelho) + teste de paridade com a task 2 | AC-2 | 2 | `deno test supabase/functions/_shared/evolution-matriz.test.ts` | todo |
-| 6  | Migration `1829` — provedor, estado, saúde + backfill + trigger de compat | AC-10 | 1 | `pnpm run db:test -- canal_evolution_estado` | todo |
-| 7  | Migration `1830` — `evolution_servidor`, `evolution_instancia`, RLS force + policies | AC-9 | 6 | `pnpm run db:test -- evolution_rls` (pgTAP: superadmin permitido, colaborador negado) | todo |
-| 8  | Migration `1831` — cofre por referência opaca (`fn_gravar/ler/remover_segredo_referenciado`) | AC-3 | 1 | `pnpm run db:test -- cofre_referencia` (anon/authenticated negados, formato recusado) | todo |
-| 9  | `atendimento-evolution`: ação `salvar_servidor` (probe + SSRF + matriz + cofre) | AC-1, AC-2, AC-3 | 4, 5, 7, 8 | `deno test supabase/functions/atendimento-evolution/salvar-servidor.test.ts` | todo |
-| 10 | `atendimento-evolution`: ação `criar_instancia` idempotente, nome derivado | AC-4 | 9 | `deno test supabase/functions/atendimento-evolution/criar-instancia.test.ts` | todo |
-| 11 | `atendimento-evolution`: ação `instalar_webhook` + estado `configuracao_incompleta` na falha | AC-5 | 10 | `deno test supabase/functions/atendimento-evolution/instalar-webhook.test.ts` | todo |
+| 1  | ADR `1686-evolution-configurada-pela-ui.md` | — | — | revisão humana | done |
+| 2  | `domain/evolution-compatibilidade.ts` + matriz inicial | AC-2 | 1 | `pnpm vitest run apps/web/src/features/atendimento/domain/evolution-compatibilidade.test.ts` | done |
+| 3  | `domain/canal-evolution.ts` (estados, saúde, transições) | AC-6, AC-7, AC-8 | 1 | `pnpm vitest run apps/web/src/features/atendimento/domain/canal-evolution.test.ts` | done |
+| 4  | `_shared/evolution-url.ts` anti-SSRF `[P]` | AC-1 | 1 | `deno test supabase/functions/_shared/evolution-url.test.ts` | done |
+| 5  | `_shared/evolution-matriz.ts` (espelho) + teste de paridade com a task 2 | AC-2 | 2 | `deno test supabase/functions/_shared/evolution-matriz.test.ts` | done |
+| 6  | Migration `1845` — provedor, estado, saúde + backfill + trigger de compat (**renumerada de 1829** por colisão com main) | AC-10 | 1 | `supabase test db` — `evolution_canal_estado.test.sql` (verde no CI) | done |
+| 7  | Migration `1846` — `evolution_servidor`, `evolution_instancia`, RLS force + policies (**renumerada de 1830**) | AC-9 | 6 | `evolution_servidor_instancia_rls.test.sql` (verde no CI) | done |
+| 8  | Migration `1847` — cofre por referência opaca (**renumerada de 1831**) | AC-3 | 1 | `cofre_referencia_opaca.test.sql` (verde no CI) | done |
+| 9  | **`evolution-configurar`** (função NOVA, não `atendimento-evolution` — SPEC_DEVIATION abaixo): ação `salvar_servidor` | AC-1, AC-2, AC-3 | 4, 5, 7, 8 | `deno test supabase/functions/evolution-configurar/evolution-configurar.test.ts` | done |
+| 10 | `evolution-configurar`: ação `criar_instancia` idempotente, nome derivado, token no cofre | AC-4 | 9 | idem (16 testes, mesmo arquivo) | done |
+| 11 | `evolution-configurar`: ação `instalar_webhook` + estado `configuracao_incompleta` na falha | AC-5 | 10 | idem | done |
 | 12 | `application/configurar-evolution.ts` (sequência atômica) + `verificar-canal.ts` | AC-5, AC-7 | 3 | `pnpm vitest run apps/web/src/features/atendimento/application/configurar-evolution.test.ts` | todo |
 | 13 | Adapter `supabase-evolution-adapter.ts`: novas ações, sem segredo na resposta | AC-3 | 11, 12 | `pnpm vitest run apps/web/src/features/atendimento/infrastructure/supabase-evolution-adapter.test.ts` | todo |
 | 14 | `components/ConfiguracaoEvolution.tsx` (máquina de vistas + textos de erro) | AC-1, AC-2, AC-5, AC-8 | 13 | `pnpm vitest run apps/web/src/features/atendimento/components/ConfiguracaoEvolution.test.tsx` | todo |
@@ -45,6 +45,11 @@ alwaysApply: false
 
 ## Divergências (SPEC_DEVIATION)
 
+- [x] Task 9-11 · `plan.md` nomeava a função `atendimento-evolution` (legada, E02-S19) para as
+      ações novas. Criada função **nova** `evolution-configurar` em vez disso — a legada
+      continua servindo o `EvolutionTab` atual sem mudança, e a nova tem seu próprio schema de
+      entrada (`salvar_servidor`/`criar_instancia`/`instalar_webhook`), sem risco de regressão
+      na tela em produção. Resolução: `plan.md` atualizado para refletir o nome real.
 - [ ] <task # · motivo · resolução: corrigir código OU atualizar spec/ADR>
 
 ## Checklist de Definition of Done
