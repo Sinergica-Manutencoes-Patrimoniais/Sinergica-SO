@@ -261,3 +261,32 @@ Deno.test("duplicado responde 200 { duplicado: true }", async () => {
   const corpo = await resposta.json();
   assertEquals(corpo.duplicado, true);
 });
+
+Deno.test("E02-S40 — mensagem nova dispara busca de foto, duplicado não dispara", async () => {
+  const chamadasDeFoto: unknown[] = [];
+  const atualizarFoto = async (entrada: unknown) => {
+    chamadasDeFoto.push(entrada);
+  };
+
+  const { serviceClient: scNova } = serviceClientFake({});
+  await criarHandler({ serviceClient: scNova, atualizarFoto })(req({ body: payloadTexto("MSG_FOTO1") }));
+  assertEquals(chamadasDeFoto.length, 1);
+  assertEquals((chamadasDeFoto[0] as { conversaId: string }).conversaId, "conv-1");
+
+  const { serviceClient: scDup } = serviceClientFake({
+    registrarResultado: { data: [{ mensagem_id: null, conversa_id: null, duplicado: true }], error: null },
+  });
+  await criarHandler({ serviceClient: scDup, atualizarFoto })(req({ body: payloadTexto("MSG_FOTO2") }));
+  assertEquals(chamadasDeFoto.length, 1); // não cresceu — duplicado não dispara busca
+});
+
+Deno.test("E02-S40 — falha na busca de foto nunca derruba a resposta do webhook", async () => {
+  const atualizarFoto = async () => {
+    throw new Error("Evolution fora do ar");
+  };
+  const { serviceClient } = serviceClientFake({});
+  const resposta = await criarHandler({ serviceClient, atualizarFoto })(
+    req({ body: payloadTexto("MSG_FOTO3") }),
+  );
+  assertEquals(resposta.status, 200);
+});

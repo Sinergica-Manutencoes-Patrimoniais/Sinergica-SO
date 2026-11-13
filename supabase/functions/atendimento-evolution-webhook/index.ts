@@ -23,6 +23,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getSupabaseServiceKey } from "../_shared/auth.ts";
 import { constantTimeEqual } from "../_shared/crypto.ts";
 import { horarioDoAparelho, textoDoAparelho } from "../_shared/evolution-aparelho.ts";
+import { atualizarFotoDoContato } from "../_shared/foto-do-contato.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 import { classificarEventoEvolution } from "./classificar.ts";
 
@@ -51,6 +52,12 @@ interface CanalRow {
 
 export interface DependenciasDoWebhook {
   serviceClient: UntypedSupabaseClient;
+  /** E02-S40 — opcional para não obrigar os testes de S36/S39 a conhecer o pipeline de foto. */
+  atualizarFoto?: (entrada: {
+    canalId: string;
+    conversaId: string;
+    remoteJid: string;
+  }) => Promise<void>;
 }
 
 async function lerPayloadLimitado(
@@ -224,17 +231,107 @@ export function criarHandler(deps: DependenciasDoWebhook) {
 
     const linha = Array.isArray(resultado) ? resultado[0] : resultado;
     if (linha?.duplicado === true) return json(200, { duplicado: true });
+
+    // E02-S40: busca a foto em segundo plano, só em entrega nova — nunca atrasa a resposta nem
+    // o caminho do Zé (AC-2). Falha é sempre engolida dentro de atualizarFotoDoContato.
+    if (deps.atualizarFoto !== undefined && linha?.conversa_id) {
+      dispararFotoDoPerfil(deps, canalId, linha.conversa_id as string, evento.remoteJid);
+    }
+
     return json(200, { ok: true, mensagemId: linha?.mensagem_id ?? null });
+  };
+}
+
+function dispararFotoDoPerfil(
+  deps: DependenciasDoWebhook,
+  canalId: string,
+  conversaId: string,
+  remoteJid: string,
+): void {
+  if (deps.atualizarFoto === undefined) return;
+  let tarefa: Promise<unknown>;
+  try {
+    tarefa = deps.atualizarFoto({ canalId, conversaId, remoteJid }).catch(() => undefined);
+  } catch {
+    return;
+  }
+  const edgeRuntime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } })
+    .EdgeRuntime;
+  if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(tarefa);
+  else void tarefa;
+}
+
+function criarAtualizarFoto(
+  serviceClient: UntypedSupabaseClient,
+): NonNullable<DependenciasDoWebhook["atualizarFoto"]> {
+  return async ({ canalId, conversaId, remoteJid }) => {
+    const { data: instancia } = await serviceClient
+      .schema("atendimento")
+      .from("evolution_instancia")
+      .select("nome_remoto, token_ref")
+      .eq("canal_id", canalId)
+      .maybeSingle();
+    if (!instancia?.token_ref) return;
+
+    const { data: servidor } = await serviceClient
+      .schema("atendimento")
+      .from("evolution_servidor")
+      .select("url_base")
+      .eq("estado", "compativel")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!servidor?.url_base) return;
+
+    const { data: tokenInstancia } = await serviceClient
+      .schema("config")
+      .rpc("fn_ler_segredo_referenciado", { p_ref: instancia.token_ref });
+    if (typeof tokenInstancia !== "string" || tokenInstancia.trim() === "") return;
+
+    await atualizarFotoDoContato(
+      {
+        canalId,
+        conversaId,
+        remoteJid,
+        nomeRemoto: instancia.nome_remoto as string,
+        tokenInstancia,
+        urlBaseEvolution: servidor.url_base as string,
+      },
+      {
+        fetchEvolution: fetch,
+        reservarConsulta: async (idConversa) => {
+          const { data } = await serviceClient
+            .schema("atendimento")
+            .rpc("fn_reservar_consulta_de_foto", { p_conversa_id: idConversa });
+          return data === true;
+        },
+        registrarResultado: async (idConversa, estado, mime, hash) => {
+          await serviceClient.schema("atendimento").rpc("fn_registrar_foto_de_contato", {
+            p_conversa_id: idConversa,
+            p_estado: estado,
+            p_mime: mime,
+            p_hash: hash,
+          });
+        },
+        salvarArquivo: async (caminho, bytes, mime) => {
+          await serviceClient.storage
+            .from("atendimento-fotos-contato")
+            .upload(caminho, bytes, { contentType: mime, upsert: true });
+        },
+      },
+    );
   };
 }
 
 function criarDependenciasDoAmbiente(): DependenciasDoWebhook {
   const url = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceKey = getSupabaseServiceKey();
+  const serviceClient = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   return {
-    serviceClient: createClient(url, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    }),
+    serviceClient,
+    atualizarFoto: criarAtualizarFoto(serviceClient),
   };
 }
 

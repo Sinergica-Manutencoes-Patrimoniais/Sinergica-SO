@@ -10,19 +10,23 @@ alwaysApply: false
 
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 1  | Migration `1838` — `foto_de_contato`, colunas em `conversas`, bucket privado, RLS force | AC-3 | — | `pnpm run db:test -- foto_de_contato` | todo |
-| 2  | `fn_reservar_consulta_de_foto` (janela de 7 dias, atômica) | AC-7 | 1 | `pnpm run db:test -- reservar_foto` | todo |
-| 3  | `fn_registrar_foto_de_contato` (guardada / sem_foto apaga / hash) | AC-8, AC-9 | 1 | `pnpm run db:test -- registrar_foto` | todo |
-| 4  | `_shared/foto-do-contato.ts` — pipeline com conferência por assinatura e teto de 1 MB | AC-4, AC-12 | 2, 3 | `deno test supabase/functions/_shared/foto-do-contato.test.ts` | todo |
-| 5  | Disparo em segundo plano no webhook, só entrada e só Evolution | AC-2, AC-14 | 4 | `deno test supabase/functions/atendimento-evolution-webhook/foto.test.ts` | todo |
-| 6  | `atendimento-anexo` ganha rota de foto, com 404 indistinguível | AC-10 | 3 | `deno test supabase/functions/atendimento-anexo/foto.test.ts` | todo |
-| 7  | Avatar com foto + fallback para iniciais em lista, cabeçalho e perfil | AC-1, AC-5, AC-6, AC-9 | 6 | `pnpm vitest run apps/web/src/features/atendimento/components/Avatar.test.tsx` | todo |
-| 8  | `listar-conversas.ts` traz `fotoHash` e só pede imagem quando há hash `[P]` | AC-6 | 1 | `pnpm vitest run apps/web/src/features/atendimento/application/listar-conversas.test.ts` | todo |
-| 9  | `fn_conversas_para_foto_inicial` + função `atendimento-preencher-fotos` | AC-13 | 4 | `deno test supabase/functions/atendimento-preencher-fotos/index.test.ts` | todo |
+| 1  | Migration `1851` (renumerada de `1838`) — `foto_de_contato`, colunas em `conversas`, bucket privado, RLS force | AC-3 | — | `supabase test db` — `foto_de_contato.test.sql` (7 asserts) | done |
+| 2  | `fn_reservar_consulta_de_foto` (janela de 7 dias, atômica) | AC-7 | 1 | idem, testes 1-2-5 | done |
+| 3  | `fn_registrar_foto_de_contato` (guardada / sem_foto apaga / hash) | AC-8, AC-9 | 1 | idem, testes 3-4-6-7 | done |
+| 4  | `_shared/foto-do-contato.ts` — pipeline com conferência por assinatura e teto de 1 MB | AC-4, AC-12 | 2, 3 | `deno test .../foto-do-contato.test.ts` (10 testes) | done |
+| 5  | Disparo em segundo plano no webhook, só entrada e só Evolution | AC-2, AC-14 | 4 | `deno test .../handler.test.ts` (2 testes S40 novos, 18 no total) | done |
+| 6  | `atendimento-anexo` ganha rota de foto, com 404 indistinguível | AC-10 | 3 | — | todo (função `atendimento-anexo` não existe ainda — é E02-S37) |
+| 7  | Avatar com foto + fallback para iniciais em lista, cabeçalho e perfil | AC-1, AC-5, AC-6, AC-9 | 6 | — | todo |
+| 8  | `listar-conversas.ts` traz `fotoHash` e só pede imagem quando há hash `[P]` | AC-6 | 1 | — | todo |
+| 9  | `fn_conversas_para_foto_inicial` + função `atendimento-preencher-fotos` | AC-13 | 4 | RPC pronta (migration 1851); função HTTP standalone não escrita | parcial |
 | 10 | Runbook do preenchimento inicial em `docs/runbooks/` `[P]` | AC-13 | 9 | revisão humana | todo |
-| 11 | Auditoria de log: nenhuma URL do WhatsApp, byte ou número `[P]` | AC-11 | 5 | `deno test ... --filter "log sem url"` | todo |
+| 11 | Auditoria de log: nenhuma URL do WhatsApp, byte ou número `[P]` | AC-11 | 5 | leitura do código — `fetchEvolution`/erros nunca logam URL/bytes | done (sem teste automatizado) |
 | 12 | Débito em `docs/SECURITY_DEBT.md` (exclusão a pedido apaga fotos) | — | 1 | revisão humana | todo |
 | 13 | Glossário: foto do contato, estado da consulta | — | — | `grep` em `docs/glossary.md` | todo |
+
+> **Nota (task 6):** a rota autenticada que serve o proxy de arquivo (`atendimento-anexo`) é
+> escopo de E02-S37, não desta story. Sem ela, a foto é guardada mas a UI ainda não tem como
+> pedi-la de forma autenticada — é a lacuna real que bloqueia as tasks 7/8.
 
 ## Plano de teste
 
