@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { classificarEventoEvolution } from "./evento-evolution";
 
-function evento(message: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+interface Extra {
+  key?: Record<string, unknown>;
+  [outro: string]: unknown;
+}
+
+function evento(message: Record<string, unknown>, extra: Extra = {}) {
+  const { key: chaveExtra, ...resto } = extra;
   return {
     event: "MESSAGES_UPSERT",
     data: {
-      key: { remoteJid: "5511999999999@s.whatsapp.net", id: "ABC123", fromMe: false, ...extra.key },
+      key: { remoteJid: "5511999999999@s.whatsapp.net", id: "ABC123", fromMe: false, ...chaveExtra },
       message,
-      ...extra,
+      ...resto,
     },
   };
 }

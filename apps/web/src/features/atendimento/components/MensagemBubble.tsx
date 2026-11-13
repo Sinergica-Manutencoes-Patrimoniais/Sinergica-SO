@@ -1,7 +1,23 @@
-import { AlertTriangle, Bot, FileText, Smartphone, User } from "lucide-react";
+import { AlertTriangle, Bot, FileText, MapPin, Smartphone, User } from "lucide-react";
 import { useRef } from "react";
 import type { MensagemItem } from "../domain/mensagens";
 import { formatarCustoIaMensagem } from "../domain/mensagens";
+
+/** E02-S37: aviso fixo — texto pronto do banco (`conteudo`), ícone de apoio por tipo. */
+const ICONE_DE_AVISO = {
+  localizacao: MapPin,
+  contato: User,
+  enquete: AlertTriangle,
+  outro: AlertTriangle,
+} as const;
+
+/** E02-S38: quem escreveu a mensagem citada — rótulo curto pro bloco "em resposta a". */
+const ROTULO_DO_AUTOR_CITADO = {
+  cliente: "Cliente",
+  ze: "Zé",
+  humano: "Equipe",
+  desconhecido: "Mensagem anterior",
+} as const;
 
 /**
  * E02-S41 (design.md "Bolha de mensagem") — laranja sai da bolha de saída e volta a significar só
@@ -22,9 +38,35 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
         : "bg-navy text-white"
       : "bg-card text-ink border border-line";
 
+  // E02-S37: para mídia GUARDADA, `conteudo` é o marcador que o Zé lê (ex.: "[imagem] legenda:
+  // X") — nunca o que a equipe deve ler. A legenda crua (campo próprio) é o texto humano; sem
+  // legenda, nenhum parágrafo extra (a mídia já fala por si, exceto figurinha e aviso/falha).
+  const textoHumano =
+    mensagem.anexoEstado === "guardado" ? (mensagem.legenda ?? null) : mensagem.conteudo;
+  const IconeDoAviso =
+    mensagem.conteudoRecebido !== null && mensagem.conteudoRecebido in ICONE_DE_AVISO
+      ? ICONE_DE_AVISO[mensagem.conteudoRecebido as keyof typeof ICONE_DE_AVISO]
+      : null;
+  const ehAvisoSemAnexo = mensagem.anexoEstado === null && IconeDoAviso !== null;
+
   return (
     <div className={`flex ${minha ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[68ch] rounded-lg px-3 py-2 text-body ${cor}`}>
+      <div className={`relative max-w-[68ch] rounded-lg px-3 py-2 text-body ${cor}`}>
+        {mensagem.citacao && (
+          <button
+            type="button"
+            disabled={mensagem.citacao.mensagemId === null}
+            className="mb-1.5 block w-full min-w-0 rounded-md border-l-2 border-ink-3/40 bg-ink/5 px-2 py-1 text-left text-caption disabled:cursor-default"
+            title={mensagem.citacao.mensagemId !== null ? "Ir para a mensagem citada" : undefined}
+          >
+            <span className="block font-semibold text-micro uppercase tracking-[0.08em] opacity-70">
+              {ROTULO_DO_AUTOR_CITADO[mensagem.citacao.autor]}
+            </span>
+            <span className="block truncate opacity-80">
+              {mensagem.citacao.trecho ?? "mensagem anterior"}
+            </span>
+          </button>
+        )}
         {deAgente && (
           <div className="mb-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.12em] opacity-70">
             <Bot className="h-3 w-3" />
@@ -43,7 +85,14 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
             Você
           </div>
         )}
-        <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>
+        {textoHumano !== null && (
+          <p className="flex items-start gap-1.5 whitespace-pre-wrap break-words">
+            {ehAvisoSemAnexo && IconeDoAviso && (
+              <IconeDoAviso className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60" />
+            )}
+            <span>{textoHumano}</span>
+          </p>
+        )}
         {mensagem.tipoConteudo === "audio" && mensagem.midiaUrl && (
           <audio controls src={mensagem.midiaUrl} className="mt-2 max-w-full">
             <track kind="captions" />
@@ -122,6 +171,14 @@ export function MensagemBubble({ mensagem }: { mensagem: MensagemItem }) {
               minute: "2-digit",
             })}
           </p>
+        )}
+        {mensagem.reacao && (
+          <span
+            className="-bottom-2 absolute right-2 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-card text-[13px] shadow-raised"
+            aria-label={`Cliente reagiu com ${mensagem.reacao}`}
+          >
+            {mensagem.reacao}
+          </span>
         )}
       </div>
     </div>

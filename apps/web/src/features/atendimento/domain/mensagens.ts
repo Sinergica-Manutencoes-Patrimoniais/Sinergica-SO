@@ -8,8 +8,32 @@ export type TipoConteudoMensagem =
   | "midia"
   | "template"
   | "interativa";
-/** E02-S32: como uma mensagem de SAÍDA foi enviada — `null` em mensagens de entrada. */
-export type OrigemEnvioMensagem = "formulario" | "ia" | "celular";
+/** E02-S32/S39: como uma mensagem de SAÍDA foi enviada — `null` em mensagens de entrada.
+ * `celular_automatico` é a mensagem automática do WhatsApp Business (não tira o Zé). */
+export type OrigemEnvioMensagem = "formulario" | "ia" | "celular" | "celular_automatico";
+
+/** E02-S37: o que o cliente mandou, quando não é texto puro. */
+export type ConteudoRecebido =
+  | "imagem"
+  | "video"
+  | "documento"
+  | "figurinha"
+  | "localizacao"
+  | "contato"
+  | "enquete"
+  | "outro";
+
+/** E02-S37: estado do anexo — `guardado` é o único com arquivo de verdade. */
+export type AnexoEstado = "guardado" | "acima_do_limite" | "tipo_nao_aceito" | "indisponivel";
+
+/** E02-S38: quem escreveu a mensagem citada — `desconhecido` quando ela não está no sistema. */
+export type AutorDaCitacao = "cliente" | "ze" | "humano" | "desconhecido";
+
+export interface CitacaoDaMensagem {
+  mensagemId: string | null;
+  trecho: string | null;
+  autor: AutorDaCitacao;
+}
 
 /** E02-S33: custo real da chamada OpenRouter que gerou uma mensagem de IA (`config.ia_gasto_log`,
  * casado por `ref_id` = id da mensagem). */
@@ -39,6 +63,15 @@ export interface MensagemItem {
   /** `null` se não veio de IA, ou o gasto não foi registrado (ex.: integração sem `usage.cost`
    * no retorno do OpenRouter). */
   custoIa: CustoIaMensagem | null;
+  /** E02-S37: legenda da mídia (só do cliente); conteudoRecebido diz O QUE era quando não é texto
+   * puro (imagem/vídeo/.../aviso); anexoEstado diz se o arquivo foi guardado de fato. */
+  legenda: string | null;
+  conteudoRecebido: ConteudoRecebido | null;
+  anexoEstado: AnexoEstado | null;
+  /** E02-S38: presente quando esta mensagem responde a outra. */
+  citacao: CitacaoDaMensagem | null;
+  /** E02-S38: emoji atual do cliente nesta mensagem, ou `null` se não há reação. */
+  reacao: string | null;
 }
 
 export interface MensagemRicaInput {
