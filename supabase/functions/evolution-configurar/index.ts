@@ -151,10 +151,12 @@ async function salvarServidor(
 
   const geracao = 1;
   const referencia = novaReferencia("EVOSERVIDOR", geracao);
-  const { error: erroVault } = await deps.serviceClient.rpc("fn_gravar_segredo_referenciado", {
-    p_ref: referencia,
-    p_valor: input.apikeyGlobal,
-  });
+  const { error: erroVault } = await deps.serviceClient
+    .schema("config")
+    .rpc("fn_gravar_segredo_referenciado", {
+      p_ref: referencia,
+      p_valor: input.apikeyGlobal,
+    });
   if (erroVault) throw new HttpError(502, "cofre_indisponivel");
 
   const estado = compatibilidade.compativel ? "compativel" : "incompativel";
@@ -206,7 +208,9 @@ async function lerSegredo(
   serviceClient: UntypedSupabaseClient,
   ref: string,
 ): Promise<string> {
-  const { data, error } = await serviceClient.rpc("fn_ler_segredo_referenciado", { p_ref: ref });
+  const { data, error } = await serviceClient
+    .schema("config")
+    .rpc("fn_ler_segredo_referenciado", { p_ref: ref });
   if (error || typeof data !== "string" || data.trim() === "") {
     throw new HttpError(502, "cofre_indisponivel");
   }
@@ -218,7 +222,7 @@ async function gravarSegredo(
   ref: string,
   valor: string,
 ): Promise<void> {
-  const { error } = await serviceClient.rpc("fn_gravar_segredo_referenciado", {
+  const { error } = await serviceClient.schema("config").rpc("fn_gravar_segredo_referenciado", {
     p_ref: ref,
     p_valor: valor,
   });

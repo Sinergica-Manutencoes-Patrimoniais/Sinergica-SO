@@ -1,0 +1,240 @@
+// atendimento-evolution-webhook — E02-S36 (ADR-1687). Webhook Evolution AUTENTICADO POR CANAL.
+//
+// Substitui, canal a canal, o endpoint legado `pcm-whatsapp-webhook` (token global, instância
+// resolvida pelo CORPO do evento — achado de segurança em
+// docs/planejamento/port-evolution-triviatende.md, c.1/c.2). O legado continua no ar durante a
+// transição; cada canal migra ao reinstalar o webhook (E02-S35, instalar_webhook).
+//
+// POST /functions/v1/atendimento-evolution-webhook/{canalId}
+// Header: x-sinergica-evolution-webhook: <segredo por canal>
+//
+// Ordem de verificação (não negociável — plan.md):
+//   1. método            -> 405
+//   2. canalId da rota    -> 404 canal_nao_identificado
+//   3. segredo por canal, tempo constante, ANTES de ler o corpo -> 401 recusado
+//   4. rate limit por canal -> 429
+//   5. corpo: content-type/tamanho/JSON -> 415/413/400
+//   6. instância do corpo != canal -> 409 canal_divergente
+//   7. reserva de idempotência (canal, event, id) -> 200 { duplicado: true }
+//   8. classifica e despacha
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSupabaseServiceKey } from "../_shared/auth.ts";
+import { constantTimeEqual } from "../_shared/crypto.ts";
+import { extractEvolutionMessage } from "../_shared/evolution-webhook.ts";
+import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
+import { classificarEventoEvolution } from "./classificar.ts";
+
+const FN = "atendimento-evolution-webhook";
+const TAMANHO_MAXIMO_DO_WEBHOOK = 256 * 1024;
+
+function json(status: number, corpo: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(corpo), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+function canalIdDaUrl(req: Request): string | null {
+  const segmentos = new URL(req.url).pathname.split("/").filter(Boolean);
+  const indice = segmentos.lastIndexOf("atendimento-evolution-webhook");
+  if (indice < 0 || segmentos[indice + 1] === undefined) return null;
+  return segmentos[indice + 1] ?? null;
+}
+
+interface CanalRow {
+  id: string;
+  identificador_externo: string | null;
+  ativo: boolean;
+}
+
+export interface DependenciasDoWebhook {
+  serviceClient: UntypedSupabaseClient;
+}
+
+async function lerPayloadLimitado(
+  req: Request,
+): Promise<{ ok: true; payload: unknown } | { ok: false; status: number; codigo: string }> {
+  const contentType = req.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    return { ok: false, status: 415, codigo: "formato_invalido" };
+  }
+  if (!req.body) return { ok: false, status: 400, codigo: "payload_invalido" };
+
+  const leitor = req.body.getReader();
+  const pedacos: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await leitor.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > TAMANHO_MAXIMO_DO_WEBHOOK) {
+      void leitor.cancel().catch(() => undefined);
+      return { ok: false, status: 413, codigo: "payload_excede_tamanho" };
+    }
+    pedacos.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let posicao = 0;
+  for (const pedaco of pedacos) {
+    bytes.set(pedaco, posicao);
+    posicao += pedaco.length;
+  }
+  try {
+    return { ok: true, payload: JSON.parse(new TextDecoder().decode(bytes)) };
+  } catch {
+    return { ok: false, status: 400, codigo: "payload_invalido" };
+  }
+}
+
+function objeto(valor: unknown): Record<string, unknown> | null {
+  return valor !== null && typeof valor === "object" && !Array.isArray(valor)
+    ? (valor as Record<string, unknown>)
+    : null;
+}
+
+/** Instância que o CORPO declara — nunca confiada sozinha; só serve para conferir contra o canal
+ * já resolvido pela rota (AC-1, ADR-1687). */
+function instanciaDeclarada(payload: unknown): string | null {
+  const raiz = objeto(payload);
+  const valor = raiz?.instance ?? objeto(raiz?.data)?.instanceId;
+  return typeof valor === "string" && valor.trim() !== "" ? valor.trim() : null;
+}
+
+export function criarHandler(deps: DependenciasDoWebhook) {
+  return async (req: Request): Promise<Response> => {
+    if (req.method !== "POST") return json(405, { codigo: "metodo_invalido" });
+
+    const canalId = canalIdDaUrl(req);
+    if (canalId === null) return json(404, { codigo: "canal_nao_identificado" });
+
+    const { data: canal, error: erroCanal } = await deps.serviceClient
+      .schema("atendimento")
+      .from("canais_externos")
+      .select("id, identificador_externo, ativo")
+      .eq("id", canalId)
+      .maybeSingle();
+    if (erroCanal) return json(502, { codigo: "erro_interno" });
+    if (!canal || !(canal as CanalRow).ativo) {
+      return json(404, { codigo: "canal_nao_identificado" });
+    }
+
+    const { data: instancia, error: erroInstancia } = await deps.serviceClient
+      .schema("atendimento")
+      .from("evolution_instancia")
+      .select("webhook_secret_ref")
+      .eq("canal_id", canalId)
+      .maybeSingle();
+    if (erroInstancia) return json(502, { codigo: "erro_interno" });
+
+    const apresentado = req.headers.get("x-sinergica-evolution-webhook");
+    let segredoEsperado: string | null = null;
+    if (instancia?.webhook_secret_ref) {
+      const { data } = await deps.serviceClient
+        .schema("config")
+        .rpc("fn_ler_segredo_referenciado", { p_ref: instancia.webhook_secret_ref });
+      segredoEsperado = typeof data === "string" ? data : null;
+    }
+    // Autentica ANTES de ler o corpo — nenhuma PII é parseada sem segredo válido (plan.md §3).
+    if (apresentado === null || segredoEsperado === null || !constantTimeEqual(apresentado, segredoEsperado)) {
+      return json(401, { codigo: "recusado" });
+    }
+
+    const { data: permitido, error: erroLimite } = await deps.serviceClient
+      .schema("atendimento")
+      .rpc("fn_consumir_rate_limit_webhook", {
+        p_chave: `evolution:${canalId}`,
+        p_limite: 120,
+        p_janela_segundos: 60,
+      });
+    if (erroLimite) return json(502, { codigo: "erro_interno" });
+    if (!permitido) return json(429, { codigo: "limite_excedido" });
+
+    const leitura = await lerPayloadLimitado(req);
+    if (!leitura.ok) return json(leitura.status, { codigo: leitura.codigo });
+
+    const canalRow = canal as CanalRow;
+    const instanciaDoCorpo = instanciaDeclarada(leitura.payload);
+    if (
+      instanciaDoCorpo !== null &&
+      canalRow.identificador_externo !== null &&
+      instanciaDoCorpo !== canalRow.identificador_externo
+    ) {
+      return json(409, { codigo: "canal_divergente" });
+    }
+
+    const evento = classificarEventoEvolution(leitura.payload);
+
+    if (evento.tipo === "ignorar") {
+      return json(200, { ignorado: true, motivo: evento.motivo });
+    }
+
+    // Mensagem do aparelho (fromMe): caminho legado intacto (S39 cuida de tirar o Zé).
+    if (evento.tipo === "aparelho") {
+      const mensagemLegada = extractEvolutionMessage(
+        (leitura.payload ?? {}) as Record<string, unknown>,
+      );
+      const { error: erroCelular } = await deps.serviceClient
+        .schema("atendimento")
+        .rpc("fn_registrar_mensagem_celular", {
+          p_instance_id: canalRow.identificador_externo ?? "",
+          p_remote_jid: evento.remoteJid,
+          p_contato_nome: mensagemLegada.contactName,
+          p_conteudo: mensagemLegada.content,
+          p_wa_message_id: evento.remoteId,
+          p_enviado_em: mensagemLegada.receivedAt ?? new Date().toISOString(),
+        });
+      if (erroCelular) return json(502, { codigo: "erro_interno" });
+      return json(200, { ok: true, aparelho: true });
+    }
+
+    if (evento.tipo !== "texto") {
+      // Mídia, áudio, aviso e reação: reconhecidos e respondidos, persistência fica para
+      // E02-S37/S38 (plan.md). Nunca viram mensagem de texto por omissão.
+      return json(200, { ignorado: true, tipo: evento.tipo });
+    }
+
+    const { data: resultado, error: erroRegistro } = await deps.serviceClient
+      .schema("atendimento")
+      .rpc("fn_registrar_mensagem_evolution", {
+        p_canal_id: canalId,
+        p_event_type: "MESSAGES_UPSERT",
+        p_remote_id: evento.remoteId,
+        p_instance_id: canalRow.identificador_externo ?? "",
+        p_remote_jid: evento.remoteJid,
+        p_contato_nome: evento.pushName ?? null,
+        p_conteudo: evento.texto,
+      });
+    if (erroRegistro) {
+      console.error(
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          nivel: "error",
+          fn: FN,
+          canalId,
+          msg: "falha ao registrar mensagem",
+        }),
+      );
+      return json(502, { codigo: "erro_interno" });
+    }
+
+    const linha = Array.isArray(resultado) ? resultado[0] : resultado;
+    if (linha?.duplicado === true) return json(200, { duplicado: true });
+    return json(200, { ok: true, mensagemId: linha?.mensagem_id ?? null });
+  };
+}
+
+function criarDependenciasDoAmbiente(): DependenciasDoWebhook {
+  const url = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey = getSupabaseServiceKey();
+  return {
+    serviceClient: createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }),
+  };
+}
+
+// Dependências lidas por requisição, nunca no import — testar este arquivo não deve exigir
+// SUPABASE_SERVICE_ROLE_KEY (mesmo padrão de apps/web/.../atendimento-padrao.ts).
+serve((req) => criarHandler(criarDependenciasDoAmbiente())(req));
