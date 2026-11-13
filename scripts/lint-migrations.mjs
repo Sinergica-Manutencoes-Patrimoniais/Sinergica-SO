@@ -133,9 +133,12 @@ function runSquawk() {
     return;
   }
   try {
-    // --assume-in-transaction: o Supabase (CLI e GitHub Integration) roda cada arquivo de
-    // migration dentro de uma transação — sem a flag, Squawk avisa "sem transação" em toda
-    // migration (falso positivo para este ambiente).
+    // --assume-in-transaction: a CLI do Supabase (`db reset`/`db push`) envolve cada arquivo de
+    // migration numa transação — sem a flag, Squawk avisa "sem transação" em toda migration.
+    // CUIDADO: a GitHub Integration NÃO envolve (cada statement vai solto, em autocommit). A
+    // migration 1842 falhou em produção com `25P01` por causa dessa diferença. A flag continua
+    // porque o aviso genérico é ruído, mas ela NÃO garante atomicidade no deploy real: migration
+    // que precisa ser atômica tem que usar um `do $$ ... $$`. Ver `.squawk.toml`.
     execSync(
       `pnpm exec squawk --assume-in-transaction ${alvo.map((f) => `"${f}"`).join(" ")}`,
       { stdio: "inherit" },

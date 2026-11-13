@@ -4,6 +4,19 @@
 #
 # Squawk cobre SEGURANÇA de migration. A correção SEMÂNTICA de RLS (CREATE POLICY exige GRANT)
 # NÃO é coberta por ele — fica no check custom em scripts/lint-migrations.mjs.
+#
+# ⚠ ATENÇÃO (2026-11-12, achado em deploy real): o `--assume-in-transaction` usado no script e na
+# CI vale para a CLI (`supabase db reset`/`db push`), que ENVOLVE cada migration numa transação.
+# A GitHub Integration do Supabase NÃO envolve: cada statement vai solto, em autocommit. A
+# migration 1842 falhou em produção com `25P01 LOCK TABLE can only be used in transaction blocks`
+# justamente por causa dessa diferença, e o `--assume-in-transaction` tinha silenciado o aviso que
+# teria pego isso antes.
+#
+# Consequência prática para quem escrever migration nova: se um arquivo precisa ser ATÔMICO —
+# `lock table`, ou um par `drop constraint` + `add constraint`, ou qualquer sequência cujo estado
+# intermediário seja inseguro — ponha tudo dentro de um único `do $$ ... $$`, com o DDL saindo por
+# `execute`. Um bloco `do` é um statement só, e por isso é atômico nos dois ambientes. Ver o
+# cabeçalho de `1842_E01-S167_transicao_1n_chamado_os.sql`.
 
 # ATENÇÃO: excluded_rules é TOP-LEVEL — dentro de [default] o Squawk ignora silenciosamente
 # (testado; achado real ao ligar o gate pela primeira vez neste repo).
