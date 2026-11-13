@@ -13,7 +13,7 @@ alwaysApply: false
 | 1  | ADR `1687-webhook-evolution-por-canal.md` | — | — | revisão humana | done |
 | 2  | `domain/evento-evolution.ts` — classificador total (lado Vite) | AC-7, AC-8, AC-9 | 1 | `pnpm vitest run apps/web/src/features/atendimento/domain/evento-evolution.test.ts` (42 testes) | done |
 | 3  | `atendimento-evolution-webhook/classificar.ts` — espelho (lado Deno) + teste de paridade | AC-7, AC-8, AC-9 | 2 | `deno test .../classificar.test.ts` | done |
-| 4  | Migration `1848` (renumerada de `1832`) — `evolution_inbox` + `canal_id` + backfill + idempotência por canal | AC-5 | 1 | `supabase test db` — `evolution_inbox_canal.test.sql` | done (não validado local — ver nota) |
+| 4  | Migration `1848` (renumerada de `1832`) — `evolution_inbox` + `canal_id` + backfill + idempotência por canal | AC-5 | 1 | `supabase test db` — `evolution_inbox_canal.test.sql` | done — SPEC_DEVIATION: unicidade `wa_message_id` segue GLOBAL (não por canal), ver comentário em `1848` |
 | 5  | RPC `fn_registrar_mensagem_evolution` (reserva + conversa + mensagem no mesmo commit) | AC-5 | 4 | idem, 6 asserts (duplicado, dois canais mesmo id, RLS) | done (idem) |
 | 6  | Handler: ordem de verificação (405/404/401/429/415/413/400/409) | AC-1, AC-2, AC-4, AC-6, AC-12 | 3, 5 | `deno test .../handler.test.ts` (16 testes) | done |
 | 7  | Teste de que o corpo **não é lido** antes do `401` `[P]` | AC-2 | 6 | idem (prova por corrida: JSON quebrado + segredo errado → 401, nunca 400) | done |

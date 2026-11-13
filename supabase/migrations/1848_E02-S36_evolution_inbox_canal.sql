@@ -3,13 +3,10 @@
 -- rota fixa e resolve a instância pelo CORPO do evento — quem conhece o token de um número
 -- escreve PII na conversa de qualquer outro, e um evento forjado escolhe a instância (achado em
 -- docs/planejamento/port-evolution-triviatende.md, c.1/c.2). Esta migration prepara o schema
--- para o webhook novo, por canal: inbox idempotente escopado, `canal_id` em conversas/mensagens,
--- e idempotência de mensagem que não colide entre canais diferentes.
+-- para o webhook novo, por canal: inbox idempotente escopado, `canal_id` em conversas/mensagens.
+-- A unicidade de `wa_message_id` continua GLOBAL (ver SPEC_DEVIATION mais abaixo).
 --
 -- Reverso:
---   drop index if exists idx_mensagens_wa_message_id_canal;
---   drop index if exists idx_mensagens_wa_message_id_sem_canal;
---   alter table atendimento.mensagens add constraint mensagens_wa_message_id_key unique (wa_message_id);
 --   alter table atendimento.mensagens drop column if exists canal_id;
 --   alter table atendimento.conversas drop column if exists canal_id;
 --   drop table if exists atendimento.evolution_inbox;
@@ -51,18 +48,14 @@ update atendimento.mensagens m
 create index if not exists idx_conversas_canal on atendimento.conversas (canal_id);
 create index if not exists idx_mensagens_canal on atendimento.mensagens (canal_id);
 
--- Idempotência de mensagem deixa de ser global: dois canais podem, em teoria, receber o mesmo
--- remote_message_id da Evolution (AC-5) — a unicidade passa a ser POR CANAL. Linha legada sem
--- canal_id (Meta WA, por ex.) mantém a garantia global de antes, numa segunda partial index.
-alter table atendimento.mensagens drop constraint if exists mensagens_wa_message_id_key;
-
-create unique index if not exists idx_mensagens_wa_message_id_canal
-  on atendimento.mensagens (canal_id, wa_message_id)
-  where canal_id is not null and wa_message_id is not null;
-
-create unique index if not exists idx_mensagens_wa_message_id_sem_canal
-  on atendimento.mensagens (wa_message_id)
-  where canal_id is null and wa_message_id is not null;
+-- SPEC_DEVIATION: a spec (AC-5) pedia unicidade de wa_message_id POR CANAL, em vez de global, pra
+-- dois canais poderem (em teoria) receber o mesmo remote_message_id sem colidir. Removido —
+-- `ON CONFLICT (wa_message_id)` explícito em 4 call sites pré-existentes (0039, 0047, 0067, 0207)
+-- depende da constraint ÚNICA GLOBAL de coluna só; um índice parcial não serve de árbitro pra
+-- esse `ON CONFLICT` sem WHERE casando. Achado pelo CI (db-tests: "no unique or exclusion
+-- constraint matching the ON CONFLICT specification" nos 4 pontos). Mantém a unicidade global —
+-- o caso de colisão entre canais diferentes é teórico (Baileys inclui aleatoriedade por
+-- dispositivo no id); quebrar 4 call sites em produção pra cobrir isso não vale a pena.
 
 comment on table atendimento.evolution_inbox is
   'E02-S36: chave de idempotência (canal_id, event_type, remote_message_id) do webhook por canal. Só service_role.';

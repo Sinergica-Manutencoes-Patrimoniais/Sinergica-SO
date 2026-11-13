@@ -107,9 +107,16 @@ $$;
 revoke all on function atendimento.fn_registrar_reacao_evolution(uuid, text, text) from public, anon, authenticated;
 grant execute on function atendimento.fn_registrar_reacao_evolution(uuid, text, text) to service_role;
 
--- Aditivo: NOVO parâmetro no final com DEFAULT — assinatura antiga continua chamável. Resolve a
--- citação DENTRO do mesmo canal (nunca globalmente); não achou = citada_mensagem_id null,
--- citada_autor = 'desconhecido' (AC-2 — mostra "mensagem anterior" do lado da UI).
+-- `create or replace` com parâmetro NOVO não substitui a função antiga — cria uma SEGUNDA
+-- sobrecarga (7 params vs. 8 com default), e uma chamada com 7 argumentos fica ambígua entre as
+-- duas (achado pelo CI: "function ... is not unique"). Precisa dropar a assinatura de 7 params
+-- primeiro para sobrar só uma função, chamável com 7 ou 8 argumentos.
+drop function if exists atendimento.fn_registrar_mensagem_evolution(
+  uuid, text, text, text, text, text, text
+);
+
+-- Resolve a citação DENTRO do mesmo canal (nunca globalmente); não achou = citada_mensagem_id
+-- null, citada_autor = 'desconhecido' (AC-2 — mostra "mensagem anterior" do lado da UI).
 create or replace function atendimento.fn_registrar_mensagem_evolution(
   p_canal_id uuid,
   p_event_type text,
@@ -183,6 +190,16 @@ begin
   return query select v_inserted_message_id, v_conversa_id, false;
 end;
 $$;
+
+-- A assinatura mudou (7 -> 8 params); GRANT não migra entre assinaturas diferentes, e Postgres
+-- concede EXECUTE a PUBLIC por padrão em função nova — sem isto, anon/authenticated chamariam
+-- a RPC direto via PostgREST.
+revoke all on function atendimento.fn_registrar_mensagem_evolution(
+  uuid, text, text, text, text, text, text, text
+) from public, anon, authenticated;
+grant execute on function atendimento.fn_registrar_mensagem_evolution(
+  uuid, text, text, text, text, text, text, text
+) to service_role;
 
 comment on function atendimento.fn_registrar_reacao_evolution(uuid, text, text) is
   'E02-S38: reação do cliente — aplicada/removida/órfã. Nunca cria mensagem nem toca prévia/nao_lidas (reação não aciona o Zé).';

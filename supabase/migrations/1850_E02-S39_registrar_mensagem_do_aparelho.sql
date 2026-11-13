@@ -64,16 +64,18 @@ begin
   end if;
 
   -- Eco por texto: a entrega ainda não gravou o id, mas uma mensagem do SISTEMA (nunca já
-  -- celular) com o mesmo texto normalizado está em envio nos últimos 20 minutos, na mesma Conversa.
+  -- celular) com o mesmo texto normalizado está em envio nos últimos 20 minutos, na mesma
+  -- Conversa. Alias `m` obrigatório: `conversa_id` sozinho é ambíguo contra a coluna de saída do
+  -- RETURNS TABLE (achado pelo CI: "column reference conversa_id is ambiguous").
   if exists (
-    select 1 from atendimento.mensagens
-     where conversa_id = v_conversa_id
-       and direcao = 'saida'
-       and remetente_tipo in ('ze', 'humano')
-       and origem_envio in ('ia', 'formulario')
-       and status_entrega = 'enviando'
-       and created_at > now() - interval '20 minutes'
-       and atendimento.fn_normalizar_texto_do_aparelho(conteudo) = v_texto_normalizado
+    select 1 from atendimento.mensagens m
+     where m.conversa_id = v_conversa_id
+       and m.direcao = 'saida'
+       and m.remetente_tipo in ('ze', 'humano')
+       and m.origem_envio in ('ia', 'formulario')
+       and m.status_entrega = 'enviando'
+       and m.created_at > now() - interval '20 minutes'
+       and atendimento.fn_normalizar_texto_do_aparelho(m.conteudo) = v_texto_normalizado
   ) then
     return query select null::uuid, v_conversa_id, false;
     return;
