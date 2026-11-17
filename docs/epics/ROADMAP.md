@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S28_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 | E00-S26 | Capacidades sensíveis ponta a ponta (planejar, validar, aprovar, cancelar, exportar, ver custo, administrar) | — | Especificada (2026-11-17) — BL 005 do Pacote Consolidado. Tier arquitetural | [spec](../../specs/E00-S26-capacidades-sensiveis/spec.md) |
 | E00-S27 | Revogação imediata de acesso — sessão, cache e JWT carimbado | — | Especificada (2026-11-17) — BL 006 do Pacote Consolidado. **Exposição de segurança aberta hoje.** Depende de E00-S26 | [spec](../../specs/E00-S27-revogacao-imediata/spec.md) |
-| E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | — | Especificada (2026-11-17) — 694 flags `VITE_SSO_*` usadas e nunca declaradas, 227 `return null` silenciosos. Par de E01-S188 pelo lado do front | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
+| E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | Especificada (2026-11-17) — 694 flags `VITE_SSO_*` usadas e nunca declaradas, 227 `return null` silenciosos. Par de E01-S188 pelo lado do front | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
 _75 concluídas no histórico · maior ID usado: E01-S198_
@@ -167,10 +167,10 @@ _75 concluídas no histórico · maior ID usado: E01-S198_
 | E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 | E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
 | E01-S189 | Alcance dos sete escritores sem gate (orçamento, despesas, cobrança, grupos) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S189-alcance-escritores-sem-gate/spec.md) |
-| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | — | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
+| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | Claude (sessão Lucas) | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
 | E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
 | E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
-| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | — | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) |
+| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | Claude (sessão Lucas) | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) |
 | E01-S194 | Kanban operacional aprovado — Campo a conciliar, Demanda e Validação PCM como etapas | — | Especificada (2026-11-17) — BL 007. Depende de E01-S193 e E00-S26 | [spec](../../specs/E01-S194-kanban-operacional-aprovado/spec.md) |
 | E01-S195 | Deslocamento: enquadramento residencial × operacional e impacto na jornada | — | Especificada (2026-11-17) — BL 009 | [spec](../../specs/E01-S195-deslocamento-enquadramento/spec.md) |
 | E01-S196 | Gatilho único do Auvo — criação manual vira contingência auditada | — | Especificada (2026-11-17) — resto do BL 004 (o acionador entrou na 1844). Tier arquitetural | [spec](../../specs/E01-S196-gatilho-unico-auvo/spec.md) |
