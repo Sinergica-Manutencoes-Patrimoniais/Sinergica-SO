@@ -386,9 +386,9 @@
       ]
     },
     "apps/web/src/app/HomePage.tsx": {
-      "sha256": "05c8655cd1c6c696bcf8dd1fc2a89462ff237c007a3ec0ed1ca3ee3482ff77e8",
+      "sha256": "38ce9492d45be99b06cd5cad2d2c0c6884ff833f49be4a5562d280f0544959b7",
       "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
+        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/area-cliente/components/AnexosOsPortal.tsx": {
@@ -2456,12 +2456,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/infrastructure/supabase-listas-materiais-adapter.ts": {
-      "sha256": "7f30279817c9f469062768063377c9a2738060cc18d898e316fd6c9fb4237623",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/infrastructure/supabase-operacao-adapter.ts": {
       "sha256": "3cfce2d1deca6bc0c246027b17d8939066c07cccb682a40c7a3d0c735e4cb301",
       "diagnostics": [
@@ -4406,24 +4400,10 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/DetalheEvento.tsx": {
-      "sha256": "6c0e96427a2b83c554a826997bc19f9ff278ca35fb4eb23fefb4a304c98ba79d",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/listas-materiais/DisponibilidadeMateriais.test.tsx": {
       "sha256": "bf3d2c2b3f3910fce20792fcd92d4d0743d3c1490090c0445383406837fc2979",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/DisponibilidadeMateriais.tsx": {
-      "sha256": "063434df3d2d6c86a600710653383cf911f4e3a155dcfc48c71110517d094c14",
-      "diagnostics": [
-        "6930c2c718074c1f30aeff0876c36756e73497832cbd6dda3cac52dda35c53ee",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/pcm/interfaces/listas-materiais/EditorMateriais.tsx": {

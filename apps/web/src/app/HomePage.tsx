@@ -129,8 +129,24 @@ import { useAuth } from "./auth-context";
 import { MODULOS, isModuloNegocio } from "./modulos";
 import type { AreaAtiva, ModuloId, ModuloTab } from "./modulos";
 import { useNavGuard } from "./nav-guard-context";
+import {
+  NAVEGACAO_SSO,
+  agruparPorGrupo,
+  entradasPorNivel,
+  navegacaoVisivel,
+} from "./navegacao-sso";
+import type { Nivel } from "./navegacao-sso";
 import { usePermissoes } from "./permissoes-context";
 import { useTheme } from "./theme-context";
+
+// E01-S190 AC-5/AC-6/task 13: guarda de ROTA, não só de botão — ocultar o item da sidebar não
+// basta (o pcmView ainda poderia, em tese, ser alcançado por outro caminho). Calculado uma vez
+// fora do componente: a lista de views administrativas não muda por sessão.
+const VIEWS_ADMINISTRATIVAS = new Set(
+  entradasPorNivel("administracao")
+    .map((entrada) => entrada.view)
+    .filter((view): view is string => Boolean(view)),
+);
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
 
@@ -170,27 +186,11 @@ type PcmView =
   | "tipos-inspecao"
   | "sistemas";
 
-interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  active?: boolean;
-  // Quando presente, o item navega (seta o PcmView). Itens sem `view` seguem decorativos (mock),
-  // como já eram antes desta story — não são o foco do escopo enxuto da Task 18.
-  view?: PcmView;
-  // E01-S80 AC-2: atalho pra fora do módulo PCM — "Grupos de Usuário" abre o hub global de
-  // Configurações na aba Grupos, reusando o mesmo `GruposPage` (nunca duplica o CRUD). `PCM_NAV` é
-  // módulo-scoped (fora do componente), então o clique de fato é resolvido no render (tem acesso a
-  // `navegarModulo`/`setConfigTab`); esta flag só marca a intenção nos dados estáticos.
-  atalhoConfigGrupos?: boolean;
-  // E01-S114: submenu simples (1 nível só) — item com `filhos` não navega por si (sem `view`
-  // próprio), só expande/colapsa; os filhos é que navegam.
-  filhos?: NavItem[];
-}
-
-interface NavGroup {
-  titulo: string;
-  items: NavItem[];
-}
+// E01-S190: `NavItem`/`NavGroup` (dados estáticos do PCM) saíram daqui — agora é `EntradaNav` em
+// `navegacao-sso.ts`. `view` de uma `EntradaNav` é `string`, não `PcmView`, por ser um módulo sem
+// dependência de React/UI; o cast pra `PcmView` acontece só no ponto de uso (`irParaPcmView`),
+// igual ao que `view?: PcmView` já fazia antes — a própria `view` nunca foi validada em tipo
+// estrito em tempo de execução, só pelo switch de `pcmView` que já existia.
 
 interface AtendimentoNavItem {
   label: string;
@@ -342,61 +342,39 @@ const GUIA_NAV: GuiaNavItem[] = [
   { label: "Papéis e permissões", icon: Users, view: "papeis" },
 ];
 
-const PCM_NAV: NavGroup[] = [
-  {
-    titulo: "OPERAÇÃO",
-    items: [
-      { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
-      // E01-S118: "Chamados" e "Operação" viram um menu só (o board). Sempre se abre um Chamado, que
-      // após tratativa deriva numa OS pro Auvo — é o mesmo item, em fases. Backlog GUT deixou de ser
-      // item de nav (virou aba do board, ao lado do Calendário).
-      { label: "Chamados", icon: Headset, view: "ordens" },
-      { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
-      { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
-      { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
-      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
-      { label: "PMOC", icon: Snowflake, view: "pmoc" },
-      { label: "Preventivas", icon: Calendar, view: "preventivas" },
-      { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
-    ],
-  },
-  {
-    titulo: "CADASTROS",
-    items: [
-      { label: "Clientes", icon: Building2, view: "clientes" },
-      { label: "Componentes", icon: Wrench, view: "equipamentos" },
-      { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Ferramentas", icon: Package, view: "ferramentas" },
-    ],
-  },
-  {
-    // E01-S80 AC-2/AC-3: cadastros/parametrizações do PCM, reunidos aqui (saíram do topo da
-    // sidebar operacional). "Grupos de Usuário" reusa o hub global de Configurações (E00-S09) —
-    // não duplica o CRUD, só atalho (ver `atalhoConfigGrupos`).
-    titulo: "CONFIGURAÇÕES",
-    items: [
-      { label: "Equipes", icon: Users, view: "equipes" },
-      { label: "Funcionários", icon: UserCog, view: "funcionarios" },
-      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
-      { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
-      { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
-      { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
-      { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
-      { label: "Segmentos", icon: LayoutGrid, view: "segmentos" },
-      { label: "Grupos de Usuário", icon: UserCog, atalhoConfigGrupos: true },
-      { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
-    ],
-  },
-  {
-    titulo: "RELATÓRIOS",
-    items: [
-      { label: "Relatório do Dia", icon: FileBarChart, view: "relatorio-diario" },
-      { label: "Relatório do Cliente", icon: FileText, view: "relatorio-cliente" },
-      { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
-      { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
-    ],
-  },
-];
+// E01-S190 — a árvore de navegação do PCM (antes `PCM_NAV`) mora em `navegacao-sso.ts`, puro e
+// testável sem React/lucide. Este mapa é só a ponte de apresentação: ícone por `id` de
+// `NAVEGACAO_SSO` (incluindo filhos). Decisões de agrupamento/absorção — ver o cabeçalho daquele
+// arquivo (AC-7: nenhuma view sumiu, cada ausência de item principal é uma decisão registrada).
+const ICONE_POR_ID: Record<string, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  ordens: Headset,
+  inspecoes: CheckCircle2,
+  assessment: ClipboardCheck,
+  clientes: Building2,
+  equipamentos: Wrench,
+  sistemas: Link2,
+  pmoc: Snowflake,
+  preventivas: Calendar,
+  "agenda-tecnico": Calendar,
+  equipes: Users,
+  funcionarios: UserCog,
+  ferramentas: Package,
+  "ferramentas-por-tecnico": HardHat,
+  "relatorio-diario": FileBarChart,
+  "relatorio-cliente": FileText,
+  "laudos-spda": Zap,
+  "apontamento-horas": Clock,
+  "relatorio-planejamento": FileBarChart,
+  "tipos-tarefa": ClipboardList,
+  "cliente-grupos": Users,
+  "cliente-marcacoes": Tag,
+  "tipos-inspecao": CheckCircle2,
+  "equipamento-categorias": Wrench,
+  segmentos: LayoutGrid,
+  "palavras-chave": FileText,
+  "grupos-usuario": UserCog,
+};
 
 // ─── componentes ─────────────────────────────────────────────────────────────
 
@@ -693,77 +671,88 @@ export function HomePage() {
               })}
             </div>
           ) : activeModulo === "pcm" ? (
-            PCM_NAV.map((group) => (
-              <div key={group.titulo}>
-                {!sidebarCompacta && (
-                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
-                    {group.titulo}
-                  </p>
-                )}
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const view = item.view;
-                  // E01-S114 AC-3: com filhos, também ativo se o pcmView atual for de um filho —
-                  // mantém o contexto visível (submenu sempre expandido, ver AC-1 "padrão simples").
-                  const filhoAtivo = item.filhos?.some((filho) => filho.view === pcmView) ?? false;
-                  const isActive = view ? view === pcmView || filhoAtivo : item.active;
-                  return (
-                    <div key={item.label}>
-                      <button
-                        type="button"
-                        title={item.label}
-                        onClick={
-                          item.atalhoConfigGrupos
-                            ? () => {
-                                setConfigTab("grupos");
-                                navegarModulo("config");
-                              }
-                            : view
-                              ? () => irParaPcmView(view)
-                              : undefined
-                        }
-                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
-                          isActive
-                            ? "border-orange bg-card/[0.07] text-white font-medium"
-                            : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
-                        }`}
-                      >
-                        <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                        {!sidebarCompacta && <span className="truncate">{item.label}</span>}
-                      </button>
-                      {item.filhos && !sidebarCompacta && (
-                        <div className="ml-4 border-l border-navy-line pl-2">
-                          {item.filhos.map((filho) => {
-                            const FilhoIcon = filho.icon;
-                            const filhoIsActive = filho.view === pcmView;
-                            return (
-                              <button
-                                key={filho.label}
-                                type="button"
-                                title={filho.label}
-                                onClick={
-                                  filho.view
-                                    ? () => irParaPcmView(filho.view as PcmView)
-                                    : undefined
-                                }
-                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${
-                                  filhoIsActive
-                                    ? "border-orange bg-card/[0.07] text-white font-medium"
-                                    : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
-                                }`}
-                              >
-                                <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
-                                <span className="truncate">{filho.label}</span>
-                              </button>
-                            );
-                          })}
+            // E01-S190 AC-6: ocultar é consequência de `navegacaoVisivel` (papel administrativo),
+            // nunca uma lista fixa de ids — e AC-4: três níveis visuais (Trabalho/Gestão/
+            // Administração), cada um com seus próprios grupos, nessa ordem.
+            (["trabalho", "gestao", "administracao"] as const satisfies readonly Nivel[]).flatMap(
+              (nivel) => {
+                const visivelNoNivel = navegacaoVisivel(NAVEGACAO_SSO, podeGerenciarConfig).filter(
+                  (entrada) => entrada.nivel === nivel,
+                );
+                return [...agruparPorGrupo(visivelNoNivel)].map(([titulo, itens]) => (
+                  <div key={`${nivel}:${titulo}`}>
+                    {!sidebarCompacta && (
+                      <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                        {titulo}
+                      </p>
+                    )}
+                    {itens.map((item) => {
+                      const Icon = ICONE_POR_ID[item.id] ?? LayoutDashboard;
+                      const view = item.view as PcmView | undefined;
+                      // E01-S114 AC-3: com filhos, também ativo se o pcmView atual for de um filho
+                      // — mantém o contexto visível (submenu sempre expandido, "padrão simples").
+                      const filhoAtivo =
+                        item.filhos?.some((filho) => filho.view === pcmView) ?? false;
+                      const isActive = view ? view === pcmView || filhoAtivo : false;
+                      return (
+                        <div key={item.id}>
+                          <button
+                            type="button"
+                            title={item.label}
+                            onClick={
+                              item.atalhoConfigGrupos
+                                ? () => {
+                                    setConfigTab("grupos");
+                                    navegarModulo("config");
+                                  }
+                                : view
+                                  ? () => irParaPcmView(view)
+                                  : undefined
+                            }
+                            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                              isActive
+                                ? "border-orange bg-card/[0.07] text-white font-medium"
+                                : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                            {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                          </button>
+                          {item.filhos && !sidebarCompacta && (
+                            <div className="ml-4 border-l border-navy-line pl-2">
+                              {item.filhos.map((filho) => {
+                                const FilhoIcon = ICONE_POR_ID[filho.id] ?? LayoutDashboard;
+                                const filhoIsActive = filho.view === pcmView;
+                                return (
+                                  <button
+                                    key={filho.id}
+                                    type="button"
+                                    title={filho.label}
+                                    onClick={
+                                      filho.view
+                                        ? () => irParaPcmView(filho.view as PcmView)
+                                        : undefined
+                                    }
+                                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${
+                                      filhoIsActive
+                                        ? "border-orange bg-card/[0.07] text-white font-medium"
+                                        : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                                    }`}
+                                  >
+                                    <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
+                                    <span className="truncate">{filho.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))
+                      );
+                    })}
+                  </div>
+                ));
+              },
+            )
           ) : activeModulo === "atendimento" ? (
             ATENDIMENTO_NAV.map((group) => (
               <div key={group.titulo}>
@@ -1033,7 +1022,14 @@ export function HomePage() {
           {activeModulo === "inicio" ? (
             <DashboardGeral moduloIds={dashboardModuloIds} onSelect={navegarModulo} />
           ) : activeModulo === "pcm" ? (
-            pcmView === "clientes" ? (
+            VIEWS_ADMINISTRATIVAS.has(pcmView) && !podeGerenciarConfig ? (
+              <div className="p-12 text-center">
+                <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
+                <p className="mt-1 text-body text-ink-3">
+                  Esta área é administrativa — fale com um supervisor se precisar de acesso.
+                </p>
+              </div>
+            ) : pcmView === "clientes" ? (
               clienteSelecionado ? (
                 // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),
                 // por isso mora aqui e não dentro da VisaoClientePage — que segue read-only (AC-7).
@@ -1056,7 +1052,11 @@ export function HomePage() {
                     painelOrcamentoOs={
                       user?.id && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
                         ? (ordemServicoId) => (
-                            <OrcamentosDaOs usuario={user?.id ?? ""} cliente={clienteSelecionado} ordemServico={ordemServicoId} />
+                            <OrcamentosDaOs
+                              usuario={user?.id ?? ""}
+                              cliente={clienteSelecionado}
+                              ordemServico={ordemServicoId}
+                            />
                           )
                         : undefined
                     }
@@ -1147,11 +1147,20 @@ export function HomePage() {
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
                   }
-                  painelOrcamentoOs={user?.id && osDeepLink?.origemClienteId && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
-                    ? (ordemServicoId) => ordemServicoId === osDeepLink?.osId
-                      ? <OrcamentosDaOs usuario={user?.id ?? ""} cliente={osDeepLink?.origemClienteId ?? ""} ordemServico={ordemServicoId} />
-                      : null
-                    : undefined}
+                  painelOrcamentoOs={
+                    user?.id &&
+                    osDeepLink?.origemClienteId &&
+                    import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                      ? (ordemServicoId) =>
+                          ordemServicoId === osDeepLink?.osId ? (
+                            <OrcamentosDaOs
+                              usuario={user?.id ?? ""}
+                              cliente={osDeepLink?.origemClienteId ?? ""}
+                              ordemServico={ordemServicoId}
+                            />
+                          ) : null
+                      : undefined
+                  }
                   filtrosIniciais={
                     ordensFiltrosPreset
                       ? {

@@ -35,23 +35,30 @@ describe("E01-S60 — contrato visual V1", () => {
   });
 
   it("organiza PMOC e tipos de tarefa sem manter o grupo preventivo morto", () => {
+    // E01-S190: a árvore de navegação do PCM saiu de HomePage.tsx (era um array `PCM_NAV`
+    // literal ali) para `navegacao-sso.ts`, puro e testável sem regex sobre texto-fonte — este
+    // teste passa a checar lá os dados, e em HomePage.tsx só o que continua lá de verdade (o
+    // switch de `pcmView`, inalterado por esta story).
+    const nav = fonte("./navegacao-sso.ts");
     const home = fonte("./HomePage.tsx");
 
-    expect(home).toMatch(
-      /titulo: "OPERAÇÃO",[\s\S]{0,1200}label: "PMOC", icon: Snowflake, view: "pmoc"/,
-    );
-    expect(home).toMatch(
-      /titulo: "CONFIGURAÇÕES",[\s\S]{0,1800}label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa"/,
-    );
-    // Escopa ao corpo do array de CADASTROS (até o primeiro fechamento `],`) em vez de uma
-    // distância fixa de caracteres — E01-S104 adicionou "Ferramentas" ao grupo e um limiar fixo
-    // (800) vira falso positivo a cada item novo, sem checar se "Tipos de Tarefa" está de fato
-    // dentro do array.
-    const cadastros = home.match(/titulo: "CADASTROS",[\s\S]*?\n\s*\],/)?.[0] ?? "";
-    expect(cadastros).not.toContain('label: "Tipos de Tarefa"');
-    expect(home).not.toContain('titulo: "PREVENTIVO"');
-    expect(home).not.toContain('label: "Cronograma"');
-    expect(home).toContain('label: "Preventivas", icon: Calendar, view: "preventivas"');
+    // PMOC saiu do grupo OPERAÇÃO (decisão desta story — resposta 26 do Fabrício, PMOC é
+    // modalidade do Plano de Manutenção, não item de operação diária) e vive agora em PLANOS.
+    // Escopado ao objeto do item (entre `id: "pmoc"` e o `},` que fecha), não ao arquivo inteiro —
+    // o cabeçalho do módulo menciona "OPERAÇÃO" e "pmoc" em prosa, perto o bastante pra um regex
+    // sem escopo casar ali em vez de na entrada de dado de verdade.
+    const entradaPmoc = nav.match(/\{\s*id: "pmoc"[\s\S]*?\n\s*\},/)?.[0] ?? "";
+    expect(entradaPmoc).toContain('grupo: "PLANOS"');
+    expect(entradaPmoc).not.toContain('grupo: "OPERAÇÃO"');
+    // "Tipos de Tarefa" saiu de CONFIGURAÇÕES (nome antigo) e vive em CATÁLOGOS, nível
+    // administração — mesma ideia de "catálogo administrativo", nome e nível atualizados.
+    expect(nav).toMatch(/grupo: "CATÁLOGOS",[\s\S]{0,1800}view: "tipos-tarefa"/);
+    const catalogos = nav.match(/id: "tipos-tarefa"[\s\S]*?\n\s*\},/)?.[0] ?? "";
+    expect(catalogos).toContain('nivel: "administracao"');
+    expect(nav).not.toContain('titulo: "PREVENTIVO"');
+    expect(nav).not.toContain('grupo: "CADASTROS"'); // o grupo inteiro foi absorvido, não só esvaziado
+    expect(nav).not.toContain('label: "Cronograma"');
+    expect(nav).toContain('label: "Preventivas"');
     expect(home).toContain('pcmView === "tipos-tarefa" ?');
     expect(home).toContain('pcmView === "pmoc" ?');
     expect(home).toContain('pcmView === "preventivas" ?');
@@ -95,5 +102,21 @@ describe("E01-S60 — contrato visual V1", () => {
 
     expect(dashboard.match(/aria-label=\{`Resumo do Chamado/g)).toHaveLength(2);
     expect(dashboard).toContain("Resumo do Chamado");
+  });
+});
+
+describe("E01-S190 — guarda de rota administrativa", () => {
+  it("o conteúdo principal nega acesso às views administrativas por permissão, não só oculta o botão da sidebar (AC-5/AC-6)", () => {
+    const home = fonte("./HomePage.tsx");
+
+    // A guarda existe ANTES da árvore de ternários que decide qual página renderizar — defesa em
+    // profundidade: mesmo que `pcmView` chegasse numa view administrativa por outro caminho que
+    // não o clique do item (hoje não existe nenhum, mas a guarda não depende disso continuar
+    // verdade), o conteúdo nega, não só a sidebar deixa de mostrar o botão.
+    expect(home).toContain("VIEWS_ADMINISTRATIVAS.has(pcmView) && !podeGerenciarConfig");
+    expect(home).toContain("Esta área é administrativa");
+    // A lista de views guardadas vem do mesmo módulo que decide o que a sidebar mostra — nunca
+    // uma segunda lista hardcoded que poderia divergir da primeira.
+    expect(home).toContain('entradasPorNivel("administracao")');
   });
 });
