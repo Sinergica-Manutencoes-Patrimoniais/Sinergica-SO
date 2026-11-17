@@ -29,7 +29,7 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S25_
+_15 concluídas no histórico · maior ID usado: E00-S27_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -44,9 +44,11 @@ _15 concluídas no histórico · maior ID usado: E00-S25_
 | E00-S21 | Rotas reais e wayfinding | Claude (sessão Lucas) | design.md escrito e pronto pra review (… | [spec](../../specs/E00-S21-rotas-wayfinding/design.md) |
 | E00-S22 | Tema escuro real e acessibilidade | Claude (sessão Lucas) | Parcial (2026-08-18). AC-2 (prefers-col… | [spec](../../specs/E00-S22-dark-mode-acessibilidade/spec.md) |
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
+| E00-S26 | Capacidades sensíveis ponta a ponta (planejar, validar, aprovar, cancelar, exportar, ver custo, administrar) | — | Especificada (2026-11-17) — BL 005 do Pacote Consolidado. Tier arquitetural | [spec](../../specs/E00-S26-capacidades-sensiveis/spec.md) |
+| E00-S27 | Revogação imediata de acesso — sessão, cache e JWT carimbado | — | Especificada (2026-11-17) — BL 006 do Pacote Consolidado. **Exposição de segurança aberta hoje.** Depende de E00-S26 | [spec](../../specs/E00-S27-revogacao-imediata/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S192_
+_75 concluídas no histórico · maior ID usado: E01-S198_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -164,12 +166,18 @@ _75 concluídas no histórico · maior ID usado: E01-S192_
 | E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 | E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
 | E01-S189 | Alcance dos sete escritores sem gate (orçamento, despesas, cobrança, grupos) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S189-alcance-escritores-sem-gate/spec.md) |
-| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) — **exige aceite do Fabrício** | — | Especificada — bloqueada por decisão (2026-11-13) | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
+| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | — | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
 | E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
 | E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
+| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | — | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) |
+| E01-S194 | Kanban operacional aprovado — Campo a conciliar, Demanda e Validação PCM como etapas | — | Especificada (2026-11-17) — BL 007. Depende de E01-S193 e E00-S26 | [spec](../../specs/E01-S194-kanban-operacional-aprovado/spec.md) |
+| E01-S195 | Deslocamento: enquadramento residencial × operacional e impacto na jornada | — | Especificada (2026-11-17) — BL 009 | [spec](../../specs/E01-S195-deslocamento-enquadramento/spec.md) |
+| E01-S196 | Gatilho único do Auvo — criação manual vira contingência auditada | — | Especificada (2026-11-17) — resto do BL 004 (o acionador entrou na 1844). Tier arquitetural | [spec](../../specs/E01-S196-gatilho-unico-auvo/spec.md) |
+| E01-S197 | Pendências técnicas agrupadas por ativo, sem perder o achado individual | — | Especificada (2026-11-17) — BL 008. Depende de E01-S193 | [spec](../../specs/E01-S197-pendencias-agrupadas-ativo/spec.md) |
+| E01-S198 | API de domínio sobre o staging | — | Especificada (2026-11-17) — BL 014, P2. Tier arquitetural. Depende de E00-S26/S27 | [spec](../../specs/E01-S198-api-dominio-staging/spec.md) |
 
 ### E02 — Atendimento · Zé
-_6 concluídas no histórico · maior ID usado: E02-S42_
+_6 concluídas no histórico · maior ID usado: E02-S43_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -209,6 +217,7 @@ _6 concluídas no histórico · maior ID usado: E02-S42_
 | E02-S40 | Foto do WhatsApp do contato no atendimento | — | Spec+plan+tasks escritos (2026-11-12). Depende de S36 | [spec](../../specs/E02-S40-foto-do-contato/spec.md) |
 | E02-S41 | Visão de conversa nova: workspace, fila com escopo, timeline tipada, contexto do cliente | — | Spec+design+plan+tasks escritos (2026-11-12). Tier arquitetural; design.md com 3 questões em aberto para o Lucas. Depende de S37 e S38 | [spec](../../specs/E02-S41-visao-de-conversa/spec.md) |
 | E02-S42 | Retirar a rota de prévia simulada `/preview-s41` do build de produção | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E02-S42-remover-preview-simulado/spec.md) |
+| E02-S43 | MCP controlado sobre a API de domínio | — | Especificada (2026-11-17) — BL 015, P2. **Bloqueada**: exige E01-S198 homologada. Substitui o design parado de E02-S30 | [spec](../../specs/E02-S43-mcp-controlado/spec.md) |
 
 ### E03 — Comercial
 _7 concluídas no histórico · maior ID usado: E03-S14_

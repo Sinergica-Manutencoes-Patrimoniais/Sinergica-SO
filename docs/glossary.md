@@ -129,3 +129,25 @@ As definições abaixo governam specs E01-S165–S186. Indicam o modelo a implem
 | **Código público protegido** | Editável só em rascunho nunca usado; aprovação, sync, etiqueta ou OS travam edição comum. Exceção administrativa cria substituto + alias auditado. | Alteração manual comum com simples aviso de QR. |
 
 `externalId` auxilia reconciliação e identidade da OS; não é prova isolada de exatamente uma criação no fornecedor. Outbox, serialização e resultado incerto permanecem necessários. Política de Equipment Auvo é configurável por categoria, sem apagar vínculos antigos. Técnico continua usando Auvo nesta fase.
+
+## Pacote Consolidado SSO — aprovado em 13/11/2026
+
+O Pacote Consolidado tem **regra de precedência explícita**: quando divergir de documento, protótipo,
+tela ou story antiga, prevalece ele. Fonte:
+`docs/Apontamentos/Pacote-Consolidado-SSO-2026-11-13.txt`; confronto com o código em
+`docs/Apontamentos/Pacote-Consolidado-2026-11-13-confronto.md`.
+
+| Termo | Definição aprovada | NÃO confundir com |
+|---|---|---|
+| **Demanda** | **Estado do Chamado** — escopo liberado pelo PCM, pronto para planejamento e ainda não planejado. Chamado adiado por curto prazo **retorna** para Demanda. | Entidade independente. Demanda não é tabela nem módulo. |
+| **Validação PCM** | Etapa explícita entre o retorno de execução do Auvo e o encerramento. Retorno do Auvo atualiza a OS e a manda para Validação PCM; **não** encerra o Chamado. | Conclusão da OS · Validação de levantamento em staging. |
+| **Campo a conciliar** | Fila de entrada do Kanban para OS aberta no Auvo **sem ID de Chamado**, que cria OS e Chamado **provisórios** no SSO até o PCM conciliar. | Conciliação bancária (Financeiro). |
+| **Diagnóstico Inicial do Cliente** | **Tipo de Inspeção** que substitui o antigo módulo Assessment; também aplicável à implantação inicial. Assessment deixa de existir como módulo independente. | Inspeção Predial (ABNT NBR 16747) · Levantamento de pré-venda (Comercial). |
+| **PMOC (modalidade)** | A partir de 13/11/2026, PMOC é **modalidade do Plano de Manutenção**, com campos, documentos, responsabilidades e exigências legais próprias e **visão filtrada**. Não mantém módulo nem cadastro independentes que dupliquem o Plano. | PMOC como sub-módulo (descrição histórica, ainda na tabela acima) · Contrato PMOC. |
+| **Trecho de deslocamento** | Registro com **origem, destino, tempo e enquadramento**. Residencial (residência ↔ primeiro/último cliente) **não computa**, inclusive com veículo da empresa sob guarda do técnico; operacional (escritório ↔ cliente, cliente ↔ cliente, retirada/entrega a serviço) **computa**, ocupando agenda e jornada. | Despesa de deslocamento (informação diferente) · Hora extra (nunca classificada automaticamente). |
+| **Excedente a validar** | Tempo de jornada acima do limite, calculado e apresentado para decisão humana. | Hora extra — o sistema **não** classifica hora extra sozinho. |
+| **Capacidade sensível** | Autorização própria, separada de leitura/escrita por módulo: **planejar, validar, aprovar, cancelar, exportar, visualizar valores internos, administrar usuários/configurações**. Concedida a grupo, nunca a pessoa codificada na regra. | Permissão por módulo (`config.grupo_modulos`) · Capacidade de mão de obra (horas). |
+| **Contingência auditada** | Caminho manual de criação de tarefa no Auvo, fora do gatilho normal (confirmação PCM + T−24). Exige capacidade própria, motivo registrado e auditoria; aparece no monitor de exceções. | Gatilho normal · Reprocessamento de falha de integração. |
+| **API de domínio** | Contrato único, autenticado e versionado pelo qual Módulo de Campo e MCP consultam e **propõem** dados. Aplica autenticação, autorização, validação, idempotência e auditoria. Nenhuma interface externa grava direto no cadastro oficial. | Edge Function de propósito específico · SQL genérico (nunca exposto). |
+| **MCP (SSO)** | Camada conversacional controlada sobre a **API de domínio** — nunca sobre o banco. Primeira entrega em leitura; escrita posterior **apenas em staging**, com confirmação. Herda usuário, escopo, permissões e auditoria. | Servidores MCP de ferramentas de desenvolvimento. |
+| **Fator de preço** | Multiplicador sobre o custo. **Fator 1,5 = preço equivalente a 150% do custo, isto é, markup de 50%** — não 1,5%. Tributos e parâmetros são configuráveis, nunca fixos no código. | Margem percentual sobre a venda. |
