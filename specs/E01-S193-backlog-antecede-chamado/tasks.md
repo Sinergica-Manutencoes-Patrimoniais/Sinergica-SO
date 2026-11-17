@@ -12,8 +12,8 @@ Detalhe técnico em `plan.md`. **Tier arquitetural**: ADR antes de implementar, 
 
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | **Inventário antes de codar**: o que `sso_backlog_parcelas` (1218/1219/1830), a composição de pendências (0375) e as 7 migrations de GUT já cobrem | — | — | relatório no `plan.md`; nenhuma tabela nova sem justificativa escrita | todo |
-| 2 | ADR do corte Backlog→Chamado (ordem da transição, bloqueio por `auvo_task_id`, reverso) | — | 1 | revisão humana | todo |
+| 1 | **Inventário antes de codar**: o que `sso_backlog_parcelas` (1218/1219/1830), a composição de pendências (0375) e as 7 migrations de GUT já cobrem | — | — | relatório no `plan.md`; nenhuma tabela nova sem justificativa escrita | **done** — achado: `0375/0377/0890/0895/1830` já cobrem AC-1 a AC-6 inteiro; zero RPC nova; "7 migrations de GUT" era contagem errada (só 4, nenhuma de item de Backlog) |
+| 2 | ADR do corte Backlog→Chamado (ordem da transição, bloqueio por `auvo_task_id`, reverso) | — | 1 | revisão humana | **aguardando revisão humana** — `docs/adr/1689-reaproveitar-maquinario-backlog-chamado.md` escrita, decide habilitar maquinário existente em vez de construir; item 4 da ADR (status `'aberto'` vs `'demanda'`) precisa de decisão de produto do Fabrício/PCM antes de prosseguir |
 | 3 | `scripts/inventariar-backlog-legado.mjs` — OS em `status='backlog'` por cliente, com/sem `auvo_task_id` | AC-7 | — | `node scripts/inventariar-backlog-legado.mjs` | todo |
 | 4 | Migration: gate `sso_backlog_pre_chamado_gate` (`default false`) + `sso_enviar_pendencias_backlog` com grant no mesmo arquivo | AC-1, AC-2 | 2 | `npx supabase@2.114.0 test db supabase/tests/E01-S193_*.test.sql` | todo |
 | 5 | Migration: `sso_priorizar_item_backlog` (GUT no item, concorrência por `revisao`) | AC-3 | 4 | pgTAP da task 4 | todo |
