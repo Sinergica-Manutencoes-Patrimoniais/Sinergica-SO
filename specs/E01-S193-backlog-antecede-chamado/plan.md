@@ -42,12 +42,15 @@ inventariei por completo os 39 arquivos `sso_backlog*` (`0375` a `1832`). Achado
   `0134_E01-S88_chamados.sql` tem `check (status in ('aberto','convertido_os','backlog','cancelado'))`.
   Criar `'demanda'` exige `ALTER ... DROP CONSTRAINT / ADD CONSTRAINT` aditivo, não é "campo livre".
 
-**Decisão de escopo que isso força — ver ADR-1689:** duas rotas de promoção vão coexistir
-(`sso_promover_backlog_chamado`, integral, já existe e só precisa de revisão+gate; e uma rota nova
-de liberação **parcial**, com Chamado em `'demanda'`, que esta story cria). Não fundir as duas numa
-migration só — são comandos com contratos diferentes (`osCriada:false,promocaoIntegral:true` vs.
-parcial). Tabela nova: **nenhuma** — reuso de `sso_backlog_composicoes`/`sso_backlog_pendencias`
-para ambas as rotas, conforme já previsto.
+**Decisão de escopo — ADR-1689, decidida em 17/11/2026 (Opção B):** introduzir `'demanda'`.
+`pcm.sso_liberar_escopo_backlog` (nova, fina) **chama** `sso_promover_backlog_chamado` (0890, sem
+reescrever locks/idempotência/parcelas) e, só depois, transiciona `'aberto'→'demanda'`. Auditados
+os 44 pontos que leem `chamados.status` (`grep` em `supabase/migrations`, 17/11): todos são
+whitelist positiva (`status not in ('aberto','convertido_os')` etc.), nunca blacklist — `'demanda'`
+entrar no `CHECK` não muda nenhum dos 44; um Chamado em `'demanda'` já não passa em nenhum deles
+por construção (não vira OS, não é suspenso, não é unido) — a frase do `spec.md` *"só então o
+Chamado admite OS"* fica verdadeira por omissão, zero RPC existente tocado. Transição
+`'demanda'→'aberto'` é RPC própria, fora do escopo (cabe a `E01-S194`). Tabela nova: **nenhuma**.
 
 ## Os dois Backlogs, com endereço
 
@@ -79,33 +82,33 @@ de Backlog agrupado. Mapa AC → RPC existente:
 |---|---|---|---|
 | AC-1, AC-2 | `pcm.sso_compor_backlog_pendencias` | `0375` | `sso_backlog_composicao_gate` |
 | AC-3 (GUTD no item, não na OS) | `pcm.sso_priorizar_composicao` | `0377` | `sso_backlog_composicao_gate` |
-| AC-4 (integral) | `pcm.sso_promover_backlog_chamado` | `0890` | `sso_promocao_backlog_gate` + `chamado_os_gate` + `sso_backlog_chamado_gate` + `sso_backlog_parcela_gate` |
-| AC-5 (parcial) | **compor**: `pcm.sso_dividir_composicao_backlog` (separa subconjunto) **então** `sso_promover_backlog_chamado` no destino | `0895` + `0890` | `sso_divisao_backlog_gate` + os 4 acima |
+| AC-4 (integral) | `pcm.sso_liberar_escopo_backlog` (**nova**, fina — chama `0890` então transiciona p/ `'demanda'`) | `0890` + nova | `sso_promocao_backlog_gate` + `chamado_os_gate` + `sso_backlog_chamado_gate` + `sso_backlog_parcela_gate` |
+| AC-5 (parcial) | **compor**: `pcm.sso_dividir_composicao_backlog` (separa subconjunto) **então** `sso_liberar_escopo_backlog` no destino | `0895` + 0890 + nova | `sso_divisao_backlog_gate` + os 4 acima |
 | AC-6 (devolução) | `pcm.sso_devolver_parcela_chamado_backlog` — reusar, não reimplementar | `1830` | já coberto por `1830` |
 
-Único RPC genuinamente **novo** necessário: **nenhum**. O que falta é:
+RPC genuinamente **novo**: só `pcm.sso_liberar_escopo_backlog` (wrapper fino de `0890` + transição
+de status) e o `ALTER CHECK` de `pcm.chamados.status`. O que falta, em ordem:
 
-1. **Revisão adversarial dos 5 comandos acima** (`ADR-0665`, `ADR-0670`, `ADR-0151` pedem isso
-   explicitamente antes de abrir qualquer gate — nunca foi feita);
-2. **Abrir os 6 gates** por migration aditiva, só após a revisão;
-3. **`grant execute`** nas funções que ainda não tiverem (conferir contra `1839_E01-S187`, que é a
+1. **Revisão adversarial de `0375`/`0377`/`0890`/`0895`/`1830`** (`ADR-0665`, `ADR-0670`,
+   `ADR-0151` pedem isso explicitamente antes de abrir qualquer gate — nunca foi feita);
+2. Migration: `ALTER TABLE pcm.chamados` CHECK aditivo incluindo `'demanda'` + `pcm.sso_liberar_escopo_backlog`;
+3. **Abrir os 6 gates** por migration aditiva, só após a revisão;
+4. **`grant execute`** nas funções que ainda não tiverem (conferir contra `1839_E01-S187`, que é a
    referência de "terceiro pilar de ativação" — flag + gate + grant — descoberta em 12/11/2026,
    achado idêntico ao que motivou `E00-S28` no front);
-4. **Front:** `Composicoes.tsx`/`PromoverComposicao.tsx` já existem e já chamam as RPCs certas —
-   faltam alcançáveis por rota/menu (igual ao achado do E00-S28);
-5. **AC-4 pede Chamado em `'demanda'`; `0890` cria em `'aberto'`.** Decisão em `ADR-1689` (nova,
-   não edita `0665`): manter `0890` como está (seu contrato já testado presumidamente usa
-   `'aberto'`) e introduzir `'demanda'` **apenas** se `E01-S194` (Kanban) exigir um estado
-   distinguível de "aberto manual" — a decidir na revisão humana da ADR, não aqui.
+5. **Front:** `Composicoes.tsx`/`PromoverComposicao.tsx` já existem e já chamam as RPCs certas —
+   faltam alcançáveis por rota/menu (igual ao achado do E00-S28); `StatusChamado`
+   (`domain/chamados.ts:6`) ganha `"demanda"`.
 
 **Atomicidade:** a GitHub Integration do Supabase roda migration **fora de transação** (diferente da
 CLI local — lição da PR #78). Qualquer passo novo que precise de atomicidade vai em `do $$ ... $$`.
 
-## Estado do Chamado na liberação — decisão movida para ADR-1689
+## Estado do Chamado na liberação — decidido, ver ADR-1689
 
-Ver `docs/adr/1689-reaproveitar-maquinario-backlog-chamado.md`. Resumo: `0890` já cria o Chamado em
-`'aberto'`; a pergunta em aberto é se isso basta ou se `'demanda'` precisa existir como estado
-**distinto** para o Kanban de `E01-S194` diferenciar "veio do Backlog aprovado" de "aberto manual".
+`'demanda'` existe como valor de `pcm.chamados.status`, aditivo ao `CHECK` de `0134`. Auditoria dos
+44 pontos que leem `status` em `supabase/migrations` (17/11/2026): 100% whitelist positiva — nenhum
+precisa mudar. `E01-S194` escreve a RPC de transição `'demanda'→'aberto'`; esta story só precisa
+criar o estado e provar (pgTAP) que nada nos 44 pontos aceita um Chamado em `'demanda'` por engano.
 
 ## Transição do legado — AC-7, AC-8
 

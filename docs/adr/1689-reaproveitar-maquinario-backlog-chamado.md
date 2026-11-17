@@ -6,7 +6,7 @@ alwaysApply: false
 
 # ADR-1689 — E01-S193 reaproveita o maquinário Backlog→Chamado já existente, em vez de construir RPC nova
 
-**Status:** proposta — aguarda revisão humana (gate da task 2 de `specs/E01-S193-backlog-antecede-chamado/tasks.md`).
+**Status:** **decidida (17/11/2026)** — revisão humana escolheu Opção B (seção "Decisão", item 4). Gate da task 2 de `specs/E01-S193-backlog-antecede-chamado/tasks.md` fechado.
 **Não substitui nem edita** `ADR-0665`, `ADR-0670` nem `ADR-0151`; é complementar a elas.
 
 ## Contexto
@@ -51,18 +51,33 @@ abertos, confirmados ali.
 3. **Front:** criar o caminho de navegação para `Composicoes.tsx` (ou uma tela equivalente, a
    decidir na implementação) a partir de "Central de Pendências" / área de Backlog — não recriar os
    componentes.
-4. **Estado do Chamado na liberação:** `0890` cria com `status='aberto'`, não `'demanda'`. Esta ADR
-   **não decide agora** se `'demanda'` precisa existir como estado distinto — isso depende de o que
-   `E01-S194` (Kanban) precisa diferenciar. Duas opções ficam em aberto para quem revisar:
-   - **Opção A (menor mudança):** manter `'aberto'`; `E01-S194` usa `chamados_eventos.tipo='criado'`
-     com `metadata->>'origemBacklog'` (já gravado por `0890` linha 61) para colorir/filtrar no
-     Kanban sem precisar de novo valor de `status`.
-   - **Opção B (fiel ao `spec.md` literal):** `ALTER ... ADD CONSTRAINT` aditivo introduzindo
-     `'demanda'`, e um novo passo dentro do mesmo comando de liberação que transiciona
-     `'aberto'→'demanda'` antes de devolver o resultado — exige revisão de todo lugar que hoje
-     assume `status in ('aberto','convertido_os','backlog','cancelado')` (grep antes de decidir).
-   **Pedir a Fabrício/PCM** qual das duas antes de escrever a migration — é decisão de produto
-   (o que aparece como coluna no Kanban), não só técnica.
+4. **Estado do Chamado na liberação — decidido em 17/11/2026 (revisão humana): Opção B,
+   introduzir `'demanda'`.** Mecanismo, após auditar os 44 pontos que hoje leem
+   `pcm.chamados.status` (`grep` em `supabase/migrations`, 17/11/2026):
+
+   - **Todos os 44 são whitelist positiva** (`status not in ('aberto','convertido_os')`,
+     `status <> 'cancelado'` etc.) nunca blacklist. `'demanda'` entrar no conjunto permitido não
+     muda nenhum dos 44 — um Chamado em `'demanda'` **automaticamente** não passa em nenhum deles:
+     não pode virar OS (`1020`, `0448`, `1047`), não pode ser vinculado de novo
+     (`0438`), não pode ser suspenso ou unido. **É um dead-end por construção**, sem tocar uma
+     linha dos RPCs existentes — exatamente a leitura literal do `spec.md`: *"só então o Chamado
+     admite OS"* vira verdade por omissão, não por guarda nova.
+   - **Front:** `StatusChamado` (`apps/web/src/features/pcm/domain/chamados.ts:6`) ganha
+     `"demanda"` no union type e label próprio; `podeGerarOsOuBacklog` (linha 145, `status !== "aberto"`)
+     já rejeita `'demanda'` sem mudança — é a mesma função, mesmo texto de erro.
+   - **Migration nova (não edita `1854`/`1855`/`0890`):** (a) `ALTER TABLE pcm.chamados`
+     `DROP CONSTRAINT` + `ADD CONSTRAINT` aditivo incluindo `'demanda'` no `CHECK`; (b) uma RPC
+     nova e fina — `pcm.sso_liberar_escopo_backlog` — que **chama** `pcm.sso_promover_backlog_chamado`
+     (0890, sem reescrever locks/idempotência/parcelas) e, só depois do retorno, faz
+     `update pcm.chamados set status='demanda' where id=p_chamado_id and status='aberto'`,
+     registrando em `audit.events`. Não duplica a lógica de composição/parcela/pendência.
+   - **AC-5 (parcial):** `pcm.sso_dividir_composicao_backlog` (0895) separa o subconjunto numa
+     composição destino; a mesma RPC nova de liberação roda sobre o destino. O restante continua
+     na composição origem, intocado.
+   - **Transição `'demanda'→'aberto'`** (liberar pra OS) é RPC própria, **fora do escopo desta
+     story** — cabe a `E01-S194` (Kanban), que é quem decide a ação do PCM que dispara essa
+     transição. Até lá, Chamado em `'demanda'` existe, aparece, mas não produz OS — estado válido,
+     não é bug.
 5. **AC-7/AC-8 (Backlog legado por status de OS) são trabalho genuinamente novo** — nada no
    inventário cobre a classificação de `pcm.ordens_servico.status='backlog'`. Tasks 3, 12, 13 do
    `tasks.md` permanecem como escritas.
