@@ -46,7 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S28_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 | E00-S26 | Capacidades sensíveis ponta a ponta (planejar, validar, aprovar, cancelar, exportar, ver custo, administrar) | — | Especificada (2026-11-17) — BL 005 do Pacote Consolidado. Tier arquitetural | [spec](../../specs/E00-S26-capacidades-sensiveis/spec.md) |
 | E00-S27 | Revogação imediata de acesso — sessão, cache e JWT carimbado | — | Especificada (2026-11-17) — BL 006 do Pacote Consolidado. **Exposição de segurança aberta hoje.** Depende de E00-S26 | [spec](../../specs/E00-S27-revogacao-imediata/spec.md) |
-| E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | Em andamento (2026-11-17) — fundação pronta (registro `FLAGS_SSO`, `RecursoNaoAtivado`, gate de CI, tradução 42501×55000) e Lote 1 (`chamados-os/`) fechado, 0 fuga. Lotes 2–6 e ligar o gate no CI seguem | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
+| E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | **Fechada (2026-11-17)** — 0 fuga/0 não-declarada/0 órfã no repositório inteiro, 737 flags; gate ligado em `ci.yml`; inventário em `docs/ativacao/flags.md`. Pendência documentada: `podeAdministrar` real só em ~20 componentes, resto nasce `false` (lado seguro) — ver tasks.md | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
 _75 concluídas no histórico · maior ID usado: E01-S198_

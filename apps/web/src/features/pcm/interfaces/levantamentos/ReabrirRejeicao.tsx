@@ -3,9 +3,10 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),chave:z.string().min(1).max(200),revision:z.number().int().positive(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number};
-export function ReabrirRejeicao(props:Props){if(import.meta.env.VITE_SSO_REABRIR_REJEICAO_ENABLED!=="true")return null;return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
+export function ReabrirRejeicao(props:Props){if(!flagLigada("VITE_SSO_REABRIR_REJEICAO_ENABLED"))return null;return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
 function Permissao(props:Props){const p=useQuery({queryKey:["levantamentos",props.userId,props.clienteId,"incorporacao-permissao"],queryFn:()=>supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.aprovar",props.clienteId),gcTime:0,refetchOnWindowFocus:true});if(p.isPending || p.isFetching)return <output>Verificando permissão…</output>;if(p.isError)return <p role="alert">Não foi possível verificar acesso. <button type="button" onClick={()=>void p.refetch()}>Tentar novamente</button></p>;return p.data===true ? <Conteudo {...props}/> : null;}
 function Conteudo({userId,clienteId,loteId,chave,revisao}:Props){
   const storageKey=`sso-reabrir-rejeicao:${JSON.stringify([userId,clienteId,loteId,chave])}`;const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const v=sessionStorage.getItem(storageKey);if(!v)return null;const p=pedidoSchema.parse(JSON.parse(v));return p.loteId===loteId && p.chave===chave ? p : "invalido";}catch{return "invalido";}});

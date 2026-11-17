@@ -1,15 +1,16 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props={userId:string;clienteId:string;tipo:"sistema"|"componente";ativoId:string};
-export function AliasesAtivo(props:Props){if(import.meta.env.VITE_SSO_LISTAGEM_ALIASES_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.tipo,props.ativoId])} {...props}/>;}
+export function AliasesAtivo(props:Props){if(!flagLigada("VITE_SSO_LISTAGEM_ALIASES_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.tipo,props.ativoId])} {...props}/>;}
 function Conteudo({userId,clienteId,tipo,ativoId}:Props){
   const client=useQueryClient();const chave=["codigos-publicos",userId,clienteId,tipo,ativoId,"aliases"];
   const q=useInfiniteQuery({queryKey:chave,gcTime:0,initialPageParam:null as string|null,queryFn:async({pageParam,signal})=>{
     const antes=await supabase.auth.getUser();
     if(antes.error || antes.data.user?.id!==userId || signal.aborted)throw new Error("Sessão indisponível ou alterada.");
-    const mediada=import.meta.env.VITE_SSO_LEITURA_ALIASES_MEDIADA_ENABLED==="true";
+    const mediada=flagLigada("VITE_SSO_LEITURA_ALIASES_MEDIADA_ENABLED");
     const parametros={p_cliente_id:clienteId,p_tipo:tipo,p_ativo_id:ativoId,p_apos:pageParam,p_limite:20};
     const consulta=mediada
       ? supabase.schema("pcm").rpc("sso_listar_aliases_ativo_mediada",{...parametros,p_ator_id:userId})

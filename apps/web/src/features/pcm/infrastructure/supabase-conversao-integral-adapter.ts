@@ -2,6 +2,7 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import type { CriarOrdemServicoCommand } from "../application/ordem-servico-gateway";
 import type { StatusOrdemServico } from "../domain/ordens-servico";
+import { flagLigada } from "../../../config/flags-sso";
 
 export interface PedidoConversaoIntegral {
   requestId: string;
@@ -89,7 +90,7 @@ export async function converterChamadoIntegral(pedido: PedidoConversaoIntegral) 
     if(depois.error||depois.data.user?.id!==c.ator||r.requestId!==c.requestId||r.osId!==c.osId||r.chamadoId!==c.chamadoId||r.parcelaId!==c.parcelaDireta.id)throw new Error("Sessão ou resposta divergente.");
     return r;
   }
-  const conferirAtor = import.meta.env.VITE_SSO_CONVERSAO_ATOR_CONFERIDO_ENABLED === "true";
+  const conferirAtor = flagLigada("VITE_SSO_CONVERSAO_ATOR_CONFERIDO_ENABLED");
   const funcao = c.protocoloConcorrente ? "sso_converter_os_concorrente" : c.escopoSha256 ? "sso_converter_chamado_escopo_conferido"
     : conferirAtor ? "sso_converter_chamado_ator_conferido" : "sso_converter_chamado_integral_autorizado";
   const { data, error } = await supabase.schema("pcm").rpc(funcao, {

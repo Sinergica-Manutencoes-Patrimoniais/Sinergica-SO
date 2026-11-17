@@ -28,6 +28,7 @@ import {
 import { DiagnosticoFusoVigencia } from "./DiagnosticoFusoVigencia";
 import { PreflightAprovacaoRevisao } from "./PreflightAprovacaoRevisao";
 import type { EstadoReciboReconciliacao } from "./ReciboReconciliacaoRevisao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Operacao =
   | { tipo: "transicao"; comando: TransicionarRevisaoCommand }
@@ -169,8 +170,8 @@ function Conteudo({
     setDetalhes([]);
     if (
       pedido.tipo === "aprovacao_revisao" &&
-      (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" ||
-        import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true")
+      (!flagLigada("VITE_SSO_APROVAR_REVISAO_ENABLED") ||
+        !flagLigada("VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED"))
     ) {
       setErro(
         "A aprovação de revisão está desativada. O pedido permanece guardado para conferência.",
@@ -313,8 +314,8 @@ function Conteudo({
       operacao.isPending ||
       trava.current ||
       (escolha === "aprovar_revisao" &&
-        (import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED !== "true" ||
-          import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true" ||
+        (!flagLigada("VITE_SSO_APROVAR_REVISAO_ENABLED") ||
+          !flagLigada("VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED") ||
           estadoRecibo !== "liberado"))
     )
       return;
@@ -343,7 +344,7 @@ function Conteudo({
       let versaoEsperada: string | undefined;
       if (
         (escolha === "aprovar" || escolha === "aprovar_revisao") &&
-        import.meta.env.VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED === "true"
+        flagLigada("VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED")
       ) {
         await exigirAtor();
         if (!montado.current) throw new Error("Tela desmontada.");
@@ -453,7 +454,7 @@ function Conteudo({
           >
             Aprovar
           </Button>
-          {import.meta.env.VITE_SSO_APROVAR_REVISAO_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_APROVAR_REVISAO_ENABLED") && (
             <Button
               variant="secondary"
               disabled={bloqueado}
@@ -489,7 +490,7 @@ function Conteudo({
             </label>
           )}
           {escolha === "aprovar_revisao" &&
-            import.meta.env.VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED === "true" && (
+            flagLigada("VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED") && (
               <DiagnosticoFusoVigencia
                 userId={userId}
                 clienteId={clienteId}
@@ -498,7 +499,7 @@ function Conteudo({
               />
             )}
           {escolha === "aprovar_revisao" &&
-            import.meta.env.VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED === "true" && (
+            flagLigada("VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED") && (
               <PreflightAprovacaoRevisao
                 userId={userId}
                 clienteId={clienteId}
@@ -510,7 +511,7 @@ function Conteudo({
             )}
           {escolha === "aprovar_revisao" && (
             <output role="status">
-              {import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED === "true"
+              {flagLigada("VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED")
                 ? estadoRecibo === "liberado"
                   ? "Recibo completo; o servidor ainda revalidará permissões e impactos antes de aprovar."
                   : estadoRecibo === "carregando"
@@ -528,7 +529,7 @@ function Conteudo({
               revisaoMudou ||
               ((escolha === "aprovar" || escolha === "aprovar_revisao") && !vigencia) ||
               (escolha === "aprovar_revisao" &&
-                (import.meta.env.VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED !== "true" ||
+                (!flagLigada("VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED") ||
                   estadoRecibo !== "liberado"))
             }
             onClick={confirmar}

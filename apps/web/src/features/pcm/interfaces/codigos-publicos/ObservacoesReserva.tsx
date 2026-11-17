@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), outboxId: z.string().guid(), componenteId: z.string().guid(), observacao: z.string().min(1).max(2000) }).strict();
 const reciboSchema = pedidoSchema.omit({ observacao: true }).extend({ criadoEm: z.string().datetime({ offset: true }) }).strict();
@@ -9,7 +11,15 @@ const linhaSchema = z.object({ request_id: z.string().guid(), ator_id: z.string(
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; outboxId: string; componenteId: string };
 export function ObservacoesReserva(props: Props) {
-  if (import.meta.env.VITE_SSO_OBSERVACOES_RESERVA_EQUIPMENT_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_OBSERVACOES_RESERVA_EQUIPMENT_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Observacoes reserva equipment"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_OBSERVACOES_RESERVA_EQUIPMENT_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.outboxId,props.componenteId])} {...props} />;
 }
 function Conteudo({ userId,clienteId,outboxId,componenteId }: Props) {
@@ -23,7 +33,7 @@ function Conteudo({ userId,clienteId,outboxId,componenteId }: Props) {
   async function conferir(signal?: AbortSignal) { const r=await supabase.auth.getUser(); if (r.error || r.data.user?.id!==userId || signal?.aborted) throw new Error("Sessão alterada."); }
   const consulta=useInfiniteQuery({ queryKey,gcTime:0,initialPageParam:null as string|null,queryFn:async ({pageParam,signal}) => {
     await conferir(signal); const parametros={p_ator_id:userId,p_cliente_id:clienteId,p_outbox_id:outboxId,p_componente_id:componenteId,p_apos:pageParam,p_limite:20};
-    const requisicao=import.meta.env.VITE_SSO_OBSERVACOES_RESERVA_MEDIADAS_ENABLED==="true"
+    const requisicao=flagLigada("VITE_SSO_OBSERVACOES_RESERVA_MEDIADAS_ENABLED")
       ? supabase.schema("pcm").rpc("sso_listar_observacoes_reserva_mediada",parametros)
       : supabase.schema("pcm").rpc("sso_listar_observacoes_reserva",parametros);
     const {data,error}=await requisicao.abortSignal(signal);
@@ -33,7 +43,7 @@ function Conteudo({ userId,clienteId,outboxId,componenteId }: Props) {
   const envio=useMutation({mutationFn:async (p:Pedido)=>{
     if(sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Tentativa divergente."); await conferir();
     const parametros={p_ator_id:userId,p_cliente_id:clienteId,p_request_id:p.requestId,p_outbox_id:p.outboxId,p_componente_id:p.componenteId,p_observacao:p.observacao};
-    const requisicao=import.meta.env.VITE_SSO_OBSERVACOES_RESERVA_MEDIADAS_ENABLED==="true"
+    const requisicao=flagLigada("VITE_SSO_OBSERVACOES_RESERVA_MEDIADAS_ENABLED")
       ? supabase.schema("pcm").rpc("sso_observar_reserva_equipment_mediada",parametros)
       : supabase.schema("pcm").rpc("sso_observar_reserva_equipment",parametros);
     const {data,error}=await requisicao;

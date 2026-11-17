@@ -4,12 +4,22 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { GrupoQuantitativo } from "../../application/estrutura-tecnica-gateway";
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const schema=z.object({requestId:z.string().guid(),userId:z.string().guid(),clienteId:z.string().guid(),grupoId:z.string().guid(),revision:z.number().int().positive(),categoriaId:z.string().guid(),sistemaId:z.string().guid().nullable(),motivo:z.string().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;grupo:GrupoQuantitativo;categorias:{id:string;nome:string}[];sistemas:{id:string;nome:string}[];disponivel:boolean};
 export function ReclassificarGrupo(props:Props){
-  if(import.meta.env.VITE_SSO_RECLASSIFICAR_GRUPO_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_RECLASSIFICAR_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Reclassificar grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RECLASSIFICAR_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.grupo.id])} {...props}/>;
 }
 function Conteudo({userId,clienteId,grupo,categorias,sistemas,disponivel}:Props){

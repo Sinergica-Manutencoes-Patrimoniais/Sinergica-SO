@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { portalInformarMaterialSchema, portalListaMateriaisSchema } from "@sinergica/shared";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 const lista = portalListaMateriaisSchema;
 export type ListaPortal = z.infer<typeof lista>;
@@ -14,7 +15,7 @@ export async function conferirSessaoMateriais(userId: string, signal?: AbortSign
 }
 
 export async function listarMateriaisPortal(clienteId: string, osId: string, apos: string | null, signal?: AbortSignal, userId?: string) {
-  const mediada = import.meta.env.VITE_SSO_MATERIAIS_ATUAIS_PORTAL_MEDIADOS_ENABLED === "true";
+  const mediada = flagLigada("VITE_SSO_MATERIAIS_ATUAIS_PORTAL_MEDIADOS_ENABLED");
   if (mediada && !userId) throw new Error("Sessão necessária.");
   if (userId) await conferirSessaoMateriais(userId, signal);
   const parametros = { p_cliente_id: clienteId, p_os_id: osId, p_apos: apos };
@@ -37,7 +38,7 @@ export async function listarMateriaisPortal(clienteId: string, osId: string, apo
 }
 export async function informarDisponibilidadePortal(input: PedidoDisponibilidade, userId?: string, contexto?: { clienteId: string; osId: string }) {
   const p = validarPedidoDisponibilidade(input);
-  const mediada = import.meta.env.VITE_SSO_DISPONIBILIDADE_MATERIAIS_PORTAL_MEDIADA_ENABLED === "true";
+  const mediada = flagLigada("VITE_SSO_DISPONIBILIDADE_MATERIAIS_PORTAL_MEDIADA_ENABLED");
   if (mediada && (!userId || !contexto)) throw new Error("Sessão e contexto necessários.");
   if (userId) await conferirSessaoMateriais(userId);
   const parametros = {

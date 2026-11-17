@@ -89,6 +89,7 @@ import { PendenciasTecnicasWorkspace } from "../interfaces/pendencias-tecnicas/W
 import { PlanoManutencaoWorkspace } from "../interfaces/plano-manutencao/Workspace";
 import { VisitasWorkspace } from "../interfaces/visitas/Workspace";
 import { EstruturaClientePage } from "./EstruturaClientePage";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Estado =
   | { fase: "carregando" }
@@ -496,7 +497,7 @@ export function VisaoClientePage({
 
       {aba === "os" && (
         <div className="flex flex-col gap-3">
-          {user && import.meta.env.VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED === "true" && <PainelLateralBacklog key={`${user.id}:${cliente.id}`} userId={user.id} clienteId={cliente.id} />}
+          {user && flagLigada("VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED") && <PainelLateralBacklog key={`${user.id}:${cliente.id}`} userId={user.id} clienteId={cliente.id} />}
           {periodo && (
             <p className="text-caption text-ink-3">
               Filtrado por período (OS criadas entre{" "}

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { RelatorioOsDespesas } from "./RelatorioOsDespesas";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const inteiro = z.number().int().nonnegative().safe();
 const resumo = z.object({ quantidade: inteiro, previsto_centavos: inteiro, realizado_centavos: inteiro,
@@ -12,7 +14,15 @@ const os = z.object({ os_id: z.string().guid(), numero: z.string(), valor_previs
 type Props = { userId: string; clienteId: string; visitaId: string };
 const moeda = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v / 100);
 export function ResumoDespesas(props: Props) {
-  if (import.meta.env.VITE_SSO_RESUMO_DESPESAS_VISITA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RESUMO_DESPESAS_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Resumo despesas visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RESUMO_DESPESAS_VISITA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, visitaId }: Props) {
@@ -47,7 +57,7 @@ function Conteudo({ userId, clienteId, visitaId }: Props) {
       {porOs.data?.pages.flat().map((item) => <section key={item.os_id} aria-label={`Despesas da OS ${item.numero}`}>
         <p>OS {item.numero} · Previsão de despesas ainda não realizadas: {moeda(item.valor_previsto_nao_realizado_centavos)} · Realizado alocado: {moeda(item.valor_realizado_centavos)} · {item.despesas_nao_realizadas} despesa(s) sem realizado
           {item.vinculos_historicos > 0 ? ` · ${item.vinculos_historicos} vínculo(s) encerrado(s): total inclui parcelas históricas` : ""}</p>
-        {import.meta.env.VITE_SSO_RELATORIO_DESPESAS_OS_ENABLED === "true" && <button type="button" aria-expanded={osAberta === item.os_id}
+        {flagLigada("VITE_SSO_RELATORIO_DESPESAS_OS_ENABLED") && <button type="button" aria-expanded={osAberta === item.os_id}
           onClick={() => setOsAberta((atual) => atual === item.os_id ? null : item.os_id)}>
           {osAberta === item.os_id ? "Fechar relatório da OS" : "Consultar relatório da OS por período"}
         </button>}

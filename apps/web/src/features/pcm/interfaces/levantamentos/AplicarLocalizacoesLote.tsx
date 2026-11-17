@@ -2,10 +2,11 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const itemSchema=z.object({chave:z.string().min(1).max(200),entidadeId:z.string().guid().nullable(),snapshot:z.record(z.string(), z.unknown()).nullable(),atributos:z.record(z.string(), z.unknown()),campos:z.record(z.string(), z.unknown()),revisaoSelecao:z.number().int().positive(),motivo:z.string().min(1).max(2000),requestId:z.string().guid(),requestIndividual:z.string().guid(),confirmado:z.literal(true)}).strict().refine(i=>(i.entidadeId===null)===(i.snapshot===null));
 const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 const Contexto=createContext<((item:Item)=>void) | null>(null);type Props={userId:string;clienteId:string;loteId:string;revisao:number;children:ReactNode};
-export function AplicarLocalizacoesLote(props:Props){if(import.meta.env.VITE_SSO_APLICAR_LOCALIZACOES_LOTE_ENABLED!=="true")return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
+export function AplicarLocalizacoesLote(props:Props){if(!flagLigada("VITE_SSO_APLICAR_LOCALIZACOES_LOTE_ENABLED"))return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,revisao,children}:Props){
  const storage=`sso-aplicar-localizacoes-lote:${JSON.stringify([userId,clienteId,loteId])}`;const client=useQueryClient();const trava=useRef(false);const [itens,setItens]=useState<Item[]>([]);const [confirmado,setConfirmado]=useState(false);const [aviso,setAviso]=useState("");
  const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const raw=sessionStorage.getItem(storage);if(!raw)return null;const p=pedidoSchema.parse(JSON.parse(raw));return p.loteId===loteId?p:"invalido";}catch{return "invalido";}});

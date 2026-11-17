@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedido = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), revisao: z.number().int().positive(), modo: z.enum(["integral", "linhas"]), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
@@ -25,7 +27,15 @@ export function CorrigirModoProposta({ usuario, cliente }: { usuario: string; cl
     const p = pedido.parse({ requestId: crypto.randomUUID(), propostaId: selecionada, revisao: consulta.data.revisao, modo: consulta.data.modo === "integral" ? "linhas" : "integral", motivo: motivo.trim() });
     if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido existente"); sessionStorage.setItem(chave, JSON.stringify(p)); setPendente(p); enviar(p);
   } catch { setAviso("Confira o motivo e a sessão. Nada foi enviado."); } }
-  if (import.meta.env.VITE_SSO_CORRECAO_MODO_PROPOSTA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CORRECAO_MODO_PROPOSTA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Correcao modo proposta"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CORRECAO_MODO_PROPOSTA_ENABLED"]}
+      />
+    );
+  }
   return <section><h3>Corrigir modo de proposta</h3><p>Não é permitido corrigir com candidato ativo ou alocação histórica; o histórico é preservado.</p>
     <form onSubmit={(e) => { e.preventDefault(); if (z.string().guid().safeParse(id.trim()).success) setSelecionada(id.trim()); else setAviso("Informe identificador válido."); }}>
       <label>Proposta <input required value={id} onChange={(e) => setId(e.target.value)} /></label><button type="submit">Consultar modo</button>

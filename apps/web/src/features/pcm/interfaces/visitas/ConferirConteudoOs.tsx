@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DiagnosticoConteudoOs } from "./DiagnosticoConteudoOs";
 import { RevalidarVinculoConteudo } from "./RevalidarVinculoConteudo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const snapshot = z.object({ id: z.string().guid(), clienteId: z.string().guid(), numero: z.string(), titulo: z.string(), descricao: z.string().nullable(),
   categoria: z.string(), status: z.string(), prioridade: z.string(), localDescricao: z.string().nullable(), excluidaEm: z.string().nullable(),
@@ -41,8 +42,8 @@ export function ConferirConteudoOs({ userId, clienteId, visitaId, osId, revisao,
   } catch { setAviso("Não foi possível guardar o pedido; nada foi enviado."); } }
   return <section><button type="button" disabled={bloqueado} onClick={() => { setAberto((v) => !v); setConfirmado(null); }}>{aberto ? "Ocultar prévia da OS" : "Conferir conteúdo básico da OS"}</button>
     {aberto && <><p>Esta conferência não abrange alvo, questionário, escopo, equipe nem autoriza envio.</p>
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_CONTEUDO_OS_ENABLED === "true" && <DiagnosticoConteudoOs userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_REVALIDAR_VINCULO_CONTEUDO_ENABLED === "true" && <RevalidarVinculoConteudo userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} revisao={revisao} bloqueado={bloqueado} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_CONTEUDO_OS_ENABLED") && <DiagnosticoConteudoOs userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} revisao={revisao} />}
+      {flagLigada("VITE_SSO_REVALIDAR_VINCULO_CONTEUDO_ENABLED") && <RevalidarVinculoConteudo userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} revisao={revisao} bloqueado={bloqueado} />}
       {consulta.isFetching && <p>Consultando prévia…</p>}{consulta.isError && <p role="alert">Prévia indisponível ou desatualizada. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
       {!consulta.isFetching && !consulta.isError && consulta.data && <div><p>{consulta.data.snapshot.numero} · {consulta.data.snapshot.titulo} · {consulta.data.snapshot.categoria} · {consulta.data.snapshot.status} · prioridade {consulta.data.snapshot.prioridade}</p>
         <p>Descrição: {consulta.data.snapshot.descricao ?? "não informada"}</p><p>Local: {consulta.data.snapshot.localDescricao ?? "não informado"}</p>

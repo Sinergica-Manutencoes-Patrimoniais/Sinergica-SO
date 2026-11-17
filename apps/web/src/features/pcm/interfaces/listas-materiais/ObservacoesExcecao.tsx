@@ -2,9 +2,10 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const schema=z.object({requestId:z.string().guid(),listaId:z.string().guid(),revision:z.number().int().positive(),eventoRevision:z.number().int().positive(),texto:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof schema>;
 type Props={usuario:string;cliente:string;ordemServico:string;listaId:string;revisao:number;eventoRevision:number};
-export function ObservacoesExcecao(props:Props){if(import.meta.env.VITE_SSO_OBSERVACOES_MATERIAIS_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.listaId,props.eventoRevision])} {...props}/>;}
+export function ObservacoesExcecao(props:Props){if(!flagLigada("VITE_SSO_OBSERVACOES_MATERIAIS_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.listaId,props.eventoRevision])} {...props}/>;}
 function Conteudo({usuario,cliente,ordemServico,listaId,revisao,eventoRevision}:Props){
   const chave=`sso-observacao-material:${JSON.stringify([usuario,cliente,listaId,eventoRevision])}`;
   const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=schema.parse(JSON.parse(v));return p.listaId===listaId && p.eventoRevision===eventoRevision ? p : "invalido";}catch{return "invalido";}});

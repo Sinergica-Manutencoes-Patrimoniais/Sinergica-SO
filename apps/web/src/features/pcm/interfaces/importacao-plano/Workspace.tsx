@@ -22,6 +22,7 @@ import {
   type PedidoMatriz,
   type PedidoRevisao,
 } from "../../infrastructure/supabase-importacao-plano-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Tentativa =
   | { tipo: "recepcao"; pedido: PedidoMatriz }
@@ -35,7 +36,7 @@ export function ImportacaoPlanoWorkspace({
 }
 
 function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) {
-  const envioXlsxHabilitado = (import.meta.env.DEV && import.meta.env.VITE_SSO_ENVIO_XLSX_DEV_ENABLED === "true") || import.meta.env.VITE_SSO_ENVIO_XLSX_ENABLED === "true";
+  const envioXlsxHabilitado = (import.meta.env.DEV && flagLigada("VITE_SSO_ENVIO_XLSX_DEV_ENABLED")) || flagLigada("VITE_SSO_ENVIO_XLSX_ENABLED");
   const storageKey = `sso-cronograma:${JSON.stringify([userId, clienteId])}`;
   const travaEnvio = useRef(false);
   const client = useQueryClient();
@@ -311,9 +312,9 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
           <button type="submit" disabled={!previaAtual || confirmacaoPrevia !== assinaturaPrevia}>Guardar em staging</button>
         </fieldset>
       </form>
-      {import.meta.env.VITE_SSO_PREVIA_XLSX_ENABLED === "true" && !!fonte.trim() && !tentativa && !envio.isPending && !csvLendo && !csv && !erroCsv && <PreviaXlsx key={JSON.stringify([userId, clienteId, fonte.trim()])} fonteId={fonte.trim()} clienteId={clienteId}
+      {flagLigada("VITE_SSO_PREVIA_XLSX_ENABLED") && !!fonte.trim() && !tentativa && !envio.isPending && !csvLendo && !csv && !erroCsv && <PreviaXlsx key={JSON.stringify([userId, clienteId, fonte.trim()])} fonteId={fonte.trim()} clienteId={clienteId}
         aoAlterarBloqueio={setXlsxBloqueado}
-        usarMatrizDeclarada={import.meta.env.VITE_SSO_CRONOGRAMA_MATRIZ_XLSX_LOCAL_ENABLED === "true" ? (valores) => { setMatriz(JSON.stringify(valores)); setPrevia(null); setPaginaPrevia(0); setErroPrevia(""); setAviso("Valores copiados para a matriz manual. Confira antes de guardar; arquivo não autenticado."); } : undefined}
+        usarMatrizDeclarada={flagLigada("VITE_SSO_CRONOGRAMA_MATRIZ_XLSX_LOCAL_ENABLED") ? (valores) => { setMatriz(JSON.stringify(valores)); setPrevia(null); setPaginaPrevia(0); setErroPrevia(""); setAviso("Valores copiados para a matriz manual. Confira antes de guardar; arquivo não autenticado."); } : undefined}
         enviarExperimental={envioXlsxHabilitado ? async (bytes) => { await envioXlsx.mutateAsync({ fonteId: fonte.trim(), bytes }); } : undefined}
         reconciliarExperimental={envioXlsxHabilitado ? async (bytes) => { await reconciliacaoXlsx.mutateAsync({ fonteId: fonte.trim(), bytes }); } : undefined} />}
       {tentativa === "invalida" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
@@ -337,7 +338,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
       )}
       {!lotes.isFetching && !lotes.isError && (
         <>
-          {import.meta.env.VITE_SSO_COMPARAR_CRONOGRAMA_ENABLED === "true" && <CompararLotes userId={userId} clienteId={clienteId} lotes={lotes.data?.pages.flat() ?? []} />}
+          {flagLigada("VITE_SSO_COMPARAR_CRONOGRAMA_ENABLED") && <CompararLotes userId={userId} clienteId={clienteId} lotes={lotes.data?.pages.flat() ?? []} />}
           <ul>
             {lotes.data?.pages.flat().map((lote) => (
               <li key={lote.id}>
@@ -346,11 +347,11 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
                   Conferir linhas
                 </button>
                 {selecionado === lote.id && <nav aria-label="Etapas do cronograma selecionado"><p>Ir para: <a href="#cronograma-detalhe">linhas</a> · <a href="#cronograma-mapeamento">mapeamento</a>
-                  {import.meta.env.VITE_SSO_REVISAO_LINHA_CRONOGRAMA_ENABLED === "true" && <> · <a href="#cronograma-revisao">revisão</a></>}
-                  {import.meta.env.VITE_SSO_CLASSIFICACAO_CRONOGRAMA_ENABLED === "true" && <> · <a href="#cronograma-classificacao">classificação</a></>}
-                  {import.meta.env.VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED === "true" && <> · <a href="#cronograma-conferencia">conferência</a></>}
-                  {import.meta.env.VITE_SSO_APROVAR_CRONOGRAMA_STAGING_ENABLED === "true" && <> · <a href="#cronograma-aprovacao">aprovação em staging</a></>}
-                  {import.meta.env.VITE_SSO_INCORPORAR_CRONOGRAMA_ENABLED === "true" && <> · <a href="#cronograma-incorporacao">incorporação em rascunho</a></>}
+                  {flagLigada("VITE_SSO_REVISAO_LINHA_CRONOGRAMA_ENABLED") && <> · <a href="#cronograma-revisao">revisão</a></>}
+                  {flagLigada("VITE_SSO_CLASSIFICACAO_CRONOGRAMA_ENABLED") && <> · <a href="#cronograma-classificacao">classificação</a></>}
+                  {flagLigada("VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED") && <> · <a href="#cronograma-conferencia">conferência</a></>}
+                  {flagLigada("VITE_SSO_APROVAR_CRONOGRAMA_STAGING_ENABLED") && <> · <a href="#cronograma-aprovacao">aprovação em staging</a></>}
+                  {flagLigada("VITE_SSO_INCORPORAR_CRONOGRAMA_ENABLED") && <> · <a href="#cronograma-incorporacao">incorporação em rascunho</a></>}
                 </p></nav>}
                 {selecionado === lote.id && (
                   <div id="cronograma-detalhe"><DetalheCronograma
@@ -362,11 +363,11 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
                   /></div>
                 )}
                 {selecionado === lote.id && <div id="cronograma-mapeamento"><MapeamentoLinha userId={userId} clienteId={clienteId} loteId={lote.id} revisao={lote.revisao} /></div>}
-                {selecionado === lote.id && import.meta.env.VITE_SSO_REVISAO_LINHA_CRONOGRAMA_ENABLED === "true" && <div id="cronograma-revisao"><RevisaoLinha userId={userId} clienteId={clienteId} loteId={lote.id} revisao={lote.revisao} /></div>}
-                {selecionado === lote.id && import.meta.env.VITE_SSO_CLASSIFICACAO_CRONOGRAMA_ENABLED === "true" && <div id="cronograma-classificacao"><ClassificacaoLinha userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
-                {selecionado === lote.id && import.meta.env.VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED === "true" && <div id="cronograma-conferencia"><ConferenciaIntegrada userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
-                {selecionado === lote.id && import.meta.env.VITE_SSO_APROVAR_CRONOGRAMA_STAGING_ENABLED === "true" && <div id="cronograma-aprovacao"><AprovarLote userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
-                {selecionado === lote.id && import.meta.env.VITE_SSO_INCORPORAR_CRONOGRAMA_ENABLED === "true" && <div id="cronograma-incorporacao"><IncorporarLinha userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
+                {selecionado === lote.id && flagLigada("VITE_SSO_REVISAO_LINHA_CRONOGRAMA_ENABLED") && <div id="cronograma-revisao"><RevisaoLinha userId={userId} clienteId={clienteId} loteId={lote.id} revisao={lote.revisao} /></div>}
+                {selecionado === lote.id && flagLigada("VITE_SSO_CLASSIFICACAO_CRONOGRAMA_ENABLED") && <div id="cronograma-classificacao"><ClassificacaoLinha userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
+                {selecionado === lote.id && flagLigada("VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED") && <div id="cronograma-conferencia"><ConferenciaIntegrada userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
+                {selecionado === lote.id && flagLigada("VITE_SSO_APROVAR_CRONOGRAMA_STAGING_ENABLED") && <div id="cronograma-aprovacao"><AprovarLote userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
+                {selecionado === lote.id && flagLigada("VITE_SSO_INCORPORAR_CRONOGRAMA_ENABLED") && <div id="cronograma-incorporacao"><IncorporarLinha userId={userId} clienteId={clienteId} loteId={lote.id} /></div>}
                 {selecionado === lote.id && <AnotacaoLote key={JSON.stringify([lote.id, lote.revisao])}
                   loteId={lote.id} revisao={lote.revisao} bloqueado={!!tentativa || envio.isPending}
                   rascunho={anotacoes[JSON.stringify([lote.id, lote.revisao])] ?? { linha: "", observacao: "" }}

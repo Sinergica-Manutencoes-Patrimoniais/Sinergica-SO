@@ -2,11 +2,21 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 type Props = { userId: string; clienteId: string; pendenciaId: string };
 const item = z.object({ id: z.string().guid(), revisao: z.number().int().positive(), mime_declarado: z.enum(["image/jpeg", "image/png"]), justificativa: z.string(), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict();
 async function conferirSessao(userId: string, signal?: AbortSignal) { const atual = await supabase.auth.getUser(); if (atual.error || atual.data.user?.id !== userId || signal?.aborted) throw new Error("Sessão alterada."); }
 export function EvidenciasOrigem(props: Props) {
-  if (import.meta.env.VITE_SSO_EVIDENCIA_ORIGEM_PENDENCIA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EVIDENCIA_ORIGEM_PENDENCIA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Evidencia origem pendencia"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EVIDENCIA_ORIGEM_PENDENCIA_ENABLED"]}
+      />
+    );
+  }
   return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.pendenciaId])} {...props} />;
 }
 function Abrir(props: Props) {
@@ -16,7 +26,7 @@ function Abrir(props: Props) {
 function Conteudo({ userId, clienteId, pendenciaId }: Props) {
   const [baixando, setBaixando] = useState(false); const [aviso, setAviso] = useState("");
   const montado = useRef(false); useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
-  const mediada = import.meta.env.VITE_SSO_EVIDENCIA_ORIGEM_MEDIADA_ENABLED === "true";
+  const mediada = flagLigada("VITE_SSO_EVIDENCIA_ORIGEM_MEDIADA_ENABLED");
   const q = useInfiniteQuery({ queryKey: ["pendencia-evidencias-origem", userId, clienteId, pendenciaId], gcTime: 0, initialPageParam: null as number | null,
     queryFn: async ({ pageParam, signal }) => { await conferirSessao(userId, signal); const parametros = { p_pendencia_id: pendenciaId, p_antes: pageParam, p_limite: 20 };
       const { data, error } = await (mediada ? supabase.schema("pcm").rpc("sso_listar_evidencias_origem_mediada", { ...parametros, p_ator_id: userId, p_cliente_id: clienteId }) : supabase.schema("pcm").rpc("sso_listar_evidencias_origem_pendencia", parametros)).abortSignal(signal);
@@ -43,12 +53,20 @@ function Conteudo({ userId, clienteId, pendenciaId }: Props) {
 }
 function DecisaoFoto(props: Props & { evidenciaId: string }) {
   const [aberto, setAberto] = useState(false);
-  if (import.meta.env.VITE_SSO_DECISAO_FOTO_ORIGEM_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DECISAO_FOTO_ORIGEM_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Decisao foto origem"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DECISAO_FOTO_ORIGEM_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar decisão PCM" : "Ver última decisão PCM"}</button>{aberto && <DecisaoConteudo {...props}/>}</section>;
 }
 function DecisaoConteudo({ userId, clienteId, pendenciaId, evidenciaId }: Props & { evidenciaId: string }) {
   const schema = z.union([z.object({ evidenciaId: z.string().guid(), decisao: z.null() }).strict(), z.object({ evidenciaId: z.string().guid(), decisao: z.enum(["aceita_pcm", "rejeitada_pcm"]), revisao: z.number().int().positive(), justificativa: z.string(), atorId: z.string().guid(), criadoEm: z.string().datetime({ offset: true }) }).strict()]);
   const q = useQuery({ queryKey: ["pendencia-decisao-foto", userId, clienteId, pendenciaId, evidenciaId], gcTime: 0, queryFn: async ({ signal }) => { await conferirSessao(userId, signal); const parametros = { p_pendencia_id: pendenciaId, p_evidencia_id: evidenciaId };
-    const { data, error } = await (import.meta.env.VITE_SSO_EVIDENCIA_ORIGEM_MEDIADA_ENABLED === "true" ? supabase.schema("pcm").rpc("sso_decisao_foto_origem_mediada", { ...parametros, p_ator_id: userId, p_cliente_id: clienteId }) : supabase.schema("pcm").rpc("sso_decisao_foto_origem_pendencia", parametros)).abortSignal(signal); if (error) throw error; const r = schema.parse(data); if (r.evidenciaId !== evidenciaId) throw new Error("Evidência divergente"); await conferirSessao(userId, signal); return r; } });
+    const { data, error } = await (flagLigada("VITE_SSO_EVIDENCIA_ORIGEM_MEDIADA_ENABLED") ? supabase.schema("pcm").rpc("sso_decisao_foto_origem_mediada", { ...parametros, p_ator_id: userId, p_cliente_id: clienteId }) : supabase.schema("pcm").rpc("sso_decisao_foto_origem_pendencia", parametros)).abortSignal(signal); if (error) throw error; const r = schema.parse(data); if (r.evidenciaId !== evidenciaId) throw new Error("Evidência divergente"); await conferirSessao(userId, signal); return r; } });
   return <section><p>Decisão humana não comprova autenticidade ou segurança do conteúdo.</p>{q.isFetching && <output>Consultando decisão…</output>}{q.isError && <p role="alert">Decisão indisponível. <button type="button" onClick={() => void q.refetch()}>Tentar novamente</button></p>}{!q.isFetching && !q.isError && q.data && (q.data.decisao === null ? <p>Nenhuma decisão PCM registrada nesta fonte.</p> : <p>{q.data.decisao} · revisão {q.data.revisao} · {q.data.justificativa} · {q.data.atorId} · <time dateTime={q.data.criadoEm}>{new Date(q.data.criadoEm).toLocaleString("pt-BR")}</time></p>)}</section>;
 }

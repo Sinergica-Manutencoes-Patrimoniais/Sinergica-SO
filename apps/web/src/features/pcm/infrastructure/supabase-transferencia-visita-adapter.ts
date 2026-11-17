@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 export const transferenciaVisitaSchema = z.object({
   requestId: z.string().guid(), origemId: z.string().guid(), destinoId: z.string().guid(),
@@ -37,8 +38,8 @@ export const supabaseTransferenciaVisitaAdapter = {
   },
   async transferir(entrada: TransferenciaVisita, atorId: string, clienteId: string) {
     const c = transferenciaVisitaSchema.parse(entrada);
-    if (c.confirmadas && import.meta.env.VITE_SSO_TRANSFERENCIA_CONFIRMADA_ENABLED !== "true") throw new Error("Transferência de Visita confirmada desativada.");
-    const mediado = import.meta.env.VITE_SSO_TRANSFERENCIA_VISITA_MEDIADA_ENABLED === "true";
+    if (c.confirmadas && !flagLigada("VITE_SSO_TRANSFERENCIA_CONFIRMADA_ENABLED")) throw new Error("Transferência de Visita confirmada desativada.");
+    const mediado = flagLigada("VITE_SSO_TRANSFERENCIA_VISITA_MEDIADA_ENABLED");
     const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_transferir_os_visita_mediado" : c.confirmadas ? "sso_transferir_os_confirmada_preparado" : "sso_transferir_os_visita_preparado", {
       ...(mediado ? { p_ator_id: atorId, p_cliente_id: clienteId, p_confirmadas: c.confirmadas ?? false } : {}),
       p_request_id: c.requestId, p_origem_id: c.origemId, p_destino_id: c.destinoId,

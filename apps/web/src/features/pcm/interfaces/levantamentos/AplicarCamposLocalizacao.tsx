@@ -6,9 +6,11 @@ import { useAreasDoCliente, useLocaisDoCliente } from "../../application/ativos-
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
 import { SelecionarAplicacaoLocalizacao } from "./AplicarLocalizacoesLote";
 import { useAprovacaoParcialLinha } from "./useAprovacaoParcialLinha";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 const schema=z.object({requestId:z.string().guid(),requestIndividual:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),chave:z.string(),entidadeId:z.string().guid().nullable(),snapshot:z.record(z.string(), z.unknown()).nullable(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;tipo:string;atributos:Record<string,unknown>};
-export function AplicarCamposLocalizacao(props:Props){if(import.meta.env.VITE_SSO_APLICAR_CAMPOS_LOCALIZACAO_ENABLED!=="true" || !["area","local","sublocal"].includes(props.tipo))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
+export function AplicarCamposLocalizacao(props:Props){if (!["area","local","sublocal"].includes(props.tipo)) return null; if (!flagLigada("VITE_SSO_APLICAR_CAMPOS_LOCALIZACAO_ENABLED")) return <RecursoNaoAtivado recurso="Aplicar campos localizacao" podeAdministrar={false} faltando={["VITE_SSO_APLICAR_CAMPOS_LOCALIZACAO_ENABLED"]} />;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,chave,revisao,tipo,atributos}:Props){
  const parcial=useAprovacaoParcialLinha(userId,clienteId,loteId,chave,revisao);
  const storage=`sso-aplicar-campos-localizacao:${JSON.stringify([userId,clienteId,loteId,chave])}`;const client=useQueryClient();const trava=useRef(false);

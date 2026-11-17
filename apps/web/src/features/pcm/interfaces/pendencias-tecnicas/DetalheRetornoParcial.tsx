@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PromoverContinuidadeAtomica } from "./PromoverContinuidadeAtomica";
 import { HistoricoPromocaoParcial } from "./HistoricoPromocaoParcial";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 const detalhe = z.object({ id, ciclo_id: id, pendencia_id: id, composicao_id: id, chamado_id: id, parcela_id: id, os_id: id, proposta_id: id,
@@ -27,8 +28,8 @@ export function DetalheRetornoParcial({ userId, clienteId, retornoId }: { userId
     {!consulta.isFetching && !consulta.isError && item && <>
       <p>{item.descricao_restante} · {item.minutos_restantes} min · {item.estado} · revisão {item.revisao}.</p>
       <p>Pendência {item.pendencia_id} · Chamado {item.chamado_id} · parcela {item.parcela_id} · OS {item.os_id}.</p>
-      {import.meta.env.VITE_SSO_HISTORICO_PROMOCAO_PARCIAL_ENABLED === "true" && <HistoricoPromocaoParcial key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id}/>}
-      {import.meta.env.VITE_SSO_PROMOCAO_CONTINUIDADE_ATOMICA_ENABLED === "true" && <PromoverContinuidadeAtomica
+      {flagLigada("VITE_SSO_HISTORICO_PROMOCAO_PARCIAL_ENABLED") && <HistoricoPromocaoParcial key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id}/>}
+      {flagLigada("VITE_SSO_PROMOCAO_CONTINUIDADE_ATOMICA_ENABLED") && <PromoverContinuidadeAtomica
         key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id} chamadoId={item.chamado_id}
         propostaId={item.proposta_id} revisao={item.revisao} descricaoRestante={item.descricao_restante} minutosRestantes={item.minutos_restantes} consultaDisponivel />}
     </>}

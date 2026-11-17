@@ -3,12 +3,22 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; tipo: "calendario" | "visita" };
 const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), rascunhoId: z.string().guid(), preparadaId: z.string().guid(), planoRevision: z.number().int().positive().safe(), decisaoRevision: z.number().int().positive().safe(), tipo: z.enum(["calendario", "visita"]), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 export function ResolverRetiradaImpacto(props: Props) {
-  if (import.meta.env.VITE_SSO_RESOLUCAO_IMPACTO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RESOLUCAO_IMPACTO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Resolucao impacto"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RESOLUCAO_IMPACTO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.rascunhoId, props.preparadaId, props.decisaoRevision, props.tipo])} {...props} />;
 }
 function Conteudo({ userId, clienteId, planoId, rascunhoId, preparadaId, planoRevision, decisaoRevision, tipo }: Props) {

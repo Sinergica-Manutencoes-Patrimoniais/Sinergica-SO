@@ -6,6 +6,7 @@ import { PromoverRetornoParcial } from "./PromoverRetornoParcial";
 import { ConfirmarContinuacaoDevolvida } from "./ConfirmarContinuacaoDevolvida";
 import { PromoverContinuidadeAtomica } from "./PromoverContinuidadeAtomica";
 import { RecuperarPromocaoParcial } from "./RecuperarPromocaoParcial";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 const linha = z.object({ id, ciclo_id: id, pendencia_id: id, composicao_id: id, chamado_id: id, parcela_id: id, os_id: id, proposta_id: id,
@@ -37,14 +38,14 @@ export function RetornosParciais({ userId, clienteId, destaqueId }: { userId: st
       {item.id === destaqueId && <strong>Selecionado no ranking. </strong>}<strong>{item.descricao_restante}</strong> · {item.minutos_restantes} min · {item.estado} · revisão {item.revisao}.
       <p>Pendência {item.pendencia_id} · Chamado anterior {item.chamado_id} · parcela {item.parcela_id} · OS {item.os_id} · proposta {item.proposta_id}.</p>
       {item.estado === "promovido" && <ConfirmarContinuacaoDevolvida userId={userId} clienteId={clienteId} retornoId={item.id} chamadoId={item.chamado_id} propostaId={item.proposta_id} />}
-      {import.meta.env.VITE_SSO_PROMOCAO_CONTINUIDADE_ATOMICA_ENABLED === "true" && <>
+      {flagLigada("VITE_SSO_PROMOCAO_CONTINUIDADE_ATOMICA_ENABLED") && <>
         <button type="button" aria-expanded={atomicoSelecionado === item.id} onClick={() => setAtomicoSelecionado(atomicoSelecionado === item.id ? null : item.id)}>{atomicoSelecionado === item.id ? "Fechar promoção atômica" : "Abrir promoção atômica ou recuperar pedido"}</button>
         {atomicoSelecionado === item.id && <PromoverContinuidadeAtomica key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id} chamadoId={item.chamado_id} propostaId={item.proposta_id} revisao={item.revisao} descricaoRestante={item.descricao_restante} minutosRestantes={item.minutos_restantes} consultaDisponivel={!consulta.isFetching && !consulta.isError} />}
       </>}
-      {import.meta.env.VITE_SSO_PROMOCAO_RETORNO_PARCIAL_ENABLED === "true" && <><button type="button" aria-expanded={selecionado === item.id} onClick={() => setSelecionado(selecionado === item.id ? null : item.id)}>{selecionado === item.id ? "Fechar promoção" : "Abrir promoção ou recuperar pedido"}</button>
+      {flagLigada("VITE_SSO_PROMOCAO_RETORNO_PARCIAL_ENABLED") && <><button type="button" aria-expanded={selecionado === item.id} onClick={() => setSelecionado(selecionado === item.id ? null : item.id)}>{selecionado === item.id ? "Fechar promoção" : "Abrir promoção ou recuperar pedido"}</button>
         {selecionado === item.id && <PromoverRetornoParcial key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id} revisao={item.revisao} estado={item.estado} descricaoRestante={item.descricao_restante} minutosRestantes={item.minutos_restantes} consultaDisponivel={!consulta.isFetching && !consulta.isError} />}</>}
     </li>)}</ol>}</div>}
     {consulta.hasNextPage && !consulta.isError && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais retornos parciais</button>}
-    {import.meta.env.VITE_SSO_CONSULTA_PROMOCAO_PARCIAL_ENABLED === "true" && <RecuperarPromocaoParcial userId={userId} clienteId={clienteId} retornosCarregados={itens.map((item) => item.id)} />}
+    {flagLigada("VITE_SSO_CONSULTA_PROMOCAO_PARCIAL_ENABLED") && <RecuperarPromocaoParcial userId={userId} clienteId={clienteId} retornosCarregados={itens.map((item) => item.id)} />}
   </section>;
 }

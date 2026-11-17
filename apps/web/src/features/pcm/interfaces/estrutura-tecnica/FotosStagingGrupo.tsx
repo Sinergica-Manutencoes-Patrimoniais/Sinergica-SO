@@ -2,10 +2,20 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; grupoId: string };
 export function FotosStagingGrupo(props: Props) {
-  if (import.meta.env.VITE_SSO_FOTOS_STAGING_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_FOTOS_STAGING_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Fotos staging grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_FOTOS_STAGING_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={JSON.stringify([props.userId, props.clienteId, props.grupoId])} {...props} />;
 }
 function Lista({ userId, clienteId, grupoId }: Props) {
@@ -15,7 +25,7 @@ function Lista({ userId, clienteId, grupoId }: Props) {
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-      const mediado = import.meta.env.VITE_SSO_LISTAR_FOTOS_GRUPO_MEDIADO_ENABLED === "true";
+      const mediado = flagLigada("VITE_SSO_LISTAR_FOTOS_GRUPO_MEDIADO_ENABLED");
       const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_listar_fotos_staging_grupo_mediado" : "sso_listar_fotos_staging_grupo", {
         ...(mediado ? { p_ator_id: userId, p_cliente_id: clienteId } : {}), p_grupo_id: grupoId, p_apos: pageParam, p_limite: 20,
       }).abortSignal(signal);

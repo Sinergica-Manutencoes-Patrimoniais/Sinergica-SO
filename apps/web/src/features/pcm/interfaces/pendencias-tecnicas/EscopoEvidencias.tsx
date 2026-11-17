@@ -1,11 +1,21 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ pendencia_id: z.string().guid(), parcela_id: z.string().guid().nullable(), situacao_parcela: z.string().nullable(), reconciliacao_declarada: z.string().nullable(), reconciliacao_revisao: z.number().int().positive().nullable(), execucao_comprovada: z.literal(false), devolucao_autorizada: z.literal(false) }).strict();
 type Props = { userId: string; clienteId: string; composicaoId: string };
 export function EscopoEvidencias(props: Props) {
-  if (import.meta.env.VITE_SSO_VISAO_ESCOPO_EVIDENCIAS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_VISAO_ESCOPO_EVIDENCIAS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Visao escopo evidencias"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_VISAO_ESCOPO_EVIDENCIAS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.composicaoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, composicaoId }: Props) {

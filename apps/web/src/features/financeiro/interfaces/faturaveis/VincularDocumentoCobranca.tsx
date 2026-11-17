@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoDocumentoCobranca } from "./HistoricoDocumentoCobranca";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ cobranca_id: z.string().guid(), anexo_id: z.string().guid(), titulo: z.string() }).strict();
 const pedidoSchema = z.object({ requestId: z.string().guid(), cobrancaId: z.string().guid(), anexoId: z.string().guid() }).strict();
@@ -30,7 +32,15 @@ export function VincularDocumentoCobranca({ usuario, cliente, lancamento }: { us
     const p = pedidoSchema.parse({ requestId: crypto.randomUUID(), cobrancaId: a.cobranca_id, anexoId: a.anexo_id });
     if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido existente"); sessionStorage.setItem(chave, JSON.stringify(p)); setPendente(p); enviar(p);
   } catch { setAviso("Não foi possível guardar pedido. Nada foi enviado."); } }
-  if (import.meta.env.VITE_SSO_DOCUMENTO_COBRANCA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DOCUMENTO_COBRANCA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Documento cobranca"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DOCUMENTO_COBRANCA_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" onClick={() => setAberto((v) => !v)}>{aberto ? "Ocultar documentos" : "Vincular documento público à cobrança"}</button>
     {aberto && <><p>Selecione apenas arquivo já revisado e publicado na mesma OS. Não use comprovantes internos.</p>
       {lista.isFetching && <p>Consultando arquivos…</p>}{lista.isError && <p role="alert">Arquivos indisponíveis. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}

@@ -2,13 +2,23 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), oportunidadeId: z.string().guid().nullable(),
   listaId: z.string().guid(), listaRevision: z.number().int().positive(), ordemServicoId: z.string().guid() }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; listaInicialId?: string };
 export function CriarOrcamento(props: Props) {
-  if (import.meta.env.VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Criar orcamento operacional"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
@@ -71,7 +81,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
   const listasElegiveis = listas.isError ? [] : listas.data?.pages.flat().filter((l) => l.responsavel === "sinergica" && l.ordem_servico_id.toLowerCase() === ordemServico.toLowerCase()) ?? [];
   const lista = listasElegiveis.find((l) => l.id === listaId);
   return <form onSubmit={(e) => { e.preventDefault(); if (pendente || enviar.isPending || enviando.current || !lista || listas.isFetching || listas.isError || oportunidades.isFetching || oportunidades.isError) return;
-    const semOportunidade = oportunidadeId === "sem-oportunidade" && import.meta.env.VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED === "true";
+    const semOportunidade = oportunidadeId === "sem-oportunidade" && flagLigada("VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED");
     if (!semOportunidade && !oportunidades.data?.pages.flat().some((opcao) => opcao.id === oportunidadeId)) { setMensagem("A oportunidade selecionada não está mais disponível. Atualize a consulta."); return; }
     try { registrar(pedidoSchema.parse({ requestId: crypto.randomUUID(), oportunidadeId: oportunidadeId === "sem-oportunidade" ? null : oportunidadeId, listaId,
       listaRevision: lista.revisao, ordemServicoId: ordemServico })); }
@@ -85,7 +95,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
     <fieldset disabled={!!pendente || enviar.isPending || oportunidades.isFetching || listas.isFetching || oportunidades.isError || listas.isError}>
       <label>Oportunidade <select required value={oportunidadeId} onChange={(e) => setOportunidadeId(e.target.value)}>
         <option value="">Selecione</option>
-        {import.meta.env.VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED === "true" && <option value="sem-oportunidade">Origem operacional, sem oportunidade</option>}
+        {flagLigada("VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED") && <option value="sem-oportunidade">Origem operacional, sem oportunidade</option>}
         {oportunidades.data?.pages.flat().map((o) => <option key={o.id} value={o.id}>{o.titulo} · {o.id}</option>)}</select></label>
       <label>Lista de materiais <select required value={listaId} onChange={(e) => setListaId(e.target.value)}>
         <option value="">Selecione</option>{listasElegiveis.map((l) => <option key={l.id} value={l.id}>{l.texto_original.trim().replace(/\s+/g, " ").slice(0, 100) || "Lista sem descrição"} · revisão {l.revisao} · {l.id}</option>)}</select></label>

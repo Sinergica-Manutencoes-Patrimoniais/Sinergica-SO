@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { pedidoEvidenciaSchema, registrarEvidenciaOnda, type PedidoEvidencia } from "../../application/registrar-evidencia-onda";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; onda: number; revision: number | null };
 
@@ -102,7 +103,7 @@ function Formulario({ userId, clienteId, onda, revision }: Props) {
     <h4>Declarar evidência</h4>
     <p>Informe referências sem URLs, credenciais ou dados sensíveis. A tentativa fica nesta aba até confirmação.</p>
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
-    {pendente && pendente !== "invalido" ? <p>Há uma tentativa pendente. <button type="button" disabled={cancelando || envio.isPending || revision === null} onClick={() => enviar(pendente)}>Repetir tentativa</button> {import.meta.env.VITE_SSO_CANCELAR_TENTATIVA_EVIDENCIA_ONDA_ENABLED === "true" && <button type="button" disabled={cancelando || envio.isPending} onClick={() => void cancelarTentativa(pendente)}>{cancelando ? "Cancelando…" : "Cancelar tentativa"}</button>}</p>
+    {pendente && pendente !== "invalido" ? <p>Há uma tentativa pendente. <button type="button" disabled={cancelando || envio.isPending || revision === null} onClick={() => enviar(pendente)}>Repetir tentativa</button> {flagLigada("VITE_SSO_CANCELAR_TENTATIVA_EVIDENCIA_ONDA_ENABLED") && <button type="button" disabled={cancelando || envio.isPending} onClick={() => void cancelarTentativa(pendente)}>{cancelando ? "Cancelando…" : "Cancelar tentativa"}</button>}</p>
       : !pendente && <form onSubmit={(evento) => { evento.preventDefault(); iniciar(); }}>
         <label>Cenário CT <input required placeholder="CT-001" value={cenario} onChange={(evento) => setCenario(evento.target.value)} /></label>
         <label>Versão <input required maxLength={120} value={versao} onChange={(evento) => setVersao(evento.target.value)} /></label>

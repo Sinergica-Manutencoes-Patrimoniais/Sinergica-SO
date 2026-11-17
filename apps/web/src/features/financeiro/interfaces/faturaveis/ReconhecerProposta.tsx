@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const schema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(),
   valorCentavos: z.number().int().min(0).max(1000000000000), competencia: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/) }).strict();
@@ -29,7 +31,15 @@ export function ReconhecerProposta({ usuario, cliente }: { usuario: string; clie
     if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido existente");
     sessionStorage.setItem(chave, JSON.stringify(p)); setPendente(p); enviar(p);
   } catch { setAviso("Confira identificador, versão, valor em centavos e competência. Nada foi enviado."); } }
-  if (import.meta.env.VITE_SSO_FATURAVEL_PROPOSTA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_FATURAVEL_PROPOSTA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Faturavel proposta"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_FATURAVEL_PROPOSTA_ENABLED"]}
+      />
+    );
+  }
   return <section><h3>Reconhecer proposta aceita</h3><p>Confirme versão e valor da proposta operacional aceita. Isto cria apenas um candidato pendente, sem cobrança.</p>
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; consulte suporte.</p>}
     {pendente && pendente !== "invalido" ? <button type="button" disabled={comando.isPending} onClick={() => enviar(pendente)}>Repetir pedido</button> :

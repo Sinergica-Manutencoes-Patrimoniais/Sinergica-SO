@@ -21,6 +21,7 @@ import { ObservarSelecaoFila } from "./ObservarSelecaoFila";
 import { ProcessamentosDemorados } from "./ProcessamentosDemorados";
 import { ConflitosPropriedadeFila } from "./ConflitosPropriedadeFila";
 import { ReservasEnvioLegado } from "./ReservasEnvioLegado";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const itemSchema = z.object({
   id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
@@ -66,7 +67,7 @@ export function ReconciliacaoWorkspace({ userId, clienteId, onAbrirOs }: { userI
   const [estadoFila, setEstadoFila] = useState("");
   const [observados,setObservados]=useState<string[]>([]);
   const enviando = useRef(false);
-  const filtroHabilitado = import.meta.env.VITE_SSO_FILTRO_RECONCILIACAO_ENABLED === "true";
+  const filtroHabilitado = flagLigada("VITE_SSO_FILTRO_RECONCILIACAO_ENABLED");
   const [pedido, setPedido] = useState<Pedido | "invalido" | null>(() => {
     try { const salvo = sessionStorage.getItem(chave); if (!salvo) return null;
       const p = pedidoSchema.parse(JSON.parse(salvo));
@@ -153,23 +154,23 @@ export function ReconciliacaoWorkspace({ userId, clienteId, onAbrirOs }: { userI
   return <section aria-label="Conferência de integração Auvo">
     <h2>Conferência de integração Auvo</h2>
     <OrdensAuvo userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />
-    {import.meta.env.VITE_SSO_RESERVAS_ENVIO_LEGADO_ENABLED === "true" && <ReservasEnvioLegado key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+    {flagLigada("VITE_SSO_RESERVAS_ENVIO_LEGADO_ENABLED") && <ReservasEnvioLegado key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
     <OrigensInternas userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />
     <p>Somente Sistemas e Componentes com Cliente comprovado. Processamento ou falha podem ter resultado remoto incerto; enviado não significa confirmado. Não há retentativa ou correção externa.</p>
-    {import.meta.env.VITE_SSO_RESUMO_RECONCILIACAO_ENABLED === "true" && <ResumoFila userId={userId} clienteId={clienteId} />}
-    {import.meta.env.VITE_SSO_PROCESSAMENTOS_DEMORADOS_ENABLED === "true" && <ProcessamentosDemorados userId={userId} clienteId={clienteId} />}
-    {import.meta.env.VITE_SSO_CONFLITOS_PROPRIEDADE_FILA_ENABLED === "true" && <ConflitosPropriedadeFila key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-    {import.meta.env.VITE_SSO_ESTATISTICAS_TRIAGEM_ENABLED === "true" && <EstatisticasTriagem userId={userId} clienteId={clienteId} />}
-    {import.meta.env.VITE_SSO_INCONSISTENCIAS_FILA_ENABLED === "true" && <InconsistenciasFila userId={userId} clienteId={clienteId} />}
-    {import.meta.env.VITE_SSO_COINCIDENCIAS_FILA_ENABLED === "true" && <CoincidenciasFila userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_RESUMO_RECONCILIACAO_ENABLED") && <ResumoFila userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_PROCESSAMENTOS_DEMORADOS_ENABLED") && <ProcessamentosDemorados userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_CONFLITOS_PROPRIEDADE_FILA_ENABLED") && <ConflitosPropriedadeFila key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_ESTATISTICAS_TRIAGEM_ENABLED") && <EstatisticasTriagem userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_INCONSISTENCIAS_FILA_ENABLED") && <InconsistenciasFila userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_COINCIDENCIAS_FILA_ENABLED") && <CoincidenciasFila userId={userId} clienteId={clienteId} />}
     {filtroHabilitado && <label>Estado da fila <select value={estadoFila} onChange={(e) => { setEstadoFila(e.target.value); setSelecionado(""); setObservados([]); }}><option value="">Todos</option><option value="pending">Pendente</option><option value="processing">Processando (remoto incerto)</option><option value="error">Erro (remoto incerto)</option><option value="sent">Enviado (não confirmado)</option></select></label>}
-    {filtroHabilitado && import.meta.env.VITE_SSO_EXPORTAR_RECONCILIACAO_ENABLED === "true" && <ExportarFila userId={userId} clienteId={clienteId} estado={estadoFila} />}
-    {import.meta.env.VITE_SSO_OBSERVACAO_FILA_LOTE_ENABLED === "true" && <ObservarSelecaoFila userId={userId} clienteId={clienteId} selecionados={itensDivergentes || itens.isFetching || itens.isError ? [] : observados} limparSelecao={()=>setObservados([])} />}
+    {filtroHabilitado && flagLigada("VITE_SSO_EXPORTAR_RECONCILIACAO_ENABLED") && <ExportarFila userId={userId} clienteId={clienteId} estado={estadoFila} />}
+    {flagLigada("VITE_SSO_OBSERVACAO_FILA_LOTE_ENABLED") && <ObservarSelecaoFila userId={userId} clienteId={clienteId} selecionados={itensDivergentes || itens.isFetching || itens.isError ? [] : observados} limparSelecao={()=>setObservados([])} />}
     {itens.isFetching && <output>Carregando integrações…</output>}
     {itens.isError && <p role="alert">Não foi possível consultar. <button type="button" onClick={() => void itens.refetch()}>Tentar novamente</button></p>}
     {itensDivergentes && <p role="alert">A fila mudou durante a consulta. <button type="button" onClick={() => void itens.refetch()}>Atualizar fila</button></p>}
     {itens.data && !itens.isFetching && !itens.isError && !itensDivergentes && <ul>{itensCarregados.map((i) => <li key={i.id}>
-      {import.meta.env.VITE_SSO_OBSERVACAO_FILA_LOTE_ENABLED === "true" && <label><input type="checkbox" checked={observados.includes(i.id)} disabled={!observados.includes(i.id)&&observados.length>=50} onChange={(e)=>setObservados((atuais)=>e.target.checked?[...atuais,i.id]:atuais.filter((id)=>id!==i.id))} /> Selecionar para observação</label>}
+      {flagLigada("VITE_SSO_OBSERVACAO_FILA_LOTE_ENABLED") && <label><input type="checkbox" checked={observados.includes(i.id)} disabled={!observados.includes(i.id)&&observados.length>=50} onChange={(e)=>setObservados((atuais)=>e.target.checked?[...atuais,i.id]:atuais.filter((id)=>id!==i.id))} /> Selecionar para observação</label>}
       {i.entidade} {i.objeto_id} · {i.operacao} · {estadoOrigem[i.estado_fonte]} · {i.tentativas} tentativa(s) · criado {i.enfileirado_em}{i.enviado_em && <> · envio registrado {i.enviado_em}</>}
       <button type="button" onClick={() => setSelecionado(i.id)}>Conferir notas</button>
       {selecionado === i.id && <form onSubmit={(e) => {
@@ -180,14 +181,14 @@ export function ReconciliacaoWorkspace({ userId, clienteId, onAbrirOs }: { userI
         enviando.current = true; setPedido(p); enviar.mutate(p);
       }}><label>Nota interna (não inclua credenciais ou dados sensíveis) <textarea required maxLength={1000} value={nota} onChange={(e) => { const valor = e.target.value; setRascunhos((atuais) => ({ ...atuais, [i.id]: valor })); }} disabled={!!pedido || enviar.isPending} /></label><button type="submit" disabled={!!pedido || enviar.isPending}>Registrar nota</button></form>}
       {selecionado === i.id && <>
-        {import.meta.env.VITE_SSO_OBSERVACAO_FILA_ENABLED === "true" && <ObservarFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
-        {import.meta.env.VITE_SSO_DIAGNOSTICO_FALHA_FILA_ENABLED === "true" && <DiagnosticoFalhaFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
-        {import.meta.env.VITE_SSO_REVALIDAR_PREVIA_FILA_ENABLED === "true" && <RevalidarPreviaFila userId={userId} clienteId={clienteId} outboxId={i.id} estado={i.estado_fonte} tentativas={i.tentativas} />}
-        {import.meta.env.VITE_SSO_REVISAO_LATERAL_FILA_ENABLED === "true" && <RevisaoLateralFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
-        {import.meta.env.VITE_SSO_ACOES_LOCAIS_FILA_ENABLED === "true" && <AcoesLocaisFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
+        {flagLigada("VITE_SSO_OBSERVACAO_FILA_ENABLED") && <ObservarFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
+        {flagLigada("VITE_SSO_DIAGNOSTICO_FALHA_FILA_ENABLED") && <DiagnosticoFalhaFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
+        {flagLigada("VITE_SSO_REVALIDAR_PREVIA_FILA_ENABLED") && <RevalidarPreviaFila userId={userId} clienteId={clienteId} outboxId={i.id} estado={i.estado_fonte} tentativas={i.tentativas} />}
+        {flagLigada("VITE_SSO_REVISAO_LATERAL_FILA_ENABLED") && <RevisaoLateralFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
+        {flagLigada("VITE_SSO_ACOES_LOCAIS_FILA_ENABLED") && <AcoesLocaisFila userId={userId} clienteId={clienteId} outboxId={i.id} />}
         <SolicitarRecuperacaoFila userId={userId} clienteId={clienteId} outboxId={i.id} />
         <HistoricoSolicitacoesRecuperacao userId={userId} clienteId={clienteId} outboxId={i.id} />
-        {import.meta.env.VITE_SSO_FILTRO_NOTAS_FILA_ENABLED === "true" && <NotasFiltradas userId={userId} clienteId={clienteId} outboxId={i.id} />}
+        {flagLigada("VITE_SSO_FILTRO_NOTAS_FILA_ENABLED") && <NotasFiltradas userId={userId} clienteId={clienteId} outboxId={i.id} />}
         {notas.isFetching && <output>Carregando notas…</output>}
         {notas.isError && <p role="alert">Não foi possível carregar notas. <button type="button" onClick={() => void notas.refetch()}>Tentar novamente</button></p>}
         {notasDivergentes && <p role="alert">O histórico mudou durante a consulta. <button type="button" onClick={() => void notas.refetch()}>Atualizar notas</button></p>}

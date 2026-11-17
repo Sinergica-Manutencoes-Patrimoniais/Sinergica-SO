@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ReconciliarQuarentenaCsv } from "./ReconciliarQuarentenaCsv";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; onRecebido?: (loteId: string) => void };
 const nomesCelulas=["Chave","Tipo","Nome","Observações","Quantidade","Código informado","Referência pai","Sistema provisório","Local provisório","Classificação"];
 function EditorCelulas({valor,onChange}:{valor:string;onChange:(valor:string)=>void}){
@@ -18,7 +19,7 @@ async function conferirSessaoConsulta(userId: string, signal: AbortSignal) {
   const { data, error } = await supabase.auth.getUser();
   if (error || data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada");
 }
-export function RevisaoQuarentenaCsv(props: Props) { if (import.meta.env.VITE_SSO_REVISAO_QUARENTENA_CSV_ENABLED !== "true") return null; return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props}/>; }
+export function RevisaoQuarentenaCsv(props: Props) { if (!flagLigada("VITE_SSO_REVISAO_QUARENTENA_CSV_ENABLED")) return null; return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props}/>; }
 function Abrir(props: Props) { const [aberto, setAberto] = useState(false); return <section><button type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar quarentenas" : "Revisar quarentenas"}</button>{aberto && <Lotes {...props}/>}</section>; }
 function Lotes({ userId, clienteId, onRecebido }: Props) {
   const [selecionado, setSelecionado] = useState("");

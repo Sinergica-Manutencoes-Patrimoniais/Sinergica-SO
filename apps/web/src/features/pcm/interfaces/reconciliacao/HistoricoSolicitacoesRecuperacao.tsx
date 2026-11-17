@@ -1,6 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({
   request_id: z.string().guid(), ator_id: z.string().guid(), epoca: z.string().guid(),
@@ -10,7 +12,15 @@ const item = z.object({
 type Props = { userId: string; clienteId: string; outboxId: string };
 
 export function HistoricoSolicitacoesRecuperacao(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_SOLICITACOES_RECUPERACAO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_SOLICITACOES_RECUPERACAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico solicitacoes recuperacao"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_SOLICITACOES_RECUPERACAO_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={JSON.stringify([props.userId, props.clienteId, props.outboxId])} {...props} />;
 }
 function Lista({ userId, clienteId, outboxId }: Props) {

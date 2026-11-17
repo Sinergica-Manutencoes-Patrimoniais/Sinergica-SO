@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { useState } from "react";
 import { AvaliarEvidenciaOs } from "./AvaliarEvidenciaOs";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const evidencia = z.object({ request_id: z.string().guid(), resultado_declarado: z.enum(["nenhum", "um", "multiplos", "desconhecido"]), origem: z.string(), referencia: z.string(), criado_em: z.string() }).strict();
 export function EvidenciasOs({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
@@ -27,8 +28,8 @@ export function EvidenciasOs({ userId, clienteId, osId }: { userId: string; clie
     {consulta.isFetching && <output>Carregando declarações…</output>}
     {consulta.isError && <p role="alert">Não foi possível carregar declarações. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && <ul>{consulta.data?.pages.flat().map((e) => <li key={e.request_id}>{e.criado_em} · resultado declarado: {e.resultado_declarado} · origem: {e.origem} · referência: {e.referencia}
-      {import.meta.env.VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED === "true" && <button type="button" onClick={() => setSelecionada(selecionada === e.request_id ? null : e.request_id)}>Avaliação interna</button>}
-      {selecionada === e.request_id && import.meta.env.VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED === "true" && <AvaliarEvidenciaOs userId={userId} clienteId={clienteId} osId={osId} evidenciaId={e.request_id} />}
+      {flagLigada("VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED") && <button type="button" onClick={() => setSelecionada(selecionada === e.request_id ? null : e.request_id)}>Avaliação interna</button>}
+      {selecionada === e.request_id && flagLigada("VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED") && <AvaliarEvidenciaOs userId={userId} clienteId={clienteId} osId={osId} evidenciaId={e.request_id} />}
     </li>)}</ul>}
     {consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais declarações</button>}
   </section>;

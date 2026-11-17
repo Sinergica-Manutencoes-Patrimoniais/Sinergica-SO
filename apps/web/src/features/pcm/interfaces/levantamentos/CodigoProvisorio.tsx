@@ -3,13 +3,15 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200),
   loteRevision: z.number().int().positive(), revision: z.number().int().nonnegative(), codigo: z.string().min(1).max(200).regex(/^\S+$/) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
 export function CodigoProvisorio(props: Props) {
-  if (import.meta.env.VITE_SSO_CODIGO_STAGING_ENABLED !== "true" || !["sistema","equipamento","componente"].includes(props.tipo)) return null;
+  if (!["sistema","equipamento","componente"].includes(props.tipo)) return null; if (!flagLigada("VITE_SSO_CODIGO_STAGING_ENABLED")) return <RecursoNaoAtivado recurso="Codigo staging" podeAdministrar={false} faltando={["VITE_SSO_CODIGO_STAGING_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props} />;
 }
 function Conteudo({ userId,clienteId,loteId,chave,revisao }: Props) {

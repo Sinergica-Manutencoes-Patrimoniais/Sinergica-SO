@@ -3,10 +3,11 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { ResolverRetiradaImpacto } from "./ResolverRetiradaImpacto";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; tipo: "calendario" | "visita" };
 export function EstadoEscolhaAlteracao(props: Props) {
-  if (import.meta.env.VITE_SSO_ALTERACAO_CICLO_ENABLED !== "true" && (props.tipo !== "calendario" || import.meta.env.VITE_SSO_NOVA_DATA_CICLO_ENABLED !== "true") && (props.tipo !== "visita" || import.meta.env.VITE_SSO_NOVA_DATA_VISITA_ENABLED !== "true")) return <ResolverRetiradaImpacto {...props} />;
+  if (!flagLigada("VITE_SSO_ALTERACAO_CICLO_ENABLED") && (props.tipo !== "calendario" || !flagLigada("VITE_SSO_NOVA_DATA_CICLO_ENABLED")) && (props.tipo !== "visita" || !flagLigada("VITE_SSO_NOVA_DATA_VISITA_ENABLED"))) return <ResolverRetiradaImpacto {...props} />;
   return <Consulta key={JSON.stringify(props)} {...props} />;
 }
 function Consulta(props: Props) {
@@ -18,7 +19,7 @@ function Consulta(props: Props) {
     const r = z.object({ preparadaId: z.string().guid(), revisaoDecisao: z.number().int().positive(), registrada: z.boolean(), atual: z.boolean() }).strict().parse(data);
     if (r.preparadaId !== preparadaId || r.revisaoDecisao !== decisaoRevision || (r.atual && !r.registrada)) throw new Error("Resposta divergente.");
     let novaData: { registrada: boolean; atual: boolean; data: string | null; indice: number | null } | null = null;
-    if (!r.registrada && tipo === "calendario" && import.meta.env.VITE_SSO_NOVA_DATA_CICLO_ENABLED === "true") {
+    if (!r.registrada && tipo === "calendario" && flagLigada("VITE_SSO_NOVA_DATA_CICLO_ENABLED")) {
       const nova = await supabase.schema("pcm").rpc("sso_consultar_nova_data_calendario", { p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_rascunho: rascunhoId, p_preparada: preparadaId, p_revisao_plano: planoRevision, p_revisao_decisao: decisaoRevision }).abortSignal(signal);
       if (nova.error) throw nova.error;
       const x = z.object({ preparadaId: z.string().guid(), revisaoDecisao: z.number().int().positive(), registrada: z.boolean(), atual: z.boolean(), data: z.string().date().nullable(), indice: z.number().int().nonnegative().nullable() }).strict().parse(nova.data);
@@ -26,7 +27,7 @@ function Consulta(props: Props) {
       novaData = x;
     }
     let novaVisita: { data: string; atual: boolean; substituicaoAplicada: boolean } | null = null;
-    if (!r.registrada && tipo === "visita" && import.meta.env.VITE_SSO_NOVA_DATA_VISITA_ENABLED === "true") {
+    if (!r.registrada && tipo === "visita" && flagLigada("VITE_SSO_NOVA_DATA_VISITA_ENABLED")) {
       const nova = await supabase.schema("pcm").rpc("sso_consultar_escolha_nova_visita", { p_ator: userId, p_cliente: clienteId, p_plano: planoId, p_rascunho: rascunhoId, p_preparada: preparadaId, p_revisao: planoRevision }).abortSignal(signal);
       if (nova.error) throw nova.error;
       const x = z.object({ requestId: z.string().guid(), preparadaId: z.string().guid(), visitaId: z.string().guid(), data: z.string().date(), serieId: z.string().guid(), semanaOrigem: z.string().date(), fonteFeriados: z.string(), atual: z.boolean(), fontesFeriadosCompletas: z.literal(false), substituicaoAplicada: z.boolean() }).strict().nullable().parse(nova.data);

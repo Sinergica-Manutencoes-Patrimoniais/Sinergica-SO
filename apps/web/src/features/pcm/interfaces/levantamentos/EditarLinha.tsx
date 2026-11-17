@@ -3,10 +3,11 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 const escalar=z.union([z.string(),z.number(),z.boolean(),z.null()]);
 const schema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),chave:z.string().min(1).max(200),revision:z.number().int().positive(),antes:z.record(z.string(), escalar),mudarObservacao:z.boolean(),observacao:z.string().max(4000).nullable(),mudarQuantidade:z.boolean(),quantidade:z.string().max(4000).nullable(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;atributos:Record<string,unknown>};
-export function EditarLinha(props:Props){if(import.meta.env.VITE_SSO_EDITAR_STAGING_ENABLED!=="true")return null;return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
+export function EditarLinha(props:Props){if(!flagLigada("VITE_SSO_EDITAR_STAGING_ENABLED"))return null;return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
 function Permissao(props:Props){const p=useQuery({queryKey:["levantamentos",props.userId,props.clienteId,"incorporacao-permissao"],queryFn:()=>supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.aprovar",props.clienteId),gcTime:0,refetchOnWindowFocus:true});if(p.isPending || p.isFetching)return <output>Verificando permissão…</output>;if(p.isError)return <p role="alert">Não foi possível verificar acesso. <button type="button" onClick={()=>void p.refetch()}>Tentar novamente</button></p>;return p.data===true ? <Conteudo {...props}/> : null;}
 function Conteudo({userId,clienteId,loteId,chave,revisao,atributos}:Props){
   const storageKey=`sso-editar-linha-staging:${JSON.stringify([userId,clienteId,loteId,chave])}`;

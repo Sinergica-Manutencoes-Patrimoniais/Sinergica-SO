@@ -22,6 +22,7 @@ import { CalendarioVisitasPortal } from "./components/CalendarioVisitasPortal";
 import { SituacaoOsPortal } from "./components/SituacaoOsPortal";
 import { PendenciasOsPortal } from "./components/PendenciasOsPortal";
 import { FilaComunicacoes } from "./components/FilaComunicacoes";
+import { flagLigada } from "../../config/flags-sso";
 
 type Secao = PortalSection;
 
@@ -351,7 +352,7 @@ function OrdensServico({
                 {os.categoria} · aberta em {dataPt(os.createdAt)}
               </p>
             </div>
-            {import.meta.env.VITE_SSO_PORTAL_SITUACAO_OS_ENABLED === "true" && user?.id
+            {flagLigada("VITE_SSO_PORTAL_SITUACAO_OS_ENABLED") && user?.id
               ? <SituacaoOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
               : <Badge texto={os.status} />}
           </div>
@@ -514,7 +515,7 @@ function Notificacoes({
   onAtualizar,
 }: { data: PortalSnapshot; onAtualizar: () => Promise<void> }) {
   const { user } = useAuth();
-  const filaAtiva = import.meta.env.VITE_SSO_PORTAL_COMUNICACOES_ENABLED === "true" && !!user?.id;
+  const filaAtiva = flagLigada("VITE_SSO_PORTAL_COMUNICACOES_ENABLED") && !!user?.id;
   if (!data.notificacoes.length && !data.osAguardandoAvaliacao.length && !filaAtiva)
     return <Vazio texto="Nenhuma notificação." />;
   return (

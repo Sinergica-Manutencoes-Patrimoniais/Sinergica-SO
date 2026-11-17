@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const base = { requestId: z.string().guid(), itemId: z.string().guid(), expectedRevision: z.number().int().positive(), motivo: z.string().trim().min(1).max(2000), protocolo: z.literal("mediado").optional() };
 const schema = z.discriminatedUnion("tipo", [
@@ -16,7 +18,15 @@ function mesmaTentativa(salvo: string | null, pedido: Pedido): boolean {
 }
 type Props = { usuario: string; cliente: string; itemId: string; revisao: number; status: string };
 export function CorrigirFaturavel(props: Props) {
-  if (import.meta.env.VITE_SSO_CORRIGIR_FATURAVEL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CORRIGIR_FATURAVEL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Corrigir faturavel"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CORRIGIR_FATURAVEL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.itemId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, itemId, revisao, status }: Props) {
@@ -35,7 +45,7 @@ function Conteudo({ usuario, cliente, itemId, revisao, status }: Props) {
   const alocacoes = useInfiniteQuery({ queryKey: ["faturavel-alocacoes", usuario, cliente, itemId], gcTime: 0, retry: false,
     enabled: status === "parcial" || status === "faturado", initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => { const antes=await supabase.auth.getUser(); if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");
-      const { data, error } = await (import.meta.env.VITE_SSO_CORRIGIR_FATURAVEL_MEDIADO_ENABLED === "true" ? supabase.schema("financeiro").rpc("sso_listar_alocacoes_mediada", { p_ator_id: usuario, p_cliente_id: cliente, p_item_id: itemId, p_apos: pageParam }) : supabase.schema("financeiro").rpc("sso_listar_alocacoes_faturavel", { p_item_id: itemId, p_apos: pageParam })).abortSignal(signal);
+      const { data, error } = await (flagLigada("VITE_SSO_CORRIGIR_FATURAVEL_MEDIADO_ENABLED") ? supabase.schema("financeiro").rpc("sso_listar_alocacoes_mediada", { p_ator_id: usuario, p_cliente_id: cliente, p_item_id: itemId, p_apos: pageParam }) : supabase.schema("financeiro").rpc("sso_listar_alocacoes_faturavel", { p_item_id: itemId, p_apos: pageParam })).abortSignal(signal);
       if (error) throw error; const pagina=z.array(z.object({ id: z.string().guid(), documento_ref: z.string(),
         valor_centavos: z.number().int().positive().safe(), estornada: z.boolean(), criado_em: z.string() }).strict()).max(20).parse(data);
       let anterior=pageParam?.toLowerCase()??"";for(const item of pagina){if(item.id.toLowerCase()<=anterior)throw new Error("Página divergente.");anterior=item.id.toLowerCase();}
@@ -92,7 +102,7 @@ function Conteudo({ usuario, cliente, itemId, revisao, status }: Props) {
     if (tipo === "estornar" && (alocacoes.isFetching || alocacoes.isError || divergentes || acao.tipo !== "estornar" || !linhas.some((item) => item.id === alocacaoId && !item.estornada && item.documento_ref === acao.documento && item.valor_centavos === acao.valorCentavos && item.criado_em === acao.criadoEm))) {
       setMensagem("A alocação não está disponível ou mudou. Atualize a consulta antes de continuar."); return;
     }
-    try { const comum = { requestId: crypto.randomUUID(), itemId, expectedRevision: revisao, motivo, ...(import.meta.env.VITE_SSO_CORRIGIR_FATURAVEL_MEDIADO_ENABLED === "true" ? { protocolo: "mediado" as const } : {}) };
+    try { const comum = { requestId: crypto.randomUUID(), itemId, expectedRevision: revisao, motivo, ...(flagLigada("VITE_SSO_CORRIGIR_FATURAVEL_MEDIADO_ENABLED") ? { protocolo: "mediado" as const } : {}) };
       registrar(schema.parse(tipo === "estornar" ? { ...comum, tipo, estornoId: crypto.randomUUID(), alocacaoId } :
         { ...comum, tipo, novoItemId: crypto.randomUUID(), complementoId: crypto.randomUUID(), valorCentavos: /^\d+$/.test(valor) ? Number(valor) : NaN }));
     } catch { setMensagem("Confira motivo e valor em centavos."); }

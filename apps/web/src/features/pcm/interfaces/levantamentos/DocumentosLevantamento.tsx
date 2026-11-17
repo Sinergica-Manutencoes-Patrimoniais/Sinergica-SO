@@ -7,9 +7,10 @@ import { VincularDocumentoAtivo } from "./VincularDocumentoAtivo";
 import { VincularAnexoLocalizacao } from "./VincularAnexoLocalizacao";
 import { AdequacaoDocumento } from "./AdequacaoDocumento";
 import { RetiradaAnexo } from "./RetiradaAnexo";
+import { flagLigada } from "../../../../config/flags-sso";
 const schema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),loteId:z.string().guid(),chave:z.string().min(1).max(200),nome:z.string(),hash:z.string().regex(/^[a-f0-9]{64}$/),titulo:z.string().min(1).max(200)}).strict();type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;loteId:string;chave:string};
-export function DocumentosLevantamento(props:Props){if(import.meta.env.VITE_SSO_DOCUMENTOS_LEVANTAMENTO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
+export function DocumentosLevantamento(props:Props){if(!flagLigada("VITE_SSO_DOCUMENTOS_LEVANTAMENTO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,chave}:Props){
   const key=`sso-documento-levantamento:${JSON.stringify([userId,clienteId,loteId,chave])}`;
   const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=schema.parse(JSON.parse(raw));return p.clienteId===clienteId && p.loteId===loteId && p.chave===chave && p.nome.startsWith(`${clienteId}/${loteId}/`) ? p : "invalido";}catch{return "invalido";}});

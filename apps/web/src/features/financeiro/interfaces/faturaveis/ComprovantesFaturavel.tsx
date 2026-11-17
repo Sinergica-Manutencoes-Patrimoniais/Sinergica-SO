@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ id: z.string().guid(), revisao: z.number().int().positive(), criado_em: z.string() }).strict();
 export function ComprovantesFaturavel({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {
@@ -22,7 +24,15 @@ export function ComprovantesFaturavel({ usuario, cliente, itemId }: { usuario: s
     if (error) throw error; if (!(data instanceof Blob)) throw new Error("Resposta inválida");
     const url = URL.createObjectURL(data); const link = document.createElement("a"); link.href = url; link.download = "comprovante"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   } });
-  if (import.meta.env.VITE_SSO_ANEXOS_FATURAVEIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ANEXOS_FATURAVEIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Anexos faturaveis"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ANEXOS_FATURAVEIS_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" onClick={() => setAberto((v) => !v)}>{aberto ? "Ocultar comprovantes" : "Comprovantes vinculados"}</button>
     {aberto && <><p>Somente comprovantes da despesa que originou este candidato; não são compartilhados no Portal.</p>
       <form onSubmit={(e) => { e.preventDefault(); vincular.mutate(); }}><label>Revisão do comprovante <input required inputMode="numeric" value={revisao} onChange={(e) => setRevisao(e.target.value)} /></label>

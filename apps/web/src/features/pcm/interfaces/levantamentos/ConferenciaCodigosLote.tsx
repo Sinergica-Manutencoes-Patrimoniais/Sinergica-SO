@@ -1,11 +1,12 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const linha=z.object({chave:z.string(),tipo:z.string(),codigo_informado:z.string().nullable(),codigo_candidato:z.string().nullable(),formato_invalido:z.boolean(),codigos_divergentes:z.boolean(),outras_linhas:z.number().int().nonnegative(),cadastros_cliente:z.number().int().nonnegative(),aliases_cliente:z.number().int().nonnegative()}).strict();
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;onRevisar?:(chave:string)=>void};
-export function ConferenciaCodigosLote(props:Props){if(import.meta.env.VITE_SSO_CONFERENCIA_CODIGOS_LOTE_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.revisao])} {...props}/>;}
+export function ConferenciaCodigosLote(props:Props){if(!flagLigada("VITE_SSO_CONFERENCIA_CODIGOS_LOTE_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.revisao])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,revisao,onRevisar}:Props){
- const revisada=import.meta.env.VITE_SSO_CONFERENCIA_CODIGOS_REVISAO_ENABLED==="true";
+ const revisada=flagLigada("VITE_SSO_CONFERENCIA_CODIGOS_REVISAO_ENABLED");
  const consulta=useInfiniteQuery({queryKey:["levantamentos",userId,clienteId,loteId,"conferencia-codigos",revisao,revisada],gcTime:0,initialPageParam:null as string | null,queryFn:async({pageParam,signal})=>{
   const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");
   const {data,error}=await supabase.schema("pcm").rpc(revisada?"sso_conferencia_codigos_revisada":"sso_conferencia_codigos_autorizada",revisada?{p_ator_id:userId,p_cliente_id:clienteId,p_lote_id:loteId,p_revision:revisao,p_apos:pageParam,p_limite:50}:{p_lote_id:loteId,p_apos:pageParam,p_limite:50}).abortSignal(signal);if(error)throw error;

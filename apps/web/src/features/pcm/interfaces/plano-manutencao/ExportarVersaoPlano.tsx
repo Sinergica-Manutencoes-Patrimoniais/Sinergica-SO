@@ -6,6 +6,7 @@ import type { PlanoResumo, RotinaDetalhe, VersaoPlano } from "../../application/
 import { contextoExportacaoValido, csvVersaoPlano, textoVersaoPlano } from "../../domain/exportacao-plano";
 import { xlsxVersaoPlano } from "../../infrastructure/exportacao-plano-xlsx";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 // Exporta somente o snapshot já consultado da versão aprovada. Não projeta calendário operacional.
 export function ExportarVersaoPlano({ clienteId, plano, versao, rotinas, completo }: {
@@ -19,7 +20,7 @@ export function ExportarVersaoPlano({ clienteId, plano, versao, rotinas, complet
     vigenciaInicio: versao.vigenciaInicio, vigenciaFim: versao.vigenciaFim,
     rotinas: rotinas.map((r) => ({ ...r, alvoNome: r.alvoNome ?? r.alvoId })),
   });
-  const conferir = import.meta.env.VITE_SSO_METADADOS_EXPORTACAO_ENABLED === "true";
+  const conferir = flagLigada("VITE_SSO_METADADOS_EXPORTACAO_ENABLED");
   const metadados = useQuery({ queryKey: ["metadados-exportacao-plano", clienteId, plano.id, versao.id], enabled: conferir, gcTime: 0, queryFn: async ({ signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_metadados_exportacao_plano", { p_cliente_id: clienteId, p_plano_id: plano.id, p_versao_id: versao.id }).abortSignal(signal); if (error) throw error; if (!data || data.custosIncluidos !== false || data.cronogramaOperacionalIncluido !== false || data.artefatoGerado !== false) throw new Error("Metadados inválidos."); return data as { clienteId: string; planoId: string; versaoId: string; numeroVersao: number; vigenciaInicio: string | null; vigenciaFim: string | null; rotinasSnapshot: number | null; arrayRotinasDisponivel: boolean }; } });
   const conferido = !conferir || (!metadados.isFetching && !metadados.isError && !!metadados.data && metadados.data.arrayRotinasDisponivel && metadados.data.clienteId === clienteId && metadados.data.planoId === plano.id && metadados.data.versaoId === versao.id && metadados.data.numeroVersao === versao.numero && metadados.data.vigenciaInicio === versao.vigenciaInicio && metadados.data.vigenciaFim === versao.vigenciaFim && metadados.data.rotinasSnapshot === rotinas.length);
   async function conferirAntesDoDownload() {
@@ -76,8 +77,8 @@ export function ExportarVersaoPlano({ clienteId, plano, versao, rotinas, complet
     {conferir && <p>Conferência de identificadores, vigência e quantidade: {conferido ? "compatível" : "pendente ou inconsistente; exportação bloqueada"}. Esta comparação não comprova conteúdo completo.</p>}{conferir && metadados.isError && <p role="alert">Metadados indisponíveis. <button type="button" onClick={() => void metadados.refetch()}>Tentar novamente</button></p>}
     {!contextoValido && <p role="alert">Versão, Plano ou Rotinas inconsistentes; exportação bloqueada.</p>}
     <button type="button" disabled={!completo || !conferido || !contextoValido || gerando} onClick={() => void exportar()}>{gerando ? "Gerando…" : "Exportar versão em PDF"}</button>
-    {import.meta.env.VITE_SSO_EXPORTAR_PLANO_CSV_ENABLED === "true" && <><p>CSV da versão aprovada, sem custos, capacidade ou cronograma operacional. Pode ser aberto em planilhas; não é XLSX.</p><button type="button" disabled={!completo || !conferido || !contextoValido || gerando} onClick={() => void exportarCsv()}>{gerando ? "Gerando…" : "Exportar versão em CSV"}</button></>}
-    {import.meta.env.VITE_SSO_EXPORTAR_PLANO_XLSX_ENABLED === "true" && <><p>XLSX experimental da versão, sem custos, capacidade ou cronograma operacional; conteúdo ainda não conferido integralmente com o snapshot aprovado.</p><button type="button" disabled={!completo || !conferido || !contextoValido || gerando} onClick={() => void exportarXlsx()}>{gerando ? "Gerando…" : "Exportar versão em XLSX"}</button></>}
+    {flagLigada("VITE_SSO_EXPORTAR_PLANO_CSV_ENABLED") && <><p>CSV da versão aprovada, sem custos, capacidade ou cronograma operacional. Pode ser aberto em planilhas; não é XLSX.</p><button type="button" disabled={!completo || !conferido || !contextoValido || gerando} onClick={() => void exportarCsv()}>{gerando ? "Gerando…" : "Exportar versão em CSV"}</button></>}
+    {flagLigada("VITE_SSO_EXPORTAR_PLANO_XLSX_ENABLED") && <><p>XLSX experimental da versão, sem custos, capacidade ou cronograma operacional; conteúdo ainda não conferido integralmente com o snapshot aprovado.</p><button type="button" disabled={!completo || !conferido || !contextoValido || gerando} onClick={() => void exportarXlsx()}>{gerando ? "Gerando…" : "Exportar versão em XLSX"}</button></>}
     {erro && <p role="alert">{erro}</p>}
   </div>;
 }

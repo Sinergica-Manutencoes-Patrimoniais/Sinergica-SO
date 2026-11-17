@@ -3,6 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PreventivasLegadasLocal } from "./PreventivasLegadasLocal";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; localId: string; itemId: string };
 const ativo = z
@@ -32,7 +34,15 @@ async function conferir(userId: string, signal: AbortSignal) {
   if (r.error || r.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
 }
 export function AtivoLocalLeitura(props: Props) {
-  if (import.meta.env.VITE_SSO_LOCAL_ATIVO_LEITURA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_LOCAL_ATIVO_LEITURA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Local ativo leitura"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_LOCAL_ATIVO_LEITURA_ENABLED"]}
+      />
+    );
+  }
   return (
     <Abrir
       key={JSON.stringify([props.userId, props.clienteId, props.localId, props.itemId])}

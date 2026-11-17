@@ -12,6 +12,7 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 import { SimulacaoRegra } from "./SimulacaoRegra";
 import { AlterarDiaContratual } from "./AlterarDiaContratual";
 import { FeriadosDeclarados } from "./FeriadosDeclarados";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 const limite = 20;
@@ -192,7 +193,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     >
       <h2 className="text-body font-semibold text-ink">Calendário contratual</h2>
       <p>Regras de {clienteNome}. Cadastrar uma regra não cria Visitas nem tarefas.</p>
-      {import.meta.env.VITE_SSO_FERIADOS_DECLARADOS_ENABLED === "true" && <FeriadosDeclarados
+      {flagLigada("VITE_SSO_FERIADOS_DECLARADOS_ENABLED") && <FeriadosDeclarados
         userId={userId} clienteId={clienteId} contratos={opcoes} regras={itens} onUsar={(contratoId,datas,periodo) => setFeriadosSimulados(periodo ? {contratoId,datas,periodo} : null)} />}
       {recuperacao.falhou && (
         <p role="alert">
@@ -413,7 +414,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
             <p>Segunda-feira de referência {r.ancoraSemana}</p>
             <p>Fuso {r.fuso}</p>
             <p>Deslocamento {r.deslocamentoMinutos} min</p>
-            {import.meta.env.VITE_SSO_ALTERAR_DIA_CONTRATUAL_ENABLED === "true" && (
+            {flagLigada("VITE_SSO_ALTERAR_DIA_CONTRATUAL_ENABLED") && (
               <AlterarDiaContratual userId={userId} clienteId={clienteId} regra={r} />
             )}
             <Button

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props={userId:string;clienteId:string;loteId:string;chave:string;aoConfirmar?:()=>void;aoCancelar?:()=>void};
 const pedido=z.object({requestId:z.string().guid(),userId:z.string(),clienteId:z.string().guid(),loteId:z.string().guid(),chave:z.string().min(1).max(200),hash:z.string().regex(/^[a-f0-9]{64}$/),tipo:z.enum(["image/jpeg","image/png"])}).strict();
 type Pedido=z.infer<typeof pedido>;
 const consultaSchema=z.object({requestId:z.string().guid(),confirmada:z.boolean(),observacao:z.object({observadoEm:z.string(),objetoCatalogado:z.boolean(),confirmada:z.boolean()}).strict().nullable()}).strict();
-export function FotosIngestaoSegura(p:Props){if(import.meta.env.VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([p.userId,p.clienteId,p.loteId,p.chave])} {...p}/>;}
+export function FotosIngestaoSegura(p:Props){if(!flagLigada("VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED"))return null;return <Conteudo key={JSON.stringify([p.userId,p.clienteId,p.loteId,p.chave])} {...p}/>;}
 function Conteudo({userId,clienteId,loteId,chave,aoConfirmar,aoCancelar}:Props){
  const storageKey=`sso-foto-digest:${JSON.stringify([userId,clienteId,loteId,chave])}`;
  const cancelKey=`${storageKey}:cancelamento`;

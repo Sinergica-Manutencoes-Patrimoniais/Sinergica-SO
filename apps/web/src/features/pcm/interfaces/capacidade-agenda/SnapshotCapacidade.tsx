@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { consolidarEsforcoVisitas, identificarConflitosEsforco, type EsforcoVisita } from "../../domain/consolidar-esforco-visitas";
 import { chaveIdentidade } from "../../domain/capacidade-por-tecnico";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const minutos = z.number().int().nonnegative().nullable();
 function dataCivil(valor: string): number {
@@ -107,12 +108,12 @@ export function SnapshotCapacidade({
 }: { userId: string; clienteId: string; semana: string; aoUsarParcial?: (dados: { semana: string; disponibilidade: number; demanda: number }) => void }) {
   const [filtroTecnico, setFiltroTecnico] = useState<{ contexto: string; id: string } | null>(null);
   const contexto = JSON.stringify([userId, clienteId, semana]);
-  const usarCiclos = import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_CICLOS_ENABLED === "true";
-  const usarReferencia = usarCiclos || import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_REFERENCIA_ENABLED === "true";
-  const usarV5 = usarReferencia || import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_V5_ENABLED === "true";
-  const usarV4 = usarV5 || import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_V4_ENABLED === "true";
-  const usarV3 = usarV4 || import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_V3_ENABLED === "true";
-  const usarV2 = usarV3 || import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_V2_ENABLED === "true";
+  const usarCiclos = flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_CICLOS_ENABLED");
+  const usarReferencia = usarCiclos || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_REFERENCIA_ENABLED");
+  const usarV5 = usarReferencia || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V5_ENABLED");
+  const usarV4 = usarV5 || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V4_ENABLED");
+  const usarV3 = usarV4 || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V3_ENABLED");
+  const usarV2 = usarV3 || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V2_ENABLED");
   const q = useQuery({
     queryKey: ["capacidade-snapshot", userId, clienteId, semana, usarV2, usarV3, usarV4, usarV5, usarReferencia, usarCiclos],
     gcTime: 0,

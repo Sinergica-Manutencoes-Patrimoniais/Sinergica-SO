@@ -8,6 +8,7 @@ import { EscopoEvidencias } from "./EscopoEvidencias";
 import { HistoricoSelecao } from "./HistoricoSelecao";
 import { PromoverComposicao } from "./PromoverComposicao";
 import { DividirComposicao } from "./DividirComposicao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const itemSchema = z.object({ id: z.string().guid(), alvo_tipo: z.string(), alvo_id: z.string().guid(), revisao: z.number().int().positive(),
   gravidade: z.number().nullable(), urgencia: z.number().nullable(), tendencia: z.number().nullable(), dor_cliente: z.number().nullable(),
@@ -40,8 +41,8 @@ const pedidoSchema = z.object({ requestId: z.string().guid(), id: z.string().gui
 type Pedido = z.infer<typeof pedidoSchema>;
 
 export function Composicoes({ userId, clienteId }: { userId: string; clienteId: string }) {
-  const rankingConsistente = import.meta.env.VITE_SSO_RANKING_BACKLOG_CONSISTENTE_ENABLED === "true";
-  const filtroHabilitado = rankingConsistente && import.meta.env.VITE_SSO_RANKING_BACKLOG_ALVO_ENABLED === "true";
+  const rankingConsistente = flagLigada("VITE_SSO_RANKING_BACKLOG_CONSISTENTE_ENABLED");
+  const filtroHabilitado = rankingConsistente && flagLigada("VITE_SSO_RANKING_BACKLOG_ALVO_ENABLED");
   const [alvoTipo, setAlvoTipo] = useState("sistema"); const [alvoId, setAlvoId] = useState("");
   const [filtro, setFiltro] = useState<{ tipo: string; id: string } | null>(null); const [erroFiltro, setErroFiltro] = useState("");
   const [divididaId, setDivididaId] = useState<string | null>(null);
@@ -121,8 +122,8 @@ function Prioridade({ item, userId, clienteId, onDividida }: { item: Item; userI
   return <article><p>{item.alvo_tipo} · {item.alvo_id} · {item.total} pendência(s) · {item.score === null ? "Prioridade não calculada" : `GUTD ${item.score.toFixed(2)}`}</p>
     <EscopoEvidencias userId={userId} clienteId={clienteId} composicaoId={item.id}/>
     <HistoricoSelecao userId={userId} clienteId={clienteId} composicaoId={item.id}/>
-    {import.meta.env.VITE_SSO_DIVIDIR_BACKLOG_ENABLED === "true" && <DividirComposicao key={JSON.stringify([userId, clienteId, item.id])} userId={userId} clienteId={clienteId} composicaoId={item.id} revisao={item.revisao} total={item.total} onDividida={onDividida} />}
-    {import.meta.env.VITE_SSO_PROMOVER_BACKLOG_CHAMADO_ENABLED === "true" && <PromoverComposicao key={JSON.stringify([userId, clienteId, item.id])} userId={userId} clienteId={clienteId} composicaoId={item.id} revisao={item.revisao} total={item.total} />}
+    {flagLigada("VITE_SSO_DIVIDIR_BACKLOG_ENABLED") && <DividirComposicao key={JSON.stringify([userId, clienteId, item.id])} userId={userId} clienteId={clienteId} composicaoId={item.id} revisao={item.revisao} total={item.total} onDividida={onDividida} />}
+    {flagLigada("VITE_SSO_PROMOVER_BACKLOG_CHAMADO_ENABLED") && <PromoverComposicao key={JSON.stringify([userId, clienteId, item.id])} userId={userId} clienteId={clienteId} composicaoId={item.id} revisao={item.revisao} total={item.total} />}
     <VinculoChamado userId={userId} clienteId={clienteId} composicaoId={item.id}/>
     {revisaoMudou && !pendente && <div role="alert"><p>A composição mudou enquanto esta edição estava aberta. Os valores digitados foram preservados; recarregar substituirá os campos pelos dados atuais.</p><button type="button" onClick={() => {
       setG(item.gravidade?.toString() ?? ""); setU(item.urgencia?.toString() ?? "");

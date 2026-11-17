@@ -8,6 +8,7 @@ import { useConfiguracaoCapacidades } from "../../application/capacidades-sso-qu
 import { criarRegistroRequisicoes } from "../../application/requisicoes-capacidades";
 import { ACOES_INDIVIDUAIS, ACOES_SSO, type AcaoSso } from "../../domain/capacidades-sso";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const LABELS: Record<AcaoSso, string> = {
   "cadastro.ler": "Consultar estrutura técnica",
@@ -431,7 +432,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
           <Button disabled={ocupado} onClick={() => void recuperar()}>
             Repetir alteração pendente
           </Button>
-          {import.meta.env.VITE_SSO_RECIBO_CAPACIDADES_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_RECIBO_CAPACIDADES_ENABLED") && (
             <Button disabled={ocupado || consultandoRecibo} onClick={() => void consultarRecibo()}>
               Consultar confirmação
             </Button>

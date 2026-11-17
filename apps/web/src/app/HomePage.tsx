@@ -131,6 +131,7 @@ import type { AreaAtiva, ModuloId, ModuloTab } from "./modulos";
 import { useNavGuard } from "./nav-guard-context";
 import { usePermissoes } from "./permissoes-context";
 import { useTheme } from "./theme-context";
+import { flagLigada } from "../config/flags-sso";
 
 // ─── tipos ──────────────────────────────────────────────────────────────────
 
@@ -1054,7 +1055,7 @@ export function HomePage() {
                     onAbrirOs={abrirOsDoCliente}
                     periodo={clientePeriodo ?? undefined}
                     painelOrcamentoOs={
-                      user?.id && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                      user?.id && flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
                         ? (ordemServicoId) => (
                             <OrcamentosDaOs usuario={user?.id ?? ""} cliente={clienteSelecionado} ordemServico={ordemServicoId} />
                           )
@@ -1147,7 +1148,7 @@ export function HomePage() {
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
                   }
-                  painelOrcamentoOs={user?.id && osDeepLink?.origemClienteId && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                  painelOrcamentoOs={user?.id && osDeepLink?.origemClienteId && flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
                     ? (ordemServicoId) => ordemServicoId === osDeepLink?.osId
                       ? <OrcamentosDaOs usuario={user?.id ?? ""} cliente={osDeepLink?.origemClienteId ?? ""} ordemServico={ordemServicoId} />
                       : null

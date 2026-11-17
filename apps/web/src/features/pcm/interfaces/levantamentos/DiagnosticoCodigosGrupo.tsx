@@ -1,12 +1,13 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const linha=z.object({chave:z.string().min(1).max(200),informado:z.boolean(),sistemas_cliente:z.number().int().nonnegative().safe(),componentes_cliente:z.number().int().nonnegative().safe(),aliases_cliente:z.number().int().nonnegative().safe(),outras_linhas_grupo:z.number().int().nonnegative().safe(),revisao:z.number().int().positive().optional()}).strict();
 function compararUtf8(a:string,b:string){const esquerda=new TextEncoder().encode(a);const direita=new TextEncoder().encode(b);for(let i=0;i<Math.min(esquerda.length,direita.length);i++)if(esquerda[i]!==direita[i])return esquerda[i]!-direita[i]!;return esquerda.length-direita.length;}
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;onRevisar?:(chave:string)=>void};
-export function DiagnosticoCodigosGrupo(props:Props){if(import.meta.env.VITE_SSO_DIAGNOSTICO_CODIGOS_GRUPO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.revisao])} {...props}/>;}
+export function DiagnosticoCodigosGrupo(props:Props){if(!flagLigada("VITE_SSO_DIAGNOSTICO_CODIGOS_GRUPO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.revisao])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,revisao,onRevisar}:Props){
- const revisionado=import.meta.env.VITE_SSO_DIAGNOSTICO_CODIGOS_GRUPO_REVISIONADO_ENABLED==="true";
+ const revisionado=flagLigada("VITE_SSO_DIAGNOSTICO_CODIGOS_GRUPO_REVISIONADO_ENABLED");
  const q=useInfiniteQuery({queryKey:["levantamentos",userId,clienteId,loteId,"diagnostico-codigos-grupo",revisao,revisionado],gcTime:0,initialPageParam:null as string | null,queryFn:async({pageParam,signal})=>{
   const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
   const requisicao=revisionado?supabase.schema("pcm").rpc("sso_diagnosticar_codigos_grupo_revisionado",{p_ator_id:userId,p_cliente_id:clienteId,p_lote_id:loteId,p_revisao:revisao,p_apos:pageParam,p_limite:50}):supabase.schema("pcm").rpc("sso_diagnosticar_codigos_grupo",{p_lote_id:loteId,p_apos:pageParam,p_limite:50});

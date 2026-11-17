@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { ConferenciaIntegrada } from "./ConferenciaIntegrada";
 import { compararIdentidadesCronograma, identificarLinhaCronograma, obterCronogramaStaging, type PedidoIdentidadeCronograma } from "../../infrastructure/supabase-importacao-plano-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function CompararLotes({ userId, clienteId, lotes }: { userId: string; clienteId: string; lotes: { id: string; fonte: string; revisao: number }[] }) {
   const [anterior, setAnterior] = useState(""); const [novo, setNovo] = useState("");
@@ -58,7 +59,7 @@ export function CompararLotes({ userId, clienteId, lotes }: { userId: string; cl
       </fieldset>
     </form>
     {detalhe.data && !detalhe.isFetching && <p>Revisão consultada: {detalhe.data.revision}. Consulte os valores na conferência do lote antes de declarar a identidade.</p>}
-    {lote && !pendente && import.meta.env.VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED === "true" && <ConferenciaIntegrada key={lote} userId={userId} clienteId={clienteId} loteId={lote} onSelecionar={setLinha} />}
+    {lote && !pendente && flagLigada("VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED") && <ConferenciaIntegrada key={lote} userId={userId} clienteId={clienteId} loteId={lote} onSelecionar={setLinha} />}
     {detalhe.isError && <p role="alert">Não foi possível consultar o lote.</p>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
     {pendente && pendente !== "invalido" && <p>Tentativa pendente. <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente, true)}>Repetir a mesma tentativa</button></p>}

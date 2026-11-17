@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; tipo: "grupo_quantitativo" | "sistema" | "componente"; entidadeId: string };
 async function conferirSessao(userId: string, signal?: AbortSignal) {
@@ -12,7 +13,7 @@ export function DocumentosStagingAtivo(props: Props) {
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.entidadeId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, tipo, entidadeId }: Props) {
-  const ativo = import.meta.env.VITE_SSO_DOCUMENTOS_STAGING_ATIVO_ENABLED === "true";
+  const ativo = flagLigada("VITE_SSO_DOCUMENTOS_STAGING_ATIVO_ENABLED");
   const q = useInfiniteQuery({
     queryKey: ["estrutura-tecnica", userId, clienteId, tipo, entidadeId, "documentos-staging"],
     enabled: ativo, gcTime: 0, initialPageParam: null as string | null,

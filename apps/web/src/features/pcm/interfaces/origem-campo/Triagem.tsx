@@ -6,12 +6,13 @@ import { RetificacaoTriagem } from "./Retificacao";
 import { RecuperarRecepcaoEnvelope } from "./RecuperarRecepcaoEnvelope";
 import { RecuperarRecepcaoEstruturada } from "./RecuperarRecepcaoEstruturada";
 import { RecuperarAcoesChamadoCampo } from "./RecuperarAcoesChamadoCampo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const itemSchema=z.object({id:z.string().guid(),integracao:z.string(),task_id:z.union([z.number().int().safe().positive(),z.string().regex(/^[1-9][0-9]*$/)]),cliente_externo_id:z.string().nullable(),recebido_em:z.string().datetime({offset:true})}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),envelopeId:z.string().guid(),clienteId:z.string().guid(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof pedidoSchema>;
 async function conferirSessao(userId:string,signal?:AbortSignal){const {data,error}=await supabase.auth.getUser();if(error || data.user?.id!==userId || signal?.aborted)throw new Error("Sessão alterada");}
 function conferirOrdem(ids:string[],apos:string|null){let anterior=apos?.toLowerCase() ?? null;for(const original of ids){const id=original.toLowerCase();if(anterior!==null && id<=anterior)throw new Error("Página divergente");anterior=id;}}
-export function TriagemOrigemCampo({userId}:{userId:string}){if(import.meta.env.VITE_SSO_TRIAGEM_ORIGEM_CAMPO_ENABLED!=="true")return null;return <Permissao key={userId} userId={userId}/>;}
+export function TriagemOrigemCampo({userId}:{userId:string}){if(!flagLigada("VITE_SSO_TRIAGEM_ORIGEM_CAMPO_ENABLED"))return null;return <Permissao key={userId} userId={userId}/>;}
 function Permissao({userId}:{userId:string}){const p=useQuery({queryKey:["triagem-origem",userId,"permissao"],gcTime:0,refetchOnWindowFocus:true,queryFn:async({signal})=>{await conferirSessao(userId,signal);const {data,error}=await supabase.schema("pcm").rpc("sso_permissao_triagem_mediada").abortSignal(signal);if(error)throw error;const permitido=z.boolean().parse(data);await conferirSessao(userId,signal);return permitido;}});
   if(p.isPending)return <output>Verificando permissão de triagem…</output>;if(p.isError)return <p role="alert">Não foi possível verificar permissão. <button type="button" onClick={()=>void p.refetch()}>Tentar novamente</button></p>;return p.data ? <>{p.isFetching && <output>Verificando permissão de triagem…</output>}<div hidden={p.isFetching}><fieldset disabled={p.isFetching}><Conteudo userId={userId}/></fieldset></div></> : null;}
 function Conteudo({userId}:{userId:string}){
@@ -27,7 +28,7 @@ function Conteudo({userId}:{userId:string}){
     <RecuperarRecepcaoEnvelope userId={userId}/>
     <RecuperarRecepcaoEstruturada userId={userId}/>
     <RecuperarAcoesChamadoCampo userId={userId}/>
-    {import.meta.env.VITE_SSO_RESOLUCAO_OS_ORIGEM_ENABLED === "true" && <RecuperarResolucao userId={userId}/>}
+    {flagLigada("VITE_SSO_RESOLUCAO_OS_ORIGEM_ENABLED") && <RecuperarResolucao userId={userId}/>}
     <RetificacaoTriagem userId={userId} clientes={clientesCarregados} clientesDisponiveis={!clientes.isPending && !clientes.isFetching && !clientes.isError && consistentes}/>
     {(clientes.isPending || eventos.isPending) && <output>Carregando triagem…</output>}{(clientes.isError || eventos.isError) && <p role="alert">Não foi possível carregar triagem. <button type="button" onClick={()=>{if(clientes.isError)void clientes.refetch();if(eventos.isError)void eventos.refetch();}}>Tentar novamente</button></p>}
     {!eventos.isError && eventos.data?.pages.flat().length===0 && <p>Nenhum envelope pendente nesta fonte.</p>}

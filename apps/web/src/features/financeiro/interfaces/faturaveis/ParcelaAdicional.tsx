@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { PreviaImpedimentosParcela } from "./PreviaImpedimentosParcela";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedido = z.object({ requestId: z.string().guid(), alocacaoId: z.string().guid(), cliente: z.string().guid(), itemId: z.string().guid(), revisao: z.number().int().positive(), documentoId: z.string().guid(), valorCentavos: z.number().int().positive().safe() }).strict();
 type Pedido = z.infer<typeof pedido>;
@@ -39,7 +40,7 @@ export function ParcelaAdicional({ usuario, cliente, itemId, documentoId, revisa
     finally { travado.current = false; }
   };
   return <section aria-label="Parcela adicional"><h5>Parcela adicional no documento</h5><p>Exige parcela anterior para este item e documento. O servidor revalida revisão e saldos; não há cobrança externa.</p>
-    {import.meta.env.VITE_SSO_PREVIA_IMPEDIMENTOS_PARCELA_ENABLED === "true" && <PreviaImpedimentosParcela usuario={usuario} cliente={cliente} itemId={itemId} documentoId={documentoId} revisao={revisao} valor={valor} />}
+    {flagLigada("VITE_SSO_PREVIA_IMPEDIMENTOS_PARCELA_ENABLED") && <PreviaImpedimentosParcela usuario={usuario} cliente={cliente} itemId={itemId} documentoId={documentoId} revisao={revisao} valor={valor} />}
     <form onSubmit={(e) => { e.preventDefault(); if (pendente || travado.current || confirmado!==fotografia) return; const parsed = pedido.safeParse({ requestId: crypto.randomUUID(), alocacaoId: crypto.randomUUID(), cliente, itemId, revisao, documentoId, valorCentavos: /^\d+$/.test(valor) ? Number(valor) : NaN }); if (!parsed.success || parsed.data.valorCentavos > saldo) { setMensagem("Confira o valor e o saldo do item."); return; } try { if (sessionStorage.getItem(chave)) { setMensagem("Existe pedido anterior; recupere-o antes de continuar."); return; } sessionStorage.setItem(chave, JSON.stringify(parsed.data)); } catch { setMensagem("Não foi possível guardar o pedido; nada foi enviado."); return; } setPendente(parsed.data); void enviar(parsed.data); }}>
       <label>Valor em centavos <input inputMode="numeric" value={valor} disabled={!!pendente || comando.isPending} onChange={(e) => setValor(e.target.value)} /></label>{" "}
       {confirmado && confirmado!==fotografia && <p role="alert">Valor, saldo ou revisão mudou; confira novamente.</p>}

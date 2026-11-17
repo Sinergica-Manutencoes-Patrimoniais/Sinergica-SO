@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const esquema = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), acao: z.enum(["corrigir", "cancelar"]),
@@ -12,7 +14,7 @@ const esquema = z.object({ requestId: z.string().guid(), despesaId: z.string().g
 type Pedido = z.infer<typeof esquema>;
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function CorrigirRealizada(props: Props) {
-  if (import.meta.env.VITE_SSO_CORRIGIR_DESPESA_REALIZADA_ENABLED !== "true" || props.despesa.status !== "ativa" || props.despesa.realizadoCentavos === null) return null;
+  if (props.despesa.status !== "ativa" || props.despesa.realizadoCentavos === null) return null; if (!flagLigada("VITE_SSO_CORRIGIR_DESPESA_REALIZADA_ENABLED")) return <RecursoNaoAtivado recurso="Corrigir despesa realizada" podeAdministrar={false} faltando={["VITE_SSO_CORRIGIR_DESPESA_REALIZADA_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])} {...props} />;
 }
 function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {

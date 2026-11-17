@@ -12,12 +12,14 @@ import { AtualizarNome } from "./AtualizarNome";
 import { AtualizarGrupo } from "./AtualizarGrupo";
 import { AplicarCamposSistema } from "./AplicarCamposSistema";
 import { AplicarCamposComponente } from "./AplicarCamposComponente";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const schema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),chave:z.string().min(1).max(200),revision:z.number().int().positive(),entidadeId:z.string().guid(),localId:z.string().guid(),tipo:z.enum(["sistema","equipamento","componente","grupo_quantitativo"])}).strict();
 type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;tipo:string;atributos?:Record<string,unknown>};
 export function VincularAtivo(props:Props){
-  if(import.meta.env.VITE_SSO_VINCULO_ATIVO_LEVANTAMENTO_ENABLED!=="true" || !["sistema","equipamento","componente","grupo_quantitativo"].includes(props.tipo))return null;
+  if (!["sistema","equipamento","componente","grupo_quantitativo"].includes(props.tipo)) return null; if (!flagLigada("VITE_SSO_VINCULO_ATIVO_LEVANTAMENTO_ENABLED")) return <RecursoNaoAtivado recurso="Vinculo ativo levantamento" podeAdministrar={false} faltando={["VITE_SSO_VINCULO_ATIVO_LEVANTAMENTO_ENABLED"]} />;
   return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props} />;
 }
 function Permissao(props:Props){

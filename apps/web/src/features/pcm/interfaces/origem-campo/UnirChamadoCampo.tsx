@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 export const pedidoUniaoChamadoCampoSchema = z.object({ requestId: uuid, clienteId: uuid, osId: uuid, origemId: uuid, destinoId: uuid,
@@ -14,7 +16,15 @@ const destinoSchema = z.object({ chamado_id: uuid, numero: z.string(), titulo: z
 type Props = { userId: string; clienteId: string; osId: string; origemId: string; origemRevision: number; osUpdatedAt: string | null; taskId: string | null; disponivel: boolean };
 
 export function UnirChamadoCampo(props: Props) {
-  if (import.meta.env.VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Uniao chamado campo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${props.userId}:${props.clienteId}:${props.osId}`} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId, origemId, origemRevision, osUpdatedAt, taskId, disponivel }: Props) {

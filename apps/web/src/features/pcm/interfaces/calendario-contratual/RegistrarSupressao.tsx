@@ -3,12 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { RegraContratualResumo } from "../../application/calendario-contratual-gateway";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),serieId:z.string().guid(),regraId:z.string().guid(),semana:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),feriadoId:z.string().guid(),feriadoRevision:z.number().int().positive(),data:z.string().regex(/^\d{4}-\d{2}-\d{2}$/)}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;feriadoId:string;feriadoRevision:number;data:string;contratoId:string|null;ativo:boolean;regras:RegraContratualResumo[]};
 function semanaDaData(data:string):string|null{const d=new Date(`${data}T00:00:00Z`);if(!Number.isFinite(d.getTime())||d.toISOString().slice(0,10)!==data)return null;const dia=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()-(dia-1));return d.toISOString().slice(0,10);}
-export function RegistrarSupressao(props:Props){if(import.meta.env.VITE_SSO_SUPRESSOES_FERIADO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.feriadoId,props.feriadoRevision])} {...props}/>;}
+export function RegistrarSupressao(props:Props){if(!flagLigada("VITE_SSO_SUPRESSOES_FERIADO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.feriadoId,props.feriadoRevision])} {...props}/>;}
 function Conteudo({userId,clienteId,feriadoId,feriadoRevision,data,contratoId,ativo,regras}:Props){
   const chave=`sso-registrar-supressao:${JSON.stringify([userId,clienteId,feriadoId])}`;const [regraId,setRegraId]=useState("");const [confirmado,setConfirmado]=useState(false);const [aviso,setAviso]=useState("");const trava=useRef(false);const cache=useQueryClient();const montado=useRef(false);useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
   const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=pedidoSchema.parse(JSON.parse(v));return p.clienteId===clienteId&&p.feriadoId===feriadoId?p:"invalido";}catch{return "invalido";}});

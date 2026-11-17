@@ -4,6 +4,8 @@ import { useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { PromoverRetornoCiclo } from "./PromoverRetornoCiclo";
 import { HistoricoPromocaoIntegral } from "./HistoricoPromocaoIntegral";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const itemSchema = z.object({ id: z.string().guid(), ciclo_id: z.string().guid(), pendencia_id: z.string().guid(),
   composicao_id: z.string().guid(), chamado_id: z.string().guid(), parcela_id: z.string().guid(), os_id: z.string().guid(),
@@ -12,7 +14,15 @@ const itemSchema = z.object({ id: z.string().guid(), ciclo_id: z.string().guid()
 
 /** Consulta experimental separada da fila e do ranking oficiais. */
 export function RetornosCicloExperimental({ userId, clienteId }: { userId: string; clienteId: string }) {
-  if (import.meta.env.VITE_SSO_RETORNO_CICLO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RETORNO_CICLO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Retorno ciclo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RETORNO_CICLO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />;
 }
 function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) {
@@ -43,8 +53,8 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     {consulta.data && <div hidden={consulta.isFetching || consulta.isError}>{itens.length === 0 ? <p>Nenhum retorno encontrado.</p> : <ol>{itens.map((item) => <li key={item.id}>
       Pendência {item.pendencia_id} · Chamado {item.chamado_id} · parcela {item.parcela_id} · {item.estado} · revisão {item.revisao}.
       <p>Ciclo {item.ciclo_id} · composição {item.composicao_id} · OS {item.os_id} · reconciliação {item.reconciliacao_id}.</p>
-      {import.meta.env.VITE_SSO_HISTORICO_PROMOCAO_INTEGRAL_ENABLED === "true" && <HistoricoPromocaoIntegral key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id}/>}
-      {import.meta.env.VITE_SSO_PROMOCAO_RETORNO_ENABLED === "true" && <><button type="button" aria-expanded={selecionado === item.id} onClick={() => setSelecionado(selecionado === item.id ? null : item.id)}>{selecionado === item.id ? "Fechar promoção" : "Abrir promoção ou recuperar pedido"}</button>
+      {flagLigada("VITE_SSO_HISTORICO_PROMOCAO_INTEGRAL_ENABLED") && <HistoricoPromocaoIntegral key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id}/>}
+      {flagLigada("VITE_SSO_PROMOCAO_RETORNO_ENABLED") && <><button type="button" aria-expanded={selecionado === item.id} onClick={() => setSelecionado(selecionado === item.id ? null : item.id)}>{selecionado === item.id ? "Fechar promoção" : "Abrir promoção ou recuperar pedido"}</button>
         {selecionado === item.id && <PromoverRetornoCiclo key={`${userId}:${clienteId}:${item.id}`} userId={userId} clienteId={clienteId} retornoId={item.id} revisao={item.revisao} estado={item.estado} consultaDisponivel={!consulta.isFetching && !consulta.isError} />}</>}
     </li>)}</ol>}</div>}
     {consulta.hasNextPage && !consulta.isError && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais retornos</button>}

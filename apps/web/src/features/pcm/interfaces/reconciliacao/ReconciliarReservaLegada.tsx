@@ -2,6 +2,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const tarefa = z.string().regex(/^[1-9][0-9]{0,15}$/).refine(v => Number.isSafeInteger(Number(v)) && Number(v) > 0);
@@ -9,7 +11,15 @@ const pedidoSchema = z.object({ requestId: uuid, clienteId: uuid, osId: uuid, re
 type Pedido = z.infer<typeof pedidoSchema>;
 
 export function ReconciliarReservaLegada({ userId, clienteId, reserva }: { userId: string; clienteId: string; reserva: { reservaId: string; osId: string } | null }) {
-  if (import.meta.env.VITE_SSO_RECONCILIAR_RESERVA_LEGADA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RECONCILIAR_RESERVA_LEGADA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Reconciliar reserva legada"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RECONCILIAR_RESERVA_LEGADA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} reserva={reserva} />;
 }
 function Conteudo({ userId, clienteId, reserva }: { userId: string; clienteId: string; reserva: { reservaId: string; osId: string } | null }) {

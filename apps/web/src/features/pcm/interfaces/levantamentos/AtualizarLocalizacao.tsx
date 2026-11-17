@@ -4,9 +4,10 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { useAreasDoCliente, useLocaisDoCliente } from "../../application/ativos-cliente-queries";
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
 const pedido = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string(), revision: z.number().int().positive(), entidadeId: z.string().guid(), tipo: z.enum(["area", "local", "sublocal"]), snapshot: z.record(z.string(), z.unknown()), motivo: z.string().min(1).max(2000) }).strict(); type Pedido = z.infer<typeof pedido>;
-export function AtualizarLocalizacao(props: Props) { if (import.meta.env.VITE_SSO_ATUALIZAR_LOCALIZACAO_LEVANTAMENTO_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props}/>; }
+export function AtualizarLocalizacao(props: Props) { if (!flagLigada("VITE_SSO_ATUALIZAR_LOCALIZACAO_LEVANTAMENTO_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props}/>; }
 function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo }: Props) {
   const key = `sso-atualizar-localizacao:${JSON.stringify([userId, clienteId, loteId, chave])}`;
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.loteId === loteId && p.chave === chave && p.tipo === tipo ? p : "invalido"; } catch { return "invalido"; } });

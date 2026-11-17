@@ -1,9 +1,10 @@
 import type { IdentidadeSnapshotExportacao } from "../application/snapshot-exportacao";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 export async function obterPaginaSnapshotExportacao(identidade: IdentidadeSnapshotExportacao, posicao: number, signal?: AbortSignal): Promise<unknown> {
   if (!Number.isSafeInteger(posicao) || posicao < 0) throw new Error("Posição inválida.");
-  const natureza = import.meta.env.VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED === "true";
+  const natureza = flagLigada("VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED");
   const usuario = natureza ? await supabase.auth.getUser() : null;
   if (natureza && (usuario?.error || !usuario?.data.user?.id || signal?.aborted)) throw new Error("Sessão indisponível.");
   let consulta = supabase.schema("pcm").rpc(natureza ? "sso_snapshot_exportacao_natureza" : "sso_snapshot_exportacao_conferido", {

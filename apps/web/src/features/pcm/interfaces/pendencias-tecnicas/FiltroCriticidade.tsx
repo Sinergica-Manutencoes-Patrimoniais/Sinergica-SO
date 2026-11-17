@@ -2,11 +2,21 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ pendencia_id: z.string().guid(), alvo_tipo: z.string(), alvo_id: z.string().guid(), pergunta: z.string(), revisao: z.number().int().positive(), criticidade: z.string().nullable(), situacao_criticidade: z.enum(["informada", "nao_informada"]) }).strict();
 type Props = { userId: string; clienteId: string };
 export function FiltroCriticidade(props: Props) {
-  if (import.meta.env.VITE_SSO_FILTRO_CRITICIDADE_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_FILTRO_CRITICIDADE_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Filtro criticidade"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_FILTRO_CRITICIDADE_ENABLED"]}
+      />
+    );
+  }
   return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
 }
 function Abrir(props: Props) {

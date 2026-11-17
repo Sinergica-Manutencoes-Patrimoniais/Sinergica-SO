@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const pedido=z.object({requestId:z.string().guid(),fotoId:z.string().guid(),tipo:z.enum(["sistema","componente"]),entidadeId:z.string().guid(),revision:z.number().int().positive()}).strict();type Pedido=z.infer<typeof pedido>;
 type Props={userId:string;clienteId:string;fotoId:string};
-export function VincularFotoAtivo(props:Props){if(import.meta.env.VITE_SSO_VINCULAR_FOTO_ATIVO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
+export function VincularFotoAtivo(props:Props){if(!flagLigada("VITE_SSO_VINCULAR_FOTO_ATIVO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
 function Conteudo({userId,clienteId,fotoId}:Props){
   const key=`sso-vincular-foto-ativo:${JSON.stringify([userId,clienteId,fotoId])}`;const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=pedido.parse(JSON.parse(raw));return p.fotoId===fotoId ? p : "invalido";}catch{return "invalido";}});const [confirmado,setConfirmado]=useState(false);const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
   const consulta=useQuery({queryKey:["levantamentos",userId,clienteId,"foto-destino-ativo",fotoId],gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_consultar_destino_foto_ativo_mediado_v2",{p_foto_id:fotoId}).abortSignal(signal);if(error)throw error;const r=z.object({fotoId:z.string().guid(),tipo:z.enum(["sistema","componente"]).nullable(),entidadeId:z.string().guid().nullable(),decisao:z.enum(["aceita","rejeitada"]).nullable(),revision:z.number().int().nonnegative(),vinculado:z.boolean(),fotoInadequada:z.boolean(),destinoAtivo:z.boolean().nullable()}).strict().parse(data);if(r.fotoId!==fotoId || ((r.tipo===null)!==(r.entidadeId===null)) || ((r.tipo===null)!==(r.destinoAtivo===null)))throw new Error("Destino divergente");return r;}});

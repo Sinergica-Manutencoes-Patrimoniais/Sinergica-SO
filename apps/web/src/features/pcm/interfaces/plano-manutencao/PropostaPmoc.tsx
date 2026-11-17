@@ -4,6 +4,7 @@ import { z } from "zod";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { supabase } from "../../../../lib/supabase-client";
 import { DecisaoPmoc } from "./DecisaoPmoc";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; planoId: string; revision: number; versaoId: string; rotinaId: string; vencimento: string; agendamentoId: string; justificativa: string };
 
 export function PropostaPmoc(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId, props.vencimento])} {...props} />; }
@@ -29,6 +30,6 @@ function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision, ve
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
     {propostas.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void propostas.refetch()}>Tentar novamente</button></p>}
     {!propostas.isFetching && !propostas.isError && propostas.data && <ul>{propostas.data.pages.flat().filter((p) => p.vencimento === vencimento).map((p) => <li key={p.id}>Proposta · PMOC {p.agendamento_pmoc_id} · alvo {p.alvo_tipo} {p.alvo_id} · {p.justificativa} · {p.criado_em}
-      {import.meta.env.VITE_SSO_DECISAO_PMOC_ENABLED === "true" && <DecisaoPmoc userId={userId} clienteId={clienteId} propostaId={p.id} />}</li>)}</ul>}{propostas.hasNextPage && <button type="button" onClick={() => void propostas.fetchNextPage()}>Mais histórico</button>}
+      {flagLigada("VITE_SSO_DECISAO_PMOC_ENABLED") && <DecisaoPmoc userId={userId} clienteId={clienteId} propostaId={p.id} />}</li>)}</ul>}{propostas.hasNextPage && <button type="button" onClick={() => void propostas.fetchNextPage()}>Mais histórico</button>}
   </section>;
 }

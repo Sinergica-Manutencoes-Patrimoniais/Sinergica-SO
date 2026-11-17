@@ -2,12 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { SubstituicaoCodigoPublico } from "../codigos-publicos/Substituicao";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ id: z.string().guid(), codigo: z.string().min(1).max(200), atual: z.boolean(), ator_id: z.string().guid(), criado_em: z.string() }).strict();
 type Props = { userId: string; clienteId: string; grupoId: string };
 
 export function CodigoAtualGrupo(props: Props) {
-  if (import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Substituicao codigo grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.grupoId])} {...props} />;
 }
 

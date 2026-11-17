@@ -6,6 +6,7 @@ import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
 import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
 import { conflitoPreparacaoVisita } from "./conflito-preparacao-visita";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 type Candidato = {
   visita_id: string;
   semana_origem: string;
@@ -356,7 +357,7 @@ function Conteudo({
               <li key={r.visitaId}>
                 Visita {r.visitaId} · ocorrência {r.ocorrenciaId} ·{" "}
                 {r.criada ? "preparada" : "reutilizada"}{" "}
-                {import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && (
+                {flagLigada("VITE_SSO_FILA_VISITA_ENABLED") && (
                   <button
                     type="button"
                     aria-expanded={filaAberta === r.ocorrenciaId}

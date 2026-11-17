@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const parcela = z.object({ vinculoId: z.string().guid(), osId: z.string().guid().nullable(), valorCentavos: z.string().regex(/^\d{1,19}$/),
   vinculo: z.enum(["ausente", "incompativel", "encerrado", "vigente"]) }).strict();
@@ -13,7 +15,7 @@ export function HistoricoRateio({ userId, clienteId, visitaId, despesaId, revisa
     queryFn: async ({ pageParam, signal }) => {
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const parametros={p_cliente_id:clienteId,p_visita_id:visitaId,p_despesa_id:despesaId,p_apos:pageParam};
-      const requisicao=import.meta.env.VITE_SSO_HISTORICO_RATEIO_MEDIADO_ENABLED==="true"
+      const requisicao=flagLigada("VITE_SSO_HISTORICO_RATEIO_MEDIADO_ENABLED")
         ? supabase.schema("pcm").rpc("sso_historico_rateio_despesa_mediado",{...parametros,p_ator_id:userId})
         : supabase.schema("pcm").rpc("sso_historico_rateio_despesa",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
@@ -21,7 +23,15 @@ export function HistoricoRateio({ userId, clienteId, visitaId, despesaId, revisa
       for(const item of pagina){if(item.revisao<=anterior||new Set(item.parcelas.map(p=>p.vinculoId.toLowerCase())).size!==item.parcelas.length)throw new Error("Página divergente.");anterior=item.revisao;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.revisao : undefined });
-  if (import.meta.env.VITE_SSO_HISTORICO_RATEIO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_RATEIO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico rateio"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_RATEIO_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" onClick={() => setAberto((v) => !v)}>{aberto ? "Ocultar histórico de rateio" : "Ver histórico de rateio"}</button>
     {aberto && lista.isFetching && <p>Consultando histórico…</p>}
     {aberto && lista.isError && <p role="alert">Histórico indisponível ou sem acesso. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}

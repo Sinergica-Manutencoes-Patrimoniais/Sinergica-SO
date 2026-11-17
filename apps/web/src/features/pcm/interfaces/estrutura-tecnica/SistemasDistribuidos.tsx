@@ -10,6 +10,8 @@ import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
 import { HistoricoGrupo } from "./HistoricoGrupo";
 import { PlanosDoAlvo } from "./PlanosDoAlvo";
 import { lerComposicao176 } from "./lerComposicao176";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 /** Projeção de vínculos presentes: não interpreta ausência de vínculo como ausência física. */
 export function SistemasDistribuidos({
@@ -17,7 +19,15 @@ export function SistemasDistribuidos({
   clienteId,
   sistemaId,
 }: { userId: string; clienteId: string; sistemaId?: string }) {
-  if (import.meta.env.VITE_SSO_SISTEMAS_DISTRIBUIDOS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_SISTEMAS_DISTRIBUIDOS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Sistemas distribuidos"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_SISTEMAS_DISTRIBUIDOS_ENABLED"]}
+      />
+    );
+  }
   return (
     <Conteudo
       key={`${userId}:${clienteId}:${sistemaId ?? "todos"}`}

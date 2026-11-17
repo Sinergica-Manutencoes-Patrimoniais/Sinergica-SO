@@ -33,6 +33,7 @@ import { CopiarPlanoAprovado } from "./CopiarPlanoAprovado";
 import { CopiarRotinaModelo } from "./CopiarRotinaModelo";
 import { ProvenienciaRotinaModelo } from "./ProvenienciaRotinaModelo";
 import { ConferenciaRotinaCopiada } from "./ConferenciaRotinaCopiada";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function DetalhePlano({
   userId,
@@ -118,11 +119,11 @@ export function DetalhePlano({
       className="mt-2 rounded-md border border-line p-3"
     >
       <h3 className="font-semibold">Rotinas</h3>
-      {import.meta.env.VITE_SSO_FILA_OBRIGACOES_PREPARADAS_ENABLED === "true" && <ObrigacoesPreparadas userId={userId} clienteId={clienteId} planoId={plano.id} />}
+      {flagLigada("VITE_SSO_FILA_OBRIGACOES_PREPARADAS_ENABLED") && <ObrigacoesPreparadas userId={userId} clienteId={clienteId} planoId={plano.id} />}
       <ObrigacoesPmoc userId={userId} clienteId={clienteId} planoId={plano.id} />
-      {import.meta.env.VITE_SSO_FUSO_PLANO_DECLARADO_ENABLED === "true" && <FusoPlanoDeclarado userId={userId} clienteId={clienteId} planoId={plano.id} />}
+      {flagLigada("VITE_SSO_FUSO_PLANO_DECLARADO_ENABLED") && <FusoPlanoDeclarado userId={userId} clienteId={clienteId} planoId={plano.id} />}
       {copiaSelecionada && <p role="status">Cópia localizada para {copiaSelecionada.origemNome}: versão rascunho {copiaSelecionada.versaoId}, Rotina {copiaSelecionada.id}. Carregue mais Rotinas se necessário. A seleção não inicia edição nem aprova a revisão.</p>}
-      {import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" && (plano.estado === "aprovado" || plano.estado === "rascunho") && <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} permitirNova={plano.estado === "aprovado"} />}
+      {flagLigada("VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED") && (plano.estado === "aprovado" || plano.estado === "rascunho") && <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} permitirNova={plano.estado === "aprovado"} />}
       {escolhaIndisponivel && (
         <p role="alert">
           A versão escolhida não está disponível na lista carregada. Escolha outra versão ou
@@ -146,7 +147,7 @@ export function DetalhePlano({
             )}
           </>
         )}
-      {(plano.estado === "rascunho" || (plano.estado === "em_revisao" && import.meta.env.VITE_SSO_INCLUIR_RETIRAR_REVISAO_ENABLED === "true" && versao?.estado === "rascunho")) &&
+      {(plano.estado === "rascunho" || (plano.estado === "em_revisao" && flagLigada("VITE_SSO_INCLUIR_RETIRAR_REVISAO_ENABLED") && versao?.estado === "rascunho")) &&
         !versoes.isPending &&
         versoesDisponiveis &&
         !escolhaIndisponivel &&
@@ -300,17 +301,17 @@ export function DetalhePlano({
       {versao?.estado === "aprovado" && !rotinas.isError && (
         <p>Dados congelados na aprovação; a situação atual dos alvos pode ser diferente.</p>
       )}
-      {import.meta.env.VITE_SSO_PREVIA_VENCIMENTOS_PLANO_ENABLED === "true" && versao?.estado === "aprovado" && <PreviaVencimentosPlano userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} revisaoPlano={plano.revisao} />}
-      {import.meta.env.VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED === "true" && import.meta.env.VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED === "true" && import.meta.env.VITE_SSO_ORIGEM_LOTE_ENABLED === "true" && versao?.estado === "aprovado" && <PrepararRotinasJanela userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} revision={plano.revisao} />}
-      {import.meta.env.VITE_SSO_COPIA_PLANO_ENABLED === "true" && versao?.estado === "aprovado" && (
+      {flagLigada("VITE_SSO_PREVIA_VENCIMENTOS_PLANO_ENABLED") && versao?.estado === "aprovado" && <PreviaVencimentosPlano userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} revisaoPlano={plano.revisao} />}
+      {flagLigada("VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED") && flagLigada("VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED") && flagLigada("VITE_SSO_ORIGEM_LOTE_ENABLED") && versao?.estado === "aprovado" && <PrepararRotinasJanela userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} revision={plano.revisao} />}
+      {flagLigada("VITE_SSO_COPIA_PLANO_ENABLED") && versao?.estado === "aprovado" && (
         <CopiarPlanoAprovado key={`${userId}:${clienteId}:${plano.id}:${versao.id}:${plano.revisao}`} userId={userId} clienteId={clienteId}
           planoId={plano.id} planoNome={plano.nome} revisao={plano.revisao} versaoId={versao.id} versaoNumero={versao.numero} />
       )}
-      {import.meta.env.VITE_SSO_EXPORTAR_PLANO_ENABLED === "true" && versao?.estado === "aprovado" && (
+      {flagLigada("VITE_SSO_EXPORTAR_PLANO_ENABLED") && versao?.estado === "aprovado" && (
         <ExportarVersaoPlano clienteId={clienteId} plano={plano} versao={versao} rotinas={itens}
           completo={rotinasDisponiveis && !rotinas.isPending && !rotinas.hasNextPage} />
       )}
-      {import.meta.env.VITE_SSO_CRONOGRAMA_PARCIAL_ENABLED === "true" && versoesDisponiveis && !versoes.isPending && versao?.estado === "aprovado" && (
+      {flagLigada("VITE_SSO_CRONOGRAMA_PARCIAL_ENABLED") && versoesDisponiveis && !versoes.isPending && versao?.estado === "aprovado" && (
         <ExportarCronogramaFotografia key={`${userId}:${clienteId}:${plano.id}:${versao.id}`} userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} />
       )}
       {versao && rotinas.isError && (
@@ -330,7 +331,7 @@ export function DetalhePlano({
         plano={plano}
         rotinas={itens}
         permitirNova={
-          (plano.estado === "rascunho" || (plano.estado === "em_revisao" && import.meta.env.VITE_SSO_INCLUIR_RETIRAR_REVISAO_ENABLED === "true")) &&
+          (plano.estado === "rascunho" || (plano.estado === "em_revisao" && flagLigada("VITE_SSO_INCLUIR_RETIRAR_REVISAO_ENABLED"))) &&
           versao?.estado === "rascunho" &&
           !novaRotina &&
           !rotinaEmEdicao &&
@@ -366,15 +367,15 @@ export function DetalhePlano({
             {r.questionarioId && (
               <p>Questionário: {r.questionarioNome ?? "referência indisponível"}</p>
             )}
-            {import.meta.env.VITE_SSO_CONFERENCIA_COPIA_ROTINA_ENABLED === "true" && versao?.estado === "rascunho" && <>
+            {flagLigada("VITE_SSO_CONFERENCIA_COPIA_ROTINA_ENABLED") && versao?.estado === "rascunho" && <>
               <Button variant="secondary" onClick={() => setRotinaConferenciaCopia(rotinaConferenciaCopia === r.id ? null : r.id)}>{rotinaConferenciaCopia === r.id ? "Fechar conferência" : `Conferir cópia de ${r.nome}`}</Button>
               {rotinaConferenciaCopia === r.id && <ConferenciaRotinaCopiada key={`${userId}:${clienteId}:${plano.id}:${versao.id}:${r.id}:${plano.revisao}`} userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revisao={plano.revisao} />}
             </>}
-            {import.meta.env.VITE_SSO_PROVENIENCIA_ROTINA_MODELO_ENABLED === "true" && versao?.estado === "rascunho" && <>
+            {flagLigada("VITE_SSO_PROVENIENCIA_ROTINA_MODELO_ENABLED") && versao?.estado === "rascunho" && <>
               <Button variant="secondary" onClick={() => setRotinaProveniencia(rotinaProveniencia === r.id ? null : r.id)}>{rotinaProveniencia === r.id ? "Fechar procedência" : `Ver procedência de ${r.nome}`}</Button>
               {rotinaProveniencia === r.id && <ProvenienciaRotinaModelo key={`${userId}:${clienteId}:${plano.id}:${versao.id}:${r.id}`} userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
             </>}
-            {import.meta.env.VITE_SSO_COPIA_ROTINA_MODELO_ENABLED === "true" && versao?.estado === "aprovado" && <>
+            {flagLigada("VITE_SSO_COPIA_ROTINA_MODELO_ENABLED") && versao?.estado === "aprovado" && <>
               <Button variant="secondary" onClick={() => setRotinaCopiaModelo(rotinaCopiaModelo === r.id ? null : r.id)}>{rotinaCopiaModelo === r.id ? "Fechar cópia" : `Copiar ${r.nome} para outro Plano`}</Button>
               {rotinaCopiaModelo === r.id && <CopiarRotinaModelo key={`${userId}:${clienteId}:${plano.id}:${versao.id}:${r.id}:${plano.revisao}`} userId={userId} clienteId={clienteId} plano={plano} versaoId={versao.id} rotina={r} />}
             </>}
@@ -405,12 +406,12 @@ export function DetalhePlano({
                 Tolerância: {r.toleranciaAntes} dias antes e {r.toleranciaDepois} dias depois
               </p>
             )}
-            {import.meta.env.VITE_SSO_VINCULAR_ROTINA_SERIE_ENABLED === "true" && versao?.estado === "aprovado" && r.modo === "visita" && (
+            {flagLigada("VITE_SSO_VINCULAR_ROTINA_SERIE_ENABLED") && versao?.estado === "aprovado" && r.modo === "visita" && (
               <VincularSerieRotina userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revision={plano.revisao} />
             )}
-            {plano.estado === "em_revisao" && versao?.estado === "rascunho" && r.questionarioId && import.meta.env.VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED === "true" && <p>Confira novamente as perguntas e exigências de evidência desta versão. A versão aprovada permanece preservada; esta conferência não aprova o Plano.</p>}
-            {import.meta.env.VITE_SSO_CONTRATO_PERGUNTAS_ENABLED === "true" && (plano.estado === "rascunho" || (plano.estado === "em_revisao" && import.meta.env.VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED === "true")) && versao?.estado === "rascunho" && r.questionarioId && <ContratoPerguntas userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revision={plano.revisao} />}
-            {import.meta.env.VITE_SSO_CONTRATO_EVIDENCIA_ENABLED === "true" && (plano.estado === "rascunho" || (plano.estado === "em_revisao" && import.meta.env.VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED === "true")) && versao?.estado === "rascunho" && r.questionarioId && <ContratoEvidencia userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revision={plano.revisao} />}
+            {plano.estado === "em_revisao" && versao?.estado === "rascunho" && r.questionarioId && flagLigada("VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED") && <p>Confira novamente as perguntas e exigências de evidência desta versão. A versão aprovada permanece preservada; esta conferência não aprova o Plano.</p>}
+            {flagLigada("VITE_SSO_CONTRATO_PERGUNTAS_ENABLED") && (plano.estado === "rascunho" || (plano.estado === "em_revisao" && flagLigada("VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED"))) && versao?.estado === "rascunho" && r.questionarioId && <ContratoPerguntas userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revision={plano.revisao} />}
+            {flagLigada("VITE_SSO_CONTRATO_EVIDENCIA_ENABLED") && (plano.estado === "rascunho" || (plano.estado === "em_revisao" && flagLigada("VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED"))) && versao?.estado === "rascunho" && r.questionarioId && <ContratoEvidencia userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revision={plano.revisao} />}
             {pendenciasConhecidasRotina(r).includes("recorrencia") && (
               <p>Recorrência não informada</p>
             )}
@@ -444,14 +445,14 @@ export function DetalhePlano({
                 )}
               </>
             )}
-            {versao?.estado === "aprovado" && r.modo === "calendario" && import.meta.env.VITE_SSO_CICLOS_UNIFORMES_ENABLED === "true" && <CiclosUniformes userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revisaoPlano={plano.revisao} />}
-            {versao?.estado === "rascunho" && import.meta.env.VITE_SSO_EXIGENCIA_LEGAL_ENABLED === "true" && <ExigenciaLegalRotina key={JSON.stringify([userId, clienteId, plano.id, versao.id, r.id])} userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} planoRevision={plano.revisao} modo={r.modo} />}
+            {versao?.estado === "aprovado" && r.modo === "calendario" && flagLigada("VITE_SSO_CICLOS_UNIFORMES_ENABLED") && <CiclosUniformes userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} revisaoPlano={plano.revisao} />}
+            {versao?.estado === "rascunho" && flagLigada("VITE_SSO_EXIGENCIA_LEGAL_ENABLED") && <ExigenciaLegalRotina key={JSON.stringify([userId, clienteId, plano.id, versao.id, r.id])} userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} planoRevision={plano.revisao} modo={r.modo} />}
             {versao?.estado === "rascunho" && r.alvoTipo === "componente" && <NaturezaAlvoRotina userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} alvoId={r.alvoId} revisao={plano.revisao} onAtualizar={onAtualizar} />}
             {versao?.estado === "aprovado" && r.alvoTipo === "componente" && <NaturezaAlvoAprovada userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} alvoId={r.alvoId} />}
-            {versao?.estado === "aprovado" && import.meta.env.VITE_SSO_DIAGNOSTICO_NORMATIVO_ENABLED === "true" && <DiagnosticoNormativoAprovado userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
-            {versao && r.modo === "visita" && import.meta.env.VITE_SSO_DIAGNOSTICO_MODO_VISITA_ENABLED === "true" && <DiagnosticoModoVisita userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
-            {versao?.estado === "aprovado" && import.meta.env.VITE_SSO_REVISAR_ROTINA_APROVADA_ENABLED === "true" && <><Button variant="secondary" onClick={() => { consultaCopiaAtual.current++; setRotinaParaRevisar({ id: r.id, nome: r.nome, versaoId: versao.id }); }}>Alterar {r.nome} em nova revisão</Button>{rotinaParaRevisar?.id === r.id && rotinaParaRevisar.versaoId === versao.id && <section aria-label="Revisão da Rotina aprovada"><p>Rotina selecionada: {rotinaParaRevisar.nome} · versão {rotinaParaRevisar.versaoId} · ID histórico {rotinaParaRevisar.id}. A versão aprovada permanece preservada; uma revisão cria rascunho, sem salvar mudanças diretamente.</p>{plano.estado === "aprovado" && import.meta.env.VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED === "true" ? <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} /> : <p>Início de revisão indisponível neste estado ou configuração.</p>}{import.meta.env.VITE_SSO_LOCALIZAR_COPIA_ROTINA_ENABLED === "true" && <button type="button" disabled={buscandoCopia} onClick={() => void selecionarCopia()}>Localizar cópia em rascunho</button>}{avisoCopia && <p role="alert">{avisoCopia}</p>}<button type="button" onClick={() => { consultaCopiaAtual.current++; setRotinaParaRevisar(null); }}>Cancelar intenção de revisão</button></section>}</>}
-            {(plano.estado === "rascunho" || (plano.estado === "em_revisao" && import.meta.env.VITE_SSO_EDICAO_ROTINA_REVISAO_ENABLED === "true" && copiaSelecionada?.id === r.id && copiaSelecionada.versaoId === versao?.id)) &&
+            {versao?.estado === "aprovado" && flagLigada("VITE_SSO_DIAGNOSTICO_NORMATIVO_ENABLED") && <DiagnosticoNormativoAprovado userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
+            {versao && r.modo === "visita" && flagLigada("VITE_SSO_DIAGNOSTICO_MODO_VISITA_ENABLED") && <DiagnosticoModoVisita userId={userId} clienteId={clienteId} planoId={plano.id} versaoId={versao.id} rotinaId={r.id} />}
+            {versao?.estado === "aprovado" && flagLigada("VITE_SSO_REVISAR_ROTINA_APROVADA_ENABLED") && <><Button variant="secondary" onClick={() => { consultaCopiaAtual.current++; setRotinaParaRevisar({ id: r.id, nome: r.nome, versaoId: versao.id }); }}>Alterar {r.nome} em nova revisão</Button>{rotinaParaRevisar?.id === r.id && rotinaParaRevisar.versaoId === versao.id && <section aria-label="Revisão da Rotina aprovada"><p>Rotina selecionada: {rotinaParaRevisar.nome} · versão {rotinaParaRevisar.versaoId} · ID histórico {rotinaParaRevisar.id}. A versão aprovada permanece preservada; uma revisão cria rascunho, sem salvar mudanças diretamente.</p>{plano.estado === "aprovado" && flagLigada("VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED") ? <IniciarRevisaoContratos userId={userId} clienteId={clienteId} planoId={plano.id} revision={plano.revisao} /> : <p>Início de revisão indisponível neste estado ou configuração.</p>}{flagLigada("VITE_SSO_LOCALIZAR_COPIA_ROTINA_ENABLED") && <button type="button" disabled={buscandoCopia} onClick={() => void selecionarCopia()}>Localizar cópia em rascunho</button>}{avisoCopia && <p role="alert">{avisoCopia}</p>}<button type="button" onClick={() => { consultaCopiaAtual.current++; setRotinaParaRevisar(null); }}>Cancelar intenção de revisão</button></section>}</>}
+            {(plano.estado === "rascunho" || (plano.estado === "em_revisao" && flagLigada("VITE_SSO_EDICAO_ROTINA_REVISAO_ENABLED") && copiaSelecionada?.id === r.id && copiaSelecionada.versaoId === versao?.id)) &&
               versao?.estado === "rascunho" &&
               !novaRotina &&
               !retiradaAtiva &&

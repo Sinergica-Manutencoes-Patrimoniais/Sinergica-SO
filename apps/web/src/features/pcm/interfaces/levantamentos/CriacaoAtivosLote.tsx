@@ -2,12 +2,13 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const itemSchema=z.object({chave:z.string().min(1).max(200),tipo:z.enum(["sistema","equipamento","componente"]),atributos:z.record(z.string(), z.unknown()),localId:z.string().guid(),sistemaId:z.string().guid().nullable(),parentId:z.string().guid().nullable(),codigo:z.string().min(1).max(200),codigoRevision:z.number().int().nonnegative(),requestId:z.string().guid()}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 const Contexto=createContext<((item:Item)=>void) | null>(null);
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;children:ReactNode};
-export function CriacaoAtivosLote(props:Props){if(import.meta.env.VITE_SSO_CRIACAO_ATIVOS_LOTE_ENABLED!=="true")return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
+export function CriacaoAtivosLote(props:Props){if(!flagLigada("VITE_SSO_CRIACAO_ATIVOS_LOTE_ENABLED"))return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,revisao,children}:Props){
  const storage=`sso-criar-ativos-lote:${JSON.stringify([userId,clienteId,loteId])}`;const client=useQueryClient();const trava=useRef(false);
  const [itens,setItens]=useState<Item[]>([]);const [revisaoSelecao,setRevisaoSelecao]=useState<number|null>(null);const [fotoConfirmada,setFotoConfirmada]=useState<string|null>(null);const [aviso,setAviso]=useState("");

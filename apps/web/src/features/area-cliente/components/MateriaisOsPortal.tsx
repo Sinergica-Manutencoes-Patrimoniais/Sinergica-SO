@@ -7,9 +7,19 @@ import { ListasHistoricoMateriais } from "./ListasHistoricoMateriais";
 import { RecuperarDisponibilidadesMateriais } from "./RecuperarDisponibilidadesMateriais";
 import { consultarReciboDisponibilidadePortal, informarDisponibilidadePortal, listarMateriaisPortal, validarPedidoDisponibilidade,
   type ListaPortal, type PedidoDisponibilidade } from "../infrastructure/supabase-portal-materiais-adapter";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export function MateriaisOsPortal({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
-  if (import.meta.env.VITE_SSO_PORTAL_MATERIAIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_MATERIAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal materiais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_MATERIAIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId, clienteId, osId])} userId={userId} clienteId={clienteId} osId={osId} />;
 }
 function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
@@ -29,7 +39,7 @@ function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: stri
     {!consulta.isFetching && !consulta.isError && !divergentes && listas.map((item) =>
       <Lista key={item.id} item={item} userId={userId} clienteId={clienteId} osId={osId} />)}
     {!consulta.isError && !divergentes && consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => { if (!consulta.isFetching) void consulta.fetchNextPage(); }}>Mais listas</button>}
-    {import.meta.env.VITE_SSO_RECIBO_DISPONIBILIDADE_MATERIAIS_ENABLED === "true" &&
+    {flagLigada("VITE_SSO_RECIBO_DISPONIBILIDADE_MATERIAIS_ENABLED") &&
       <RecuperarDisponibilidadesMateriais userId={userId} clienteId={clienteId} osId={osId}
         listasVisiveis={!consulta.isFetching && !consulta.isError && !divergentes ? listas.map((item) => item.id) : []} />}
     <ListasHistoricoMateriais userId={userId} clienteId={clienteId} osId={osId} />
@@ -89,7 +99,7 @@ function Lista({ item, userId, clienteId, osId }: { item: ListaPortal; userId: s
     <p>Responsável: {item.responsavel === "cliente" ? "Cliente" : "Sinérgica"} · Situação: {item.estado.replaceAll("_", " ")}</p>
     {item.ultima_informacao_em && <p>Última informação: {new Date(item.ultima_informacao_em).toLocaleString("pt-BR")} · {item.ultima_informacao_por === null ? "autor não informado" : item.ultima_informacao_por.toLowerCase() === userId.toLowerCase() ? "informada por você" : "informada por outra pessoa"}.</p>}
     {item.excecao_atual && <p role="status">Foi informada uma exceção em campo; confira a situação com a equipe.</p>}
-    {item.excecao_atual && import.meta.env.VITE_SSO_PORTAL_CLASSIFICACAO_EXCECAO_ENABLED === "true" &&
+    {item.excecao_atual && flagLigada("VITE_SSO_PORTAL_CLASSIFICACAO_EXCECAO_ENABLED") &&
       <ClassificacaoExcecao userId={userId} clienteId={clienteId} osId={osId} listaId={item.id} revisao={item.revisao} />}
     <ul>{item.linhas.map((linha, indice) => <li key={`${item.id}-${indice}`}>{linha.descricao}{linha.quantidade ? ` — ${linha.quantidade}` : ""}{linha.unidade ? ` ${linha.unidade}` : ""}</li>)}</ul>
     <HistoricoMateriais userId={userId} clienteId={clienteId} osId={osId} listaId={item.id} />
@@ -105,7 +115,7 @@ function Lista({ item, userId, clienteId, osId }: { item: ListaPortal; userId: s
     </form>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Contate suporte.</p>}
     {pendente && pendente !== "invalido" && <button type="button" disabled={enviar.isPending || recibo.isPending} onClick={() => registrar(pendente)}>Repetir tentativa</button>}
-    {import.meta.env.VITE_SSO_RECIBO_DISPONIBILIDADE_MATERIAIS_ENABLED === "true" && pendente && pendente !== "invalido" &&
+    {flagLigada("VITE_SSO_RECIBO_DISPONIBILIDADE_MATERIAIS_ENABLED") && pendente && pendente !== "invalido" &&
       <button type="button" disabled={enviar.isPending || recibo.isPending} onClick={() => {
         if (trava.current) return;
         try { if (sessionStorage.getItem(chave) !== JSON.stringify(pendente)) throw new Error("Tentativa alterada."); }

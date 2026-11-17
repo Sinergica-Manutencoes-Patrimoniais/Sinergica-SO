@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const id = z.string().guid();
 const destinoSchema = z.object({ fotoId: id, grupoId: id.nullable(), grupoAtivo: z.boolean().nullable(),
@@ -13,7 +15,15 @@ type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; fotoId: string };
 
 export function VincularFotoVerificadaGrupo(props: Props) {
-  if (import.meta.env.VITE_SSO_VINCULAR_FOTO_VERIFICADA_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_VINCULAR_FOTO_VERIFICADA_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Vincular foto verificada grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_VINCULAR_FOTO_VERIFICADA_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.fotoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, fotoId }: Props) {

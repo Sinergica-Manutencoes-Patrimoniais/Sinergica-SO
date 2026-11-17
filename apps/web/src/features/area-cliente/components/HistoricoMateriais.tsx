@@ -3,11 +3,21 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { conferirSessaoMateriais } from "../infrastructure/supabase-portal-materiais-adapter";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ descricao: z.string(), quantidade: z.string().nullable(), unidade: z.string().nullable() }).strict();
 type Props={userId:string;clienteId:string;osId:string;listaId:string};
 export function HistoricoMateriais(props:Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_MATERIAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico materiais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_MATERIAIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.osId,props.listaId])} {...props}/>;
 }
 function Conteudo({ userId, clienteId, osId, listaId }: Props) {
@@ -15,7 +25,7 @@ function Conteudo({ userId, clienteId, osId, listaId }: Props) {
   const lista = useInfiniteQuery({ queryKey: ["portal-historico-materiais", userId, clienteId, osId, listaId], enabled: aberto,
     gcTime: 0, staleTime: 0, retry: false, refetchOnWindowFocus: true, initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => { await conferirSessaoMateriais(userId, signal); const parametros={p_cliente_id:clienteId,p_os_id:osId,p_lista_id:listaId,p_apos:pageParam};
-      const requisicao=import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED==="true"?supabase.schema("pcm").rpc("sso_portal_historico_materiais_mediado",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_historico_materiais",parametros);
+      const requisicao=flagLigada("VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED")?supabase.schema("pcm").rpc("sso_portal_historico_materiais_mediado",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_historico_materiais",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error; const pagina = z.array(z.object({ revisao_publicacao: z.number().int().positive(), publicado_em: z.string().datetime({offset:true}) }).strict()).max(20).parse(data);
       let anterior = pageParam; for (const item of pagina) { if (item.revisao_publicacao <= anterior) throw new Error("Página divergente."); anterior = item.revisao_publicacao; } await conferirSessaoMateriais(userId, signal); return pagina; },
@@ -25,7 +35,7 @@ function Conteudo({ userId, clienteId, osId, listaId }: Props) {
   const detalhe = useQuery({ queryKey: ["portal-versao-materiais", userId, clienteId, osId, listaId, revisao], enabled: aberto && revisaoVisivel,
     gcTime: 0, staleTime: 0, retry: false, refetchOnWindowFocus: true, queryFn: async ({ signal }) => {
       await conferirSessaoMateriais(userId, signal); const parametros={p_cliente_id:clienteId,p_os_id:osId,p_lista_id:listaId,p_revisao:revisao};
-      const requisicao=import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED==="true"?supabase.schema("pcm").rpc("sso_portal_versao_materiais_mediada",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_versao_materiais",parametros);
+      const requisicao=flagLigada("VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED")?supabase.schema("pcm").rpc("sso_portal_versao_materiais_mediada",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_versao_materiais",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error; const resultado = z.array(linha).max(100).parse(data); await conferirSessaoMateriais(userId, signal); return resultado;
     } });

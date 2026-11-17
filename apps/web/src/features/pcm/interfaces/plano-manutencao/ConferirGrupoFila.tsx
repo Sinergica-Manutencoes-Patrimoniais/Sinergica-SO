@@ -5,6 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { RegistrarOcorrenciaGrupo } from "./RegistrarOcorrenciaGrupo";
 import { ReabrirGrupoFila } from "./ReabrirGrupoFila";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const previaSchema = z.object({ tipo: z.enum(["calendario", "visita"]), preparadaId: uuid, cicloId: uuid, grupoId: uuid, filaRevisao: z.number().int().positive(), filaEstado: z.enum(["aguardando", "verificacao", "cancelado"]), gruposRegistrados: z.number().int().nonnegative(), efeitosLocais: z.number().int().nonnegative(), fotografiaHash: z.string().regex(/^[a-f0-9]{64}$/), confirmavel: z.boolean(), fontesExternasComprovadas: z.literal(false), declaracaoAtual: z.boolean(), podeReabrir: z.boolean() }).strict();
@@ -32,7 +33,7 @@ function Conteudo({ userId, clienteId, planoId, preparadaId, tipo }: Props) {
   return <section aria-label="Conferência de Grupo na fila"><p>A decisão é uma declaração PCM das fontes consultadas; não comprova ausência de execução fora das fontes conhecidas. A fila só muda após confirmação separada.</p>
     {previa.isFetching && <p role="status">Conferindo Grupo…</p>}{previa.isError && <p role="alert">Grupo ou fila indisponíveis para conferência. <button type="button" onClick={() => void previa.refetch()}>Tentar novamente</button></p>}
     {atual && <><p>Grupo {atual.grupoId} · identidades registradas {atual.gruposRegistrados} · efeitos locais associados {atual.efeitosLocais} · revisão da fila {atual.filaRevisao}.</p>
-      {atual.gruposRegistrados === 0 && <><p>Registre a identidade do Grupo nesta ocorrência; depois atualize a conferência.</p>{import.meta.env.VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED === "true" && <RegistrarOcorrenciaGrupo userId={userId} clienteId={clienteId} planoId={planoId} tipo={tipo} preparadaId={preparadaId} />}</>}
+      {atual.gruposRegistrados === 0 && <><p>Registre a identidade do Grupo nesta ocorrência; depois atualize a conferência.</p>{flagLigada("VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED") && <RegistrarOcorrenciaGrupo userId={userId} clienteId={clienteId} planoId={planoId} tipo={tipo} preparadaId={preparadaId} />}</>}
       {atual.podeReabrir && <ReabrirGrupoFila userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={preparadaId} tipo={tipo} revisao={atual.filaRevisao} />}
       {atual.filaEstado === "aguardando" && atual.declaracaoAtual && <p>Declaração PCM atual nas fontes conferidas; isso não comprova fontes externas.</p>}
       {atual.filaEstado === "verificacao" && !atual.confirmavel && atual.gruposRegistrados > 0 && <p role="alert">A fila ou os efeitos conhecidos exigem reconciliação; não é possível registrar esta declaração.</p>}

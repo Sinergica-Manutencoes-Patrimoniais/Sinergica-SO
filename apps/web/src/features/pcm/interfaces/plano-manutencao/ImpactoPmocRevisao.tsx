@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; planoId: string; revisao: number };
 const fotografia=z.object({vinculoId:z.string().guid(),agendamentoId:z.string().guid(),vencimento:z.string().date(),agendamento:z.object({id:z.string().guid(),contratoId:z.string().guid(),imovelId:z.string().guid(),data:z.string().date(),tipo:z.string(),estado:z.string(),registroId:z.string().guid().nullable(),auvoOsId:z.string().nullable()}).strict().nullable(),imovelConferidoId:z.string().guid().nullable(),contratoConferidoId:z.string().guid().nullable(),imovelClienteId:z.string().guid().nullable(),imovelExcluidoEm:z.string().nullable(),contratoExcluidoEm:z.string().nullable(),decisaoAtualId:z.string().guid().nullable(),origem:z.string().nullable()}).strict();
 const itemSchema=z.object({vinculo_id:z.string().guid(),rascunho_id:z.string().guid(),rotina_id:z.string().guid(),alvo_tipo:z.enum(["sistema","componente","grupo"]),alvo_id:z.string().guid(),vencimento:z.string().date(),agendamento_id:z.string().guid(),revisao_decisao:z.number().int().nonnegative().safe(),ultima_decisao:z.enum(["manter_pmoc","exige_reconciliacao"]).nullable(),ultima_revisao_plano:z.number().int().positive().nullable(),fotografia}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),planoId:z.string().guid(),rascunhoId:z.string().guid(),vinculoId:z.string().guid(),revisao:z.number().int().positive().safe(),decisaoRevision:z.number().int().nonnegative().safe(),decisao:z.enum(["manter_pmoc","exige_reconciliacao"]),motivo:z.string().trim().min(1).max(2000),fotografia}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
-export function ImpactoPmocRevisao(props:Props) {if(import.meta.env.VITE_SSO_IMPACTO_PMOC_REVISAO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props}/>;}
+export function ImpactoPmocRevisao(props:Props) {if(!flagLigada("VITE_SSO_IMPACTO_PMOC_REVISAO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props}/>;}
 function Conteudo({userId,clienteId,planoId,revisao}:Props) {
   const montado = useRef(false);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);

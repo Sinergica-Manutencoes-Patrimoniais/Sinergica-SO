@@ -3,12 +3,13 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { RecepcaoEnvelope } from "./RecepcaoEnvelope";
+import { flagLigada } from "../../../../config/flags-sso";
 const schema=z.object({requestId:z.string().guid(),envelopeId:z.string().guid(),revision:z.number().int().positive(),osId:z.string().guid(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof schema>;
-export function ResolucaoOs(props:{userId:string;clienteId:string;envelopeId:string;revision:number}){if(import.meta.env.VITE_SSO_RESOLUCAO_OS_ORIGEM_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.envelopeId])} {...props}/>;}
+export function ResolucaoOs(props:{userId:string;clienteId:string;envelopeId:string;revision:number}){if(!flagLigada("VITE_SSO_RESOLUCAO_OS_ORIGEM_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.envelopeId])} {...props}/>;}
 function Conteudo({userId,clienteId,envelopeId,revision}:{userId:string;clienteId:string;envelopeId:string;revision:number}){
   const chave=`sso-resolucao-origem:${JSON.stringify([userId,envelopeId])}`;const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=schema.parse(JSON.parse(v));return p.envelopeId===envelopeId ? p : "invalido";}catch{return "invalido";}});
   const [osId,setOsId]=useState("");const [motivo,setMotivo]=useState("");const [confirmacao,setConfirmacao]=useState<string|null>(null);const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
-  const detalheHabilitado=import.meta.env.VITE_SSO_OS_TRIAGEM_DETALHADA_ENABLED==="true";
+  const detalheHabilitado=flagLigada("VITE_SSO_OS_TRIAGEM_DETALHADA_ENABLED");
   const lista=useInfiniteQuery({queryKey:["triagem-origem",userId,envelopeId,"os",revision,detalheHabilitado],gcTime:0,initialPageParam:null as string | null,
     queryFn:async({pageParam,signal})=>{const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada");const {data,error}=await supabase.schema("pcm").rpc(detalheHabilitado?"sso_listar_os_campo_detalhada_mediada":"sso_listar_os_campo_mediada",{p_cliente_id:clienteId,p_envelope_id:envelopeId,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;
       const linhas=detalheHabilitado?z.array(z.object({id:z.string().guid(),numero:z.string(),titulo:z.string()}).strict()).max(20).parse(data):z.array(z.object({id:z.string().guid()}).strict()).max(20).parse(data).map((item)=>({...item,numero:null,titulo:null}));

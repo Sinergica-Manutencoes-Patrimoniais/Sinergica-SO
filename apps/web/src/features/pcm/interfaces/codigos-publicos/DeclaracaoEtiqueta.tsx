@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedidoSchema = z.object({
   requestId: z.string().guid(), tipo: z.enum(["sistema", "componente", "grupo_quantitativo"]),
@@ -13,7 +14,7 @@ type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; tipo: "sistema" | "componente" | "grupo_quantitativo"; ativoId: string };
 
 export function DeclaracaoEtiqueta(props: Props) {
-  if (props.tipo === "grupo_quantitativo" ? import.meta.env.VITE_SSO_DECLARAR_ETIQUETA_GRUPO_ENABLED !== "true" : import.meta.env.VITE_SSO_DECLARAR_ETIQUETA_ENABLED !== "true") return null;
+  if (props.tipo === "grupo_quantitativo" ? !flagLigada("VITE_SSO_DECLARAR_ETIQUETA_GRUPO_ENABLED") : !flagLigada("VITE_SSO_DECLARAR_ETIQUETA_ENABLED")) return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.ativoId])} {...props} />;
 }
 

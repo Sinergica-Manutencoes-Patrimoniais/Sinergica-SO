@@ -2,12 +2,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { RecursoNaoAtivado } from "@sinergica/ui";
+import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 
 const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),loteId:z.string().guid(),chave:z.string().min(1).max(200),
   revision:z.number().int().positive(),entidadeId:z.string().guid(),tipo:z.enum(["sistema","equipamento","componente","grupo_quantitativo"]),snapshot:z.record(z.string(), z.unknown())}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
-type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;entidadeId:string;tipo:string;observacoes?:boolean};
-export function AtualizarNome(props:Props){if((props.observacoes ? import.meta.env.VITE_SSO_ATUALIZAR_OBSERVACOES_LEVANTAMENTO_ENABLED : import.meta.env.VITE_SSO_ATUALIZAR_NOME_LEVANTAMENTO_ENABLED)!=="true" || !props.entidadeId)return null;
+type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;entidadeId:string;tipo:string;observacoes?:boolean;podeAdministrar?:boolean};
+export function AtualizarNome(props:Props){
+  if(!props.entidadeId) return null; // contexto errado, não é "desativado"
+  const flag = props.observacoes ? "VITE_SSO_ATUALIZAR_OBSERVACOES_LEVANTAMENTO_ENABLED" as const : "VITE_SSO_ATUALIZAR_NOME_LEVANTAMENTO_ENABLED" as const;
+  if(!flagLigada(flag)){
+    return <RecursoNaoAtivado recurso={props.observacoes ? "Atualizar observações" : "Atualizar nome"} podeAdministrar={!!props.podeAdministrar}
+      faltando={[flag, FLAGS_SSO.find((f)=>f.nome===flag)?.gate].filter((v):v is string=>Boolean(v))} />;
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave,props.entidadeId,props.observacoes])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,chave,revisao,entidadeId,tipo,observacoes=false}:Props){
   const storageKey=`sso-atualizar-${observacoes ? "observacoes" : "nome"}-levantamento:${JSON.stringify([userId,clienteId,loteId,chave,entidadeId])}`;

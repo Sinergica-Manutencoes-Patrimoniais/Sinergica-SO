@@ -2,11 +2,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { ConfirmacaoVisita } from "./ConfirmacaoVisita";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; osId: string };
 const visita = z.object({ id: z.string().guid(), inicio_em: z.string(), fim_em: z.string(), mensagem: z.string(), ciente_em: z.string().nullable() }).strict();
 export function VisitasOsPortal(props: Props) {
-  if (import.meta.env.VITE_SSO_PORTAL_VISITAS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_VISITAS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal visitas"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_VISITAS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: Props) {
@@ -30,7 +40,7 @@ function Conteudo({ userId, clienteId, osId }: Props) {
       <p>{new Date(v.inicio_em).toLocaleString("pt-BR")} – {new Date(v.fim_em).toLocaleString("pt-BR")}</p><p>{v.mensagem}</p>
       {v.ciente_em ? <p>Você registrou ciência em {new Date(v.ciente_em).toLocaleString("pt-BR")}.</p> :
         <button type="button" disabled={ciencia.isPending} onClick={() => ciencia.mutate(v.id)}>Registrar ciência</button>}
-      {import.meta.env.VITE_SSO_CONFIRMACAO_CLIENTE_VISITA_ENABLED === "true" && <ConfirmacaoVisita userId={userId} clienteId={clienteId} osId={osId} publicacaoId={v.id} />}
+      {flagLigada("VITE_SSO_CONFIRMACAO_CLIENTE_VISITA_ENABLED") && <ConfirmacaoVisita userId={userId} clienteId={clienteId} osId={osId} publicacaoId={v.id} />}
     </div>)}
     {ciencia.isError && <p role="alert">Não foi possível registrar ciência; atualize a lista e tente novamente.</p>}
   </section>;

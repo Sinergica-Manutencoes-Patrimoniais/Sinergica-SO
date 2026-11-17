@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const decisaoSchema = z.array(z.object({
   decisao: z.enum(["rejeitada", "incorporada", "atualizada", "vinculada"]), revisao: z.number().int().positive(),
@@ -11,7 +13,15 @@ const decisaoSchema = z.array(z.object({
 
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number };
 export function DecisaoLinha(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_LEVANTAMENTO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_LEVANTAMENTO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico levantamento"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_LEVANTAMENTO_ENABLED"]}
+      />
+    );
+  }
   return <Consulta key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props} />;
 }
 

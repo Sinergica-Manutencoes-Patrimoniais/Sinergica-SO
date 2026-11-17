@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const itemSchema = z.object({ requestId: uuid, planoId: uuid, rotinaId: uuid, fotografia: z.record(z.string(), z.unknown()),
@@ -151,11 +152,11 @@ function Conteudo({ userId, clienteId, planos, disponivel }: Props) {
     {pendente === "invalido" ? <p role="alert">Tentativa local ilegível. Procure suporte.</p> : pendente ? <>
       <p>Tentativa pendente: etapa {pendente.etapa}, {pendente.itens.length} Plano(s).</p>
       <button type="button" disabled={ocupado || !!pendente.cancelamento} onClick={() => void executar(pendente)}>Repetir mesma tentativa</button>
-      {import.meta.env.VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void executar(pendente, true)}>Consultar recibo sem repetir</button>}
-      {import.meta.env.VITE_SSO_CANCELAR_ACEITE_LOTE_ENABLED === "true" && pendente.etapa === "criacao" && <div>
+      {flagLigada("VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void executar(pendente, true)}>Consultar recibo sem repetir</button>}
+      {flagLigada("VITE_SSO_CANCELAR_ACEITE_LOTE_ENABLED") && pendente.etapa === "criacao" && <div>
         <p>Cancelar o aceite impede nova criação, mas não reverte lote que já tenha sido criado.</p>
         {pendente.cancelamento ? <><p>Cancelamento pendente. Motivo: {pendente.cancelamento.motivo}.</p><button type="button" disabled={ocupado} onClick={() => void cancelar(pendente)}>Repetir cancelamento</button>
-          {import.meta.env.VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void cancelar(pendente, true)}>Consultar recibo do cancelamento</button>}</> : <>
+          {flagLigada("VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void cancelar(pendente, true)}>Consultar recibo do cancelamento</button>}</> : <>
           <label>Motivo <textarea maxLength={2000} value={motivoCancelamento} onChange={(e) => { setMotivoCancelamento(e.target.value); setConfirmouCancelamento(false); }} /></label>
           <label><input type="checkbox" checked={confirmouCancelamento} onChange={(e) => setConfirmouCancelamento(e.target.checked)} /> Entendo que o cancelamento não reverte lote já criado.</label>
           <button type="button" disabled={ocupado || !confirmouCancelamento || !motivoCancelamento.trim()} onClick={() => iniciarCancelamento(pendente)}>Cancelar aceite</button>

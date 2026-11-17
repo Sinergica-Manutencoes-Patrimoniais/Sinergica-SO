@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { useState } from "react";
 import { HistoricoMovimentosOcorrencia } from "./HistoricoMovimentosOcorrencia";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z.object({ ocorrencia_id: z.string().guid(), plano_id: z.string().guid(), rotina_id: z.string().guid(),
   vencimento_original: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), possui_vinculo_legado: z.boolean() }).strict();
@@ -37,7 +38,7 @@ export function OcorrenciasImpactoDia({ userId, clienteId, serieId, visitaId }: 
     {!consulta.isFetching && !consulta.isError && consulta.data && <>
       {consulta.data.pages.flat().length === 0 ? <p>Nenhuma ocorrência preparada encontrada.</p> : <ul>{consulta.data.pages.flat().map((x) =>
         <li key={x.ocorrencia_id}>Plano {x.plano_id} · Rotina {x.rotina_id} · vencimento {x.vencimento_original} · vínculo legado {x.possui_vinculo_legado ? "presente" : "não identificado"}
-          {import.meta.env.VITE_SSO_HISTORICO_MOVIMENTO_OCORRENCIA_ENABLED === "true" && <><button type="button" aria-expanded={historicoId === x.ocorrencia_id} onClick={() => setHistoricoId(historicoId === x.ocorrencia_id ? null : x.ocorrencia_id)}>Consultar mudanças de programação</button>
+          {flagLigada("VITE_SSO_HISTORICO_MOVIMENTO_OCORRENCIA_ENABLED") && <><button type="button" aria-expanded={historicoId === x.ocorrencia_id} onClick={() => setHistoricoId(historicoId === x.ocorrencia_id ? null : x.ocorrencia_id)}>Consultar mudanças de programação</button>
             {historicoId === x.ocorrencia_id && <HistoricoMovimentosOcorrencia key={`${userId}:${clienteId}:${visitaId}:${x.ocorrencia_id}`} userId={userId} clienteId={clienteId} visitaId={visitaId} ocorrenciaId={x.ocorrencia_id} />}</>}
         </li>)}</ul>}
       {consulta.hasNextPage && <button type="button" onClick={() => void consulta.fetchNextPage()}>Mais ocorrências</button>}

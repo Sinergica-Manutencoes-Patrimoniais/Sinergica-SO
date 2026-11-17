@@ -7,10 +7,20 @@ import {
   alterarPrevisao,
   validarAlterarPrevisao,
 } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function EditarPrevisao(props: Props) {
-  if (import.meta.env.VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Editar despesas visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED"]}
+      />
+    );
+  }
   return (
     <Conteudo
       key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])}

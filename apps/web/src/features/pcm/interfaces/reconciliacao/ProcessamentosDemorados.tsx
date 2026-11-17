@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DemorasObservadas } from "./DemorasObservadas";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z.object({ outbox_id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
   iniciado_em: z.string().datetime({ offset: true }).nullable(), classificacao: z.enum(["inicio_desconhecido", "tempo_excedido_observado"]),
@@ -32,7 +33,7 @@ export function ProcessamentosDemorados({ userId, clienteId }: { userId: string;
   const itens = atual ? (consulta.data?.pages.flat() ?? []) : [];
   return <section aria-label="Processamentos para conferência">
     <h4>Processamentos para conferência</h4>
-    {import.meta.env.VITE_SSO_DEMORAS_OBSERVADAS_ENABLED === "true" && <DemorasObservadas key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_DEMORAS_OBSERVADAS_ENABLED") && <DemorasObservadas key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
     <p>Escolha um limite em minutos. A lista inclui também inícios desconhecidos. Nenhum item é considerado abandonado ou seguro para reenvio.</p>
     <form onSubmit={(e) => { e.preventDefault(); const valor = Number(minutos); if (Number.isInteger(valor) && valor >= 1 && valor <= 10080) {
       if (valor === filtro) void consulta.refetch(); else setFiltro(valor);

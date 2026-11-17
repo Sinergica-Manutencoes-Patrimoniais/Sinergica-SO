@@ -9,9 +9,19 @@ import { RecuperarDecisoesProposta } from "./RecuperarDecisoesProposta";
 import { obterItensHistoricos, formatarItensHistoricos } from "../infrastructure/itens-publicos-proposta";
 import { decidirPropostaOs, listarPropostasOs, validarDecisaoPropostaOs,
   obterDetalheOperacional, conferirSessaoProposta, type PropostaOs, type DecidirPropostaOs } from "../infrastructure/supabase-portal-propostas-os-adapter";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export function PropostasOsPortal({ userId, clienteId, osId, clienteNome }: { userId: string; clienteId: string; osId: string; clienteNome: string }) {
-  if (import.meta.env.VITE_SSO_PORTAL_PROPOSTA_OS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_PROPOSTA_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal proposta os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_PROPOSTA_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId, clienteId, osId])} userId={userId} clienteId={clienteId} osId={osId} clienteNome={clienteNome} />;
 }
 function Conteudo({ userId, clienteId, osId, clienteNome }: { userId: string; clienteId: string; osId: string; clienteNome: string }) {
@@ -23,7 +33,7 @@ function Conteudo({ userId, clienteId, osId, clienteNome }: { userId: string; cl
   const propostas = consulta.data?.pages.flat() ?? [];
   const paginasDivergentes = new Set(propostas.map((item) => item.id.toLowerCase())).size !== propostas.length;
   return <section aria-label="Orçamentos da ordem de serviço"><h3>Orçamentos da OS</h3>
-    {import.meta.env.VITE_SSO_RECIBO_DECISAO_PROPOSTA_ENABLED === "true" && <RecuperarDecisoesProposta userId={userId} clienteId={clienteId} osId={osId} />}
+    {flagLigada("VITE_SSO_RECIBO_DECISAO_PROPOSTA_ENABLED") && <RecuperarDecisoesProposta userId={userId} clienteId={clienteId} osId={osId} />}
     {consulta.isFetching && <p>Consultando orçamentos…</p>}
     {consulta.isError && <p role="alert">Orçamentos indisponíveis ou sem acesso. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && paginasDivergentes && <p role="alert">As propostas mudaram durante a consulta. <button type="button" onClick={() => void consulta.refetch()}>Atualizar propostas</button></p>}
@@ -44,12 +54,12 @@ function Item({ item, userId, clienteId, osId, clienteNome }: { item: PropostaOs
   const montado = useRef(false);
   const travaDecisao = useRef(false);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
-  const exigeItens = import.meta.env.VITE_SSO_PROPOSTA_ITENS_PUBLICOS_ENABLED === "true";
+  const exigeItens = flagLigada("VITE_SSO_PROPOSTA_ITENS_PUBLICOS_ENABLED");
   const itensPublicos = useQuery({ queryKey: ["portal-itens-proposta", userId, clienteId, osId, item.id, item.versao], enabled: exigeItens,
     gcTime: 0, staleTime: 0, retry: false, refetchOnWindowFocus: true, queryFn: async ({ signal }) => {
       await conferirSessaoProposta(userId, signal);
       const parametros={p_cliente_id:clienteId,p_os_id:osId,p_proposta_id:item.id,p_versao:item.versao};
-      const requisicao=import.meta.env.VITE_SSO_ITENS_ATUAIS_PORTAL_MEDIADOS_ENABLED==="true"
+      const requisicao=flagLigada("VITE_SSO_ITENS_ATUAIS_PORTAL_MEDIADOS_ENABLED")
         ? supabase.schema("comercial").rpc("sso_portal_itens_atuais_mediados",{...parametros,p_ator_id:userId})
         : supabase.schema("comercial").rpc("sso_portal_itens_publicos",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
@@ -134,7 +144,7 @@ function Item({ item, userId, clienteId, osId, clienteNome }: { item: PropostaOs
     {exigeItens && itensPublicos.isFetching && <p>Consultando itens da versão…</p>}
     {exigeItens && itensPublicos.isError && <p role="alert">Itens da versão indisponíveis; decisão bloqueada. <button type="button" onClick={() => void itensPublicos.refetch()}>Tentar novamente</button></p>}
     {exigeItens && itensDisponiveis && <ul>{itensPublicos.data?.map((linha) => <li key={linha.id}>{linha.descricao} · {linha.quantidade} × {linha.precoUnitarioCentavos} centavos</li>)}</ul>}
-    {import.meta.env.VITE_SSO_EXPORTAR_PROPOSTA_OPERACIONAL_ENABLED === "true" && <button type="button" disabled={baixando} onClick={() => void baixarPdf()}>{baixando ? "Gerando PDF…" : "Baixar versão pública em PDF"}</button>}
+    {flagLigada("VITE_SSO_EXPORTAR_PROPOSTA_OPERACIONAL_ENABLED") && <button type="button" disabled={baixando} onClick={() => void baixarPdf()}>{baixando ? "Gerando PDF…" : "Baixar versão pública em PDF"}</button>}
     <HistoricoPropostaOs userId={userId} clienteId={clienteId} osId={osId} propostaId={item.id} clienteNome={clienteNome} />
     {item.status === "enviada" && !decisaoConcluida && <div>
       <label><input type="checkbox" checked={conferido("aceita")} disabled={!!pendente || enviar.isPending || !itensDisponiveis} onChange={(e) => setConfirmacao(e.target.checked ? JSON.stringify([fotografia, "aceita"]) : null)} /> Conferi esta versão para aprovação.</label>

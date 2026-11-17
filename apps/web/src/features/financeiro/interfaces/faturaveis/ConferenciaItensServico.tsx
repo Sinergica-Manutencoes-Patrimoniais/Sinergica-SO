@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const contagem = z.union([z.number(), z.string().regex(/^\d+$/)])
@@ -10,7 +12,15 @@ const resultado = z.object({ clienteId: uuid, fatoId: uuid, declaracoesMaterial:
   exclusividadeComprovada: z.literal(false), geraFaturavel: z.literal(false) }).strict();
 
 export function ConferenciaItensServico(props: { usuario: string; cliente: string; declaracao: string }) {
-  if (import.meta.env.VITE_SSO_CONFERENCIA_ITENS_SERVICO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_ITENS_SERVICO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia itens servico"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_ITENS_SERVICO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.declaracao])} {...props} />;
 }
 function Conteudo({ usuario, cliente, declaracao }: { usuario: string; cliente: string; declaracao: string }) {
@@ -49,7 +59,7 @@ function Conteudo({ usuario, cliente, declaracao }: { usuario: string; cliente: 
     {consulta.isError && <p role="alert">Consulta indisponível ou sem permissão.</p>}
     {!consulta.isFetching && !consulta.isError && consulta.data === null && <p>Identidade interna ainda não encontrada.</p>}
     {!consulta.isFetching && !consulta.isError && consulta.data && <p>Declarações de material na linha: {consulta.data.declaracoesMaterial}; itens de proposta integral: {consulta.data.itensPropostaIntegral}; itens de material na linha: {consulta.data.itensMaterialMesmaLinha}; não cancelados: {consulta.data.itensNaoCancelados}; cancelados: {consulta.data.itensCancelados}. Contagens incluem itens base e complementos.</p>}
-    {import.meta.env.VITE_SSO_CLASSIFICACAO_FATO_SERVICO_ENABLED === "true" && fato && <section aria-label="Classificação comercial da linha">
+    {flagLigada("VITE_SSO_CLASSIFICACAO_FATO_SERVICO_ENABLED") && fato && <section aria-label="Classificação comercial da linha">
       <button type="button" disabled={classificacao.isFetching} onClick={() => void classificacao.refetch()}>Consultar classificação da linha</button>
       {classificacao.isFetching && <output>Consultando classificação…</output>}
       {classificacao.isError && <p role="alert">Classificação indisponível ou sem permissão.</p>}

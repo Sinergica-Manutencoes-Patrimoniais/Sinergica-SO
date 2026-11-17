@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DataTable } from "@sinergica/ui";
+import { DataTable, RecursoNaoAtivado } from "@sinergica/ui";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const campos = z.object({ titulo: z.string().nullable(), descricao: z.string().nullable(), tecnicoAuvoId: z.string().nullable(),
   dataAgendada: z.string().nullable(), checkIn: z.string().nullable(), checkOut: z.string().nullable() }).strict();
@@ -19,7 +20,15 @@ const rotulos: [keyof z.infer<typeof campos>, string][] = [["titulo", "Título"]
   ["dataAgendada", "Agendamento"], ["checkIn", "Entrada"], ["checkOut", "Saída"]];
 
 export function ConferenciaEventoCampo(props: Props) {
-  if (import.meta.env.VITE_SSO_CONFERENCIA_EVENTO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_EVENTO_CAMPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia evento campo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_EVENTO_CAMPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: Props) {

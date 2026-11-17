@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z
   .object({
@@ -24,7 +26,15 @@ const pedidoSchema = z
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number };
 export function RejeicaoLevantamento(props: Props) {
-  if (import.meta.env.VITE_SSO_REJEICAO_LEVANTAMENTOS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_REJEICAO_LEVANTAMENTOS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Rejeicao levantamentos"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_REJEICAO_LEVANTAMENTOS_ENABLED"]}
+      />
+    );
+  }
   return (
     <Conteudo
       key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])}

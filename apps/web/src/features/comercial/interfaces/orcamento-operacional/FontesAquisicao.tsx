@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { RetificarFonteAquisicao } from "./RetificarFonteAquisicao";
 import { valorReaisParaCentavos } from "../../domain/valor-em-reais";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const tipo = z.enum(["material", "retirada_exclusiva"]);
@@ -82,7 +83,7 @@ export function FontesAquisicao({ usuario, cliente, listaId, listaRevisao, permi
     {!consulta.isFetching && !consulta.isError && consulta.data && (itens.length === 0 ? <p>Nenhuma fonte declarada.</p> :
       <ul>{itens.map((f) => <li key={f.id}>{f.tipo === "material" ? "Material" : "Retirada exclusiva"} · {f.descricao} · {f.valor_centavos} centavos · lista revisão {f.lista_revisao}</li>)}</ul>)}
     {!consulta.isError && consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais fontes</button>}
-    {import.meta.env.VITE_SSO_RETIFICAR_FONTE_AQUISICAO_ENABLED === "true" && <RetificarFonteAquisicao usuario={usuario} cliente={cliente} listaId={listaId}
+    {flagLigada("VITE_SSO_RETIFICAR_FONTE_AQUISICAO_ENABLED") && <RetificarFonteAquisicao usuario={usuario} cliente={cliente} listaId={listaId}
       listaRevisao={listaRevisao} fontes={!consulta.isFetching && !consulta.isError ? itens : []} disponivel={permitirEdicao && !!consulta.data && !consulta.isFetching && !consulta.isError} />}
     {pendente === "invalido" ? <p role="alert">Tentativa inválida. Procure suporte.</p> : pendente ? <>
       <p>Há uma tentativa pendente; o resultado pode ser incerto.</p><button type="button" disabled={ocupado || !permitirEdicao} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button>

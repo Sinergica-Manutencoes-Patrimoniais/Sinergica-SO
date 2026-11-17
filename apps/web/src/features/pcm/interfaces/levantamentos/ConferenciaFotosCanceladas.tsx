@@ -2,10 +2,11 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect,useRef,useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props={userId:string;clienteId:string;loteId:string;chave:string};
 const itemSchema=z.object({request_id:z.string().guid(),cancelada_em:z.string(),ultima_observacao_em:z.string().nullable(),objeto_catalogado:z.boolean().nullable()}).strict();
 const resultadoSchema=z.object({observacaoId:z.string().guid(),requestId:z.string().guid(),objetoCatalogado:z.boolean(),observadoEm:z.string()}).strict();
-export function ConferenciaFotosCanceladas(p:Props){if(import.meta.env.VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([p.userId,p.clienteId,p.loteId,p.chave])} {...p}/>;}
+export function ConferenciaFotosCanceladas(p:Props){if(!flagLigada("VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED"))return null;return <Conteudo key={JSON.stringify([p.userId,p.clienteId,p.loteId,p.chave])} {...p}/>;}
 function Conteudo(p:Props){
  const consulta=useInfiniteQuery({queryKey:["conferencia-fotos-canceladas",p.userId,p.clienteId,p.loteId,p.chave],initialPageParam:null as string|null,gcTime:0,staleTime:0,retry:false,refetchOnWindowFocus:true,
   queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_listar_fotos_canceladas",{p_cliente_id:p.clienteId,p_lote_id:p.loteId,p_chave:p.chave,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(itemSchema).max(20).parse(data);},getNextPageParam:pagina=>pagina.length===20?pagina.at(-1)?.request_id:undefined});

@@ -2,12 +2,22 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), grupoId: z.string().guid(), codigo: z.string().min(1).max(200).regex(/^[^\s]+$/) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 
 export function AtribuirCodigoGrupo({ userId, clienteId, grupoId }: { userId: string; clienteId: string; grupoId: string }) {
-  if (import.meta.env.VITE_SSO_ATRIBUIR_CODIGO_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ATRIBUIR_CODIGO_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Atribuir codigo grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ATRIBUIR_CODIGO_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId, clienteId, grupoId])} userId={userId} clienteId={clienteId} grupoId={grupoId} />;
 }
 

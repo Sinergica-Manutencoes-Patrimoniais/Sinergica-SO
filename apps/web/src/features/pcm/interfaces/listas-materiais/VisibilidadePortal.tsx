@@ -2,12 +2,22 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { RecursoNaoAtivado } from "@sinergica/ui";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const evento = z.object({ revisao_publicacao: z.number().int().positive(), sequencia: z.number().int().positive(), acao: z.enum(["retirar", "republicar"]), motivo: z.string(), ator_id: z.string().guid(), criado_em: z.string() }).strict();
 const pedido = z.object({ requestId: z.string().guid(), listaId: z.string().guid(), revisao: z.number().int().positive(), acao: z.enum(["retirar", "republicar"]), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function VisibilidadePortal(props: { usuario: string; cliente: string; listaId: string }) {
-  if (import.meta.env.VITE_SSO_VISIBILIDADE_MATERIAIS_ENABLED !== "true" || import.meta.env.VITE_SSO_VISIBILIDADE_MATERIAIS_MEDIADA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_VISIBILIDADE_MATERIAIS_ENABLED") || !flagLigada("VITE_SSO_VISIBILIDADE_MATERIAIS_MEDIADA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Visibilidade de materiais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_VISIBILIDADE_MATERIAIS_ENABLED", "VITE_SSO_VISIBILIDADE_MATERIAIS_MEDIADA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.listaId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, listaId }: { usuario: string; cliente: string; listaId: string }) {

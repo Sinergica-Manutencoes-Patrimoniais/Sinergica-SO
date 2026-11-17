@@ -3,16 +3,26 @@ import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
 import { HistoricoMateriais } from "./HistoricoMateriais";
 import { conferirSessaoMateriais } from "../infrastructure/supabase-portal-materiais-adapter";
+import { RecursoNaoAtivado } from "@sinergica/ui";
+import { flagLigada } from "../../../config/flags-sso";
 
 export function ListasHistoricoMateriais(props: { userId: string; clienteId: string; osId: string }) {
-  if (import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_RETIRADOS_ENABLED !== "true" || import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_MATERIAIS_RETIRADOS_ENABLED") || !flagLigada("VITE_SSO_HISTORICO_MATERIAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Histórico de materiais retirados"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_MATERIAIS_RETIRADOS_ENABLED", "VITE_SSO_HISTORICO_MATERIAIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
   const listas = useInfiniteQuery({ queryKey: ["portal-listas-historico-materiais", userId, clienteId, osId], gcTime: 0, staleTime: 0, retry: false,
     refetchOnWindowFocus: true, initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => { await conferirSessaoMateriais(userId, signal);const parametros={p_cliente_id:clienteId,p_os_id:osId,p_apos:pageParam};
-      const requisicao=import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED==="true"?supabase.schema("pcm").rpc("sso_portal_listas_historico_materiais_mediado",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_listas_historico_materiais",parametros);
+      const requisicao=flagLigada("VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED")?supabase.schema("pcm").rpc("sso_portal_listas_historico_materiais_mediado",{...parametros,p_ator_id:userId}):supabase.schema("pcm").rpc("sso_portal_listas_historico_materiais",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error; const pagina = z.array(z.object({ lista_id: z.string().guid() }).strict()).max(20).parse(data);
       let anterior = pageParam?.toLowerCase() ?? null; for (const item of pagina) { const id = item.lista_id.toLowerCase(); if (anterior !== null && id <= anterior) throw new Error("Página divergente."); anterior = id; } await conferirSessaoMateriais(userId, signal); return pagina; },

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { VisitaResumo } from "../../application/visitas-gateway";
 import { supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedidoSchema = z.object({
   requestId: z.string().guid(), intencaoId: z.string().guid(), novoVinculoId: z.string().guid(),
@@ -74,7 +75,7 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
       return r;
     },
   });
-  const excecoes=useInfiniteQuery({queryKey:["visitas",userId,clienteId,"excecoes-transferencia",identidade.data?.osId],enabled:import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&!!identidade.data&&!identidade.isFetching&&!identidade.isError&&!bloqueado&&!pedido,gcTime:0,
+  const excecoes=useInfiniteQuery({queryKey:["visitas",userId,clienteId,"excecoes-transferencia",identidade.data?.osId],enabled:flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&!!identidade.data&&!identidade.isFetching&&!identidade.isError&&!bloqueado&&!pedido,gcTime:0,
     initialPageParam:null as {lista:string;revisao:number}|null,
     queryFn:async({pageParam,signal})=>{const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted||!identidade.data)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_listar_excecoes_para_intencao",{p_cliente_id:clienteId,p_os_id:identidade.data.osId,p_apos_lista:pageParam?.lista??null,p_apos_revisao:pageParam?.revisao??null,p_limite:20}).abortSignal(signal);if(error)throw error;
@@ -84,7 +85,7 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
   const material=excecoes.data?.pages.flat().find((e)=>JSON.stringify([e.lista_id,e.revisao])===materialId);
   const impedimento = useQuery({
     queryKey: ["visitas", userId, clienteId, "impedimento-transferencia", identidade.data?.osId],
-    enabled: import.meta.env.VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED === "true" && !!identidade.data && !identidade.isFetching && !identidade.isError && !bloqueado && !pedido,
+    enabled: flagLigada("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED") && !!identidade.data && !identidade.isFetching && !identidade.isError && !bloqueado && !pedido,
     gcTime: 0, staleTime: 0,
     queryFn: async ({ signal }) => {
       const osId = identidade.data?.osId;
@@ -104,7 +105,7 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
   });
   const ordemSelecionada=ordens.data?.pages.flat().find(o=>o.id===vinculoId);
   const fotografia=JSON.stringify({userId,clienteId,origem:origem??null,destino:destino??null,ordem:ordemSelecionada??null,identidade:identidade.data??null,material:material??null,
-    impedimento: import.meta.env.VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED === "true" ? { consultando: impedimento.isFetching, erro: impedimento.isError, ultimo: impedimento.data ?? null } : null,
+    impedimento: flagLigada("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED") ? { consultando: impedimento.isFetching, erro: impedimento.isError, ultimo: impedimento.data ?? null } : null,
     sequencia,motivo});
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
@@ -148,7 +149,7 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
     <form onSubmit={(event) => {
       event.preventDefault();
       if (pedido || trava.current || bloqueado || confirmacao!==fotografia || !origem || !destino || ordens.isFetching || ordens.isError || identidade.isFetching || identidade.isError || !identidade.data || !ordens.data?.pages.flat().some((o) => o.id === vinculoId && o.osId === identidade.data.osId) ||
-        (materialId&&(import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED!=="true"||!material||excecoes.isFetching||excecoes.isError))) return;
+        (materialId&&(!flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")||!material||excecoes.isFetching||excecoes.isError))) return;
       try {
         const p = pedidoSchema.parse({ requestId: crypto.randomUUID(), intencaoId: crypto.randomUUID(), novoVinculoId: crypto.randomUUID(), clienteId,
           origemId: origem.id, destinoId: destino.id, vinculoId, revisaoOrigem: origem.revisao, revisaoDestino: destino.revisao, sequencia: Number(sequencia), motivo, tarefaEsperada: identidade.data.tarefaAuvoId,...(material?{material:{listaId:material.lista_id,eventoRevisao:material.revisao}}:{}) });
@@ -167,14 +168,14 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
       {vinculoId && identidade.isFetching && <output>Conferindo identidade no SSO…</output>}
       {vinculoId && identidade.isError && <p role="alert">Identidade indisponível. <button type="button" onClick={() => void identidade.refetch()}>Tentar novamente</button></p>}
       {vinculoId && !identidade.isFetching && !identidade.isError && identidade.data && <p>Tarefa no SSO: {identidade.data.tarefaAuvoId}. A consulta não comprova estado no Auvo.</p>}
-      {import.meta.env.VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED === "true" && identidade.data && !identidade.isFetching && !identidade.isError && <>
+      {flagLigada("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED") && identidade.data && !identidade.isFetching && !identidade.isError && <>
         {impedimento.isFetching && <p>Consultando impedimento declarado…</p>}
         {impedimento.isError && <p role="alert">Não foi possível consultar o impedimento declarado da OS.</p>}
         {!impedimento.isFetching && !impedimento.isError && impedimento.data && <p>Último impedimento declarado: {impedimento.data.estado === "suspenso" ? "suspensão" : "retomada"}, revisão {impedimento.data.revisao}. Essa declaração não comprova alteração da tarefa no Auvo.</p>}
         {!impedimento.isFetching && !impedimento.isError && impedimento.data === null && <p>Nenhum impedimento local declarado foi encontrado; isso não comprova disponibilidade de materiais.</p>}
       </>}
       {ordens.hasNextPage && <button type="button" onClick={() => void ordens.fetchNextPage()}>Mais OS para transferência</button>}
-      {import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&identidade.data&&!identidade.isFetching&&!identidade.isError&&<>
+      {flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&identidade.data&&!identidade.isFetching&&!identidade.isError&&<>
         <p>Associar exceção histórica não confirma que ela continua aberta.</p>
         {excecoes.isFetching&&<output>Carregando exceções…</output>}
         {excecoes.isError&&<p role="alert">Exceções indisponíveis. <button type="button" onClick={()=>void excecoes.refetch()}>Tentar novamente</button></p>}
@@ -185,7 +186,7 @@ function TransferirOsEnviadaInterna({ userId, clienteId, visitas, bloqueado }: P
       <label>Sequência no destino <input type="number" required min="1" step="1" value={sequencia} onChange={(e) => setSequencia(e.target.value)} /></label>
       <label>Motivo da transferência <textarea required maxLength={2000} value={motivo} onChange={(e) => setMotivo(e.target.value)} /></label>
       {confirmacao && confirmacao!==fotografia && <p role="alert">Dados ou revisões mudaram; confira novamente a transferência.</p>}
-      <label><input type="checkbox" checked={confirmacao===fotografia} disabled={!origem||!destino||!ordemSelecionada||!identidade.data||ordens.isFetching||identidade.isFetching||ordens.isError||identidade.isError||(import.meta.env.VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED === "true" && impedimento.isFetching)} onChange={(e)=>setConfirmacao(e.target.checked?fotografia:null)}/> Conferi a mesma OS, tarefa, origem, destino e eventual exceção; a tarefa Auvo não será alterada por esta ação.</label>
+      <label><input type="checkbox" checked={confirmacao===fotografia} disabled={!origem||!destino||!ordemSelecionada||!identidade.data||ordens.isFetching||identidade.isFetching||ordens.isError||identidade.isError||(flagLigada("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED") && impedimento.isFetching)} onChange={(e)=>setConfirmacao(e.target.checked?fotografia:null)}/> Conferi a mesma OS, tarefa, origem, destino e eventual exceção; a tarefa Auvo não será alterada por esta ação.</label>
       <button type="submit" disabled={confirmacao!==fotografia}>Transferir e registrar intenção</button>
     </fieldset></form>
     {pedido === "invalido" && <p role="alert">Tentativa ilegível. Procure suporte.</p>}

@@ -11,6 +11,7 @@ import type {
 } from "../application/config-gateway";
 import type { Grupo, PermissaoModulo } from "../domain/grupo";
 import type { NivelAcesso } from "../domain/modulo";
+import { flagLigada } from "../../../config/flags-sso";
 
 function permissoesParaObjeto(permissoes: readonly PermissaoModulo[]): Record<string, NivelAcesso> {
   return Object.fromEntries(permissoes.map((p) => [p.modulo, p.nivel]));
@@ -67,7 +68,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
   },
 
   async criarGrupo(nome, descricao, permissoes, atorEsperado): Promise<Grupo> {
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED")) {
       const identidade = await supabase.auth.getUser();
       if (identidade.error || !identidade.data.user?.id || identidade.data.user.id !== atorEsperado) throw new Error("Sessão alterada. Nenhum grupo foi enviado.");
       const usuarioId = identidade.data.user.id;
@@ -136,7 +137,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
     if (patch.descricao !== undefined) campos.descricao = patch.descricao;
     if (patch.ativo !== undefined) campos.ativo = patch.ativo;
 
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED")) {
       if (!patch.estadoEsperado || patch.estadoEsperado.id !== id || !patch.atorEsperado) throw new Error("Estado anterior ou sessão do grupo indisponível; recarregue antes de editar.");
       const anterior = patch.estadoEsperado;
       const ator = patch.atorEsperado;

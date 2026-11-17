@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z
   .object({
@@ -32,7 +34,15 @@ export function FotosGrupo(props: {
   grupoId: string;
   podeEditar: boolean;
 }) {
-  if (import.meta.env.VITE_SSO_FOTOS_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_FOTOS_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Fotos grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_FOTOS_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Fotos key={JSON.stringify([props.userId, props.clienteId, props.grupoId])} {...props} />;
 }
 function Fotos({

@@ -8,6 +8,7 @@ import { EsforcoDeclarado } from "./EsforcoDeclarado";
 import { DeslocamentoDeclarado } from "./DeslocamentoDeclarado";
 import { DeslocamentosSemana } from "./DeslocamentosSemana";
 import { ConfirmarEsforcoRestante } from "./ConfirmarEsforcoRestante";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Fonte = {
   vinculo_id: string;
@@ -39,9 +40,9 @@ export function FontesDemanda({
   const [osEditada, setOsEditada] = useState<string | null>(null);
   const [escopoEditado, setEscopoEditado] = useState<string | null>(null);
   const [visitaDeslocamento, setVisitaDeslocamento] = useState<string | null>(null);
-  const mostrarResumo = import.meta.env.VITE_SSO_RESUMO_ESFORCO_ENABLED === "true";
-  const mostrarContinuacoes = mostrarResumo && import.meta.env.VITE_SSO_ESFORCO_CONTINUACAO_ENABLED === "true";
-  const confirmarRestante = mostrarContinuacoes && import.meta.env.VITE_SSO_ESFORCO_RESTANTE_CONTINUACAO_ENABLED === "true";
+  const mostrarResumo = flagLigada("VITE_SSO_RESUMO_ESFORCO_ENABLED");
+  const mostrarContinuacoes = mostrarResumo && flagLigada("VITE_SSO_ESFORCO_CONTINUACAO_ENABLED");
+  const confirmarRestante = mostrarContinuacoes && flagLigada("VITE_SSO_ESFORCO_RESTANTE_CONTINUACAO_ENABLED");
   const fontes = useInfiniteQuery({
     queryKey: ["capacidade-fontes-demanda", userId, clienteId, semana, mostrarResumo, mostrarContinuacoes, confirmarRestante],
     gcTime: 0,
@@ -177,7 +178,7 @@ export function FontesDemanda({
   return (
     <section aria-label="Fontes de demanda da semana">
       <h3>Fontes de demanda da semana</h3>
-      {import.meta.env.VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED === "true" && <DeslocamentosSemana key={JSON.stringify([userId, clienteId, semana])} userId={userId} clienteId={clienteId} semana={semana} />}
+      {flagLigada("VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED") && <DeslocamentosSemana key={JSON.stringify([userId, clienteId, semana])} userId={userId} clienteId={clienteId} semana={semana} />}
       <p>
         Somente vínculos de Visita carregados. Não há capacidade validada: esforço restante,
         deduplicação OS/Ocorrência, simultaneidade e especialidades ainda dependem de conferência.
@@ -260,7 +261,7 @@ export function FontesDemanda({
                 participante(s) · deslocamento{" "}
                 {primeira.deslocamento_visita_minutos === null ? "não informado" : `${primeira.deslocamento_visita_minutos} min`}</> :
                 <span role="alert">informações da Visita divergentes entre páginas; recarregue e confira antes de usar.</span>}
-              {import.meta.env.VITE_SSO_DESLOCAMENTO_DECLARADO_ENABLED === "true" && <>
+              {flagLigada("VITE_SSO_DESLOCAMENTO_DECLARADO_ENABLED") && <>
                 <button type="button" aria-expanded={visitaDeslocamento === visitaId} onClick={() => setVisitaDeslocamento(visitaDeslocamento === visitaId ? null : visitaId)}>{visitaDeslocamento === visitaId ? "Ocultar deslocamento declarado" : "Conferir deslocamento declarado"}</button>
                 {visitaDeslocamento === visitaId && <DeslocamentoDeclarado userId={userId} clienteId={clienteId} visitaId={visitaId} />}
               </>}
@@ -280,7 +281,7 @@ export function FontesDemanda({
                     {confirmarRestante && f.proposta_continuacao_id && <ConfirmarEsforcoRestante
                       userId={userId} clienteId={clienteId} osId={f.os_id} propostaId={f.proposta_continuacao_id}
                       revisao={f.esforco_revision ?? 0} internos={f.internos_minutos ?? null} terceiros={f.terceiros_minutos ?? null} acompanhamento={f.acompanhamento_minutos ?? null} jaConfirmado={f.esforco_restante_confirmado === true} />}
-                    {import.meta.env.VITE_SSO_ESFORCO_DECLARADO_ENABLED === "true" && (
+                    {flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") && (
                       <button
                         type="button"
                         onClick={() =>
@@ -291,7 +292,7 @@ export function FontesDemanda({
                       </button>
                     )}
                     {osEditada === f.vinculo_id &&
-                      import.meta.env.VITE_SSO_ESFORCO_DECLARADO_ENABLED === "true" && (
+                      flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") && (
                         <EsforcoDeclarado
                           key={f.vinculo_id}
                           userId={userId}
@@ -299,7 +300,7 @@ export function FontesDemanda({
                           osId={f.os_id}
                         />
                       )}
-                    {import.meta.env.VITE_SSO_ESCOPO_ORIGEM_ENABLED === "true" && (
+                    {flagLigada("VITE_SSO_ESCOPO_ORIGEM_ENABLED") && (
                       <button
                         type="button"
                         onClick={() =>
@@ -310,7 +311,7 @@ export function FontesDemanda({
                       </button>
                     )}
                     {escopoEditado === f.vinculo_id &&
-                      import.meta.env.VITE_SSO_ESCOPO_ORIGEM_ENABLED === "true" && (
+                      flagLigada("VITE_SSO_ESCOPO_ORIGEM_ENABLED") && (
                         <EscopoDeclarado
                           key={f.vinculo_id}
                           userId={userId}

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ValidacaoResposta } from "./ValidacaoResposta";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; respostaId: string; revision: number; caminho: string; justificativa: string };
 
 type Props = { userId: string; clienteId: string; retornoId: string };
@@ -40,8 +41,8 @@ function ConteudoUpload({ userId, clienteId, retornoId }: Props) {
       <label>Foto <input required type="file" accept="image/jpeg,image/png" onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} /></label>{" "}
       <label>Justificativa <textarea required maxLength={2000} value={justificativa} onChange={(e) => setJustificativa(e.target.value)} /></label><button type="submit">Enviar e associar</button></fieldset>
     </form>{respostas.hasNextPage && <button type="button" onClick={() => void respostas.fetchNextPage()}>Mais respostas</button>}
-    {historico.data && <ul>{historico.data.pages.flat().map((h) => <li key={h.id}>Revisão {h.revisao} · resposta {h.resposta_id} · {h.mime_declarado} · {h.justificativa} · {h.criado_em}{import.meta.env.VITE_SSO_DOWNLOAD_EVIDENCIA_RESPOSTA_ENABLED === "true" && <button type="button" disabled={baixando} onClick={() => void baixar(h.id)}>Baixar para revisão</button>}
-      {import.meta.env.VITE_SSO_VALIDACAO_RESPOSTA_ENABLED === "true" && <ValidacaoResposta userId={userId} clienteId={clienteId} retornoId={retornoId} respostaId={h.resposta_id} evidenciaId={h.id} uploadsRevision={revision} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
+    {historico.data && <ul>{historico.data.pages.flat().map((h) => <li key={h.id}>Revisão {h.revisao} · resposta {h.resposta_id} · {h.mime_declarado} · {h.justificativa} · {h.criado_em}{flagLigada("VITE_SSO_DOWNLOAD_EVIDENCIA_RESPOSTA_ENABLED") && <button type="button" disabled={baixando} onClick={() => void baixar(h.id)}>Baixar para revisão</button>}
+      {flagLigada("VITE_SSO_VALIDACAO_RESPOSTA_ENABLED") && <ValidacaoResposta userId={userId} clienteId={clienteId} retornoId={retornoId} respostaId={h.resposta_id} evidenciaId={h.id} uploadsRevision={revision} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={registro.isPending} onClick={() => repetir(pendente)}>Verificar objeto e repetir registro</button>}{aviso && <p role="status">{aviso}</p>}
   </section>;
 }

@@ -1,9 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 const schema = z.object({ respostaId: z.string().guid(), original: z.object({ resultado: z.string(), observacao: z.string().nullable() }).strict(), proposta: z.object({ id: z.string().guid(), revisao: z.number().int().positive(), resultado: z.string(), observacao: z.string().nullable(), decisao: z.enum(["aceita", "rejeitada"]).nullable(), decisaoRevisao: z.number().int().positive().nullable() }).strict().nullable(), efetivada: z.literal(false), integracaoTransversalConcluida: z.literal(false) }).strict();
 export function PreviaReclassificacaoResposta({ userId, clienteId, respostaId }: { userId: string; clienteId: string; respostaId: string }) {
-  if (import.meta.env.VITE_SSO_PREVIA_RECLASSIFICACAO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PREVIA_RECLASSIFICACAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Previa reclassificacao"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PREVIA_RECLASSIFICACAO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId, clienteId, respostaId])} userId={userId} clienteId={clienteId} respostaId={respostaId}/>;
 }
 function Conteudo({ userId, clienteId, respostaId }: { userId: string; clienteId: string; respostaId: string }) {

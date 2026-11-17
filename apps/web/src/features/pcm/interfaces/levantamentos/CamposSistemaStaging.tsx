@@ -5,10 +5,12 @@ import { supabase } from "../../../../lib/supabase-client";
 import { useAreasDoCliente, useCategoriasAtivo, useLocaisDoCliente } from "../../application/ativos-cliente-queries";
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
 import { supabaseCatalogosSimplesAdapter } from "../../infrastructure/supabase-catalogos-simples-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; tipo: string };
 const campos = z.record(z.string(), z.union([z.string(), z.null()]));
 const pedido = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string(), revision: z.number().int().positive(), acao: z.enum(["editar", "conferir"]), campos, motivo: z.string().min(1).max(2000) }).strict(); type Pedido = z.infer<typeof pedido>;
-export function CamposSistemaStaging(props: Props) { if (import.meta.env.VITE_SSO_CAMPOS_SISTEMA_STAGING_ENABLED !== "true" || props.tipo !== "sistema") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props}/>; }
+export function CamposSistemaStaging(props: Props) { if (props.tipo !== "sistema") return null; if (!flagLigada("VITE_SSO_CAMPOS_SISTEMA_STAGING_ENABLED")) return <RecursoNaoAtivado recurso="Campos sistema staging" podeAdministrar={false} faltando={["VITE_SSO_CAMPOS_SISTEMA_STAGING_ENABLED"]} />; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props}/>; }
 function Conteudo({ userId, clienteId, loteId, chave }: Props) {
   const key = `sso-campos-sistema:${JSON.stringify([userId, clienteId, loteId, chave])}`; const client = useQueryClient(); const trava = useRef(false);
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.loteId === loteId && p.chave === chave ? p : "invalido"; } catch { return "invalido"; } });

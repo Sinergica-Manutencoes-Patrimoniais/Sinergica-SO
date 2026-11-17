@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Registro = { id:string; classificacao:string; dados:Record<string,string|number|null> };
 type Props = { userId:string; clienteId:string; tipo:"referencias"|"planos"|"mapeamento-planos"; registros:Registro[]; parcial:boolean; disponivel:boolean };
@@ -12,7 +13,7 @@ export function RelatorioPrevia({userId,clienteId,tipo,registros,parcial,disponi
   useEffect(()=>{ativo.current=true;return()=>{ativo.current=false;geracao.current++;};},[]);
   async function autorizar(){
     if(await supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir",clienteId)!==true)throw new Error("Acesso indisponível.");
-    if(tipo==="mapeamento-planos" || import.meta.env.VITE_SSO_PREFLIGHT_MIGRACAO_MEDIADO_ENABLED==="true"){
+    if(tipo==="mapeamento-planos" || flagLigada("VITE_SSO_PREFLIGHT_MIGRACAO_MEDIADO_ENABLED")){
       const {data,error}=await supabase.schema("pcm").rpc("sso_autorizar_exportacao_preflight",{p_ator_id:userId,p_cliente_id:clienteId});
       if(error||data!==true)throw new Error("Acesso indisponível.");
     }

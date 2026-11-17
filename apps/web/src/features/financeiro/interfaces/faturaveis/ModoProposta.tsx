@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const schema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), modo: z.enum(["integral", "linhas"]), motivo: z.string().min(1).max(1000) }).strict();
 type Pedido = z.infer<typeof schema>;
@@ -23,7 +25,15 @@ export function ModoProposta({ usuario, cliente }: { usuario: string; cliente: s
     const p = schema.parse({ requestId: crypto.randomUUID(), propostaId: proposta.trim(), modo, motivo: motivo.trim() });
     if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido existente"); sessionStorage.setItem(chave, JSON.stringify(p)); setPendente(p); enviar(p);
   } catch { setAviso("Confira os dados e a sessão. Nada foi enviado."); } }
-  if (import.meta.env.VITE_SSO_MODO_FATURAMENTO_PROPOSTA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_MODO_FATURAMENTO_PROPOSTA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Modo faturamento proposta"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_MODO_FATURAMENTO_PROPOSTA_ENABLED"]}
+      />
+    );
+  }
   return <section><h3>Modo de faturamento da proposta</h3><p>Escolha integral ou linhas. A escolha é definitiva neste fluxo e não cria cobrança.</p>
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
     {pendente && pendente !== "invalido" ? <button type="button" disabled={comando.isPending} onClick={() => enviar(pendente)}>Repetir pedido</button> :

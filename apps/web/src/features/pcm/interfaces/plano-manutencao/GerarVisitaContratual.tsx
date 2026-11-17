@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; serieId: string; regraId: string; semana: string; visitaId: string; inicio: string; cobertura: string; protocolo?: "coordenado" | "suprimivel" | "legado" };
 
 export function GerarVisitaContratual({ userId, clienteId, serieId }: { userId: string; clienteId: string; serieId: string }) {
@@ -17,7 +18,7 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     const parametros = { p_request_id: p.requestId, p_cliente_id: p.clienteId, p_serie_id: p.serieId, p_regra_id: p.regraId,
       p_semana: p.semana, p_visita_id: p.visitaId, p_inicio_em: p.inicio, p_responsavel_id: null, p_cobertura: p.cobertura };
     const protocolo = p.protocolo ?? "legado";
-    if(protocolo === "coordenado" && import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED !== "true") throw new Error("Geração coordenada indisponível.");
+    if(protocolo === "coordenado" && !flagLigada("VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED")) throw new Error("Geração coordenada indisponível.");
     const consulta = protocolo === "coordenado" ? supabase.schema("pcm").rpc("sso_gerar_visita_ou_suprimir", { ...parametros, p_ator_id: userId })
       : supabase.schema("pcm").rpc("sso_recibo_geracao_visita_legada", {p_ator:userId,p_request:p.requestId,p_cliente:p.clienteId,p_serie:p.serieId,p_regra:p.regraId,p_semana:p.semana,p_visita:p.visitaId,p_inicio:p.inicio,p_responsavel:null,p_cobertura:p.cobertura});
     const { data, error } = await consulta; if (error) throw error;
@@ -49,7 +50,7 @@ function GerarVisitaContratualSessao({ userId, clienteId, serieId }: { userId: s
     if (r.decisao === "suprimida_feriado") void cache.invalidateQueries({ queryKey: ["historico-supressao-gerador", userId, clienteId] });
   }, onError: (error,p) => {if (!montado.current) return;const e=error as {code?:string;message?:string};if(p.protocolo!=="coordenado"&&e.code==="55000"&&e.message==="recibo_legado_indisponivel")setAviso("Recibo antigo não encontrado. O pedido permanece guardado e a situação original não foi comprovada; procure suporte para conferir.");else setAviso("Resultado não confirmado; repita a tentativa. Em conflito de semana ou dúvida de horário procure suporte.");}, onSettled: () => { trava.current = false; } });
   const enviar = (pedido: Pedido) => { if (trava.current) return;
-    if (!pendente && import.meta.env.VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED !== "true") {setAviso("Geração coordenada indisponível; nenhum pedido criado.");return;}
+    if (!pendente && !flagLigada("VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED")) {setAviso("Geração coordenada indisponível; nenhum pedido criado.");return;}
     const p: Pedido = pendente ? pedido : { ...pedido, protocolo: "coordenado" };
     trava.current = true; try { const salvo = sessionStorage.getItem(chave); if (pendente ? salvo !== JSON.stringify(p) : salvo !== null) throw new Error(); sessionStorage.setItem(chave, JSON.stringify(p)); } catch { trava.current = false; setPendente("invalido"); setAviso("Não foi possível guardar tentativa; nada enviado. Procure suporte."); return; } setPendente(p); envio.mutate(p); };
   const regraSelecionada = !regras.isFetching && !regras.isError ? regras.data?.pages.flat().find((r) => r.id === regraId) : undefined;

@@ -1,6 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const itemSchema = z.object({ tipo: z.enum(["composicao", "retorno", "retorno_parcial"]), id: z.string().guid(), composicao_id: z.string().guid(),
   pendencia_id: z.string().guid().nullable(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().guid(),
@@ -20,11 +22,19 @@ function compararDecimal(a: string, b: string): number {
 
 /** Consulta experimental separada da fila oficial; flags e RPC privada mantêm o gate fechado. */
 export function RankingUnificadoExperimental({ userId, clienteId, onAbrirParcial }: { userId: string; clienteId: string; onAbrirParcial?: (id: string) => void }) {
-  if (import.meta.env.VITE_SSO_RANKING_UNIFICADO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RANKING_UNIFICADO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Ranking unificado"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RANKING_UNIFICADO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirParcial={onAbrirParcial} />;
 }
 function Conteudo({ userId, clienteId, onAbrirParcial }: { userId: string; clienteId: string; onAbrirParcial?: (id: string) => void }) {
-  const incluirParciais = import.meta.env.VITE_SSO_RANKING_RETORNO_PARCIAL_ENABLED === "true";
+  const incluirParciais = flagLigada("VITE_SSO_RANKING_RETORNO_PARCIAL_ENABLED");
   const consulta = useInfiniteQuery({
     queryKey: ["backlog-ranking-unificado", userId, clienteId, incluirParciais], gcTime: 0, refetchOnWindowFocus: true,
     initialPageParam: { tipo: null, id: null, score: null, assinatura: null } as Cursor,

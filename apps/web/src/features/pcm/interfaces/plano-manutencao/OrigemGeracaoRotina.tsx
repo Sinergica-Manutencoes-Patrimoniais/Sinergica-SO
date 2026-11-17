@@ -3,12 +3,22 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), versaoId: z.string().guid(), rotinaId: z.string().guid(), revision: z.number().int().positive().safe(), origem: z.enum(["plano", "pmoc"]), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; revision: number };
 export function OrigemGeracaoRotina(props: Props) {
-  if (import.meta.env.VITE_SSO_ORIGEM_ROTINA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ORIGEM_ROTINA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Origem rotina"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ORIGEM_ROTINA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: Props) {

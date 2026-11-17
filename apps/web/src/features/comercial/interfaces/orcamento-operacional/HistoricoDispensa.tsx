@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ id: z.string().guid(), tipo: z.enum(["dispensada", "revogada"]), dispensa_id: z.string().guid(),
   lista_revisao: z.number().int().positive(), motivo: z.string(), ator_id: z.string().guid(), criado_em: z.string() }).strict();
@@ -10,7 +12,15 @@ const pedidoSchema = z.object({ requestId: z.string().guid(), revogacaoId: z.str
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; listaId: string; listaRevision: number; vigenteId: string | null };
 export function HistoricoDispensa(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_DISPENSA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_DISPENSA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico dispensa"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_DISPENSA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico, props.listaId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico, listaId, listaRevision, vigenteId }: Props) {

@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z.object({ chave: z.string().min(1).max(200), tipo: z.string(), referencia_pai: z.string().nullable(), pai_tipo: z.string().nullable(),
   revisao: z.number().int().positive(), problemas: z.array(z.enum(["area_nao_admite_pai", "pai_nao_encontrado_no_lote", "ancestral_nao_encontrado_no_lote", "ciclo_hierarquia", "cadeia_extensa", "tipo_pai_incompativel"])) }).strict();
@@ -21,9 +22,9 @@ export function DiagnosticoHierarquia({ userId, clienteId, loteId, revisao, onRe
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada");
       const parametros = { p_cliente_id: clienteId, p_lote_id: loteId, p_revision: revisao, p_apos: pageParam, p_limite: 30 };
-      const requisicao = import.meta.env.VITE_SSO_DIAGNOSTICO_ANCESTRAL_ENABLED === "true"
+      const requisicao = flagLigada("VITE_SSO_DIAGNOSTICO_ANCESTRAL_ENABLED")
         ? supabase.schema("pcm").rpc("sso_diagnosticar_hierarquia_lote_v2", { ...parametros, p_ator_id: userId })
-        : import.meta.env.VITE_SSO_DIAGNOSTICO_HIERARQUIA_MEDIADO_ENABLED === "true"
+        : flagLigada("VITE_SSO_DIAGNOSTICO_HIERARQUIA_MEDIADO_ENABLED")
         ? supabase.schema("pcm").rpc("sso_diagnosticar_hierarquia_lote_mediado", { ...parametros, p_ator_id: userId })
         : supabase.schema("pcm").rpc("sso_diagnosticar_hierarquia_lote", parametros);
       const { data, error } = await requisicao.abortSignal(signal);

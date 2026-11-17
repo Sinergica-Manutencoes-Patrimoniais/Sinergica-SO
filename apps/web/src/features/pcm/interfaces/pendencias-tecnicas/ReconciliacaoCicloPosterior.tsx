@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 const estadoSchema = z.object({ parcelaId: id, situacao: z.string(), revision: z.number().int().nonnegative(), osId: id.nullable(),
@@ -40,7 +41,7 @@ export function ReconciliacaoCicloPosterior({ userId, clienteId, composicaoId, c
   const cache = useQueryClient();
   const raiz = ["backlog-reconciliacao-ciclo", userId, clienteId, cicloId, parcelaId] as const;
   async function conferirAtor() { const { data, error } = await supabase.auth.getUser(); if (error || data.user?.id !== userId) throw new Error("Sessão alterada"); }
-  const cadeiaAtiva = import.meta.env.VITE_SSO_RECONCILIACAO_CADEIA_ENABLED === "true";
+  const cadeiaAtiva = flagLigada("VITE_SSO_RECONCILIACAO_CADEIA_ENABLED");
   const opcoesOs = useInfiniteQuery({ queryKey: [...raiz, "os-cadeia"], initialPageParam: null as string | null, gcTime: 0, enabled: cadeiaAtiva,
     queryFn: async ({ pageParam, signal }) => { await conferirAtor(); const { data, error } = await supabase.schema("pcm").rpc("sso_os_ciclo_posterior", {
       p_cliente_id: clienteId, p_ciclo_id: cicloId, p_modo: "interromper", p_apos: pageParam, p_limite: 30 }).abortSignal(signal);

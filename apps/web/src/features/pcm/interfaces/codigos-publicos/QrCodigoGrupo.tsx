@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; ativoId: string; tipo: "grupo_quantitativo" | "sistema" | "componente"; codigo: string };
 
 export function QrCodigoGrupo(props: Props) {
-  if (props.tipo === "grupo_quantitativo" ? import.meta.env.VITE_SSO_QR_CODIGO_GRUPO_ENABLED !== "true" : import.meta.env.VITE_SSO_QR_CODIGO_ATIVO_ENABLED !== "true") return null;
+  if (props.tipo === "grupo_quantitativo" ? !flagLigada("VITE_SSO_QR_CODIGO_GRUPO_ENABLED") : !flagLigada("VITE_SSO_QR_CODIGO_ATIVO_ENABLED")) return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.ativoId, props.codigo])} {...props} />;
 }
 
@@ -23,7 +24,7 @@ function Conteudo({ userId, clienteId, ativoId, tipo, codigo }: Props) {
     if (error || !data || data.situacao !== "encontrado" || data.tipo !== tipo || data.ativoId !== ativoId) throw new Error("Código indisponível ou ambíguo.");
     if (tipo === "grupo_quantitativo") {
       if (data.codigoAtual !== codigo || data.codigoHistorico !== false) throw new Error("Código atual divergente.");
-    } else if (import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true") {
+    } else if (flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")) {
       const atual = await supabase.schema("pcm").rpc("sso_consultar_codigo_atual_mediado", { p_ator_id: userId, p_cliente_id: clienteId, p_tipo: tipo, p_ativo_id: ativoId });
       if (atual.error || atual.data?.tipo !== tipo || atual.data?.ativoId !== ativoId || atual.data?.codigo !== codigo) throw new Error("Código atual divergente.");
     } else {

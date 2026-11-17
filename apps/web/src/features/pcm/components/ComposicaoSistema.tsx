@@ -15,6 +15,7 @@ import type { SistemaItemOpcao, SistemasGateway } from "../application/sistemas-
 import type { Sistema } from "../domain/sistemas";
 import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { SeletorItensComFiltro } from "./SeletorItensComFiltro";
+import { flagLigada } from "../../../config/flags-sso";
 
 const pedidoSchema = z
   .object({
@@ -54,8 +55,8 @@ function Conteudo({ gateway, sistema, temEscrita, userId, onSalvo }: Props) {
   const [selecionadosIds, setSelecionadosIds] = useState<Set<string>>(new Set());
   const [salvando, setSalvando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState<string | null>(null);
-  const protecaoLegada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
-  const composicaoAtomica = import.meta.env.VITE_SSO_COMPOSICAO_SISTEMA_ATOMICA_ENABLED === "true";
+  const protecaoLegada = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
+  const composicaoAtomica = flagLigada("VITE_SSO_COMPOSICAO_SISTEMA_ATOMICA_ENABLED");
   const integracaoIncompleta = protecaoLegada && !composicaoAtomica;
   const chave = `sso-composicao-sistema:${JSON.stringify([userId, sistema.clienteId, sistema.id])}`;
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {

@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { RecursoNaoAtivado } from "@sinergica/ui";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const comandoSchema = z.object({ requestId: z.string().guid(), listaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), linhas: z.array(z.object({ descricao: z.string().trim().min(1).max(1000),
@@ -10,7 +12,15 @@ type Comando = z.infer<typeof comandoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; listaId: string; revisao: number };
 
 export function PublicarPortal(props: Props) {
-  if (import.meta.env.VITE_SSO_PUBLICAR_MATERIAIS_PORTAL_ENABLED !== "true" || import.meta.env.VITE_SSO_PUBLICAR_MATERIAIS_MEDIADO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PUBLICAR_MATERIAIS_PORTAL_ENABLED") || !flagLigada("VITE_SSO_PUBLICAR_MATERIAIS_MEDIADO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Publicar materiais no portal"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PUBLICAR_MATERIAIS_PORTAL_ENABLED", "VITE_SSO_PUBLICAR_MATERIAIS_MEDIADO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico, props.listaId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico, listaId, revisao }: Props) {
@@ -28,7 +38,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaId, revisao }: Props) {
   const enviar = useMutation({ mutationFn: async (pedido: Comando) => {
     const antes = await supabase.auth.getUser();
     if (antes.error || antes.data.user?.id !== usuario || sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Sessão ou tentativa alterada.");
-    if (import.meta.env.VITE_SSO_PUBLICAR_MATERIAIS_MEDIADO_ENABLED !== "true") throw new Error("Publicação mediada indisponível.");
+    if (!flagLigada("VITE_SSO_PUBLICAR_MATERIAIS_MEDIADO_ENABLED")) throw new Error("Publicação mediada indisponível.");
     const { data, error } = await supabase.schema("pcm").rpc("sso_portal_publicar_materiais_mediada", {
       p_ator_id: usuario, p_cliente_id: cliente, p_os_id: ordemServico,
       p_request_id: pedido.requestId, p_lista_id: pedido.listaId,

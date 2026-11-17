@@ -27,16 +27,26 @@ import {
   supabaseFaturaveisAdapter,
   validarComandoFaturavel,
 } from "../../infrastructure/supabase-faturaveis-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { usuario: string; cliente: string };
 /** Fluxo fechado por flag; funções também não têm EXECUTE em papéis da aplicação. */
 export function FilaFaturaveis(props: Props) {
-  if (import.meta.env.VITE_SSO_FATURAVEIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_FATURAVEIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Faturaveis"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_FATURAVEIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 function Conteudo({ usuario, cliente }: Props) {
   const chavePedido = `faturavel-decisao:${JSON.stringify([usuario, cliente])}`;
-  const cancelamentoHabilitado = import.meta.env.VITE_SSO_CANCELAMENTO_FATURAVEL_ENABLED === "true";
+  const cancelamentoHabilitado = flagLigada("VITE_SSO_CANCELAMENTO_FATURAVEL_ENABLED");
   const [pendente, setPendente] = useState<ComandoFaturavel | "invalido" | null>(() => {
     try { const raw = sessionStorage.getItem(chavePedido); return raw ? validarComandoFaturavel(JSON.parse(raw)) : null; }
     catch { return "invalido"; }
@@ -48,8 +58,8 @@ function Conteudo({ usuario, cliente }: Props) {
   const [erro, setErro] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [filtroOrigem, setFiltroOrigem] = useState("");
-  const filtroServidor = import.meta.env.VITE_SSO_FILTRO_FATURAVEIS_SERVIDOR_ENABLED === "true";
-  const filtroPeriodo = filtroServidor && import.meta.env.VITE_SSO_FILTRO_COMPETENCIA_FATURAVEIS_ENABLED === "true";
+  const filtroServidor = flagLigada("VITE_SSO_FILTRO_FATURAVEIS_SERVIDOR_ENABLED");
+  const filtroPeriodo = filtroServidor && flagLigada("VITE_SSO_FILTRO_COMPETENCIA_FATURAVEIS_ENABLED");
   const [competenciaInicio, setCompetenciaInicio] = useState("");
   const [competenciaFim, setCompetenciaFim] = useState("");
   const mesValido = (valor: string) => !valor || /^(?!0000)\d{4}-(0[1-9]|1[0-2])$/.test(valor);
@@ -155,9 +165,9 @@ function Conteudo({ usuario, cliente }: Props) {
   return (
     <section aria-label="A Faturar">
       <h2>A Faturar</h2>
-      {import.meta.env.VITE_SSO_SERVICO_EXTRA_ENABLED === "true" && <ServicosExtra usuario={usuario} cliente={cliente} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_ORIGEM_OS_ENABLED === "true" && <DiagnosticoOrigemOs cliente={cliente} />}
-      {import.meta.env.VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_ENABLED === "true" && <RelatorioDespesasFaturaveis usuario={usuario} cliente={cliente} />}
+      {flagLigada("VITE_SSO_SERVICO_EXTRA_ENABLED") && <ServicosExtra usuario={usuario} cliente={cliente} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_ORIGEM_OS_ENABLED") && <DiagnosticoOrigemOs cliente={cliente} />}
+      {flagLigada("VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_ENABLED") && <RelatorioDespesasFaturaveis usuario={usuario} cliente={cliente} />}
       <ConferirEstornos usuario={usuario} cliente={cliente} />
       <DocumentosCompetencia usuario={usuario} cliente={cliente} />
       <ReconhecerProposta usuario={usuario} cliente={cliente} />
@@ -209,9 +219,9 @@ function Conteudo({ usuario, cliente }: Props) {
             {f.origem_tipo === "servico_extra_fato" && <RastreioCandidatoServico usuario={usuario} cliente={cliente} itemId={f.id} />}
             {f.origem_tipo === "servico_extra_fato" && (f.status === "pendente" || possuiTentativaConferenciaServico(usuario, cliente, f.id)) && <ConferirServico usuario={usuario} cliente={cliente} itemId={f.id} fatoId={f.origem_id} revision={f.revisao} valorOriginal={f.valor_original_centavos} status={f.status} />}
             {f.origem_tipo === "material_proposta_linha" && <RastreioLinhaMaterial usuario={usuario} cliente={cliente} itemId={f.id} />}
-            {(f.origem_tipo === "material_proposta_linha" || import.meta.env.VITE_SSO_HISTORICO_FATURAVEL_TODAS_ORIGENS_ENABLED === "true") && <HistoricoRevisaoFaturavel usuario={usuario} cliente={cliente} itemId={f.id} revisao={f.revisao} />}
+            {(f.origem_tipo === "material_proposta_linha" || flagLigada("VITE_SSO_HISTORICO_FATURAVEL_TODAS_ORIGENS_ENABLED")) && <HistoricoRevisaoFaturavel usuario={usuario} cliente={cliente} itemId={f.id} revisao={f.revisao} />}
             {f.origem_tipo === "despesa_visita" && <ComprovantesFaturavel usuario={usuario} cliente={cliente} itemId={f.id} />}
-            {import.meta.env.VITE_SSO_DIAGNOSTICO_ACEITE_COMPLEMENTO_ENABLED === "true" && (f.origem_tipo === "proposta_operacional" || f.origem_tipo === "material_proposta_linha") && <DiagnosticoAceiteComplemento usuario={usuario} cliente={cliente} itemId={f.id} />}
+            {flagLigada("VITE_SSO_DIAGNOSTICO_ACEITE_COMPLEMENTO_ENABLED") && (f.origem_tipo === "proposta_operacional" || f.origem_tipo === "material_proposta_linha") && <DiagnosticoAceiteComplemento usuario={usuario} cliente={cliente} itemId={f.id} />}
             {f.status === "pendente" && !pendente && (
               <button
                 type="button"
@@ -227,8 +237,8 @@ function Conteudo({ usuario, cliente }: Props) {
               </button>
             )}
             {f.origem_tipo !== "servico_extra_fato" && (f.status === "conferido" || f.status === "parcial") && <AlocarDocumento usuario={usuario} cliente={cliente} itemId={f.id} revisao={f.revisao} />}
-            {f.origem_tipo !== "servico_extra_fato" && import.meta.env.VITE_SSO_DOCUMENTO_INTERNO_ENABLED === "true" && (f.status === "conferido" || f.status === "parcial" || f.status === "faturado") && <DocumentoInterno usuario={usuario} cliente={cliente} itemId={f.id} />}
-            {f.origem_tipo !== "servico_extra_fato" && import.meta.env.VITE_SSO_RECUPERAR_PARCELA_ENABLED === "true" && <RecuperarParcela usuario={usuario} cliente={cliente} itemId={f.id} />}
+            {f.origem_tipo !== "servico_extra_fato" && flagLigada("VITE_SSO_DOCUMENTO_INTERNO_ENABLED") && (f.status === "conferido" || f.status === "parcial" || f.status === "faturado") && <DocumentoInterno usuario={usuario} cliente={cliente} itemId={f.id} />}
+            {f.origem_tipo !== "servico_extra_fato" && flagLigada("VITE_SSO_RECUPERAR_PARCELA_ENABLED") && <RecuperarParcela usuario={usuario} cliente={cliente} itemId={f.id} />}
             {(f.status === "conferido" || f.status === "parcial" || f.status === "faturado") && <HistoricoDocumentos usuario={usuario} cliente={cliente} itemId={f.id} />}
             {f.origem_tipo !== "servico_extra_fato" && f.status !== "cancelado" && <CorrigirFaturavel usuario={usuario} cliente={cliente} itemId={f.id} revisao={f.revisao} status={f.status} />}
           </li>

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 export function ResumoFotosLote({userId,clienteId,loteId}:{userId:string;clienteId:string;loteId:string}){
-  const ativo=import.meta.env.VITE_SSO_RESUMO_FOTOS_LOTE_ENABLED==="true";
+  const ativo=flagLigada("VITE_SSO_RESUMO_FOTOS_LOTE_ENABLED");
   const q=useQuery({queryKey:["levantamentos",userId,clienteId,loteId,"resumo-fotos"],enabled:ativo,gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_resumo_fotos_autorizado",{p_lote_id:loteId}).abortSignal(signal);if(error)throw error;const r=z.object({loteId:z.string().guid(),total:z.number().int().nonnegative(),semDecisao:z.number().int().nonnegative(),aceitas:z.number().int().nonnegative(),rejeitadas:z.number().int().nonnegative()}).strict().parse(data);if(r.loteId!==loteId || r.semDecisao+r.aceitas+r.rejeitadas!==r.total)throw new Error("Resumo divergente");return r;}});
   if(!ativo)return null;
   if(q.isPending)return <p>Consultando fotos do lote…</p>;

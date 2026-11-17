@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ReatestarCobertura } from "./ReatestarCobertura";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; evidenciaId: string | null; revision: number; justificativa: string };
 const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),retornoId:z.string().guid(),evidenciaId:z.string().guid().nullable(),revision:z.number().int().nonnegative().safe(),justificativa:z.string().trim().min(1).max(2000)}).strict();
 const historicoSchema=z.object({id:z.string().guid(),evidencia_id:z.string().guid().nullable(),revisao_evidencias:z.number().int().nonnegative().safe(),perguntas:z.number().int().nonnegative().safe(),justificativa:z.string(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
@@ -40,7 +41,7 @@ function Conteudo({ userId, clienteId, retornoId, revision, evidencias }: { user
     </form>
     {historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}
     {!historico.isFetching && !historico.isError && historico.data && <ul>{historico.data.pages.flat().map((c) => <li key={c.id}>Evidência {c.evidencia_id ?? "nenhuma, conforme contrato"} · revisão {c.revisao_evidencias} · {c.perguntas} perguntas · {c.justificativa} · {c.ator_id} · {c.criado_em}
-      {import.meta.env.VITE_SSO_REATESTACAO_COBERTURA_ENABLED === "true" && <ReatestarCobertura userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={c.id} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
+      {flagLigada("VITE_SSO_REATESTACAO_COBERTURA_ENABLED") && <ReatestarCobertura userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={c.id} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
   </section>;
 }

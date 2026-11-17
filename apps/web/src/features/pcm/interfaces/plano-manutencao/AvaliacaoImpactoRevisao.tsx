@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const contagem = z.number().int().nonnegative().safe();
 
@@ -11,7 +12,7 @@ export function AvaliacaoImpactoRevisao({
   planoId,
   revisao,
 }: { userId: string; clienteId: string; planoId: string; revisao: number }) {
-  const habilitado = import.meta.env.VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED");
   const consulta = useQuery({
     queryKey: ["avaliacao-impacto-revisao", userId, clienteId, planoId, revisao],
     enabled: habilitado,
@@ -52,7 +53,7 @@ export function AvaliacaoImpactoRevisao({
   });
   const visitas = useQuery({
     queryKey: ["avaliacao-impacto-visita-legado", userId, clienteId, planoId, revisao],
-    enabled: habilitado && import.meta.env.VITE_SSO_AVALIACAO_IMPACTO_VISITA_ENABLED === "true",
+    enabled: habilitado && flagLigada("VITE_SSO_AVALIACAO_IMPACTO_VISITA_ENABLED"),
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }) => {
@@ -93,7 +94,7 @@ export function AvaliacaoImpactoRevisao({
   });
   const grupos = useQuery({
     queryKey: ["avaliacao-fotografias-grupo", userId, clienteId, planoId, revisao],
-    enabled: habilitado && import.meta.env.VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED === "true",
+    enabled: habilitado && flagLigada("VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED"),
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }) => {

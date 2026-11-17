@@ -1,6 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ alocacao_id: z.string().guid(), documento_ref: z.string(), data_documento: z.string(),
   valor_centavos: z.number().int().positive().safe(), lancamento_id: z.string().guid(),
@@ -8,7 +10,15 @@ const linha = z.object({ alocacao_id: z.string().guid(), documento_ref: z.string
   estorno_id: z.string().guid().nullable(), conferencia_id: z.string().guid().nullable(), data_conferencia: z.string().nullable() }).strict();
 type Props = { usuario: string; cliente: string; itemId: string };
 export function HistoricoDocumentos(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_FATURAVEL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_FATURAVEL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico faturavel"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_FATURAVEL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.itemId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, itemId }: Props) {

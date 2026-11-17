@@ -4,6 +4,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import { TriagemChamadoProvisorio } from "./TriagemChamadoProvisorio";
 import { DetalheUltimoEvento } from "./DetalheUltimoEvento";
 import { ConflitosCampo } from "./ConflitosCampo";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ os_id: z.string().guid(), chamado_id: z.string().guid(), provisorio: z.boolean(), status_os: z.string(),
   status_campo: z.enum(["aberta", "em_andamento", "concluida"]), ordem_externa: z.string().regex(/^[1-9]\d{0,17}$/),
@@ -11,7 +13,15 @@ const item = z.object({ os_id: z.string().guid(), chamado_id: z.string().guid(),
 const rotulos = { aberta: "Aberta em campo", em_andamento: "Em andamento em campo", concluida: "Concluída em campo — conferir validação PCM" } as const;
 
 export function EstadoCampo({ userId, clienteId, onAbrirOs }: { userId: string; clienteId: string; onAbrirOs?: (osId: string) => void }) {
-  if (import.meta.env.VITE_SSO_ESTADO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ESTADO_CAMPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Estado campo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ESTADO_CAMPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />;
 }
 function Conteudo({ userId, clienteId, onAbrirOs }: { userId: string; clienteId: string; onAbrirOs?: (osId: string) => void }) {
@@ -40,8 +50,8 @@ function Conteudo({ userId, clienteId, onAbrirOs }: { userId: string; clienteId:
     {!q.isFetching && !q.isError && consistentes && itens.length === 0 && <p>Nenhuma tarefa nesta consulta; isso não prova ausência de trabalho em campo.</p>}
     <ul>{itens.map((i) => <li key={i.os_id}>OS {i.os_id} · Chamado {i.chamado_id} {i.provisorio && "· origem provisória"} · {rotulos[i.status_campo]} · situação da OS {i.status_os} · {i.conflitos} conflito(s) registrado(s).
       {onAbrirOs && <button type="button" onClick={() => onAbrirOs(i.os_id)}>Abrir OS</button>}
-      {import.meta.env.VITE_SSO_DETALHE_EVENTO_CAMPO_ENABLED === "true" && <DetalheUltimoEvento userId={userId} clienteId={clienteId} osId={i.os_id} />}
-      {i.conflitos > 0 && import.meta.env.VITE_SSO_CONFLITOS_CAMPO_ENABLED === "true" && <ConflitosCampo userId={userId} clienteId={clienteId} osId={i.os_id} />}
+      {flagLigada("VITE_SSO_DETALHE_EVENTO_CAMPO_ENABLED") && <DetalheUltimoEvento userId={userId} clienteId={clienteId} osId={i.os_id} />}
+      {i.conflitos > 0 && flagLigada("VITE_SSO_CONFLITOS_CAMPO_ENABLED") && <ConflitosCampo userId={userId} clienteId={clienteId} osId={i.os_id} />}
       {i.provisorio && <TriagemChamadoProvisorio userId={userId} clienteId={clienteId} osId={i.os_id} />}</li>)}</ul>
     {q.hasNextPage && !q.isError && consistentes && <button type="button" disabled={q.isFetching} onClick={() => void q.fetchNextPage()}>Mais tarefas</button>}
   </section>;

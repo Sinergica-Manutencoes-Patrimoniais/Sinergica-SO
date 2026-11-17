@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props={userId:string;clienteId:string;planoId:string;revisao:number;vigencia:string};
 const fotografia=z.object({id:z.string().guid(),imovelId:z.string().guid(),contratoId:z.string().guid(),data:z.string().date(),tipo:z.string(),estado:z.string(),registroId:z.string().guid().nullable(),auvoOsId:z.string().nullable(),clienteId:z.string().guid(),imovelNome:z.string(),imovelExcluidoEm:z.string().nullable(),imovelAtualizadoEm:z.string().nullable(),contratoConferidoId:z.string().guid().nullable(),contratoInicio:z.string().nullable(),contratoFim:z.string().nullable(),contratoEstado:z.string().nullable(),contratoExcluidoEm:z.string().nullable(),contratoAtualizadoEm:z.string().nullable()}).strict();
 const item=z.object({agendamento_id:z.string().guid(),rascunho_id:z.string().guid(),vencimento:z.string().date(),estado:z.string(),tipo:z.string(),revisao_decisao:z.number().int().nonnegative().safe(),classificacao:z.enum(["relacionado","nao_relacionado","historico_preservado"]).nullable(),revisao_plano:z.number().int().positive().nullable(),fotografia_atual:z.boolean(),fotografia,evidencia:z.string().nullable(),motivo:z.string().nullable()}).strict();
 const pedido=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),planoId:z.string().guid(),rascunhoId:z.string().guid(),agendamentoId:z.string().guid(),revisao:z.number().int().positive().safe(),decisaoRevision:z.number().int().nonnegative().safe(),classificacao:z.enum(["relacionado","nao_relacionado","historico_preservado"]),evidencia:z.string().trim().min(1).max(500),motivo:z.string().trim().min(1).max(2000),fotografia}).strict();type Pedido=z.infer<typeof pedido>;
-export function InventarioPmocRevisao(props:Props){if(import.meta.env.VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED!=="true"||!props.vigencia)return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props}/>;}
+export function InventarioPmocRevisao(props:Props){if(!props.vigencia)return null; if(!flagLigada("VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED"))return <RecursoNaoAtivado recurso="Inventário PMOC em revisão" podeAdministrar={false} faltando={["VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED"]} />;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props}/>;}
 function Conteudo({userId,clienteId,planoId,revisao,vigencia}:Props){
   const montado = useRef(false);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);

@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { FotoPorResposta } from "./FotoPorResposta";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; notaId: string; justificativa: string };
 
 export function FotosRetorno({ userId, clienteId, retornoId }: { userId: string; clienteId: string; retornoId: string }) {
@@ -27,8 +28,8 @@ export function FotosRetorno({ userId, clienteId, retornoId }: { userId: string;
     </form>{candidatas.hasNextPage && <button type="button" onClick={() => void candidatas.fetchNextPage()}>Mais fotos</button>}
     {historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}
     {historico.data && <ul>{historico.data.pages.flat().map((a) => <li key={a.id}>Nota {a.nota_id} · {a.mime_declarado} · {a.justificativa} · {a.ator_id} · {a.criado_em}
-      {import.meta.env.VITE_SSO_DOWNLOAD_FOTO_RETORNO_ENABLED === "true" && <button type="button" disabled={baixando} onClick={() => void baixar(a.id)}>Baixar foto para revisão</button>}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
-    {import.meta.env.VITE_SSO_FOTO_POR_RESPOSTA_ENABLED === "true" && <FotoPorResposta userId={userId} clienteId={clienteId} retornoId={retornoId} />}
+      {flagLigada("VITE_SSO_DOWNLOAD_FOTO_RETORNO_ENABLED") && <button type="button" disabled={baixando} onClick={() => void baixar(a.id)}>Baixar foto para revisão</button>}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
+    {flagLigada("VITE_SSO_FOTO_POR_RESPOSTA_ENABLED") && <FotoPorResposta userId={userId} clienteId={clienteId} retornoId={retornoId} />}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
   </section>;
 }

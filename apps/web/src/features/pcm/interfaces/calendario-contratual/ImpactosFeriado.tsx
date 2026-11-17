@@ -2,12 +2,22 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ ocorrencia_id:z.string().guid(),plano_id:z.string().guid(),rotina_id:z.string().guid(),visita_id:z.string().guid(),vencimento_original:z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).strict();
 type Props={userId:string;clienteId:string;feriadoId:string;data:string};
 export function ImpactosFeriado(props:Props){
   const [aberto,setAberto]=useState(false);
-  if(import.meta.env.VITE_SSO_IMPACTOS_FERIADO_VISITA_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_IMPACTOS_FERIADO_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Impactos feriado visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_IMPACTOS_FERIADO_VISITA_ENABLED"]}
+      />
+    );
+  }
   return <><button type="button" aria-expanded={aberto} onClick={()=>setAberto(v=>!v)}>{aberto?"Ocultar ocorrências":"Consultar ocorrências afetadas"}</button>{aberto&&<Conteudo key={JSON.stringify([props.userId,props.clienteId,props.feriadoId,props.data])} {...props}/>}</>;
 }
 function Conteudo({userId,clienteId,feriadoId,data}:Props){

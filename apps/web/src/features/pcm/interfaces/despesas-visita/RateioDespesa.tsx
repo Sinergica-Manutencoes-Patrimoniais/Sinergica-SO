@@ -3,10 +3,12 @@ import { useRef, useState } from "react";
 import { dividirRateioIgual } from "../../domain/despesas-visita";
 import { consultarOsParaRateio, consultarRateio, ratearDespesa, validarRateioDespesa,
   type RatearDespesa as Pedido, type DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function RateioDespesa(props: Props) {
-  if (import.meta.env.VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED !== "true" || props.despesa.status !== "ativa") return null;
+  if (props.despesa.status !== "ativa") return null; if (!flagLigada("VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED")) return <RecursoNaoAtivado recurso="Rateio de despesas da Visita" podeAdministrar={false} faltando={["VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])} {...props} />;
 }
 function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {

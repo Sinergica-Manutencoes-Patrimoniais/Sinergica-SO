@@ -57,6 +57,7 @@ import {
   supabasePropostaAdapter,
 } from "../infrastructure/supabase-proposta-adapter";
 import { PropostasSemCustos } from "./PropostasSemCustos";
+import { flagLigada } from "../../../config/flags-sso";
 
 const TIPO_LABEL: Record<Proposta["tipo"], string> = {
   levantamento: "Levantamento",
@@ -550,7 +551,7 @@ function PropostaEditorCompleto({
         <ArrowLeft className="size-4" aria-hidden />
         Voltar às propostas
       </Button>
-      {import.meta.env.VITE_SSO_AUTORIZACAO_COMPLEMENTO_ENABLED === "true" && user && <AutorizacaoComplemento key={propostaSelecionada.id} usuario={user.id} clienteId={clienteId} propostaId={propostaSelecionada.id} />}
+      {flagLigada("VITE_SSO_AUTORIZACAO_COMPLEMENTO_ENABLED") && user && <AutorizacaoComplemento key={propostaSelecionada.id} usuario={user.id} clienteId={clienteId} propostaId={propostaSelecionada.id} />}
 
       {erro && (
         <Card>

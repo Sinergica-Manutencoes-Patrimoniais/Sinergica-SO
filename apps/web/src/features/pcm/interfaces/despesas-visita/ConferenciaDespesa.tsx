@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const resultado = z.object({ revisao: z.number().int().positive(), comprovante: z.enum(["nao_realizada", "indisponivel", "objeto_privado_existe"]),
   rateio: z.enum(["sem_rateio", "vinculo_incompleto", "vinculo_encerrado", "total_divergente", "total_confere"]), parcelas: z.number().int().nonnegative(),
@@ -16,7 +18,15 @@ export function ConferenciaDespesa({ userId, clienteId, visitaId, despesaId, rev
         p_cliente_id: clienteId, p_visita_id: visitaId, p_despesa_id: despesaId }).abortSignal(signal);
       if (error) throw error; return z.array(resultado).length(1).parse(data)[0]!;
     } });
-  if (import.meta.env.VITE_SSO_CONFERENCIA_DESPESA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_DESPESA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia despesa"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_DESPESA_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" onClick={() => setAberto((v) => !v)}>{aberto ? "Ocultar conferência" : "Conferir despesa"}</button>
     {aberto && consulta.isFetching && <p>Consultando…</p>}
     {aberto && consulta.isError && <p role="alert">Conferência indisponível ou sem acesso. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}

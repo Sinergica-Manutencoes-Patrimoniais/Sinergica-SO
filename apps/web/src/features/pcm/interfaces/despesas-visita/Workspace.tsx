@@ -24,6 +24,7 @@ import { ConferenciaDespesa } from "./ConferenciaDespesa";
 import { HistoricoRateio } from "./HistoricoRateio";
 import { RecuperarAtribuicoesTecnico } from "./RecuperarAtribuicoesTecnico";
 import { RecuperarCorrecoesMediadas } from "./RecuperarCorrecoesMediadas";
+import { flagLigada } from "../../../../config/flags-sso";
 
 /** Não ativar a flag antes da migration e dos gates de autorização/RLS. */
 export function DespesasVisitaWorkspace({
@@ -83,8 +84,8 @@ export function DespesasVisitaWorkspace({
   return (
     <section aria-label="Despesas da Visita">
       <h4>Despesas da Visita</h4>
-      {import.meta.env.VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED === "true" && <RecuperarAtribuicoesTecnico userId={userId} clienteId={clienteId} visitaId={visitaId} />}
-      {import.meta.env.VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED === "true" && <RecuperarCorrecoesMediadas userId={userId} clienteId={clienteId} visitaId={visitaId}
+      {flagLigada("VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED") && <RecuperarAtribuicoesTecnico userId={userId} clienteId={clienteId} visitaId={visitaId} />}
+      {flagLigada("VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED") && <RecuperarCorrecoesMediadas userId={userId} clienteId={clienteId} visitaId={visitaId}
         despesasVisiveis={!despesas.isFetching && !despesas.isError ? despesas.data?.pages.flat().map(item => item.id) ?? [] : []} />}
       <ResumoDespesas userId={userId} clienteId={clienteId} visitaId={visitaId} />
       <RelatorioClienteDespesas userId={userId} clienteId={clienteId} />

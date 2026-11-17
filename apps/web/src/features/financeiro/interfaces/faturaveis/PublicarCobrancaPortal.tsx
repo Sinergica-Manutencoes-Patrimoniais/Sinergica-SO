@@ -4,13 +4,15 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { LancamentoItem } from "../../domain/lancamento";
 import { VincularDocumentoCobranca } from "./VincularDocumentoCobranca";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const schema = z.object({ requestId: z.string().guid(), lancamentoId: z.string().guid(), osId: z.string().guid(),
   descricao: z.string().trim().min(1).max(1000), valorCentavos: z.number().int().positive(),
   competencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), vencimento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable() }).strict();
 type Pedido = z.infer<typeof schema>;
 export function PublicarCobrancaPortal({ usuario, lancamento }: { usuario: string; lancamento: LancamentoItem }) {
-  if (import.meta.env.VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED !== "true" || lancamento.tipo !== "entrada" || !lancamento.osId || !lancamento.clienteId) return null;
+  if (lancamento.tipo !== "entrada" || !lancamento.osId || !lancamento.clienteId) return null; if (!flagLigada("VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED")) return <RecursoNaoAtivado recurso="Publicar cobrança da OS" podeAdministrar={false} faltando={["VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([usuario, lancamento.clienteId, lancamento.id])} usuario={usuario} lancamento={lancamento} />;
 }
 function Conteudo({ usuario, lancamento }: { usuario: string; lancamento: LancamentoItem }) {

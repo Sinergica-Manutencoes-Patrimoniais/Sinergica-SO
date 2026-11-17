@@ -26,6 +26,7 @@ import { PreventivaDetalheDrawer } from "./PreventivaDetalheDrawer";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
 import { PreventivasListaView } from "./PreventivasListaView";
 import { PreventivasTimelineView } from "./PreventivasTimelineView";
+import { flagLigada } from "../../../config/flags-sso";
 
 type VisaoPreventivas = "lista" | "timeline" | "calendario";
 
@@ -596,7 +597,7 @@ export function PreventivasWorkspace({
           {erroAcao ?? "Não foi possível carregar o formulário."}
         </p>
       )}
-      {clienteId && import.meta.env.VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED === "true" && (
+      {clienteId && flagLigada("VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED") && (
         <FilaPreventivaWorkspace clienteId={clienteId} userId={userId} />
       )}
       <section className="rounded-lg border border-line bg-surface p-4">

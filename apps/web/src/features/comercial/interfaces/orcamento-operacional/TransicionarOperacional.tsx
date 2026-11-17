@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { VisibilidadeOrcamento } from "./VisibilidadeOrcamento";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(),
   estadoEsperado: z.enum(["rascunho", "em_revisao", "aprovada"]), acao: z.enum(["revisar", "aprovar", "publicar"]),
@@ -13,7 +15,15 @@ const pedidoSchema = z.object({ requestId: z.string().guid(), propostaId: z.stri
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; propostaId: string; versao: number; status: string };
 export function TransicionarOperacional(props: Props) {
-  if (import.meta.env.VITE_SSO_PUBLICAR_ORCAMENTO_OPERACIONAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PUBLICAR_ORCAMENTO_OPERACIONAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Publicar orcamento operacional"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PUBLICAR_ORCAMENTO_OPERACIONAL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico, props.propostaId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico, propostaId, versao, status }: Props) {
@@ -41,7 +51,7 @@ function Conteudo({ usuario, cliente, ordemServico, propostaId, versao, status }
       const resposta = z.array(z.object({ versao: z.number().int().positive(), status: z.string(),
         preco_centavos: z.number().int().nonnegative().safe(), valido_ate: z.string().nullable() }).strict()).length(1).parse(data)[0]; await conferirSessao(signal); return resposta;
     } });
-  const diagnosticoAtivo = import.meta.env.VITE_SSO_DIAGNOSTICO_FONTE_RETIFICADA_ENABLED === "true";
+  const diagnosticoAtivo = flagLigada("VITE_SSO_DIAGNOSTICO_FONTE_RETIFICADA_ENABLED");
   const diagnostico = useQuery({ queryKey: ["orcamento-fonte-retificada", usuario, cliente, propostaId, versao], gcTime: 0, retry: false,
     enabled: diagnosticoAtivo && origem.data === true && !origem.isFetching && !origem.isError,
     queryFn: async ({ signal }) => {
@@ -90,9 +100,9 @@ function Conteudo({ usuario, cliente, ordemServico, propostaId, versao, status }
     {diagnosticoAtivo && !diagnostico.isFetching && !diagnostico.isError && diagnostico.data?.estado === "fonte_retificada" && <p role="alert">Fonte desta versão foi retificada. Refaça a composição antes da transição.</p>}
     {diagnosticoAtivo && !diagnostico.isFetching && !diagnostico.isError && diagnostico.data?.estado === "sem_fotografia" && <p>Esta versão não tem fotografia mista identificada; confira as fontes por outro caminho.</p>}
     {diagnosticoAtivo && !diagnostico.isFetching && !diagnostico.isError && diagnostico.data?.estado === "sem_retificacao_observada" && <p>Nenhuma retificação encontrada na fotografia mista. Isso não comprova ausência de duplicidades.</p>}
-    {status === "enviada" && import.meta.env.VITE_SSO_VISIBILIDADE_ORCAMENTO_ENABLED === "true" && <VisibilidadeOrcamento usuario={usuario} cliente={cliente} propostaId={propostaId} versao={versao} />}
+    {status === "enviada" && flagLigada("VITE_SSO_VISIBILIDADE_ORCAMENTO_ENABLED") && <VisibilidadeOrcamento usuario={usuario} cliente={cliente} propostaId={propostaId} versao={versao} />}
     {acao && <form onSubmit={(e) => { e.preventDefault(); if (pendente || enviar.isPending || enviando.current || (acao === "publicar" && confirmado!==fotografiaPublicacao)) return;
-      try { const estruturado = acao === "publicar" && import.meta.env.VITE_SSO_PUBLICAR_ITENS_PROPOSTA_ENABLED === "true";
+      try { const estruturado = acao === "publicar" && flagLigada("VITE_SSO_PUBLICAR_ITENS_PROPOSTA_ENABLED");
         const itensPublicos = estruturado ? itens.map((i) => {
           if (!/^\d+$/.test(i.quantidade) || !/^\d+$/.test(i.preco)) throw new Error("Valores inválidos");
           return { id: crypto.randomUUID(), descricao: i.descricao.trim(), quantidade: Number(i.quantidade), precoUnitarioCentavos: Number(i.preco) };
@@ -104,7 +114,7 @@ function Conteudo({ usuario, cliente, ordemServico, propostaId, versao, status }
       {acao === "publicar" && <><p>Revise o texto público. Não inclua custos, fornecedores internos ou comprovantes.</p>
         <label>Escopo público <textarea maxLength={4000} value={escopo} onChange={(e) => setEscopo(e.target.value)} /></label>
         <label>Descrição pública <input maxLength={1000} value={descricao} onChange={(e) => setDescricao(e.target.value)} /></label>
-        {import.meta.env.VITE_SSO_PUBLICAR_ITENS_PROPOSTA_ENABLED === "true" && <div><p>Informe itens públicos; o total deve corresponder ao preço da proposta.</p>
+        {flagLigada("VITE_SSO_PUBLICAR_ITENS_PROPOSTA_ENABLED") && <div><p>Informe itens públicos; o total deve corresponder ao preço da proposta.</p>
           {itens.map((item, i) => <div key={i}>
             <label>Descrição <input required maxLength={1000} value={item.descricao} onChange={(e) => setItens((v) => v.map((x, j) => j === i ? { ...x, descricao: e.target.value } : x))} /></label>
             <label>Quantidade inteira <input required inputMode="numeric" value={item.quantidade} onChange={(e) => setItens((v) => v.map((x, j) => j === i ? { ...x, quantidade: e.target.value } : x))} /></label>

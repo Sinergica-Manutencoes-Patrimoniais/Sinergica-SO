@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 const item = z.object({ id: z.string().guid(), descricao: z.string().min(1), quantidade: z.number().int().positive(),
   precoUnitarioCentavos: z.number().int().nonnegative().safe() }).strict();
@@ -7,7 +8,7 @@ const schema = z.object({ estruturado: z.boolean(), itens: z.array(item).max(100
   .refine((v) => v.estruturado ? v.itens.length > 0 : v.itens.length === 0);
 export async function obterItensHistoricos(clienteId: string, osId: string, propostaId: string, versao: number, userId: string) {
   const parametros={p_cliente_id:clienteId,p_os_id:osId,p_proposta_id:propostaId,p_versao:versao};
-  const requisicao=import.meta.env.VITE_SSO_ITENS_HISTORICOS_PORTAL_MEDIADOS_ENABLED==="true"
+  const requisicao=flagLigada("VITE_SSO_ITENS_HISTORICOS_PORTAL_MEDIADOS_ENABLED")
     ? supabase.schema("comercial").rpc("sso_portal_itens_historicos_mediados",{...parametros,p_ator_id:userId})
     : supabase.schema("comercial").rpc("sso_portal_itens_publicos_historico",parametros);
   const { data, error } = await requisicao;

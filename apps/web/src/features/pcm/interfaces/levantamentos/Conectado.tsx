@@ -8,12 +8,31 @@ import { ImportacaoCsv } from "./ImportacaoCsv";
 import { ImportacaoXlsxExperimental } from "./ImportacaoXlsxExperimental";
 import { RevisaoQuarentenaCsv } from "./RevisaoQuarentenaCsv";
 import { Recepcao } from "./Recepcao";
+import { RecursoNaoAtivado } from "@sinergica/ui";
+import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
+
+const FLAG_LEVANTAMENTOS = "VITE_SSO_LEVANTAMENTOS_ENABLED" as const;
 
 export function EntradaLevantamentos({
-  habilitado,
+  podeAdministrar,
   ...props
-}: { habilitado: string | undefined; userId: string; clienteId: string; loteRecebido?: string | null }) {
-  if (habilitado !== "true") return null;
+}: {
+  podeAdministrar: boolean;
+  userId: string;
+  clienteId: string;
+  loteRecebido?: string | null;
+}) {
+  if (!flagLigada(FLAG_LEVANTAMENTOS)) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Levantamentos"
+        podeAdministrar={podeAdministrar}
+        faltando={[FLAG_LEVANTAMENTOS, FLAGS_SSO.find((f) => f.nome === FLAG_LEVANTAMENTOS)?.gate].filter(
+          (v): v is string => Boolean(v),
+        )}
+      />
+    );
+  }
   return <LevantamentosConectado {...props} />;
 }
 
@@ -48,7 +67,7 @@ export function LevantamentosConectado(props: { userId: string; clienteId: strin
     setRecebido({userId:props.userId,clienteId:props.clienteId,loteId});
   };
   return <><RevisaoQuarentenaCsv userId={props.userId} clienteId={props.clienteId} onRecebido={abrirLote} />
-    {import.meta.env.VITE_SSO_RECEPCAO_MANUAL_LEVANTAMENTO_ENABLED === "true" && <Recepcao
+    {flagLigada("VITE_SSO_RECEPCAO_MANUAL_LEVANTAMENTO_ENABLED") && <Recepcao
       key={`${props.userId}:${props.clienteId}`}
       userId={props.userId}
       clienteId={props.clienteId}
@@ -57,15 +76,15 @@ export function LevantamentosConectado(props: { userId: string; clienteId: strin
         if (atual.error || atual.data.user?.id !== props.userId || contexto.current.versao !== versaoContexto) throw new Error("Sessão ou Cliente alterado");
       }}
       onRecebido={abrirLote}
-      reservarRecepcao={import.meta.env.VITE_SSO_RESERVA_RECEPCAO_MANUAL_ENABLED === "true" ? async (clienteId, pedido) => {
+      reservarRecepcao={flagLigada("VITE_SSO_RESERVA_RECEPCAO_MANUAL_ENABLED") ? async (clienteId, pedido) => {
         if (clienteId !== props.clienteId || contexto.current.versao !== versaoContexto) throw new Error("Contexto alterado");
         return supabaseLevantamentosAdapter.reservarRecepcao(props.userId, clienteId, pedido);
       } : undefined}
-      consultarRecibo={import.meta.env.VITE_SSO_RECIBO_RECEPCAO_MANUAL_ENABLED === "true" ? async (clienteId, pedido) => {
+      consultarRecibo={flagLigada("VITE_SSO_RECIBO_RECEPCAO_MANUAL_ENABLED") ? async (clienteId, pedido) => {
         if (clienteId !== props.clienteId || contexto.current.versao !== versaoContexto) throw new Error("Contexto alterado");
         return supabaseLevantamentosAdapter.consultarReciboRecepcao(props.userId, clienteId, pedido);
       } : undefined}
-      cancelarRecepcao={import.meta.env.VITE_SSO_CANCELAR_RECEPCAO_MANUAL_ENABLED === "true" ? async (clienteId, pedido, motivo) => {
+      cancelarRecepcao={flagLigada("VITE_SSO_CANCELAR_RECEPCAO_MANUAL_ENABLED") ? async (clienteId, pedido, motivo) => {
         if (clienteId !== props.clienteId || contexto.current.versao !== versaoContexto) throw new Error("Contexto alterado");
         return supabaseLevantamentosAdapter.cancelarRecepcao(props.userId, clienteId, pedido, motivo);
       } : undefined}

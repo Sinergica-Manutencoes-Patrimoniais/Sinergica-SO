@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { EntradaLevantamentos } from "../levantamentos/Conectado";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const contextoSchema = z.object({ clienteId: z.string().guid(), osId: z.string().guid(), envelopeId: z.string().guid(),
   taskId: z.string().regex(/^[1-9]\d{0,18}$/), requestId: z.string().guid() }).strict();
@@ -14,7 +16,15 @@ type Props = { userId: string; clienteId: string; osId: string; envelopeId: stri
 
 /** Recepção declarada: não prova que questionário ou fotos vieram do Auvo. */
 export function RecepcaoEstruturada(props: Props) {
-  if (import.meta.env.VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Recepcao estruturada"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId, props.envelopeId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId, envelopeId, disponivel }: Props) {
@@ -162,9 +172,9 @@ function Conteudo({ userId, clienteId, osId, envelopeId, disponivel }: Props) {
         <button type="submit" disabled={!disponivel || !confirmado || ocupado || previsualizando || lendoArquivo || previa?.fotografia !== fotografia}>Receber para conferência</button>
       </form>}
     {aviso && <p role="status">{aviso}</p>}
-    {loteId && import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED === "true" && <section>
+    {loteId && flagLigada("VITE_SSO_LEVANTAMENTOS_ENABLED") && <section>
       <button type="button" aria-expanded={abrirLote} onClick={() => setAbrirLote(!abrirLote)}>{abrirLote ? "Ocultar lote" : "Abrir conferência do lote"}</button>
-      {abrirLote && <EntradaLevantamentos habilitado={import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED} userId={userId} clienteId={clienteId} loteRecebido={loteId} />}
+      {abrirLote && <EntradaLevantamentos podeAdministrar={false} userId={userId} clienteId={clienteId} loteRecebido={loteId} />}
     </section>}
   </section>;
 }

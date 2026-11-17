@@ -20,6 +20,8 @@ import { PreviaSelecao } from "./PreviaSelecao";
 import { EvidenciasOrigem } from "./EvidenciasOrigem";
 import { ResultadosAtivo } from "./ResultadosAtivo";
 import { ResolucaoFotoManual } from "./ResolucaoFotoManual";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linhaSchema = z.object({ id: z.string().guid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]),
   alvo_id: z.string().guid(), alvo_nome: z.string().nullable(), pergunta: z.string(), observacao: z.string().nullable(),
@@ -34,7 +36,15 @@ const respostaSchema = z.object({ pendenciaId: z.string().guid(), requestId: z.s
 
 /** A flag e os comandos no banco permanecem fechados até revisão e integração completas. */
 export function PendenciasTecnicasWorkspace(props: { userId: string; clienteId: string }) {
-  if (import.meta.env.VITE_SSO_PENDENCIAS_TECNICAS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PENDENCIAS_TECNICAS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Pendencias tecnicas"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PENDENCIAS_TECNICAS_ENABLED"]}
+      />
+    );
+  }
   return <Permissao key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
 }
 function Permissao(props: { userId: string; clienteId: string }) {
@@ -48,7 +58,7 @@ function Lista({ userId, clienteId }: { userId: string; clienteId: string }) {
   const [selecionadas, setSelecionadas] = useState<Record<string, number>>({});
   const [buscaAtivo, setBuscaAtivo] = useState("");
   const [buscaAplicada, setBuscaAplicada] = useState("");
-  const filtroServidor = import.meta.env.VITE_SSO_PENDENCIAS_FILTRO_ATIVO_ENABLED === "true";
+  const filtroServidor = flagLigada("VITE_SSO_PENDENCIAS_FILTRO_ATIVO_ENABLED");
   const lista = useInfiniteQuery({ queryKey: ["pendencias-tecnicas", userId, clienteId, "lista", filtroServidor ? buscaAplicada : null], gcTime: 0,
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
@@ -99,14 +109,14 @@ function Lista({ userId, clienteId }: { userId: string; clienteId: string }) {
     <ResultadosAtivo userId={userId} clienteId={clienteId} alvos={itensVisiveis} />
     {filtroServidor ? <form onSubmit={(e) => { e.preventDefault(); setBuscaAplicada(buscaAtivo.trim()); }}><label>Buscar ativo <input value={buscaAtivo} maxLength={120} onChange={(e) => setBuscaAtivo(e.target.value)} /></label><button type="submit">Buscar</button>{buscaAtivo.trim() !== buscaAplicada && <p>Busca editada; confirme para atualizar os resultados.</p>}</form> : <label>Filtrar ativo nas páginas carregadas <input value={buscaAtivo} maxLength={200} onChange={(e) => setBuscaAtivo(e.target.value)} /></label>}
     {buscaNormalizada && !lista.isFetching && !lista.isError && <p>{gruposVisiveis.length} ativo(s) encontrados nas páginas carregadas{lista.hasNextPage ? "; carregue mais para ampliar a busca" : ""}. A seleção de pendências é preservada.</p>}
-    {import.meta.env.VITE_SSO_BACKLOG_COMPOSICAO_ENABLED === "true" && <ComporBacklog userId={userId} clienteId={clienteId} selecionadas={selecionadas} selecaoConferida={selecaoConferida} limpar={() => setSelecionadas({})} />}
-    {import.meta.env.VITE_SSO_BACKLOG_COMPOSICAO_ENABLED === "true" && <Composicoes userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_BACKLOG_COMPOSICAO_ENABLED") && <ComporBacklog userId={userId} clienteId={clienteId} selecionadas={selecionadas} selecaoConferida={selecaoConferida} limpar={() => setSelecionadas({})} />}
+    {flagLigada("VITE_SSO_BACKLOG_COMPOSICAO_ENABLED") && <Composicoes userId={userId} clienteId={clienteId} />}
     {lista.isFetching && <output>Carregando pendências…</output>}
     {lista.isError && <p role="alert">Não foi possível carregar pendências. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}
     {!lista.isFetching && !lista.isError && lista.data && itensVisiveis.length === 0 && <p>Nenhuma pendência encontrada nesta fonte.</p>}
     {!lista.isFetching && !lista.isError && itensVisiveis.length > 0 && <p>Contagens abaixo consideram apenas as páginas carregadas{lista.hasNextPage ? "; há mais pendências para carregar" : ""}.</p>}
     <div hidden={lista.isFetching || lista.isError}>{[...agrupados.entries()].map(([chave, grupo]) => <section key={chave} hidden={!gruposVisiveis.some(([visivel]) => visivel === chave)} aria-label={`Pendências de ${grupo.nome}`}><h3>{grupo.nome} · {grupo.itens.length} carregada(s)</h3>{grupo.itens.map((item) => <div key={item.id}>
-      {import.meta.env.VITE_SSO_BACKLOG_COMPOSICAO_ENABLED === "true" && (item.estado === "aberta" || selecionadas[item.id] !== undefined) && <label><input type="checkbox" checked={selecionadas[item.id] !== undefined} disabled={selecionadas[item.id] === undefined && !!alvoSelecionado && (alvoSelecionado.alvo_tipo !== item.alvo_tipo || alvoSelecionado.alvo_id !== item.alvo_id)} onChange={(e) => setSelecionadas((atual) => {
+      {flagLigada("VITE_SSO_BACKLOG_COMPOSICAO_ENABLED") && (item.estado === "aberta" || selecionadas[item.id] !== undefined) && <label><input type="checkbox" checked={selecionadas[item.id] !== undefined} disabled={selecionadas[item.id] === undefined && !!alvoSelecionado && (alvoSelecionado.alvo_tipo !== item.alvo_tipo || alvoSelecionado.alvo_id !== item.alvo_id)} onChange={(e) => setSelecionadas((atual) => {
         const proxima = { ...atual }; if (e.target.checked) proxima[item.id] = item.revisao; else delete proxima[item.id]; return proxima;
       })} /> Selecionar pendência para composição</label>}
       {selecionadas[item.id] !== undefined && selecionadas[item.id] !== item.revisao && <p role="alert">Pendência alterada desde a seleção. Desmarque e selecione novamente após conferir a revisão.</p>}
@@ -227,14 +237,14 @@ function Decidir({ item, userId, clienteId }: { item: Linha; userId: string; cli
   return <article><h3>{item.alvo_tipo} · {item.alvo_nome ?? "Nome indisponível"} · {item.alvo_id}</h3><p>Pergunta {item.pergunta} · {item.estado} · revisão {item.revisao}</p>
     {item.observacao && <p>Observação: {item.observacao}</p>}
     <p>Fotos, executor e data da execução não estão disponíveis nesta fonte.</p>
-    {import.meta.env.VITE_SSO_PORTAL_PENDENCIAS_PUBLICACAO_ENABLED === "true" && <PublicarPendenciaPortal key={`${item.id}:${item.revisao}`} userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />}
+    {flagLigada("VITE_SSO_PORTAL_PENDENCIAS_PUBLICACAO_ENABLED") && <PublicarPendenciaPortal key={`${item.id}:${item.revisao}`} userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />}
     <DiagnosticoResolucao userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />
     <HistoricoResolucaoAtivo userId={userId} clienteId={clienteId} alvoTipo={item.alvo_tipo} alvoId={item.alvo_id} />
     <CriticidadePendencia userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} alvoTipo={item.alvo_tipo} alvoId={item.alvo_id} />
     <ContextoTecnico userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />
     {item.estado === "resolvida" && <RevisaoCondicaoResolvida userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />}
     <ResolucaoHumana userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} aberta={item.estado === "aberta"} />
-    {import.meta.env.VITE_SSO_PORTAL_PENDENCIAS_PUBLICACAO_ENABLED === "true" && <HistoricoPublicacaoPortal userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />}
+    {flagLigada("VITE_SSO_PORTAL_PENDENCIAS_PUBLICACAO_ENABLED") && <HistoricoPublicacaoPortal userId={userId} clienteId={clienteId} pendenciaId={item.id} revisao={item.revisao} />}
     <button type="button" onClick={() => setMostrarHistorico((valor) => !valor)}>{mostrarHistorico ? "Ocultar histórico" : "Ver histórico de decisões"}</button>
     {mostrarHistorico && historico.isPending && <output>Carregando histórico…</output>}
     {mostrarHistorico && historico.isError && <p role="alert">Não foi possível consultar o histórico. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 export function DiagnosticoResolucao({userId,clienteId,pendenciaId,revisao}:{userId:string;clienteId:string;pendenciaId:string;revisao:number}){
-  const ativo=import.meta.env.VITE_SSO_DIAGNOSTICO_RESOLUCAO_PENDENCIA_ENABLED==="true";
+  const ativo=flagLigada("VITE_SSO_DIAGNOSTICO_RESOLUCAO_PENDENCIA_ENABLED");
   const q=useQuery({queryKey:["pendencias-tecnicas",userId,clienteId,pendenciaId,"diagnostico-resolucao",revisao],enabled:ativo,gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_diagnostico_resolucao_pendencia",{p_pendencia_id:pendenciaId}).abortSignal(signal);if(error)throw error;const r=z.object({pendenciaId:z.string().guid(),revision:z.number().int().positive(),estado:z.string(),parcelaVinculada:z.boolean(),osAtribuida:z.boolean(),osFinalizada:z.boolean()}).strict().parse(data);if(r.pendenciaId!==pendenciaId)throw new Error("Pendência divergente");return r;}});
   if(!ativo)return null;
   if(q.isPending)return <p>Consultando diagnóstico…</p>;

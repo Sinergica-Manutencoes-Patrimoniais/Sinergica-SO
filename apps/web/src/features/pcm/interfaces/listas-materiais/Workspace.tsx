@@ -16,6 +16,7 @@ import {
   supabaseListasMateriaisAdapter,
   validarCriarListaMateriais,
 } from "../../infrastructure/supabase-listas-materiais-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { usuario: string; cliente: string; ordemServico: string };
 /** Integração condicionada a rollout e validação da migration, sem efeito sobre OS/Auvo. */
@@ -146,7 +147,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     <section aria-label="Listas de materiais da OS">
       <h3>Listas de materiais da OS</h3>
       <p>O texto original é preservado. Criar lista não altera a OS nem envia tarefa ao Auvo.</p>
-      {import.meta.env.VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED") && (
         <>
           <button type="button" aria-expanded={excecoesAbertas} onClick={() => setExcecoesAbertas((abertas) => !abertas)}>
             {excecoesAbertas ? "Ocultar exceções da OS" : "Consultar exceções da OS"}

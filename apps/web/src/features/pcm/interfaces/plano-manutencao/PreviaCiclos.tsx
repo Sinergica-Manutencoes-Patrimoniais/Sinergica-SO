@@ -15,6 +15,7 @@ import { TriagemCicloAtrasado } from "./TriagemCicloAtrasado";
 import { DecisaoFeriadoCalendario } from "./DecisaoFeriadoCalendario";
 import { MaterializarLoteCalendario } from "./MaterializarLoteCalendario";
 import { OrigemGeracaoRotina } from "./OrigemGeracaoRotina";
+import { flagLigada } from "../../../../config/flags-sso";
 
 function janela(vencimento: string, diasAntes: number, diasDepois: number) {
   try {
@@ -179,14 +180,14 @@ function Conteudo({
       {periodo && !ciclos.isFetching && !ciclos.isError && !!ciclos.data?.length && (
         <label>Comparar data com as tolerâncias <input type="date" value={dataAvaliacao} onChange={(e) => setDataAvaliacao(e.target.value)} /></label>
       )}
-      {import.meta.env.VITE_SSO_EXPORTAR_PREVIA_CICLOS_ENABLED === "true" && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && (
+      {flagLigada("VITE_SSO_EXPORTAR_PREVIA_CICLOS_ENABLED") && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && (
         <ExportarPreviaCiclos clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId}
           inicio={periodo.inicio} fim={periodo.fim} ciclos={ciclos.data} feriados={feriados} />
       )}
       {revisaoPlano !== undefined && <OrigemGeracaoRotina userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_PMOC_ENABLED === "true" && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && <DiagnosticoPmoc userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} inicio={periodo.inicio} fim={periodo.fim} revision={revisaoPlano} />}
-      {import.meta.env.VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED === "true" && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && revisaoPlano !== undefined && <MaterializarLoteCalendario userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} inicio={periodo.inicio} fim={periodo.fim} ciclos={ciclos.data} />}
-      {import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" && <TriagemCicloAtrasado userId={userId} clienteId={clienteId} planoId={planoId} rotinaId={rotinaId} ocorrenciaEmConferencia={ocorrenciaEmConferencia} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_PMOC_ENABLED") && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && <DiagnosticoPmoc userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} inicio={periodo.inicio} fim={periodo.fim} revision={revisaoPlano} />}
+      {flagLigada("VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED") && periodo && !ciclos.isFetching && !ciclos.isError && ciclos.data && revisaoPlano !== undefined && <MaterializarLoteCalendario userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} inicio={periodo.inicio} fim={periodo.fim} ciclos={ciclos.data} />}
+      {flagLigada("VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED") && <TriagemCicloAtrasado userId={userId} clienteId={clienteId} planoId={planoId} rotinaId={rotinaId} ocorrenciaEmConferencia={ocorrenciaEmConferencia} />}
       {periodo && !ciclos.isFetching && !ciclos.isError && (
         <ul>
           {ciclos.data?.map((item) => (
@@ -196,12 +197,12 @@ function Conteudo({
               <span>{janela(item.vencimento, item.toleranciaAntes, item.toleranciaDepois)}</span>
               {dataAvaliacao && <p>Data {dataAvaliacao.split("-").reverse().join("/")}: {avaliarData(item.vencimento, dataAvaliacao, item.toleranciaAntes, item.toleranciaDepois)}. Avaliação informativa; não registra execução nem altera o vencimento.</p>}
               {feriados.includes(item.vencimento) && <p>Feriado hipotético: vencimento permanece para tratamento PCM; ciclo seguinte continua baseado na âncora.</p>}
-              {import.meta.env.VITE_SSO_PROXIMO_CICLO_ANCORADO_ENABLED === "true" && <ProximoCicloAncorado userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} />}
-              {import.meta.env.VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED === "true" && revisaoPlano !== undefined && <MaterializarCicloCanonico userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} ciclo={item.ciclo} vencimento={item.vencimento} />}
-              {import.meta.env.VITE_SSO_HISTORICO_CICLO_CANONICO_ENABLED === "true" && <HistoricoCicloCanonico userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} />}
-              {import.meta.env.VITE_SSO_DECISAO_FERIADO_CALENDARIO_ENABLED === "true" && <DecisaoFeriadoCalendario userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo}
-                aoConferirAtraso={import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" ? setOcorrenciaEmConferencia : undefined} />}
-              {import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true" && revisaoPlano !== undefined && <DecidirVencimento userId={userId} clienteId={clienteId}
+              {flagLigada("VITE_SSO_PROXIMO_CICLO_ANCORADO_ENABLED") && <ProximoCicloAncorado userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} />}
+              {flagLigada("VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED") && revisaoPlano !== undefined && <MaterializarCicloCanonico userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} revision={revisaoPlano} ciclo={item.ciclo} vencimento={item.vencimento} />}
+              {flagLigada("VITE_SSO_HISTORICO_CICLO_CANONICO_ENABLED") && <HistoricoCicloCanonico userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} />}
+              {flagLigada("VITE_SSO_DECISAO_FERIADO_CALENDARIO_ENABLED") && <DecisaoFeriadoCalendario userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo}
+                aoConferirAtraso={flagLigada("VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED") ? setOcorrenciaEmConferencia : undefined} />}
+              {flagLigada("VITE_SSO_DECISAO_VENCIMENTO_ENABLED") && revisaoPlano !== undefined && <DecidirVencimento userId={userId} clienteId={clienteId}
                 planoId={planoId} revision={revisaoPlano} versaoId={versaoId} rotinaId={rotinaId} ciclo={item.ciclo} vencimento={item.vencimento} />}
             </li>
           ))}

@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const respostaSchema = z.object({
   tipo: z.enum(["sistema", "componente"]), ativoId: z.string().guid(), clienteId: z.string().guid(),
@@ -10,7 +12,15 @@ const respostaSchema = z.object({
 type Props = { userId: string; clienteId: string; tipo: "sistema" | "componente"; ativoId: string };
 
 export function EvidenciasUso(props: Props) {
-  if (import.meta.env.VITE_SSO_EVIDENCIAS_USO_CODIGO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EVIDENCIAS_USO_CODIGO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Evidencias uso codigo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EVIDENCIAS_USO_CODIGO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.ativoId])} {...props} />;
 }
 

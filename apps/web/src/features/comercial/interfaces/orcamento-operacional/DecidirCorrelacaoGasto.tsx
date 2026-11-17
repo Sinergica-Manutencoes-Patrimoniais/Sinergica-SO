@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const linha = z.object({ request_id: uuid, fonte_id: uuid, despesa_id: uuid, vinculo_id: uuid,
@@ -36,7 +37,7 @@ export function DecidirCorrelacaoGasto({ usuario, cliente, listaId, disponivel }
   async function conferirAtor() { const { data, error } = await supabase.auth.getUser(); if (error || data.user?.id !== usuario) throw new Error("Sessão alterada"); }
   const consulta = useInfiniteQuery({ queryKey: raiz, initialPageParam: null as string | null, gcTime: 0, retry: false,
     queryFn: async ({ pageParam, signal }) => {
-      await conferirAtor(); const { data, error } = await supabase.schema("comercial").rpc(import.meta.env.VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED === "true" ? "sso_listar_correlacoes_gasto_v2_mediado" : "sso_listar_correlacoes_gasto_v2", {
+      await conferirAtor(); const { data, error } = await supabase.schema("comercial").rpc(flagLigada("VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED") ? "sso_listar_correlacoes_gasto_v2_mediado" : "sso_listar_correlacoes_gasto_v2", {
         p_ator_id: usuario, p_cliente_id: cliente, p_lista_id: listaId, p_apos: pageParam, p_limite: 30,
       }).abortSignal(signal); if (error) throw error;
       const pagina = z.array(linha).max(30).parse(data); let anterior = pageParam ?? "";
@@ -73,7 +74,7 @@ export function DecidirCorrelacaoGasto({ usuario, cliente, listaId, disponivel }
     if (trava.current || !disponivel) return; trava.current = true; setOcupado(true); setAviso(""); const serializado = JSON.stringify(p);
     try {
       await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
-      const { data, error } = await supabase.schema("comercial").rpc(import.meta.env.VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED === "true" ? "sso_decidir_correlacao_gasto_mediado" : "sso_decidir_correlacao_gasto", {
+      const { data, error } = await supabase.schema("comercial").rpc(flagLigada("VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED") ? "sso_decidir_correlacao_gasto_mediado" : "sso_decidir_correlacao_gasto", {
         p_ator_id: p.atorId, p_cliente_id: p.clienteId, p_request_id: p.requestId, p_correlacao_id: p.correlacaoId,
         p_expected_revision: p.revision, p_acao: p.acao, p_motivo: p.motivo,
       }); if (error) throw error;
@@ -104,7 +105,7 @@ export function DecidirCorrelacaoGasto({ usuario, cliente, listaId, disponivel }
     {consulta.hasNextPage && !consulta.isFetching && !consulta.isError && !paginasDivergentes && <button type="button" onClick={() => void consulta.fetchNextPage()}>Mais correlações</button>}
     {pendente === "invalido" ? <p role="alert">Tentativa inválida. Procure suporte.</p> : pendente ? <>
       <p>Há uma tentativa pendente; o resultado pode ser incerto.</p><button type="button" disabled={ocupado || !disponivel} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button>
-      {import.meta.env.VITE_SSO_RECIBO_DECISAO_CORRELACAO_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</button>}
+      {flagLigada("VITE_SSO_RECIBO_DECISAO_CORRELACAO_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</button>}
     </> : <form onSubmit={(e) => { e.preventDefault(); iniciar(); }}>
       <label>Correlação <select value={selecionado} disabled={!disponivel || ocupado || consulta.isFetching || consulta.isError || paginasDivergentes} required
         onChange={(e) => { setSelecionado(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>

@@ -8,6 +8,7 @@ import { obterPesosGutdConfig, salvarPesosGutd } from "../application/priorizaca
 import { PESOS_GUTD_PADRAO, type PesosGutd } from "../domain/priorizacao-backlog";
 import { supabasePriorizacaoGutdAdapter } from "../infrastructure/supabase-priorizacao-gutd-adapter";
 import { PesosGutdAuditados } from "../interfaces/pendencias-tecnicas/PesosGutdAuditados";
+import { flagLigada } from "../../../config/flags-sso";
 
 const CAMPOS: Array<{ key: keyof PesosGutd; label: string }> = [
   { key: "gravidade", label: "Gravidade" },
@@ -49,7 +50,7 @@ export function ConfigPriorizacaoPage() {
     );
   }
 
-  if (import.meta.env.VITE_SSO_PESOS_GUTD_AUDITADOS_ENABLED === "true") {
+  if (flagLigada("VITE_SSO_PESOS_GUTD_AUDITADOS_ENABLED")) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-heading font-semibold text-ink">Priorização (GUTD)</h1>

@@ -5,6 +5,7 @@ import type { RegraContratualResumo } from "../../application/calendario-contrat
 import { alterarDiaContratual, type PedidoAlterarDia } from "../../infrastructure/supabase-calendario-contratual-adapter";
 import { PreviaMudancaDia } from "./PreviaMudancaDia";
 import { AlterarDiaComVisitas } from "./AlterarDiaComVisitas";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; regra: RegraContratualResumo };
 export function AlterarDiaContratual(props: Props) {
@@ -73,7 +74,7 @@ function Conteudo({ userId, clienteId, regra }: Props) {
     <form onSubmit={(event) => {
       event.preventDefault();
       const novoDia = Number(dia);
-      if (import.meta.env.VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED === "true" || pedido || trava.current || confirmacao !== identidade || !Number.isInteger(novoDia) || novoDia < 1 || novoDia > 7 || novoDia === regra.diaSemana || !vigencia) {
+      if (flagLigada("VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED") || pedido || trava.current || confirmacao !== identidade || !Number.isInteger(novoDia) || novoDia < 1 || novoDia > 7 || novoDia === regra.diaSemana || !vigencia) {
         setMensagem("Escolha outro dia e informe a vigência."); return;
       }
       const novo: PedidoAlterarDia = { requestId: crypto.randomUUID(), serieId: regra.serieId,
@@ -91,12 +92,12 @@ function Conteudo({ userId, clienteId, regra }: Props) {
         <label>Vigência <input required type="date" value={vigencia} onChange={(e) => { setVigencia(e.target.value); setConfirmacao(null); }} /></label>
         <p>Regra atual: revisão {regra.numero} · dia {regra.diaSemana}. A confirmação vale somente para os dados exibidos.</p>
         <label><input type="checkbox" checked={confirmacao === identidade} disabled={!dia || !vigencia} onChange={(e) => setConfirmacao(e.target.checked ? identidade : null)} /> Conferi a regra atual, novo dia e vigência</label>
-        <button type="submit" disabled={confirmacao !== identidade || import.meta.env.VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED === "true"}>Confirmar alteração sem Visitas</button>
+        <button type="submit" disabled={confirmacao !== identidade || flagLigada("VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED")}>Confirmar alteração sem Visitas</button>
       </fieldset>
     </form>
-    {import.meta.env.VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED === "true" && <AlterarDiaComVisitas userId={userId} clienteId={clienteId}
+    {flagLigada("VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED") && <AlterarDiaComVisitas userId={userId} clienteId={clienteId}
       serieId={regra.serieId} revisao={regra.numero} dia={Number(dia)} vigencia={vigencia} bloqueado={!!pedido || dia === String(regra.diaSemana)} />}
-    {import.meta.env.VITE_SSO_PREVIA_MUDANCA_DIA_ENABLED === "true" && <>
+    {flagLigada("VITE_SSO_PREVIA_MUDANCA_DIA_ENABLED") && <>
       <button type="button" disabled={!vigencia || !Number.isInteger(Number(dia)) || Number(dia)<1 || Number(dia)>7} onClick={()=>setMostrarPrevia((v)=>!v)}>{mostrarPrevia?"Fechar prévia de impacto":"Consultar impacto nas Visitas"}</button>
       {mostrarPrevia && vigencia && Number(dia)>=1 && Number(dia)<=7 && <PreviaMudancaDia key={JSON.stringify([userId,clienteId,regra.serieId,regra.numero,vigencia,dia])} userId={userId} clienteId={clienteId} serieId={regra.serieId} revisao={regra.numero} vigencia={vigencia} dia={Number(dia)} />}
     </>}

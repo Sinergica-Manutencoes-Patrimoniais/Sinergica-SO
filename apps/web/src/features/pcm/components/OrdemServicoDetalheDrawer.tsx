@@ -16,6 +16,7 @@ import { RelatorioOsDespesas } from "../interfaces/despesas-visita/RelatorioOsDe
 import { PublicarAnexo } from "../interfaces/anexos-os/PublicarAnexo";
 import { ChamadoPainel } from "./ChamadoPainel";
 import { Cliente360Drawer } from "./Cliente360Drawer";
+import { flagLigada } from "../../../config/flags-sso";
 
 const STATUS: StatusOrdemServico[] = [
   "solicitacao",
@@ -145,7 +146,7 @@ export function OrdemServicoDetalheDrawer({
             />
             <Campo titulo="Origem" valor={detalhe.data?.origem ?? "—"} />
           </dl>
-          {aberto && user?.id && import.meta.env.VITE_SSO_LISTAS_MATERIAIS_ENABLED === "true" && (
+          {aberto && user?.id && flagLigada("VITE_SSO_LISTAS_MATERIAIS_ENABLED") && (
             <WorkspaceListasMateriais
               usuario={user.id}
               cliente={clienteId}

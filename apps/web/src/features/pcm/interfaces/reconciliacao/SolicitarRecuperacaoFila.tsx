@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const id = z.string().guid();
 const revisao = z.string().regex(/^(0|[1-9][0-9]{0,18})$/);
@@ -15,7 +17,15 @@ type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; outboxId: string };
 
 export function SolicitarRecuperacaoFila(props: Props) {
-  if (import.meta.env.VITE_SSO_SOLICITAR_RECUPERACAO_FILA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_SOLICITAR_RECUPERACAO_FILA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Solicitar recuperacao fila"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_SOLICITAR_RECUPERACAO_FILA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.outboxId])} {...props} />;
 }
 
@@ -118,7 +128,7 @@ function Conteudo({ userId, clienteId, outboxId }: Props) {
     {consulta.isError && <p role="alert">Revisão indisponível. <button type="button" onClick={() => void consulta.refetch()}>Reconsultar</button></p>}
     {pendente === "invalido" ? <p role="alert">Tentativa ilegível. Procure suporte.</p> : pendente
       ? <><button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesma solicitação</button>
-        {import.meta.env.VITE_SSO_RECIBO_SOLICITACAO_RECUPERACAO_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</button>}</>
+        {flagLigada("VITE_SSO_RECIBO_SOLICITACAO_RECUPERACAO_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</button>}</>
       : <form onSubmit={(e) => { e.preventDefault(); iniciar(); }}>
         {consulta.data && !consulta.isFetching && !consulta.isError && <p>Revisão local {consulta.data.revisao}.</p>}
         <label>Motivo <textarea value={motivo} maxLength={2000} required disabled={ocupado} onChange={(e) => { setMotivo(e.target.value); setConfirmacao(null); }} /></label>

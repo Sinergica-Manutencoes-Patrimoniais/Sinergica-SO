@@ -2,11 +2,12 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const pedidoSchema=z.object({requestId:z.string().guid(),fotoId:z.string().guid(),revision:z.number().int().nonnegative(),decisao:z.enum(["aceita","rejeitada"]),motivo:z.string().min(1).max(2000)}).strict();
 const eventoSchema=z.object({revisao:z.number().int().positive(),decisao:z.enum(["aceita","rejeitada"]),motivo:z.string(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;fotoId:string};
-export function DecisaoFoto(props:Props){if(import.meta.env.VITE_SSO_DECISAO_FOTO_LEVANTAMENTO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
+export function DecisaoFoto(props:Props){if(!flagLigada("VITE_SSO_DECISAO_FOTO_LEVANTAMENTO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
 function Conteudo({userId,clienteId,fotoId}:Props){
   const key=`sso-decisao-foto:${JSON.stringify([userId,clienteId,fotoId])}`;
   const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=pedidoSchema.parse(JSON.parse(raw));return p.fotoId===fotoId ? p : "invalido";}catch{return "invalido";}});

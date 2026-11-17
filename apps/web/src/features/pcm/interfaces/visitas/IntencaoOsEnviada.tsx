@@ -6,6 +6,7 @@ import type { VisitaResumo } from "../../application/visitas-gateway";
 import { supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-adapter";
 import { TriagemIntencoes } from "./TriagemIntencoes";
 import { TransferirOsEnviada } from "./TransferirOsEnviada";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedidoSchema=z.object({requestId:z.string().guid(),intencaoId:z.string().guid(),clienteId:z.string().guid(),origemId:z.string().guid(),destinoId:z.string().guid(),vinculoId:z.string().guid(),
   revisaoOrigem:z.number().int().positive().safe(),revisaoDestino:z.number().int().positive().safe(),motivo:z.string().trim().min(1).max(2000),
@@ -36,7 +37,7 @@ function IntencaoOsEnviadaInterna({userId,clienteId,visitas,bloqueado}: Props) {
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;},
     getNextPageParam:(pagina) => { const ultima = pagina.at(-1); return pagina.length===20 && ultima ? {sequencia:ultima.sequencia,id:ultima.id} : undefined; }});
   const osSelecionada=ordens.data?.pages.flat().find((o)=>o.id===vinculoId);
-  const excecoes=useInfiniteQuery({queryKey:["visitas",userId,clienteId,"excecoes-intencao",osSelecionada?.osId],enabled:import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&!!osSelecionada&&!bloqueado,gcTime:0,
+  const excecoes=useInfiniteQuery({queryKey:["visitas",userId,clienteId,"excecoes-intencao",osSelecionada?.osId],enabled:flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&!!osSelecionada&&!bloqueado,gcTime:0,
     initialPageParam:null as {lista:string;revisao:number}|null,
     queryFn:async({pageParam,signal})=>{const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_listar_excecoes_para_intencao",{p_cliente_id:clienteId,p_os_id:osSelecionada!.osId,p_apos_lista:pageParam?.lista??null,p_apos_revisao:pageParam?.revisao??null,p_limite:20}).abortSignal(signal);if(error)throw error;
@@ -53,7 +54,7 @@ function IntencaoOsEnviadaInterna({userId,clienteId,visitas,bloqueado}: Props) {
       for(const item of pagina){const atual=item.id.toLowerCase();if(atual<=anterior)throw new Error("Página divergente.");anterior=atual;}
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;},
     getNextPageParam:(pagina) => pagina.length===30 ? pagina.at(-1)?.id : undefined});
-  const origemMaterial=useQuery({queryKey:["visitas",userId,clienteId,"origem-material-intencao",origemConsultada?.intencaoId,origemConsultada?.osId],enabled:import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&!!origemConsultada&&!bloqueado,gcTime:0,
+  const origemMaterial=useQuery({queryKey:["visitas",userId,clienteId,"origem-material-intencao",origemConsultada?.intencaoId,origemConsultada?.osId],enabled:flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&!!origemConsultada&&!bloqueado,gcTime:0,
     queryFn:async({signal})=>{const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted||!origemConsultada)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_consultar_origem_material_intencao",{p_cliente_id:clienteId,p_intencao_id:origemConsultada.intencaoId}).abortSignal(signal);if(error)throw error;
       const resposta=origemMaterialSchema.parse(data);if(resposta.intencaoId!==origemConsultada.intencaoId||resposta.osId!==origemConsultada.osId)throw new Error("Origem divergente.");
@@ -76,10 +77,10 @@ function IntencaoOsEnviadaInterna({userId,clienteId,visitas,bloqueado}: Props) {
     catch{setMensagem("Não foi possível conferir tentativa; nada foi enviado.");return;}
     trava.current=true;envio.mutate(p);};
   return <section aria-label="Intenção de reprogramação de OS enviada"><h3>Intenção de reprogramação de OS enviada</h3>
-    {import.meta.env.VITE_SSO_TRANSFERENCIA_OS_ENVIADA_ENABLED === "true" && <TransferirOsEnviada userId={userId} clienteId={clienteId} visitas={visitas} bloqueado={bloqueado} />}
-    {import.meta.env.VITE_SSO_TRIAGEM_INTENCAO_OS_ENABLED === "true" && <TriagemIntencoes userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_TRANSFERENCIA_OS_ENVIADA_ENABLED") && <TransferirOsEnviada userId={userId} clienteId={clienteId} visitas={visitas} bloqueado={bloqueado} />}
+    {flagLigada("VITE_SSO_TRIAGEM_INTENCAO_OS_ENABLED") && <TriagemIntencoes userId={userId} clienteId={clienteId} />}
     <p>Registro interno apenas: não move OS, não altera horário nem tarefa Auvo. A reconciliação e execução estão bloqueadas.</p>
-    <form onSubmit={(event) => {event.preventDefault();if(pedido||trava.current||bloqueado||!confirmado||!origem||!destino||!motivo.trim()||ordens.isFetching||ordens.isError||!ordens.data?.pages.flat().some((o) => o.id===vinculoId)||(materialId&&(import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED!=="true"||!material||excecoes.isFetching||excecoes.isError)))return;
+    <form onSubmit={(event) => {event.preventDefault();if(pedido||trava.current||bloqueado||!confirmado||!origem||!destino||!motivo.trim()||ordens.isFetching||ordens.isError||!ordens.data?.pages.flat().some((o) => o.id===vinculoId)||(materialId&&(!flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")||!material||excecoes.isFetching||excecoes.isError)))return;
       const validacao=pedidoSchema.safeParse({requestId:crypto.randomUUID(),intencaoId:crypto.randomUUID(),clienteId,origemId:origem.id,destinoId:destino.id,vinculoId,revisaoOrigem:origem.revisao,revisaoDestino:destino.revisao,motivo:motivo.trim(),...(material?{material:{listaId:material.lista_id,eventoRevisao:material.revisao}}:{})});
       if(!validacao.success){setMensagem("Confira OS, Visitas, revisões e motivo.");return;}const p=validacao.data;
       try{if(sessionStorage.getItem(chave)!==null){setMensagem("Há tentativa anterior; reabra para recuperar.");return;}sessionStorage.setItem(chave,JSON.stringify(p));}
@@ -93,7 +94,7 @@ function IntencaoOsEnviadaInterna({userId,clienteId,visitas,bloqueado}: Props) {
       <label>OS <select required value={vinculoId} onChange={(e) => {setVinculoId(e.target.value);setMaterialId("");}}><option value="">Selecione</option>
         {ordens.data?.pages.flat().map((o) => <option key={o.id} value={o.id}>{o.numero} · {o.titulo}</option>)}</select></label>
       {ordens.hasNextPage&&<button type="button" onClick={() => void ordens.fetchNextPage()}>Mais OS</button>}
-      {import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&osSelecionada&&<>
+      {flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&osSelecionada&&<>
         <p>A associação registra um evento histórico; não confirma que a exceção ainda está aberta.</p>
         {excecoes.isFetching&&<output>Carregando exceções…</output>}
         {excecoes.isError&&<p role="alert">Exceções indisponíveis. <button type="button" onClick={()=>void excecoes.refetch()}>Tentar novamente</button></p>}
@@ -109,9 +110,9 @@ function IntencaoOsEnviadaInterna({userId,clienteId,visitas,bloqueado}: Props) {
     {mensagem&&<p role="status">{mensagem}</p>}
     {intencoes.isFetching&&<output>Carregando intenções…</output>}{intencoes.isError&&<p role="alert">Intenções indisponíveis. <button type="button" onClick={() => void intencoes.refetch()}>Tentar novamente</button></p>}
     {!intencoes.isFetching&&!intencoes.isError&&<ul>{intencoes.data?.pages.flat().map((i) => <li key={i.id}>OS {i.os_id} · tarefa {i.tarefa_auvo_id} · {i.estado} · origem {i.visita_origem_id} · destino {i.visita_destino_id}
-      {import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&<button type="button" disabled={bloqueado} onClick={()=>setOrigemConsultada({intencaoId:i.id,osId:i.os_id})}>Consultar origem de material</button>}</li>)}</ul>}
+      {flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&<button type="button" disabled={bloqueado} onClick={()=>setOrigemConsultada({intencaoId:i.id,osId:i.os_id})}>Consultar origem de material</button>}</li>)}</ul>}
     {!intencoes.isError&&intencoes.hasNextPage&&<button type="button" disabled={intencoes.isFetching} onClick={() => void intencoes.fetchNextPage()}>Mais intenções</button>}
-    {origemConsultada&&!bloqueado&&!intencoes.isFetching&&!intencoes.isError&&intencoes.data?.pages.flat().some((i)=>i.id===origemConsultada.intencaoId&&i.os_id===origemConsultada.osId)&&import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&<section aria-label="Origem de material da intenção"><h4>Origem de material</h4>
+    {origemConsultada&&!bloqueado&&!intencoes.isFetching&&!intencoes.isError&&intencoes.data?.pages.flat().some((i)=>i.id===origemConsultada.intencaoId&&i.os_id===origemConsultada.osId)&&flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&<section aria-label="Origem de material da intenção"><h4>Origem de material</h4>
       {origemMaterial.isFetching&&<output>Consultando origem…</output>}
       {origemMaterial.isError&&<p role="alert">Não foi possível consultar a origem. <button type="button" onClick={()=>void origemMaterial.refetch()}>Tentar novamente</button></p>}
       {!origemMaterial.isFetching&&!origemMaterial.isError&&origemMaterial.data&&(origemMaterial.data.origem?<p>Lista {origemMaterial.data.origem.listaId} · revisão {origemMaterial.data.origem.eventoRevisao} · {origemMaterial.data.origem.motivo}: {origemMaterial.data.origem.descricao}. O vínculo é histórico e não confirma exceção aberta.</p>:<p>Nenhuma origem de material associada a esta intenção.</p>)}

@@ -7,6 +7,7 @@ import { validarCriacaoVisita } from "../../application/visitas";
 import type { CriarVisita } from "../../application/visitas-gateway";
 import { cancelarCriacaoVisita, consultarReciboCriacaoVisita, reservarCriacaoVisita, supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-adapter";
 import { converterHorarioLocal } from "./horario-local";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function NovaVisita({ userId, clienteId }: { userId: string; clienteId: string }) {
   const chave = `sso-visita-criacao:${userId}:${clienteId}`;
@@ -140,7 +141,7 @@ export function NovaVisita({ userId, clienteId }: { userId: string; clienteId: s
       if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido pendente.");
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId) throw new Error("Sessão alterada.");
-      if (import.meta.env.VITE_SSO_RESERVA_CRIACAO_VISITA_ENABLED === "true") {
+      if (flagLigada("VITE_SSO_RESERVA_CRIACAO_VISITA_ENABLED")) {
         if (sessionStorage.getItem(chaveReserva) !== null) throw new Error("Reserva pendente.");
         sessionStorage.setItem(chaveReserva, JSON.stringify(comando));
         setReservaPendente(comando);
@@ -181,8 +182,8 @@ export function NovaVisita({ userId, clienteId }: { userId: string; clienteId: s
     {erro && <p role="alert">{erro}</p>}{mensagem && <output>{mensagem}</output>}
     {cancelamento === "invalido" || (cancelamento && (!pendente || cancelamento.requestId !== pendente.requestId)) ? <p role="alert">Cancelamento local inconsistente. Consulte suporte.</p> : null}
     {pendente && <><Button variant="secondary" disabled={ocupado || armazenamentoFalhou || cancelamento !== null} onClick={() => void enviar(pendente)}>Tentar criar Visita novamente</Button>
-      {import.meta.env.VITE_SSO_RECIBO_CRIACAO_VISITA_ENABLED === "true" && <Button variant="secondary" disabled={ocupado || armazenamentoFalhou} onClick={() => void enviar(pendente, true)}>Consultar recibo sem recriar</Button>}</>}
-    {pendente && cancelamento !== "invalido" && import.meta.env.VITE_SSO_CANCELAR_CRIACAO_VISITA_ENABLED === "true" && (cancelamento ?
+      {flagLigada("VITE_SSO_RECIBO_CRIACAO_VISITA_ENABLED") && <Button variant="secondary" disabled={ocupado || armazenamentoFalhou} onClick={() => void enviar(pendente, true)}>Consultar recibo sem recriar</Button>}</>}
+    {pendente && cancelamento !== "invalido" && flagLigada("VITE_SSO_CANCELAR_CRIACAO_VISITA_ENABLED") && (cancelamento ?
       <Button variant="secondary" disabled={ocupado} onClick={() => void cancelar(pendente)}>Consultar ou repetir cancelamento</Button> :
       <fieldset disabled={ocupado}><legend>Cancelar tentativa de criação</legend><p>Se a Visita já existir, ela será preservada. Caso contrário, este pedido não poderá criá-la depois.</p>
         <label>Motivo <textarea maxLength={2000} value={motivoCancelamento} onChange={e => { setMotivoCancelamento(e.target.value); setConfirmarCancelamento(false); }} /></label>

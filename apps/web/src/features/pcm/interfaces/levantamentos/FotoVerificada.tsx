@@ -1,6 +1,7 @@
 import { useEffect,useRef,useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
-export function FotoVerificada(p:{userId:string;fotoId:string}){if(import.meta.env.VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED!=="true")return null;return <Conteudo key={`${p.userId}:${p.fotoId}`} {...p}/>;}
+import { flagLigada } from "../../../../config/flags-sso";
+export function FotoVerificada(p:{userId:string;fotoId:string}){if(!flagLigada("VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED"))return null;return <Conteudo key={`${p.userId}:${p.fotoId}`} {...p}/>;}
 function Conteudo({userId,fotoId}:{userId:string;fotoId:string}){
  const [url,setUrl]=useState<string|null>(null);const [erro,setErro]=useState(false);const [ocupado,setOcupado]=useState(false);const montado=useRef(false);
  useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);

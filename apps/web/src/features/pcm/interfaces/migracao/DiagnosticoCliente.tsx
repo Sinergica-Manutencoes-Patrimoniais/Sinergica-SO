@@ -9,6 +9,7 @@ import { MatrizCenarios } from "./MatrizCenarios";
 import { RascunhoPlanoLegado } from "./RascunhoPlanoLegado";
 import { RelatorioPrevia } from "./RelatorioPrevia";
 import { ReversaoLotesLegados } from "./ReversaoLotesLegados";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const campos = {
   chamadosAtivos: "Chamados não excluídos",
@@ -27,7 +28,7 @@ export function DiagnosticoCliente({ userId, clienteId }: { userId: string; clie
   const [planoSelecionado, setPlanoSelecionado] = useState<string | null>(null);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<string | null>(null);
   const [somenteReferenciasParaConferencia, setSomenteReferenciasParaConferencia] = useState(false);
-  const mediado = import.meta.env.VITE_SSO_PREFLIGHT_MIGRACAO_MEDIADO_ENABLED === "true";
+  const mediado = flagLigada("VITE_SSO_PREFLIGHT_MIGRACAO_MEDIADO_ENABLED");
   const conferirSessao = async (signal: AbortSignal) => {
     const atual = await supabase.auth.getUser();
     if (atual.error || atual.data.user?.id !== userId || signal.aborted)
@@ -261,7 +262,7 @@ export function DiagnosticoCliente({ userId, clienteId }: { userId: string; clie
                 <li key={r.chamado_id}>
                   Chamado {r.chamado_id} · OS legada {r.os_legada_id ?? "não exposta"} ·{" "}
                   {r.os_relacionadas} OS relacionadas · {r.classificacao}
-                  {import.meta.env.VITE_SSO_CANONICALIZAR_CHAMADO_ENABLED === "true" &&
+                  {flagLigada("VITE_SSO_CANONICALIZAR_CHAMADO_ENABLED") &&
                     r.classificacao === "vinculo_inverso_ausente" && (
                       <button
                         type="button"
@@ -366,7 +367,7 @@ export function DiagnosticoCliente({ userId, clienteId }: { userId: string; clie
             <li key={p.plano_id}>
               Plano {p.plano_id} · {p.estado} · {p.alvo_tipo} {p.alvo_id ?? "não exposto"} ·{" "}
               {p.ocorrencias} ocorrências · {p.classificacao}
-              {import.meta.env.VITE_SSO_RASCUNHO_PLANO_LEGADO_ENABLED === "true" &&
+              {flagLigada("VITE_SSO_RASCUNHO_PLANO_LEGADO_ENABLED") &&
                 p.classificacao === "alvo_coerente_migracao_nao_planejada" && (
                   <button
                     type="button"
@@ -381,7 +382,7 @@ export function DiagnosticoCliente({ userId, clienteId }: { userId: string; clie
           ))}
         </ul>
       )}
-      {import.meta.env.VITE_SSO_RASCUNHO_PLANO_LEGADO_ENABLED === "true" && planoSelecionado && (
+      {flagLigada("VITE_SSO_RASCUNHO_PLANO_LEGADO_ENABLED") && planoSelecionado && (
         <RascunhoPlanoLegado
           userId={userId}
           clienteId={clienteId}
@@ -413,7 +414,7 @@ export function DiagnosticoCliente({ userId, clienteId }: { userId: string; clie
           Mais planos
         </button>
       )}
-      {import.meta.env.VITE_SSO_LOTE_RASCUNHOS_LEGADOS_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_LOTE_RASCUNHOS_LEGADOS_ENABLED") && (
         <LoteRascunhosLegados
           userId={userId}
           clienteId={clienteId}
@@ -425,7 +426,7 @@ export function DiagnosticoCliente({ userId, clienteId }: { userId: string; clie
           }
         />
       )}
-      {import.meta.env.VITE_SSO_REVERSAO_LOTE_LEGADO_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_REVERSAO_LOTE_LEGADO_ENABLED") && (
         <ReversaoLotesLegados userId={userId} clienteId={clienteId} />
       )}
       {planos.data && !planos.isFetching && !planos.isError && !planosDivergentes && (

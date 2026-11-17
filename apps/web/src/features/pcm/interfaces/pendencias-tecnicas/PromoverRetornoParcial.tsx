@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 export const pedidoPromocaoParcialSchema = z.object({ requestId: id, atorId: id, clienteId: id, retornoId: id, retornoRevision: z.number().int().positive(),
@@ -90,7 +91,7 @@ export function PromoverRetornoParcial({ userId, clienteId, retornoId, revisao, 
     <p>O novo Chamado conterá somente o restante declarado, sem criar OS ou tarefa. A parada anterior não está comprovada.</p>
     {recuperacao.invalido ? <p role="alert">Tentativa local inválida. Procure suporte.</p> : pendente ? <>
       <p>Pedido pendente para revisão {pendente.retornoRevision}: {pendente.descricaoRestante} · {pendente.minutosRestantes} min.</p><Button variant="secondary" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</Button>
-      {import.meta.env.VITE_SSO_CONSULTA_PROMOCAO_PARCIAL_ENABLED === "true" && <Button variant="secondary" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</Button>}
+      {flagLigada("VITE_SSO_CONSULTA_PROMOCAO_PARCIAL_ENABLED") && <Button variant="secondary" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</Button>}
     </> : estado !== "aguardando" ? <p>Este retorno não está disponível para nova promoção.</p> : <>
       {descricaoIncompativel && <p role="alert">O restante excede o limite atual da parcela ou possui espaços nas bordas. Não será truncado; procure suporte.</p>}
       <label>Título do Chamado <input className="input" maxLength={200} value={titulo} disabled={ocupado || !consultaDisponivel} onChange={(e) => { setTitulo(e.target.value); setConfirmacao(null); }} /></label>

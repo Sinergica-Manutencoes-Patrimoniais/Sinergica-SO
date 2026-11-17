@@ -2,10 +2,11 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z.object({ vinculo_id: z.string().guid(), versao_id: z.string().guid(), rotina_id: z.string().guid(), alvo_tipo: z.enum(["sistema", "componente", "grupo"]), alvo_id: z.string().guid(), vencimento: z.string().date(), agendamento_id: z.string().guid(), status_pmoc: z.string().nullable(), estado_vinculo: z.enum(["declarado_pcm", "revisao_necessaria", "conflito"]) }).strict();
 type Props = { userId: string; clienteId: string; planoId: string };
-export function ObrigacoesPmoc(props: Props) { if (import.meta.env.VITE_SSO_OBRIGACOES_PMOC_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props} />; }
+export function ObrigacoesPmoc(props: Props) { if (!flagLigada("VITE_SSO_OBRIGACOES_PMOC_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId])} {...props} />; }
 function Conteudo({ userId, clienteId, planoId }: Props) {
  const consulta = useInfiniteQuery({ queryKey: ["obrigacoes-pmoc-plano", userId, clienteId, planoId], gcTime: 0, retry: false, initialPageParam: null as string | null,
   queryFn: async ({ pageParam, signal }) => { await conferirSessaoDiagnostico(userId, signal); const { data, error } = await supabase.schema("pcm").rpc("sso_listar_obrigacoes_pmoc_plano", { p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; const pagina = z.array(linha).max(20).parse(data); let anterior = pageParam?.toLowerCase() ?? ""; for (const item of pagina) { if (item.vinculo_id.toLowerCase() <= anterior) throw new Error("Página divergente."); anterior = item.vinculo_id.toLowerCase(); } await conferirSessaoDiagnostico(userId, signal); return pagina; },

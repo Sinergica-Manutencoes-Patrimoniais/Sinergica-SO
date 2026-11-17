@@ -2,10 +2,12 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 const opcaoSchema=z.object({os_id:z.string().guid(),numero:z.string(),estado_os:z.string(),os_atualizada_em:z.string().datetime({offset:true}),chamado_revision:z.number().int().positive(),escopo_revision:z.number().int().positive()}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),parcelaId:z.string().guid(),osId:z.string().guid(),chamadoRevision:z.number().int().positive(),escopoRevision:z.number().int().positive(),osStatus:z.string(),osAtualizadaEm:z.string().datetime({offset:true}),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;parcelaId:string;chamadoDiretoId?:string};
-export function AtribuirParcela(props:Props){if(import.meta.env.VITE_SSO_ATRIBUICAO_PARCELA_ENABLED!=="true"||(props.chamadoDiretoId&&import.meta.env.VITE_SSO_ATRIBUICAO_DIRETA_ENABLED!=="true"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.parcelaId,props.chamadoDiretoId])} {...props}/>;}
+export function AtribuirParcela(props:Props){if(!flagLigada("VITE_SSO_ATRIBUICAO_PARCELA_ENABLED"))return <RecursoNaoAtivado recurso="Atribuição de parcela" podeAdministrar={false} faltando={["VITE_SSO_ATRIBUICAO_PARCELA_ENABLED"]} />; if(props.chamadoDiretoId&&!flagLigada("VITE_SSO_ATRIBUICAO_DIRETA_ENABLED"))return <RecursoNaoAtivado recurso="Atribuição direta" podeAdministrar={false} faltando={["VITE_SSO_ATRIBUICAO_DIRETA_ENABLED"]} />;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.parcelaId,props.chamadoDiretoId])} {...props}/>;}
 function Conteudo({userId,clienteId,parcelaId,chamadoDiretoId}:Props){
   const chave=chamadoDiretoId?`sso-atribuicao-direta:${JSON.stringify([userId,clienteId,chamadoDiretoId,parcelaId])}`:`sso-atribuicao-parcela:${JSON.stringify([userId,clienteId,parcelaId])}`;const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=pedidoSchema.parse(JSON.parse(v));return p.parcelaId===parcelaId ? p : "invalido";}catch{return "invalido";}});
   const [osId,setOsId]=useState("");const [motivo,setMotivo]=useState("");const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();

@@ -3,13 +3,23 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoDispensa } from "./HistoricoDispensa";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({ requestId: z.string().guid(), dispensaId: z.string().guid(), listaId: z.string().guid(),
   listaRevision: z.number().int().positive(), ordemServicoId: z.string().guid(), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string };
 export function DispensarOrcamento(props: Props) {
-  if (import.meta.env.VITE_SSO_DISPENSA_ORCAMENTO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DISPENSA_ORCAMENTO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Dispensa orcamento"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DISPENSA_ORCAMENTO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico }: Props) {

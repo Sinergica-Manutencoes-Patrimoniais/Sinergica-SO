@@ -4,9 +4,19 @@ import { conferirOnda, ONDAS_PILOTO, type EvidenciaCenario, type OndaPiloto } fr
 import { RegistrarEvidenciaOnda } from "./RegistrarEvidenciaOnda";
 import { DecisaoOnda } from "./DecisaoOnda";
 import { HistoricoDecisoesOnda } from "./HistoricoDecisoesOnda";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export function EvidenciasOnda({ userId, clienteId }: { userId: string; clienteId: string }) {
-  if (import.meta.env.VITE_SSO_EVIDENCIAS_ONDA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EVIDENCIAS_ONDA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Evidencias onda"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EVIDENCIAS_ONDA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />;
 }
 
@@ -43,7 +53,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     {!consulta.isFetching && !consulta.isError && consulta.data && consulta.hasNextPage === false && <DecisaoOnda
       userId={userId} clienteId={clienteId} onda={onda} revision={consulta.data.pages[0]!.revision} />}
     <HistoricoDecisoesOnda userId={userId} clienteId={clienteId} onda={onda} />
-    {import.meta.env.VITE_SSO_MATRIZ_EVIDENCIAS_CLIENTE_ENABLED === "true" && <MatrizCliente userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_MATRIZ_EVIDENCIAS_CLIENTE_ENABLED") && <MatrizCliente userId={userId} clienteId={clienteId} />}
   </section>;
 }
 

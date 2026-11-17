@@ -2,10 +2,20 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; grupoId: string };
 export function FotosVerificadasGrupo(props: Props) {
-  if (import.meta.env.VITE_SSO_FOTOS_VERIFICADAS_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_FOTOS_VERIFICADAS_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Fotos verificadas grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_FOTOS_VERIFICADAS_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={JSON.stringify([props.userId, props.clienteId, props.grupoId])} {...props} />;
 }
 function Lista({ userId, clienteId, grupoId }: Props) {

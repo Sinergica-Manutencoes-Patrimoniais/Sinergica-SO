@@ -10,6 +10,7 @@ import { DeclaracaoEtiqueta } from "./DeclaracaoEtiqueta";
 import { SubstituicaoCodigoPublico } from "./Substituicao";
 import { HistoricoCodigoGrupo } from "./HistoricoCodigoGrupo";
 import { QrCodigoGrupo } from "./QrCodigoGrupo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const resposta = z.union([
   z.object({ situacao: z.literal("nao_encontrado") }).strict(),
@@ -69,7 +70,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
   });
   const atual = useQuery({
     queryKey: ["codigos-publicos", userId, clienteId, "unificada-codigo-atual", ativo?.tipo, ativo?.ativoId],
-    enabled: !!ativo && (import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" || import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true" || import.meta.env.VITE_SSO_QR_CODIGO_ATIVO_ENABLED === "true"),
+    enabled: !!ativo && (flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") || flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") || flagLigada("VITE_SSO_QR_CODIGO_ATIVO_ENABLED")),
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }) => {
@@ -77,7 +78,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       let codigo: unknown;
-      if (import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true") {
+      if (flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")) {
         const { data, error } = await supabase.schema("pcm").rpc("sso_consultar_codigo_atual_mediado", {
           p_ator_id: userId, p_cliente_id: clienteId, p_tipo: ativo.tipo, p_ativo_id: ativo.ativoId,
         }).abortSignal(signal);
@@ -119,18 +120,18 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
       <EvidenciasUso userId={userId} clienteId={clienteId} tipo={ativo.tipo} ativoId={ativo.ativoId} />
       {ativo.tipo === "componente" && <CategoriaComponente userId={userId} clienteId={clienteId} componenteId={ativo.ativoId} />}
       <DeclaracaoEtiqueta userId={userId} clienteId={clienteId} tipo={ativo.tipo} ativoId={ativo.ativoId} />
-      {(import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" || import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true") && atual.isFetching && <output>Consultando código atual…</output>}
+      {(flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") || flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")) && atual.isFetching && <output>Consultando código atual…</output>}
       {atual.isError && <p role="alert">Código atual indisponível. <button type="button" onClick={() => void atual.refetch()}>Tentar novamente</button></p>}
       {!atual.isFetching && !atual.isError && atual.data && <p>Código atual: {atual.data}. {busca.trim().toUpperCase() === atual.data.trim().toUpperCase() ? "O código consultado corresponde ao atual." : "O código consultado difere do atual; confira o histórico abaixo."}</p>}
       {!atual.isFetching && !atual.isError && atual.data && <QrCodigoGrupo userId={userId} clienteId={clienteId} ativoId={ativo.ativoId} tipo={ativo.tipo} codigo={atual.data} />}
-      {import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" && !atual.isFetching && !atual.isError && atual.data &&
+      {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !atual.isFetching && !atual.isError && atual.data &&
         <SubstituicaoCodigoPublico key={JSON.stringify([userId, clienteId, ativo.tipo, ativo.ativoId, atual.data])} userId={userId} clienteId={clienteId} tipo={ativo.tipo} ativoId={ativo.ativoId} codigoAnterior={atual.data} />}
     </>}
     {resultado?.situacao === "encontrado" && resultado.tipo === "grupo_quantitativo" && <>
       <HistoricoCodigoGrupo key={JSON.stringify([userId, clienteId, resultado.ativoId])} userId={userId} clienteId={clienteId} grupoId={resultado.ativoId} />
       <QrCodigoGrupo userId={userId} clienteId={clienteId} ativoId={resultado.ativoId} tipo="grupo_quantitativo" codigo={resultado.codigoAtual} />
       <DeclaracaoEtiqueta userId={userId} clienteId={clienteId} tipo="grupo_quantitativo" ativoId={resultado.ativoId} />
-      {import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED === "true" &&
+      {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED") &&
         <SubstituicaoCodigoPublico key={JSON.stringify([userId, clienteId, resultado.ativoId, resultado.codigoAtual])} userId={userId} clienteId={clienteId}
           tipo="grupo_quantitativo" ativoId={resultado.ativoId} codigoAnterior={resultado.codigoAtual} />}
     </>}

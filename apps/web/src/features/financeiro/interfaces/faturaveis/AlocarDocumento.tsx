@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ParcelaAdicional } from "./ParcelaAdicional";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const esquema = z.object({ requestId: z.string().guid(), alocacaoId: z.string().guid(), itemId: z.string().guid(),
   expectedRevision: z.number().int().positive(), lancamentoId: z.string().guid(), documentoRef: z.string().trim().min(1).max(200),
@@ -10,7 +12,15 @@ const esquema = z.object({ requestId: z.string().guid(), alocacaoId: z.string().
 type Pedido = z.infer<typeof esquema>;
 type Props = { usuario: string; cliente: string; itemId: string; revisao: number };
 export function AlocarDocumento(props: Props) {
-  if (import.meta.env.VITE_SSO_ALOCAR_FATURAVEL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ALOCAR_FATURAVEL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Alocar faturavel"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ALOCAR_FATURAVEL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.itemId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, itemId, revisao }: Props) {
@@ -35,7 +45,7 @@ function Conteudo({ usuario, cliente, itemId, revisao }: Props) {
       if (resultado.itemId !== itemId || resultado.revisao !== revisao || resultado.situacao !== "calculado" || resultado.disponivelCentavos === null || !/^\d+$/.test(resultado.disponivelCentavos)) throw new Error("Saldo indisponível ou revisão divergente.");
       const disponivel=z.number().int().nonnegative().safe().parse(Number(resultado.disponivelCentavos));const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return disponivel; } });
   const previaParcela = useQuery({ queryKey: ["faturavel-previa-parcela-documento", usuario, cliente, itemId, lancamento, revisao], gcTime: 0, retry: false,
-    enabled: import.meta.env.VITE_SSO_PREVIA_PARCELA_DOCUMENTO_ENABLED === "true" && z.string().guid().safeParse(lancamento).success,
+    enabled: flagLigada("VITE_SSO_PREVIA_PARCELA_DOCUMENTO_ENABLED") && z.string().guid().safeParse(lancamento).success,
     queryFn: async ({ signal }) => { const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");const { data: resposta, error } = await supabase.schema("financeiro").rpc("sso_previa_parcela_documento", { p_cliente_id: cliente, p_item_id: itemId, p_lancamento_id: lancamento }).abortSignal(signal); if (error) throw error;
       const p = z.object({ itemId: z.string().guid(), lancamentoId: z.string().guid(), revisaoItem: z.number().int(), documento: z.object({ id: z.string().guid(), referencia: z.string(), data: z.string() }).strict().nullable(), alocadoItemCentavos: z.string(), alocadoDocumentoCentavos: z.string().nullable(), parcelasAdicionaisHabilitadas: z.boolean(), reservaSaldo: z.literal(false), cobrancaEnviada: z.literal(false) }).strict().parse(resposta);
       if (p.itemId !== itemId || p.lancamentoId !== lancamento || p.revisaoItem !== revisao) throw new Error("Prévia divergente");const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==usuario||signal.aborted)throw new Error("Sessão alterada.");return p; } });
@@ -90,7 +100,7 @@ function Conteudo({ usuario, cliente, itemId, revisao }: Props) {
     <form onSubmit={(e) => { e.preventDefault(); if (pendente || enviar.isPending || enviando.current || confirmado!==fotografia || saldo.isFetching || saldo.isError || opcoes.isFetching || opcoes.isError || paginasDivergentes || !lancamentoSelecionado || saldo.data === undefined) return;
       try { const p = esquema.parse({ requestId: crypto.randomUUID(), alocacaoId: crypto.randomUUID(), itemId,
         expectedRevision: revisao, lancamentoId: lancamento, documentoRef: documento, dataDocumento: data,
-        valorCentavos: /^\d+$/.test(valor) ? Number(valor) : NaN, ...(import.meta.env.VITE_SSO_ALOCACAO_DOCUMENTO_MEDIADA_ENABLED === "true" ? { protocolo: "mediado" as const } : {}) });
+        valorCentavos: /^\d+$/.test(valor) ? Number(valor) : NaN, ...(flagLigada("VITE_SSO_ALOCACAO_DOCUMENTO_MEDIADA_ENABLED") ? { protocolo: "mediado" as const } : {}) });
         if (p.valorCentavos > saldo.data || !opcoes.data?.pages.flat().some((opcao) => opcao.id === p.lancamentoId)) throw new Error("Saldo ou lançamento indisponível"); registrar(p);
       } catch { setMensagem("Confira lançamento, documento, data e saldo."); }
     }}><fieldset disabled={!!pendente || enviar.isPending || saldo.isFetching || opcoes.isFetching || saldo.isError || opcoes.isError || paginasDivergentes}>
@@ -107,7 +117,7 @@ function Conteudo({ usuario, cliente, itemId, revisao }: Props) {
       <label><input type="checkbox" checked={confirmado===fotografia} onChange={(e) => setConfirmado(e.target.checked?fotografia:null)} /> Confirmei documento, valor e vínculo com este item.</label>
       <button type="submit" disabled={confirmado!==fotografia}>Vincular documento</button>
     </fieldset></form>
-    {import.meta.env.VITE_SSO_PARCELA_ADICIONAL_ENABLED === "true" && previaParcela.data?.documento && previaParcela.data.parcelasAdicionaisHabilitadas && !previaParcela.isFetching && !previaParcela.isError && saldo.data !== undefined && !saldo.isFetching && !saldo.isError && <ParcelaAdicional key={previaParcela.data.documento.id} usuario={usuario} cliente={cliente} itemId={itemId} documentoId={previaParcela.data.documento.id} revisao={previaParcela.data.revisaoItem} saldo={saldo.data} />}
+    {flagLigada("VITE_SSO_PARCELA_ADICIONAL_ENABLED") && previaParcela.data?.documento && previaParcela.data.parcelasAdicionaisHabilitadas && !previaParcela.isFetching && !previaParcela.isError && saldo.data !== undefined && !saldo.isFetching && !saldo.isError && <ParcelaAdicional key={previaParcela.data.documento.id} usuario={usuario} cliente={cliente} itemId={itemId} documentoId={previaParcela.data.documento.id} revisao={previaParcela.data.revisaoItem} saldo={saldo.data} />}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Contate suporte.</p>}
     {pendente && pendente !== "invalido" && <button type="button" disabled={enviar.isPending} onClick={() => registrar(pendente)}>Repetir tentativa</button>}
     {mensagem && <p role="status">{mensagem}</p>}

@@ -1,8 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 export function DiagnosticoAncestraisGrupos({userId,clienteId}:{userId:string;clienteId:string}){
-  const ativo=import.meta.env.VITE_SSO_DIAGNOSTICO_ANCESTRAIS_GRUPOS_ENABLED==="true";
+  const ativo=flagLigada("VITE_SSO_DIAGNOSTICO_ANCESTRAIS_GRUPOS_ENABLED");
   const q=useInfiniteQuery({queryKey:["estrutura-tecnica",userId,clienteId,"diagnostico-ancestrais-grupos"],enabled:ativo,gcTime:0,initialPageParam:null as string | null,queryFn:async({pageParam,signal})=>{
     const {data,error}=await supabase.schema("pcm").rpc("sso_diagnostico_ancestrais_grupos",{p_cliente_id:clienteId,p_apos:pageParam,p_limite:100}).abortSignal(signal);if(error)throw error;
     const r=z.object({clienteId:z.string().guid(),examinados:z.number().int().min(0).max(100),ciclos:z.number().int().nonnegative(),incompletos:z.number().int().nonnegative(),limite:z.number().int().nonnegative(),ultimoId:z.string().guid().nullable()}).strict().parse(data);

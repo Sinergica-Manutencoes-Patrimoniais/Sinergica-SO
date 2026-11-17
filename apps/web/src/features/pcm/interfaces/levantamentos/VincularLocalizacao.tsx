@@ -4,6 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { useAreasDoCliente, useLocaisDoCliente } from "../../application/ativos-cliente-queries";
 import { supabaseHierarquiaAdapter } from "../../infrastructure/supabase-hierarquia-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export const pedidoVinculoLocalizacaoSchema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200), revisao: z.number().int().positive(),
   tipo: z.enum(["area", "local", "sublocal"]), entidadeId: z.string().guid(), snapshot: z.record(z.string(), z.unknown()), motivo: z.string().trim().min(1).max(2000) }).strict();
@@ -11,7 +13,7 @@ type Pedido = z.infer<typeof pedidoVinculoLocalizacaoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
 
 export function VincularLocalizacao(props: Props) {
-  if (import.meta.env.VITE_SSO_VINCULAR_LOCALIZACAO_ENABLED !== "true" || !["area", "local", "sublocal"].includes(props.tipo)) return null;
+  if (!["area", "local", "sublocal"].includes(props.tipo)) return null; if (!flagLigada("VITE_SSO_VINCULAR_LOCALIZACAO_ENABLED")) return <RecursoNaoAtivado recurso="Vincular localizacao" podeAdministrar={false} faltando={["VITE_SSO_VINCULAR_LOCALIZACAO_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props} />;
 }
 
@@ -81,7 +83,7 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo }: Props) {
     {(areas.isError || locais.isError) && <p role="alert">Cadastros indisponíveis.</p>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
     {pendente && pendente !== "invalido" ? <><button type="button" disabled={envio.isPending || consultando} onClick={() => enviar(pendente)}>Repetir vínculo</button>
-      {import.meta.env.VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED === "true" && <button type="button" disabled={envio.isPending || consultando} onClick={() => void consultarRecibo(pendente)}>Consultar confirmação</button>}</> : !pendente && <>
+      {flagLigada("VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED") && <button type="button" disabled={envio.isPending || consultando} onClick={() => void consultarRecibo(pendente)}>Consultar confirmação</button>}</> : !pendente && <>
       <label>Cadastro <select value={entidade} onChange={(e) => { setEntidade(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>{opcoes.map((x) => <option key={x.id} value={x.id}>{x.nome} · {x.id}</option>)}</select></label>
       {entidade && snapshot.isError && <p role="alert">Cadastro indisponível. <button type="button" onClick={() => void snapshot.refetch()}>Tentar novamente</button></p>}
       {snapshot.data && !snapshot.isFetching && <p>Nome: {String(snapshot.data.nome)} · Área: {String(snapshot.data.areaId ?? "—")} · Pai: {String(snapshot.data.parentId ?? "—")}</p>}

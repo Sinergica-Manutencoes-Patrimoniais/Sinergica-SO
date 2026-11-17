@@ -7,6 +7,7 @@ import { ComandosCicloDevolucao } from "./ComandosCicloDevolucao";
 import { OsCicloPosterior } from "./OsCicloPosterior";
 import { ReconciliacaoCicloPosterior } from "./ReconciliacaoCicloPosterior";
 import { ContinuacoesParcelaCiclo } from "./ContinuacoesParcelaCiclo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function CiclosPosteriores({ userId, clienteId, composicaoId }: { userId: string; clienteId: string; composicaoId: string }) {
   const [selecionado, setSelecionado] = useState<string | null>(null);
@@ -39,17 +40,17 @@ export function CiclosPosteriores({ userId, clienteId, composicaoId }: { userId:
     {consulta.data && <div hidden={consulta.isFetching || consulta.isError}>{itens.length === 0 ? <p>Nenhum ciclo posterior encontrado.</p> : <ul>{itens.map((item) => <li key={item.ciclo_id}>
       Ciclo {item.ciclo_id} · {item.ciclo_estado} · revisão {item.ciclo_revisao}. Pendência {item.pendencia_id}, Chamado {item.chamado_id}, parcela {item.parcela_id} ({item.situacao}).
       <p>Suspensão {item.suspensao_estado ?? "não registrada"} · OS {item.os_id ?? "não atribuída"} ({item.os_status ?? "indisponível"}) · interrupção {item.interrupcao_estado ?? "não registrada"} · reconciliação {item.reconciliacao_estado ?? "não registrada"}. Prova de parada indisponível.</p>
-      {import.meta.env.VITE_SSO_CONTINUACAO_PARCELA_CICLO_ENABLED === "true" && item.ciclo_id && <><button type="button" aria-expanded={continuacaoSelecionada === item.ciclo_id} onClick={() => setContinuacaoSelecionada(continuacaoSelecionada === item.ciclo_id ? null : item.ciclo_id)}>Consultar continuidade</button>{continuacaoSelecionada === item.ciclo_id && <ContinuacoesParcelaCiclo key={`${userId}:${clienteId}:${item.ciclo_id}:${item.parcela_id}`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={item.ciclo_id} parcelaId={item.parcela_id} />}</>}
-      {import.meta.env.VITE_SSO_RECONCILIACAO_CICLO_POSTERIOR_ENABLED === "true" && item.ciclo_id && <>
+      {flagLigada("VITE_SSO_CONTINUACAO_PARCELA_CICLO_ENABLED") && item.ciclo_id && <><button type="button" aria-expanded={continuacaoSelecionada === item.ciclo_id} onClick={() => setContinuacaoSelecionada(continuacaoSelecionada === item.ciclo_id ? null : item.ciclo_id)}>Consultar continuidade</button>{continuacaoSelecionada === item.ciclo_id && <ContinuacoesParcelaCiclo key={`${userId}:${clienteId}:${item.ciclo_id}:${item.parcela_id}`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={item.ciclo_id} parcelaId={item.parcela_id} />}</>}
+      {flagLigada("VITE_SSO_RECONCILIACAO_CICLO_POSTERIOR_ENABLED") && item.ciclo_id && <>
         <button type="button" aria-expanded={reconciliacaoSelecionada === item.ciclo_id} onClick={() => setReconciliacaoSelecionada(reconciliacaoSelecionada === item.ciclo_id ? null : item.ciclo_id)}>Consultar reconciliação</button>
         {reconciliacaoSelecionada === item.ciclo_id && <ReconciliacaoCicloPosterior key={`${userId}:${clienteId}:${item.ciclo_id}:${item.parcela_id}`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={item.ciclo_id} parcelaId={item.parcela_id} />}
       </>}
-      {import.meta.env.VITE_SSO_OS_CICLO_POSTERIOR_ENABLED === "true" && item.ciclo_id && <>
+      {flagLigada("VITE_SSO_OS_CICLO_POSTERIOR_ENABLED") && item.ciclo_id && <>
         <button type="button" aria-expanded={osSelecionada === item.ciclo_id} onClick={() => setOsSelecionada(osSelecionada === item.ciclo_id ? null : item.ciclo_id)}>Consultar OS e declarações</button>
         {osSelecionada === item.ciclo_id && <><OsCicloPosterior key={`${item.ciclo_id}:atribuir`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={item.ciclo_id} parcelaId={item.parcela_id} modo="atribuir" />
           <OsCicloPosterior key={`${item.ciclo_id}:interromper`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={item.ciclo_id} parcelaId={item.parcela_id} modo="interromper" /></>}
       </>}
-      {import.meta.env.VITE_SSO_COMANDOS_DEVOLUCAO_CICLO_ENABLED === "true" && <><button type="button" aria-expanded={selecionado === item.ciclo_id} onClick={() => setSelecionado(selecionado === item.ciclo_id ? null : item.ciclo_id)}>{selecionado === item.ciclo_id ? "Fechar comandos" : "Abrir comandos ou recuperar pedido"}</button>
+      {flagLigada("VITE_SSO_COMANDOS_DEVOLUCAO_CICLO_ENABLED") && <><button type="button" aria-expanded={selecionado === item.ciclo_id} onClick={() => setSelecionado(selecionado === item.ciclo_id ? null : item.ciclo_id)}>{selecionado === item.ciclo_id ? "Fechar comandos" : "Abrir comandos ou recuperar pedido"}</button>
         {selecionado === item.ciclo_id && <ComandosCicloDevolucao key={`${userId}:${clienteId}:${composicaoId}:${item.ciclo_id}`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} candidato={item} disponivel={!consulta.isFetching && !consulta.isError} />}</>}
     </li>)}</ul>}</div>}
     {consulta.hasNextPage && !consulta.isError && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais ciclos</button>}

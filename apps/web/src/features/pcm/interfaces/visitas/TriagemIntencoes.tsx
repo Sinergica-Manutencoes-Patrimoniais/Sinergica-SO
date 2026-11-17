@@ -2,6 +2,7 @@ import { useInfiniteQuery,useMutation,useQuery,useQueryClient } from "@tanstack/
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Item={id:string;os_id:string;tarefa_auvo_id:string;estado:string;revisao:number};
 const pedidoSchema=z.object({requestId:z.string().guid(),eventoId:z.string().guid(),clienteId:z.string().guid(),intencaoId:z.string().guid(),revision:z.number().int().positive().safe(),acao:z.enum(["anotar","descartar"]),resultado:z.enum(["desconhecido","mesma_tarefa","divergente"]).nullable(),tarefa:z.string().max(100).nullable(),referencia:z.string().max(500).nullable(),motivo:z.string().trim().min(1).max(2000)}).strict()
@@ -37,7 +38,7 @@ function TriagemIntencoesInterna({userId,clienteId}: Props) {
   const itemAtual=itens.data?.pages.flat().find((i)=>i.id===selecionado);
   const fotografia=JSON.stringify({userId,clienteId,item:itemAtual??null,acao,resultado,tarefa,referencia,motivo});
   const origemMaterial=useQuery({queryKey:["triagem-intencao-os",userId,clienteId,"material",selecionado,itemAtual?.os_id],gcTime:0,
-    enabled:import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&!!itemAtual&&!itens.isFetching&&!itens.isError,
+    enabled:flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&!!itemAtual&&!itens.isFetching&&!itens.isError,
     queryFn:async({signal})=>{const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted||!itemAtual)throw new Error("Sessão alterada.");
       const {data,error}=await supabase.schema("pcm").rpc("sso_consultar_origem_material_intencao",{p_cliente_id:clienteId,p_intencao_id:itemAtual.id}).abortSignal(signal);if(error)throw error;
       const r=origemSchema.parse(data);if(r.intencaoId!==itemAtual.id||r.osId!==itemAtual.os_id)throw new Error("Origem divergente.");
@@ -62,7 +63,7 @@ function TriagemIntencoesInterna({userId,clienteId}: Props) {
     {!itens.isFetching&&!itens.isError&&<ul>{itens.data?.pages.flat().map((i) => <li key={i.id}>OS {i.os_id} · tarefa {i.tarefa_auvo_id} · {i.estado} · revisão {i.revisao}
       <button type="button" onClick={() => setSelecionado(i.id)}>Ver triagem</button>
       {selecionado===i.id&&<>
-        {import.meta.env.VITE_SSO_INTENCAO_MATERIAL_ENABLED==="true"&&<section aria-label="Material associado à intenção">
+        {flagLigada("VITE_SSO_INTENCAO_MATERIAL_ENABLED")&&<section aria-label="Material associado à intenção">
           {origemMaterial.isFetching&&<output>Consultando origem de material…</output>}
           {origemMaterial.isError&&<p role="alert">Origem de material indisponível ou sem permissão. <button type="button" onClick={()=>void origemMaterial.refetch()}>Tentar novamente</button></p>}
           {!origemMaterial.isFetching&&!origemMaterial.isError&&origemMaterial.data&&(origemMaterial.data.origem?<p>Exceção histórica: {origemMaterial.data.origem.motivo} · {origemMaterial.data.origem.descricao}. Não confirma que permanece aberta.</p>:<p>Sem origem de material associada.</p>)}

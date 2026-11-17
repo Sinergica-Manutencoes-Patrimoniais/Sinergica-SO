@@ -10,6 +10,7 @@ import { ModuloPermissaoGrid } from "../components/ModuloPermissaoGrid";
 import type { Grupo, PermissaoModulo } from "../domain/grupo";
 import type { ModuloId, NivelAcesso } from "../domain/modulo";
 import { supabaseConfigAdapter } from "../infrastructure/supabase-config-adapter";
+import { flagLigada } from "../../../config/flags-sso";
 
 type PermissoesMap = Partial<Record<ModuloId, NivelAcesso>>;
 
@@ -64,7 +65,7 @@ export function GruposPage() {
   const [edicoesGuardadas, setEdicoesGuardadas] = useState<{ ator: string; itens: EdicaoGuardada[]; invalidas: number } | null>(null);
 
   const verificarCriacaoGuardada = useCallback(() => {
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED !== "true" || !user?.id) { setCriacaoGuardada(null); return; }
+    if (!flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED") || !user?.id) { setCriacaoGuardada(null); return; }
     try {
       const texto = sessionStorage.getItem(`sso-criacao-grupo:${user.id}`);
       setCriacaoGuardada(texto ? criacaoGuardadaSchema.parse(JSON.parse(texto)) : null);
@@ -74,7 +75,7 @@ export function GruposPage() {
   useEffect(() => { verificarCriacaoGuardada(); }, [verificarCriacaoGuardada]);
 
   const verificarEdicoesGuardadas = useCallback(() => {
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED !== "true" || !user?.id) { setEdicoesGuardadas(null); return; }
+    if (!flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED") || !user?.id) { setEdicoesGuardadas(null); return; }
     const ator = user.id;
     const prefixo = `sso-edicao-grupo:${ator}:`;
     const itens: EdicaoGuardada[] = [];

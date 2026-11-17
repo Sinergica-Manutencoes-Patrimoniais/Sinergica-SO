@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirToleranciasLote, incorporarLoteCronograma, listarMapeamentosCronograma, prepararImportacaoCronograma, type PedidoLoteCronograma } from "../../infrastructure/supabase-importacao-plano-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function IncorporarLote({ userId, clienteId, loteId, planoId }: { userId: string; clienteId: string; loteId: string; planoId: string }) {
   const cache = useQueryClient(); const storageKey = `sso-incorporacao-lote-cronograma:${JSON.stringify([userId, clienteId, loteId, planoId])}`;
@@ -32,7 +33,7 @@ export function IncorporarLote({ userId, clienteId, loteId, planoId }: { userId:
   const primeira = escolhidas[0];
   const revisaoUnica = consistentes && !!primeira && escolhidas.length === selecionadas.length && escolhidas.every((x) => x.revisao_lote === primeira.revisao_lote && x.revisao_plano === primeira.revisao_plano && x.candidata && x.alvo_atual === "valido" && x.pendencias.length === 0);
   const mapasConferiveis = mapasEscolhidos.length === escolhidas.length && mapasEscolhidos.every(Boolean) && !mapeamentos.isFetching && !mapeamentos.isError;
-  const toleranciaHabilitada=import.meta.env.VITE_SSO_CONFERENCIA_TOLERANCIAS_LOTE_ENABLED === "true";
+  const toleranciaHabilitada=flagLigada("VITE_SSO_CONFERENCIA_TOLERANCIAS_LOTE_ENABLED");
   const idsMapas=mapasEscolhidos.flatMap((x)=>x?[x.id]:[]).sort();
   const tolerancias=useQuery({queryKey:["cronograma-tolerancias-lote",userId,clienteId,loteId,primeira?.revisao_lote,idsMapas],gcTime:0,retry:false,
     enabled:toleranciaHabilitada&&revisaoUnica&&mapasConferiveis&&idsMapas.length>0,

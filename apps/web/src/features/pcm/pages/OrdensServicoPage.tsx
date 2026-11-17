@@ -92,6 +92,7 @@ import { obterResumoOsDoCliente, supabaseOperacaoAdapter } from "../infrastructu
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { BacklogGutPage } from "./BacklogGutPage";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Visao = "lista" | "kanban" | "timeline" | "calendario" | "backlog";
 
@@ -228,7 +229,7 @@ export function OrdensServicoPage({
   const resumoChamados = useQuery({
     queryKey: ["s167-resumo-chamados", user?.id, chamadosParaResumo],
     queryFn: ({ signal }) => carregarResumosChamados(chamadosParaResumo, signal),
-    enabled: consultasAtivas && visao === "kanban" && import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length > 0,
+    enabled: consultasAtivas && visao === "kanban" && flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length > 0,
     staleTime: 0,
     refetchInterval: 30000,
   });
@@ -250,7 +251,7 @@ export function OrdensServicoPage({
     await Promise.all([
       visao === "kanban" ? feedsKanban.refetch() : feed.refetch(),
       queryKpis.refetch(),
-      ...(import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length ? [resumoChamados.refetch()] : []),
+      ...(flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length ? [resumoChamados.refetch()] : []),
     ]);
   }, [visao, feedsKanban.refetch, feed.refetch, queryKpis.refetch, chamadosParaResumo.length, resumoChamados.refetch]);
   const primeiraPinturaMarcada = useRef(false);
@@ -424,7 +425,7 @@ export function OrdensServicoPage({
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível aplicar em lote.");
     } finally {
-      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length) await resumoChamados.refetch();
+      if (flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length) await resumoChamados.refetch();
       setSalvando(false);
     }
   }
@@ -452,7 +453,7 @@ export function OrdensServicoPage({
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
-      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length) await resumoChamados.refetch();
+      if (flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length) await resumoChamados.refetch();
       setSalvando(false);
     }
   }
@@ -764,9 +765,9 @@ export function OrdensServicoPage({
 
           {visao !== "lista" && (
             <div className="bg-card rounded-xl border border-line p-4">
-              {visao === "kanban" && user && filtros.clienteId !== "todos" && import.meta.env.VITE_SSO_QUADRO_CHAMADOS_ENABLED === "true" && <QuadroGerencial key={`${user.id}:${filtros.clienteId}`} usuario={user.id} cliente={filtros.clienteId} onAbrirOs={(id) => { setOrigemCentral({ cliente: filtros.clienteId, os: id }); setSelecionadaId(id); setVisao("lista"); }} />}
-              {visao === "kanban" && user && filtros.clienteId !== "todos" && import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && <PainelLateralBacklog key={`${user.id}:${filtros.clienteId}`} userId={user.id} clienteId={filtros.clienteId} />}
-              {visao === "kanban" && user && filtros.clienteId === "todos" && import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && <p>Selecione um Cliente para consultar seu backlog de escopo.</p>}
+              {visao === "kanban" && user && filtros.clienteId !== "todos" && flagLigada("VITE_SSO_QUADRO_CHAMADOS_ENABLED") && <QuadroGerencial key={`${user.id}:${filtros.clienteId}`} usuario={user.id} cliente={filtros.clienteId} onAbrirOs={(id) => { setOrigemCentral({ cliente: filtros.clienteId, os: id }); setSelecionadaId(id); setVisao("lista"); }} />}
+              {visao === "kanban" && user && filtros.clienteId !== "todos" && flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && <PainelLateralBacklog key={`${user.id}:${filtros.clienteId}`} userId={user.id} clienteId={filtros.clienteId} />}
+              {visao === "kanban" && user && filtros.clienteId === "todos" && flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && <p>Selecione um Cliente para consultar seu backlog de escopo.</p>}
               {visao === "kanban" && (
                 <OsKanbanView
                   ordens={ordensFiltradas}

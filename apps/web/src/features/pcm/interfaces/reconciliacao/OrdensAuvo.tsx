@@ -12,6 +12,7 @@ import { IntencoesReprogramacao } from "./IntencoesReprogramacao";
 import { ObservarOrdens } from "./ObservarOrdens";
 import { HistoricoObservacaoOs } from "./HistoricoObservacaoOs";
 import { ConflitosPropriedadeOs } from "./ConflitosPropriedadeOs";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Ordem = { id:string; numero:string; status_operacional:string; status_sync:string | null; auvo_task_id:string | null; atualizado_em:string; classificacao:string };
 type Pedido = { requestId:string; clienteId:string; osId:string; atualizadoEm:string; sync:string | null; taskId:string | null; nota:string };
@@ -77,11 +78,11 @@ function Conteudo({ userId,clienteId,onAbrirOs }: {userId:string;clienteId:strin
     catch {setMensagem("Tentativa local mudou ou está indisponível. Procure suporte.");}
   }
   return <section aria-label="Conferência de OS Auvo"><h3>OS e vínculo Auvo</h3>
-    {import.meta.env.VITE_SSO_TRIAGEM_INTENCOES_REPROGRAMACAO_ENABLED === "true" && <IntencoesReprogramacao userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
-    {import.meta.env.VITE_SSO_INBOX_OS_INCERTA_ENABLED === "true" && <InboxOsIncerta userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_TRIAGEM_INTENCOES_REPROGRAMACAO_ENABLED") && <IntencoesReprogramacao userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+    {flagLigada("VITE_SSO_INBOX_OS_INCERTA_ENABLED") && <InboxOsIncerta userId={userId} clienteId={clienteId} />}
     <p>Vínculo observado não confirma estado remoto; sem vínculo o resultado é incerto. Sem retentativa externa nesta tela.</p>
-    {import.meta.env.VITE_SSO_CONFLITOS_PROPRIEDADE_OS_ENABLED === "true" && <ConflitosPropriedadeOs userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
-    {import.meta.env.VITE_SSO_OBSERVAR_OS_RECONCILIACAO_ENABLED === "true" && <ObservarOrdens userId={userId} clienteId={clienteId}
+    {flagLigada("VITE_SSO_CONFLITOS_PROPRIEDADE_OS_ENABLED") && <ConflitosPropriedadeOs userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+    {flagLigada("VITE_SSO_OBSERVAR_OS_RECONCILIACAO_ENABLED") && <ObservarOrdens userId={userId} clienteId={clienteId}
       ordens={!ordens.isFetching && !ordens.isError ? (ordens.data?.pages.flat() ?? []) : []} disponivel={!!ordens.data && !ordens.isFetching && !ordens.isError} />}
     {ordens.isFetching && <output>Carregando OS…</output>}
     {ordens.isError && <p role="alert">Não foi possível consultar OS. <button type="button" onClick={() => void ordens.refetch()}>Tentar novamente</button></p>}
@@ -96,12 +97,12 @@ function Conteudo({ userId,clienteId,onAbrirOs }: {userId:string;clienteId:strin
       }}><label>Nota interna (sem credenciais ou dados sensíveis) <textarea required maxLength={1000} value={nota} onChange={(e) => setNota(e.target.value)} disabled={!!pedido || envio.isPending}/></label>
         <button type="submit" disabled={!!pedido || envio.isPending}>Registrar</button></form>}
       {selecionado===o.id && <>
-        {import.meta.env.VITE_SSO_OBSERVAR_OS_RECONCILIACAO_ENABLED === "true" && <HistoricoObservacaoOs userId={userId} clienteId={clienteId} osId={o.id} />}
-        {import.meta.env.VITE_SSO_CONFLITOS_WEBHOOK_ENABLED === "true" && <ConflitosWebhook usuario={userId} cliente={clienteId} os={o.id} statusAtual={o.status_operacional} taskAtual={o.auvo_task_id} atualizadoEm={o.atualizado_em} />}
-        {import.meta.env.VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED === "true" && <EvidenciasOs userId={userId} clienteId={clienteId} osId={o.id} />}
-        {import.meta.env.VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED === "true" && <RevalidarIncertezaOs userId={userId} clienteId={clienteId} osId={o.id} />}
-        {import.meta.env.VITE_SSO_SNAPSHOT_OS_RECONCILIACAO_ENABLED === "true" && <DiagnosticoSnapshotOs userId={userId} clienteId={clienteId} osId={o.id} />}
-        {import.meta.env.VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED === "true" && <DeclararEvidenciaOs userId={userId} clienteId={clienteId} osId={o.id} atualizadoEm={o.atualizado_em} sync={o.status_sync} taskId={o.auvo_task_id} bloqueado={ordens.isFetching || ordens.isError} />}
+        {flagLigada("VITE_SSO_OBSERVAR_OS_RECONCILIACAO_ENABLED") && <HistoricoObservacaoOs userId={userId} clienteId={clienteId} osId={o.id} />}
+        {flagLigada("VITE_SSO_CONFLITOS_WEBHOOK_ENABLED") && <ConflitosWebhook usuario={userId} cliente={clienteId} os={o.id} statusAtual={o.status_operacional} taskAtual={o.auvo_task_id} atualizadoEm={o.atualizado_em} />}
+        {flagLigada("VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED") && <EvidenciasOs userId={userId} clienteId={clienteId} osId={o.id} />}
+        {flagLigada("VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED") && <RevalidarIncertezaOs userId={userId} clienteId={clienteId} osId={o.id} />}
+        {flagLigada("VITE_SSO_SNAPSHOT_OS_RECONCILIACAO_ENABLED") && <DiagnosticoSnapshotOs userId={userId} clienteId={clienteId} osId={o.id} />}
+        {flagLigada("VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED") && <DeclararEvidenciaOs userId={userId} clienteId={clienteId} osId={o.id} atualizadoEm={o.atualizado_em} sync={o.status_sync} taskId={o.auvo_task_id} bloqueado={ordens.isFetching || ordens.isError} />}
         {notas.isFetching && <output>Carregando notas…</output>}
         {notas.isError && <p role="alert">Não foi possível carregar notas. <button type="button" onClick={() => void notas.refetch()}>Tentar novamente</button></p>}
         {!notas.isFetching && !notas.isError && <ul>{notas.data?.pages.flat().map((n) => <li key={n.request_id}>{n.criado_em} · {n.nota}</li>)}</ul>}

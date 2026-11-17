@@ -4,17 +4,27 @@ import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { useState } from "react";
 import { DiagnosticoHierarquia } from "./DiagnosticoHierarquia";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linhaSchema=z.object({chave:z.string(),tipo:z.string(),problemas:z.array(z.string()),possiveis_duplicatas:z.number().int().nonnegative(),classificacao:z.enum(["rejeitada","decidida","atualizada","conferencia_necessaria","possivel_alteracao","possivel_nova"])}).strict();
 const rotulos={rejeitada:"Rejeitada",decidida:"Decidida",atualizada:"Cadastro atualizado",conferencia_necessaria:"Conferência necessária",possivel_alteracao:"Possível alteração",possivel_nova:"Possível nova"} as const;
 export function DiagnosticoLote(props:{userId:string;clienteId:string;loteId:string;revisao:number;onRevisar?:(chave:string)=>void}){
-  if(import.meta.env.VITE_SSO_DIAGNOSTICO_LEVANTAMENTO_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_DIAGNOSTICO_LEVANTAMENTO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Diagnostico levantamento"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DIAGNOSTICO_LEVANTAMENTO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;
 }
 function Conteudo({userId,clienteId,loteId,revisao,onRevisar}:{userId:string;clienteId:string;loteId:string;revisao:number;onRevisar?:(chave:string)=>void}){
   const [filtro,setFiltro]=useState<"todas" | keyof typeof rotulos>("todas");
   const [hierarquiaAberta,setHierarquiaAberta]=useState(false);
-  const revisada=import.meta.env.VITE_SSO_DIAGNOSTICO_LOTE_REVISAO_ENABLED==="true";
+  const revisada=flagLigada("VITE_SSO_DIAGNOSTICO_LOTE_REVISAO_ENABLED");
   const permissao=useQuery({queryKey:["levantamentos",userId,clienteId,"incorporacao-permissao"],queryFn:async({signal})=>{
     const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");
     const resultado=await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.aprovar",clienteId);
@@ -37,7 +47,7 @@ function Conteudo({userId,clienteId,loteId,revisao,onRevisar}:{userId:string;cli
     {rejeitada:0,decidida:0,atualizada:0,conferencia_necessaria:0,possivel_alteracao:0,possivel_nova:0});
   const visiveis=filtro==="todas" ? linhas : linhas.filter((linha)=>linha.classificacao===filtro);
   return <section aria-label="Diagnóstico do lote"><h3>Conferência inicial</h3><p>Verificações literais por Cliente e referências do lote. Ausência de alerta não comprova que a linha está correta; aprovação requer revisão completa. {!revisada && "A revisão do lote não é confirmada nesta consulta."}</p>
-    {import.meta.env.VITE_SSO_DIAGNOSTICO_HIERARQUIA_ENABLED === "true" && <><button type="button" aria-expanded={hierarquiaAberta} onClick={()=>setHierarquiaAberta(!hierarquiaAberta)}>{hierarquiaAberta?"Fechar hierarquia":"Consultar hierarquia do lote"}</button>{hierarquiaAberta && <DiagnosticoHierarquia key={`${userId}:${clienteId}:${loteId}:${revisao}`} userId={userId} clienteId={clienteId} loteId={loteId} revisao={revisao} onRevisar={onRevisar}/>}</>}
+    {flagLigada("VITE_SSO_DIAGNOSTICO_HIERARQUIA_ENABLED") && <><button type="button" aria-expanded={hierarquiaAberta} onClick={()=>setHierarquiaAberta(!hierarquiaAberta)}>{hierarquiaAberta?"Fechar hierarquia":"Consultar hierarquia do lote"}</button>{hierarquiaAberta && <DiagnosticoHierarquia key={`${userId}:${clienteId}:${loteId}:${revisao}`} userId={userId} clienteId={clienteId} loteId={loteId} revisao={revisao} onRevisar={onRevisar}/>}</>}
     {consulta.isFetching && <output>Carregando diagnóstico…</output>}
     {consulta.isError && <p role="alert">Não foi possível consultar diagnóstico. <button type="button" onClick={()=>void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && paginasDivergentes && <p role="alert">O diagnóstico contém linhas repetidas entre páginas. <button type="button" onClick={()=>void consulta.refetch()}>Atualizar diagnóstico</button></p>}

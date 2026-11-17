@@ -7,11 +7,21 @@ import {
   type DeclararRepasse as Pedido,
   type DespesaVisitaListada,
 } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 
 export function DeclararRepasse(props: Props) {
-  if (import.meta.env.VITE_SSO_REPASSE_DESPESAS_VISITA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_REPASSE_DESPESAS_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Repasse despesas visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_REPASSE_DESPESAS_VISITA_ENABLED"]}
+      />
+    );
+  }
   if (props.despesa.status !== "ativa" || props.despesa.realizadoCentavos === null) return null;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])} {...props} />;
 }

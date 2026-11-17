@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { RegistrarTarefaLegada } from "./RegistrarTarefaLegada";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const recorrencia = z.object({ inicio: z.string().date().nullable(), intervalo: z.number().int().positive().nullable(), unidade: z.string().nullable() });
 const resposta = z.discriminatedUnion("mapeado", [z.object({ planoId: z.string().guid(), mapeado: z.literal(false) }).strict(), z.object({ planoId: z.string().guid(), mapeado: z.literal(true), versao: z.number().int().positive(), estadoVersao: z.string(), origemAlterada: z.boolean(), identidadePreservada: z.boolean(), nomePreservado: z.boolean(), alvoPreservado: z.boolean(), questionarioPreservado: z.boolean(), recorrenciaOrigem: recorrencia.strict(), recorrenciaDestino: recorrencia.extend({ modo: z.string() }).strict(), tempoValidado: z.boolean(), tipoTarefaOrigem: z.string().guid(), revisaoPlano: z.number().int().positive(), estadoPlano: z.string(), equivalenciaComprovada: z.literal(false) }).strict()]);
@@ -18,7 +19,7 @@ export function ConferenciaPlanoLegado({ userId, clienteId, planoId }: { userId:
       {!consulta.isFetching && !consulta.isError && r && (!r.mapeado ? <p>Nenhum mapeamento registrado.</p> : <><p>Versão {r.versao} · {r.estadoVersao}. A comparação não comprova equivalência operacional nem migra histórico.</p>
         <ul><li>Origem {r.origemAlterada ? "alterada após o registro" : "igual à fotografia registrada"}</li><li>Identidade {r.identidadePreservada ? "preservada" : "divergente"}</li><li>Nome {r.nomePreservado ? "preservado" : "divergente"}</li><li>Alvo {r.alvoPreservado ? "preservado" : "divergente"}</li><li>Questionário {r.questionarioPreservado ? "referência preservada" : "divergente"}</li><li>Tempo {r.tempoValidado ? "informado" : "a validar"}</li></ul>
         <p>Origem: {r.recorrenciaOrigem.inicio ?? "sem data"}, a cada {r.recorrenciaOrigem.intervalo ?? "?"} {r.recorrenciaOrigem.unidade ?? "?"}. Destino: {r.recorrenciaDestino.inicio ?? "sem data"}, a cada {r.recorrenciaDestino.intervalo ?? "?"} {r.recorrenciaDestino.unidade ?? "?"}, modo {r.recorrenciaDestino.modo}. Confira a regra declarada.</p><p>Tipo de tarefa da origem: {r.tipoTarefaOrigem}; vínculo no destino exige conferência.</p>
-        {import.meta.env.VITE_SSO_REFERENCIA_TAREFA_LEGADA_ENABLED === "true" && <RegistrarTarefaLegada userId={userId} clienteId={clienteId} planoId={planoId} revisao={r.revisaoPlano} tipoTarefaId={r.tipoTarefaOrigem} disponivel={!r.origemAlterada && r.estadoPlano === "rascunho" && r.estadoVersao === "rascunho"} />}</>)}
+        {flagLigada("VITE_SSO_REFERENCIA_TAREFA_LEGADA_ENABLED") && <RegistrarTarefaLegada userId={userId} clienteId={clienteId} planoId={planoId} revisao={r.revisaoPlano} tipoTarefaId={r.tipoTarefaOrigem} disponivel={!r.origemAlterada && r.estadoPlano === "rascunho" && r.estadoVersao === "rascunho"} />}</>)}
     </>}
   </section>;
 }

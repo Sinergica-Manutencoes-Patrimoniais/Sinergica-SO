@@ -7,6 +7,8 @@ import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-cap
 import { supabaseLevantamentosAdapter } from "../../infrastructure/supabase-levantamentos-adapter";
 import { AtualizarLocalizacao } from "./AtualizarLocalizacao";
 import { VincularLocalizacao } from "./VincularLocalizacao";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema = z.object({
   requestId: z.string().guid(),
@@ -19,8 +21,16 @@ type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string };
 
 export function IncorporacaoLocalizacao(props: Props) {
-  if (import.meta.env.VITE_SSO_INCORPORACAO_LOCALIZACAO_ENABLED !== "true" ||
-    !["area", "local", "sublocal"].includes(props.tipo)) return null;
+  if (!["area", "local", "sublocal"].includes(props.tipo)) return null;
+  if (!flagLigada("VITE_SSO_INCORPORACAO_LOCALIZACAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Incorporação de localização"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_INCORPORACAO_LOCALIZACAO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props} />;
 }
 

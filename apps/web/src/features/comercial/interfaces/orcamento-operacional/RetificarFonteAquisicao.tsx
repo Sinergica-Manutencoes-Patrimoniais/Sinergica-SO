@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { centavosParaEntradaReais, valorReaisParaCentavos } from "../../domain/valor-em-reais";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const tipoSchema = z.enum(["material", "retirada_exclusiva"]);
@@ -69,7 +70,7 @@ export function RetificarFonteAquisicao({ usuario, cliente, listaId, listaRevisa
     {pendente === "invalido" ? <p role="alert">Tentativa inválida. Procure suporte.</p> : pendente ? <>
       <p>Há uma tentativa pendente; o resultado pode ser incerto.</p><button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button>
     </> : <form onSubmit={(e) => { e.preventDefault(); iniciar(); }}>
-      {import.meta.env.VITE_SSO_RETIFICAR_FONTE_UTILIZADA_ENABLED === "true" && <label>Uso da fonte <select value={modalidade} disabled={ocupado || !disponivel} onChange={(e) => { setModalidade(e.target.value === "utilizada" ? "utilizada" : "nao_utilizada"); setConfirmacao(null); }}>
+      {flagLigada("VITE_SSO_RETIFICAR_FONTE_UTILIZADA_ENABLED") && <label>Uso da fonte <select value={modalidade} disabled={ocupado || !disponivel} onChange={(e) => { setModalidade(e.target.value === "utilizada" ? "utilizada" : "nao_utilizada"); setConfirmacao(null); }}>
         <option value="nao_utilizada">Ainda não utilizada</option><option value="utilizada">Já utilizada em orçamento</option></select></label>}
       {modalidade === "utilizada" && <p>A nova fonte ficará reservada à mesma proposta; nenhum orçamento será alterado automaticamente.</p>}
       <label>Fonte <select value={selecionado} disabled={!disponivel || ocupado} required onChange={(e) => {

@@ -24,6 +24,7 @@ import { ComposicaoSistema } from "./ComposicaoSistema";
 import { DrawerDetalheSistema } from "./DrawerDetalheSistema";
 import { SistemaModal } from "./SistemaModal";
 import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Modal = { modo: "novo" } | { modo: "editar"; sistema: Sistema } | null;
 
@@ -52,7 +53,7 @@ export function PainelSistemasCliente({
   const criar = useCriarSistema(supabaseSistemasAdapter, supabaseIdentificadorAtivoAdapter);
   const editar = useEditarSistema(supabaseSistemasAdapter, supabaseIdentificadorAtivoAdapter);
   const desativar = useDesativarSistema(supabaseSistemasAdapter, clienteId);
-  const capacidadeHabilitada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const capacidadeHabilitada = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
   const capacidade = useQuery({
     queryKey: ["cadastro-legado-capacidade", userId, clienteId], enabled: capacidadeHabilitada && temEscrita,
     gcTime: 0, retry: false, refetchOnWindowFocus: true,

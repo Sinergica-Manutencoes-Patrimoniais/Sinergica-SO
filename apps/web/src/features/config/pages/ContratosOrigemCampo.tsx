@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const cadastro = z.object({ tipo: z.literal("cadastro"), requestId: uuid, contratoId: uuid, versao: z.string().trim().min(1).max(100),
@@ -12,7 +14,15 @@ type Pedido = z.infer<typeof pedidoSchema>;
 const item = z.object({ id: uuid, versao: z.string(), habilitado: z.boolean(), definicao: z.record(z.string(), z.unknown()), motivo: z.string().nullable(), evidencia: z.string().nullable(), criado_por: uuid.nullable() }).strict();
 
 export function ContratosOrigemCampo({ userId }: { userId: string }) {
-  if (import.meta.env.VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Admin contrato origem"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={userId} userId={userId} />;
 }
 function Conteudo({ userId }: { userId: string }) {

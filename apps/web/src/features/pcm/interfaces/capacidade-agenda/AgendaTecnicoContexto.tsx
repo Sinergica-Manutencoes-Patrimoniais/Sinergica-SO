@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z.object({ id: z.string().min(1), funcionario_id: z.string().min(1), data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), hora_inicio: z.string().nullable(), hora_fim: z.string().nullable() });
 type Cursor = { data: string; id: string } | null;
@@ -22,7 +23,7 @@ function Conteudo({ userId, clienteId, semana }: { userId: string; clienteId: st
   const [buscaNome, setBuscaNome] = useState("");
   const [tecnicoServidor, setTecnicoServidor] = useState<string | null>(null);
   const [erroBusca, setErroBusca] = useState("");
-  const filtroServidor = import.meta.env.VITE_SSO_FILTRO_TECNICO_AGENDA_ENABLED === "true";
+  const filtroServidor = flagLigada("VITE_SSO_FILTRO_TECNICO_AGENDA_ENABLED");
   const tecnicosDisponiveis = useInfiniteQuery({ queryKey:["capacidade-agenda",userId,clienteId,"catalogo-filtrado",buscaNome], enabled:filtroServidor, gcTime:0,
     initialPageParam:null as {nome:string;id:string}|null,
     queryFn:async({pageParam,signal})=>{const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");

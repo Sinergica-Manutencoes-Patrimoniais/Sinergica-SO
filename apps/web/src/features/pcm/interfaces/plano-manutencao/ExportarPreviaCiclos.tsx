@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { criarRelatorioPdf } from "../../../../lib/pdf/relatorio-pdf";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Ciclo={ciclo:number;vencimento:string;toleranciaAntes:number;toleranciaDepois:number};
 function celula(valor:string|number):string { let texto=String(valor); if (/^[\s\u0000-\u001f]*[=+\-@]/u.test(texto) || /^[\t\r\n]/u.test(texto)) texto=`'${texto}`; return `"${texto.replace(/"/g,'""')}"`; }
@@ -28,5 +29,5 @@ export function ExportarPreviaCiclos({clienteId,planoId,versaoId,rotinaId,inicio
     if(!await supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir",clienteId))throw new Error("Acesso indisponível.");
     const url=URL.createObjectURL(new Blob([conteudo],{type:"text/csv;charset=utf-8"}));try{const link=document.createElement("a");link.href=url;link.download="previa-ciclos-calendario.csv";link.click();}finally{URL.revokeObjectURL(url);}
   }catch{setErro("Não foi possível exportar a prévia. Confira permissão e dados.");}finally{setOcupado(false);}}
-  return <div><button type="button" disabled={ocupado} onClick={() => void exportar()}>{ocupado?"Gerando…":"Exportar prévia parcial em PDF"}</button>{import.meta.env.VITE_SSO_EXPORTAR_PREVIA_CICLOS_CSV_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void exportarCsv()}>Exportar prévia parcial em CSV</button>}{erro&&<p role="alert">{erro}</p>}</div>;
+  return <div><button type="button" disabled={ocupado} onClick={() => void exportar()}>{ocupado?"Gerando…":"Exportar prévia parcial em PDF"}</button>{flagLigada("VITE_SSO_EXPORTAR_PREVIA_CICLOS_CSV_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void exportarCsv()}>Exportar prévia parcial em CSV</button>}{erro&&<p role="alert">{erro}</p>}</div>;
 }

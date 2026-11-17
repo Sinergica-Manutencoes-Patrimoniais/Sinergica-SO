@@ -1,9 +1,19 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { listarCobrancasOs } from "../infrastructure/supabase-portal-cobrancas-os-adapter";
 import { DocumentosCobranca } from "./DocumentosCobranca";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export function CobrancasOsPortal(props: { userId: string; clienteId: string; osId: string }) {
-  if (import.meta.env.VITE_SSO_PORTAL_COBRANCA_OS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_COBRANCA_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal cobranca os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_COBRANCA_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
@@ -22,7 +32,7 @@ function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: stri
     {!consulta.isFetching && !consulta.isError && !divergentes && cobrancas.map((c) => <div key={c.lancamento_id}>
       <p>{c.descricao} · {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c.valor_centavos / 100)}</p>
       <p>Competência {c.competencia} · Vencimento {c.vencimento ?? "não informado"} · {c.situacao.replaceAll("_", " ")}</p>
-      {import.meta.env.VITE_SSO_DOCUMENTO_COBRANCA_ENABLED === "true" && <DocumentosCobranca userId={userId} clienteId={clienteId} osId={osId} lancamentoId={c.lancamento_id} />}
+      {flagLigada("VITE_SSO_DOCUMENTO_COBRANCA_ENABLED") && <DocumentosCobranca userId={userId} clienteId={clienteId} osId={osId} lancamentoId={c.lancamento_id} />}
     </div>)}
     {!consulta.isError && !divergentes && consulta.hasNextPage && <button type="button" disabled={consulta.isFetching} onClick={() => { if (!consulta.isFetching) void consulta.fetchNextPage(); }}>Mais cobranças</button>}
   </section>;

@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ revisao: z.number().int().positive(), tipo: z.enum(["conferido", "cancelado"]),
   valor_anterior_centavos: z.string().regex(/^\d+$/), valor_final_centavos: z.string().regex(/^\d+$/).nullable(),
@@ -14,7 +16,15 @@ export function HistoricoRevisaoFaturavel({ usuario, cliente, itemId, revisao }:
       p_cliente_id: cliente, p_item_id: itemId, p_apos: pageParam }).abortSignal(signal);
       if (error) throw error; return z.array(item).max(20).parse(data); },
     getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.revisao : undefined });
-  if (import.meta.env.VITE_SSO_HISTORICO_REVISAO_FATURAVEL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_REVISAO_FATURAVEL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico revisao faturavel"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_REVISAO_FATURAVEL_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" onClick={() => setAberto((v) => !v)}>{aberto ? "Ocultar revisões" : "Ver revisões"}</button>
     {aberto && lista.isFetching && <p>Consultando revisões…</p>}
     {aberto && lista.isError && <p role="alert">Histórico indisponível ou sem acesso. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}

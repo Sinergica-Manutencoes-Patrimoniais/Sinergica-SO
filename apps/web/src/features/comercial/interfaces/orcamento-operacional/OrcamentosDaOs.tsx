@@ -10,6 +10,7 @@ import { ClassificacaoLinha } from "./ClassificacaoLinha";
 import { HistoricoLegadoOs } from "./HistoricoLegadoOs";
 import { HistoricoLegadoPreOs } from "./HistoricoLegadoPreOs";
 import { DecidirOrcamentoPcm } from "./DecidirOrcamentoPcm";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { usuario: string; cliente: string; ordemServico: string; listaInicialId?: string };
 export function OrcamentosDaOs({ usuario, cliente, ordemServico, listaInicialId }: Props) {
@@ -30,8 +31,8 @@ export function OrcamentosDaOs({ usuario, cliente, ordemServico, listaInicialId 
       <h3>Orçamentos operacionais da OS</h3>
       <CriarOrcamento key={JSON.stringify([usuario, cliente, ordemServico, listaInicialId ?? null])} usuario={usuario} cliente={cliente} ordemServico={ordemServico} listaInicialId={listaInicialId} />
       <DispensarOrcamento usuario={usuario} cliente={cliente} ordemServico={ordemServico} />
-      {import.meta.env.VITE_SSO_HISTORICO_ORCAMENTO_LEGADO_ENABLED === "true" && <HistoricoLegadoOs usuario={usuario} cliente={cliente} os={ordemServico} />}
-      {import.meta.env.VITE_SSO_HISTORICO_ORCAMENTO_PRE_OS_ENABLED === "true" && <HistoricoLegadoPreOs key={`${usuario}:${cliente}`} usuario={usuario} cliente={cliente} />}
+      {flagLigada("VITE_SSO_HISTORICO_ORCAMENTO_LEGADO_ENABLED") && <HistoricoLegadoOs usuario={usuario} cliente={cliente} os={ordemServico} />}
+      {flagLigada("VITE_SSO_HISTORICO_ORCAMENTO_PRE_OS_ENABLED") && <HistoricoLegadoPreOs key={`${usuario}:${cliente}`} usuario={usuario} cliente={cliente} />}
       <p>
         Consulta parcial de vínculos canônicos; não inclui necessariamente orçamentos históricos.
         Emissão e decisão ainda não disponíveis.
@@ -55,9 +56,9 @@ export function OrcamentosDaOs({ usuario, cliente, ordemServico, listaInicialId 
               Proposta {item.id} · {item.status === "aceita" ? "aprovada" : item.status} · versão{" "}
               {item.versao}
               {item.status === "rascunho" && <ExcecaoPreco usuario={usuario} cliente={cliente} ordemServico={ordemServico} propostaId={item.id} versao={item.versao} />}
-              {item.status === "aceita" && import.meta.env.VITE_SSO_CLASSIFICACAO_LINHA_ENABLED === "true" && <ClassificacaoLinha key={`${item.id}:${item.versao}`} usuario={usuario} cliente={cliente} proposta={item.id} versao={item.versao} />}
+              {item.status === "aceita" && flagLigada("VITE_SSO_CLASSIFICACAO_LINHA_ENABLED") && <ClassificacaoLinha key={`${item.id}:${item.versao}`} usuario={usuario} cliente={cliente} proposta={item.id} versao={item.versao} />}
               <TransicionarOperacional usuario={usuario} cliente={cliente} ordemServico={ordemServico} propostaId={item.id} versao={item.versao} status={item.status} />
-              {import.meta.env.VITE_SSO_DECISAO_PCM_ORCAMENTO_ENABLED === "true" && <DecidirOrcamentoPcm key={item.id} usuario={usuario} cliente={cliente} os={ordemServico} proposta={item.id} versao={item.versao} status={item.status} />}
+              {flagLigada("VITE_SSO_DECISAO_PCM_ORCAMENTO_ENABLED") && <DecidirOrcamentoPcm key={item.id} usuario={usuario} cliente={cliente} os={ordemServico} proposta={item.id} versao={item.versao} status={item.status} />}
               {item.status === "rascunho" && (
                 <>
                   <button type="button" onClick={() => setEditando(editando === item.id ? null : item.id)}>

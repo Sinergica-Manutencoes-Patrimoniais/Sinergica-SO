@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { portalDecisaoOrcamentoSchema } from "@sinergica/shared";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 const proposta = z.object({ id: z.string().guid(), ordem_servico_id: z.string().guid(),
   status: z.enum(["enviada", "aceita", "recusada"]), versao: z.number().int().positive(),
@@ -20,7 +21,7 @@ export async function conferirSessaoProposta(userId: string, signal?: AbortSigna
 export async function listarPropostasOs(clienteId: string, osId: string, apos: string | null, signal?: AbortSignal, userId?: string) {
   if (userId) await conferirSessaoProposta(userId, signal);
   const parametros={p_cliente_id:clienteId,p_os_id:osId,p_apos:apos};
-  const mediado=import.meta.env.VITE_SSO_PROPOSTAS_PORTAL_MEDIADAS_ENABLED==="true";
+  const mediado=flagLigada("VITE_SSO_PROPOSTAS_PORTAL_MEDIADAS_ENABLED");
   if(mediado&&!userId)throw new Error("Usuário ausente.");
   let consulta = mediado?supabase.schema("comercial").rpc("sso_portal_propostas_os_mediada",{...parametros,p_ator_id:userId}):supabase.schema("comercial").rpc("sso_portal_propostas_os",parametros);
   if (signal) consulta = consulta.abortSignal(signal);
@@ -37,7 +38,7 @@ export async function listarPropostasOs(clienteId: string, osId: string, apos: s
 }
 export async function obterDetalheOperacional(clienteId: string, osId: string, propostaId: string, versao: number, userId: string) {
   const parametros={p_cliente_id:clienteId,p_os_id:osId,p_proposta_id:propostaId,p_versao:versao};
-  const requisicao=import.meta.env.VITE_SSO_PROPOSTAS_PORTAL_MEDIADAS_ENABLED==="true"?supabase.schema("comercial").rpc("sso_portal_detalhe_operacional_mediado",{...parametros,p_ator_id:userId}):supabase.schema("comercial").rpc("sso_portal_detalhe_operacional",parametros);
+  const requisicao=flagLigada("VITE_SSO_PROPOSTAS_PORTAL_MEDIADAS_ENABLED")?supabase.schema("comercial").rpc("sso_portal_detalhe_operacional_mediado",{...parametros,p_ator_id:userId}):supabase.schema("comercial").rpc("sso_portal_detalhe_operacional",parametros);
   const { data, error } = await requisicao;
   if (error) throw error;
   const r = z.object({ propostaId: z.string().guid(), versao: z.number().int().positive(),
@@ -47,7 +48,7 @@ export async function obterDetalheOperacional(clienteId: string, osId: string, p
 }
 export async function obterVersaoOperacional(clienteId: string, osId: string, propostaId: string, versao: number, userId: string) {
   const parametros={p_cliente_id:clienteId,p_os_id:osId,p_proposta_id:propostaId,p_versao:versao};
-  const requisicao=import.meta.env.VITE_SSO_HISTORICO_PROPOSTA_MEDIADO_ENABLED==="true"
+  const requisicao=flagLigada("VITE_SSO_HISTORICO_PROPOSTA_MEDIADO_ENABLED")
     ? supabase.schema("comercial").rpc("sso_portal_versao_operacional_mediada",{...parametros,p_ator_id:userId})
     : supabase.schema("comercial").rpc("sso_portal_versao_operacional",parametros);
   const { data, error } = await requisicao;
@@ -61,7 +62,7 @@ export async function decidirPropostaOs(input: DecidirPropostaOs, userId?: strin
   const p = validarDecisaoPropostaOs(input);
   if (userId) await conferirSessaoProposta(userId);
   const parametros={p_request_id:p.requestId,p_proposta_id:p.propostaId,p_versao:p.versao,p_decisao:p.decisao,p_motivo:p.motivo};
-  const mediada=import.meta.env.VITE_SSO_DECISAO_PROPOSTA_PORTAL_MEDIADA_ENABLED==="true";
+  const mediada=flagLigada("VITE_SSO_DECISAO_PROPOSTA_PORTAL_MEDIADA_ENABLED");
   if(mediada&&(!userId||!contexto))throw new Error("Contexto indisponível.");
   const requisicao=mediada?supabase.schema("comercial").rpc("sso_portal_decidir_proposta_mediada",{...parametros,p_ator_id:userId,p_cliente_id:contexto!.clienteId,p_os_id:contexto!.osId}):supabase.schema("comercial").rpc("sso_portal_decidir_proposta_versionada",parametros);
   const { data, error } = await requisicao;
