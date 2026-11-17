@@ -2,7 +2,7 @@
 -- Migration 1854: Assessment vira tipo de Inspeção "Diagnóstico Inicial do Cliente".
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 begin;
-select plan(7);
+select plan(9);
 
 -- 1) o catálogo nasce com exatamente a entrada esperada, idempotente (migration já rodou no
 --    `db reset` que precede este teste — aqui só confirmamos que existe e é única).
@@ -11,6 +11,32 @@ select is(
   1,
   'AC-1: catálogo tem exatamente uma entrada "Diagnóstico Inicial do Cliente"'
 );
+
+-- 1b) achado de /revisao-adversarial (17/11/2026): `nome` não tem UNIQUE em `tipos_inspecao`
+--     (0091) — se já existir uma linha homônima apagada ou desativada (ex.: alguém testou o
+--     nome manualmente), o lookup da migration não pode escolhê-la por acidente. Simula esse
+--     estado inserindo uma segunda linha homônima, morta, e confirma que a mesma lógica de busca
+--     da migration continua achando a linha VIVA original, não a morta.
+select ok(
+  (select id from pcm.tipos_inspecao where nome = 'Diagnóstico Inicial do Cliente') is not null,
+  'pré-condição: existe uma linha viva "Diagnóstico Inicial do Cliente" antes do cenário adversarial'
+);
+insert into pcm.tipos_inspecao (nome, descricao, deleted_at)
+values ('Diagnóstico Inicial do Cliente', '[TESTE] homônima apagada, não pode ser escolhida', now());
+insert into pcm.tipos_inspecao (nome, descricao, ativo)
+values ('Diagnóstico Inicial do Cliente', '[TESTE] homônima desativada, não pode ser escolhida', false);
+select is(
+  (
+    select id from pcm.tipos_inspecao
+    where nome = 'Diagnóstico Inicial do Cliente' and deleted_at is null and ativo = true
+    order by created_at asc
+    limit 1
+  ),
+  (select id from pcm.tipos_inspecao where nome = 'Diagnóstico Inicial do Cliente' and descricao like 'Consolida o antigo Assessment%'),
+  'achado /revisao-adversarial: o lookup com filtro de deleted_at/ativo ignora homônima apagada e desativada'
+);
+delete from pcm.tipos_inspecao
+where nome = 'Diagnóstico Inicial do Cliente' and descricao like '[TESTE] homônima%';
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-00000000e501', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pcm-escrita-s190@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())

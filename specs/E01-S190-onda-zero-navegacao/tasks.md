@@ -27,7 +27,7 @@ Detalhe técnico em `plan.md`. Desbloqueada em 17/11/2026 pelas respostas 26/27 
 | 13 | Catálogos administrativos (tipos, categorias, segmentos, palavras-chave) para Administração, com guarda de rota | AC-5, AC-6 | 4 | `cd apps/web && pnpm vitest run src/app` + acesso por URL negado | done — guarda real no CONTEÚDO (`VIEWS_ADMINISTRATIVAS.has(pcmView) && !podeGerenciarConfig`), não só a sidebar escondendo o botão (defesa em profundidade) |
 | 14 | Glossário: "Diagnóstico Inicial do Cliente" e "PMOC (modalidade)" — já escritos em 17/11; conferir sinônimo histórico | AC-8 | 6, 7 | revisão humana | done — termos já em `docs/glossary.md` desde a confronto do Pacote Consolidado (17/11) |
 | 15 | Inventário DEPOIS + diff no corpo do PR; qualquer ação sumida vira decisão registrada | AC-7 | 9–13 | `diff /tmp/nav-antes.txt /tmp/nav-depois.txt` anexado ao PR | done, com ressalva — a prova RIGOROSA é `navegacao-sso.test.ts` ("AC-7 — nenhuma view do menu original desapareceu"), que lista as 26 views originais do `PCM_NAV` e assert cada uma continua alcançável via `todasAsViews()`. O script `inventariar-navegacao.mjs` é só um artefato de apoio — seu parser é single-level e confunde `filhos` aninhados (bug conhecido, não corrigido: baixo valor de investimento pra um script de inventário manual) |
-| 16 | `/revisao-adversarial` — tier arquitetural por tocar classificação de dado em produção | — | 8, 15 | achado reproduzido vira teste | todo — pendente antes do PASS final desta story |
+| 16 | `/revisao-adversarial` — tier arquitetural por tocar classificação de dado em produção | — | 8, 15 | achado reproduzido vira teste | **PASS, 17/11/2026** — 1 achado médio reproduzido e corrigido: migration 1854 buscava `tipos_inspecao` por `nome` sem filtrar `deleted_at`/`ativo` (coluna sem UNIQUE, `0091`); `SELECT INTO` sem `ORDER BY` pegaria linha homônima apagada/desativada de forma não-determinística. Corrigido (filtro + `order by created_at limit 1`) e coberto por novo teste (pgTAP 7→9 assertions, suíte full 14/14 verde). 1 hipótese não reproduzida, não bloqueia: `navegacaoVisivel` não recorre a `filhos` — hoje inofensivo (todo filho tem o mesmo `nivel` do pai), sem teste de invariante |
 
 ## Definition of Done
 
@@ -37,4 +37,5 @@ Detalhe técnico em `plan.md`. Desbloqueada em 17/11/2026 pelas respostas 26/27 
 - Diff de ações alcançáveis por perfil sem perda não decidida (SC-004).
 - **Nenhuma tabela de estrutura fundida** — conferido no diff de migration.
 - CI verde, `db-tests` não pulado.
-- Pendente: `/revisao-adversarial` (task 16) e o gap de Grupo quantitativo na pesquisa/jornada (tasks 11-12).
+- `/revisao-adversarial` (task 16): **PASS**, 1 achado médio corrigido (ver task 16).
+- Pendente (registrado, não bloqueia PASS): gap de Grupo quantitativo na pesquisa/jornada (tasks 11-12) — exige RPC nova, fora desta rodada.

@@ -27,7 +27,16 @@ do $$
 declare
   v_tipo_id uuid;
 begin
-  select id into v_tipo_id from pcm.tipos_inspecao where nome = 'Diagnóstico Inicial do Cliente';
+  -- `nome` não tem UNIQUE em `pcm.tipos_inspecao` (0091) — sem o filtro `deleted_at is null` e
+  -- `ativo = true` abaixo, um registro homônimo já apagado ou desativado (ex.: alguém testou
+  -- manualmente este nome exato após o Pacote Consolidado circular em 13/11) seria escolhido de
+  -- forma não-determinística pelo `select into` (PL/pgSQL usa a primeira linha sem ORDER BY), e
+  -- os Assessments existentes ficariam classificados contra um tipo que não aparece em nenhum
+  -- catálogo/seletor que filtre por `ativo`/`deleted_at` — quebrando AC-1 silenciosamente.
+  select id into v_tipo_id from pcm.tipos_inspecao
+  where nome = 'Diagnóstico Inicial do Cliente' and deleted_at is null and ativo = true
+  order by created_at asc
+  limit 1;
 
   if v_tipo_id is null then
     insert into pcm.tipos_inspecao (nome, descricao)
