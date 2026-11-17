@@ -7,7 +7,9 @@ import type {
   CriarOsChamado as Pedido,
 } from "../../application/chamados-os-comando";
 import { CriarOsChamado } from "./CriarOsChamado";
-vi.mock("../../../../lib/supabase-client", () => ({ supabase: { auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) } } }));
+vi.mock("../../../../lib/supabase-client", () => ({
+  supabase: { auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) } },
+}));
 
 const pedido: Pedido = {
   requestId: "16794000-0000-4000-8000-000000000001",
@@ -27,6 +29,7 @@ afterEach(() => {
 });
 
 function montar(gateway: CriacaoOsChamadoGateway) {
+  vi.stubEnv("VITE_SSO_CRIAR_OS_CHAMADO_ENABLED", "true");
   vi.stubEnv("VITE_SSO_RECONCILIAR_REQUEST_OS_ENABLED", "true");
   sessionStorage.setItem(chave, JSON.stringify(pedido));
   const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -34,11 +37,11 @@ function montar(gateway: CriacaoOsChamadoGateway) {
   render(
     <QueryClientProvider client={cliente}>
       <CriarOsChamado
-        habilitado="true"
         usuario="usuario"
         cliente={pedido.clienteId}
         chamado={pedido.chamadoId}
         chamadoEsperado={pedido.chamadoId}
+        podeAdministrar={false}
         gateway={gateway}
       />
     </QueryClientProvider>,
@@ -117,4 +120,23 @@ it("não remove outra tentativa gravada durante a reconciliação", async () => 
   });
   expect(await screen.findByText(/tentativa local mudou/)).toBeTruthy();
   expect(sessionStorage.getItem(chave)).toBe(JSON.stringify(outra));
+});
+
+it("E00-S28: flag desligada mostra RecursoNaoAtivado em vez de sumir (antes: return null silencioso)", () => {
+  const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={cliente}>
+      <CriarOsChamado
+        usuario="usuario"
+        cliente={pedido.clienteId}
+        chamado={pedido.chamadoId}
+        chamadoEsperado={pedido.chamadoId}
+        podeAdministrar
+        gateway={{ consultarRevisao: async () => 1, criar: vi.fn() }}
+      />
+    </QueryClientProvider>,
+  );
+  expect(screen.getByText("Criar OS neste Chamado")).toBeInTheDocument();
+  expect(screen.getByText("VITE_SSO_CRIAR_OS_CHAMADO_ENABLED")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Criar OS" })).not.toBeInTheDocument();
 });

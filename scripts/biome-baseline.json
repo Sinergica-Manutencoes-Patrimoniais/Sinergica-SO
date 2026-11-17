@@ -1748,11 +1748,9 @@
       ]
     },
     "apps/web/src/features/pcm/components/ChamadoPainel.tsx": {
-      "sha256": "1d8e158b3c08a2698d1eed0fa4457c8db2cc847ee8fbc1d48fb356193490309b",
+      "sha256": "513414f37b615e82d8f2d82e078b15374f067203a89169f7c784f9202e4f0b0d",
       "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "f5696d9933a511b6d9a640c7692f6095d4d3b925c61932d379f3815b207f1af7"
+        "5304091526a1485f145f2b5c0c23034bfef24fbc12741a2a7a2a9473e93cc81f"
       ]
     },
     "apps/web/src/features/pcm/components/DrawerDetalheSistema.test.tsx": {
@@ -2456,12 +2454,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/infrastructure/supabase-listas-materiais-adapter.ts": {
-      "sha256": "7f30279817c9f469062768063377c9a2738060cc18d898e316fd6c9fb4237623",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/infrastructure/supabase-operacao-adapter.ts": {
       "sha256": "3cfce2d1deca6bc0c246027b17d8939066c07cccb682a40c7a3d0c735e4cb301",
       "diagnostics": [
@@ -2941,11 +2933,9 @@
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/AprovarContinuacaoParcela.tsx": {
-      "sha256": "2a4ae4663de81f70c06f23b311b8c4fe167e073dc59814c14710981e81fef31e",
+      "sha256": "0e0b560751b1e8f326ff3b81c63e7ec7ed0180fdaeb86c1c90972e27586befea",
       "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "c6838b0895d7c8bb52d4a5b56ea885de9dc9eba20f529f5d97b250056897a265"
+        "aee049146457a985261031584815a91c69968300e66f399cae1098e0d7cbf6e9"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/AptidaoChamado.test.tsx": {
@@ -2955,13 +2945,7 @@
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/AptidaoChamado.tsx": {
-      "sha256": "033cdae14d4264cd853292fdc407065afbfc734e687c9c4c09a713b2d2947590",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/chamados-os/AvaliacaoEscopo.tsx": {
-      "sha256": "d1c2960e42fbe5d0102663c8f43f49014c4cfe8fefcec6acfe9d0d2a281e89e8",
+      "sha256": "f99383dedf3fae78110a52e211a86a2d1ac88ea4b59647898fc54e2fd2121acd",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
@@ -2974,70 +2958,44 @@
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/CanonicalizarVinculoLegado.tsx": {
-      "sha256": "084f3fec828d3a46c1890e8dd3a5c48ec699237408963e270c60d2fb93659b23",
+      "sha256": "3d70c87f0e3bc28b18984abc5df84c275b369703feeed9725f9cb8e77c8c2a34",
       "diagnostics": [
-        "9278af2b24be8519bf75071e0192f950168505df29b45549c69516d44edf225e",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
+        "d39f75c730b839c0786056d4b044c7b8766dc6ee13a2f88a6ab84bd1b2c4157a"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/ConversaoIntegral.test.tsx": {
-      "sha256": "6c465a6406e0fad488145b46eac75cab65f7f8484bacfec29d3be888ebfbacd9",
+      "sha256": "fa5b2149a57d2d7b7320814684cc35d1ad59aecbcfd47a48a9f53d90c1f218a5",
       "diagnostics": [
-        "35323bfee2451827744274291dd7857983858667eb4352aef1a8aace73eebdb0",
-        "3aba791c8a2167f59a736ee16344bf5a04823643f9f886fc8f85a07cdefbd4f3",
-        "7af29c9258a850ec4ad51a40a7597140ea9aa17717c5c1f4ea31dcbd249ae1c4",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/chamados-os/ConversaoIntegral.tsx": {
-      "sha256": "14233c04344740be4dec536566b120a4393442fcce6b0da9aa6c4d67c90819eb",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/chamados-os/CriarOsChamado.test.tsx": {
-      "sha256": "d4d52874b9436e76d4efefe2943c54cd0c20b333fc1c33050c30cc5528e4ac1d",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
+        "3866551abc3f52f89542f40642d983a53e23de19c31264bfe01e055613076e39",
+        "47782ece391581502460a31fd0e0ec95d983afae55436c062695359c6c16f93b",
+        "d6a3c9ed4197cc448757003dd189a52525c9ffb90540e6f648deaa78de893dcf"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/CriarOsChamado.tsx": {
-      "sha256": "f7150bbf7309f4a23b4a606adb2691ed83b3da18d618ff82fe92b25dfdb81e4c",
+      "sha256": "9a453d203a4818d0d046b4d4403aaaa56911905d5c6af75d5ca6dc8c09b0dfc9",
       "diagnostics": [
-        "75bbb5a5187842ac2c50e0aaf12c8153f834d6e079a979addac366df9ba99c50",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
+        "09f32fd3fa945d86824c162b58726fb04c0c0eb57ba3f9936b075fca3b622279"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/EncerrarChamadoConferido.tsx": {
-      "sha256": "5ff65c2ca44758b8e448094651ead4d745383cb422bb8836f1a806ac891f18f3",
+      "sha256": "a96a0e5d3f4697585504eddf9e372710348f1141bf5d1b72ea25d81610cab8b0",
       "diagnostics": [
-        "7aa9c7921ddb5d72444d394d640fcccf18e407320af61c7464659c88ff612454",
+        "4231c45b10d9b3adb3b97f75cdff02c559c9102290867d8cb987addbb76f2f33",
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/GestaoEscopo.test.tsx": {
-      "sha256": "5922f716e2bf2616a033c57c8cd2cbe9d65ec0eb864e5d627aa0327c2c491675",
+      "sha256": "350adda683c186350c5a68a43db2c73f0bed45783daba57430465394003c72f3",
       "diagnostics": [
-        "055c17da7d109dc1fc6022e1aeab0264e5a076279a99fa322f51ae1fa5171f89",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "ecf31679a593be86deeba10d0b336ba4adf12e308394fe3098635b670ef8b9c0"
+        "87724616ac451550a7a1a177c66ef3950126efbdd17596a5c3d7619007c53e79",
+        "ea9179751b896712421a691739d9fd303928e06f19258e1641517a9da6d972d2"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/GestaoEscopo.tsx": {
-      "sha256": "0d6a95778744edeceb13617e02fd0ecc4512cde98e0e85ea4af8e02f296f32fc",
+      "sha256": "363fab6b881f0ed862b1be51bdfb99353c81369ccf460cae7d12c6620042679e",
       "diagnostics": [
-        "3bdb771f2b345657384041eb03e21be2d25dd63314a3c70777531616049fe6f5",
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/chamados-os/MateriaisDaOrdem.tsx": {
-      "sha256": "e44ed3f1ce491f3aefcc5060697de4ce5f389cfe216d06d064c516be85f727ad",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
+        "d65f0d6ab1d0cd57cb91a94d579473d728e9fd3c87ba15b0937067a40a7ef091"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/OrdensChamadoFotografia.tsx": {
@@ -3045,19 +3003,6 @@
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
         "ed45e8dd98e583ce29d5ae8803aae5568b4baf823f0bd3fed4458613e635ce4c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/chamados-os/OrdensDoChamado.test.tsx": {
-      "sha256": "0fcee077b504e9582f22faa0303c696be955b24de044579a3ba88184464393ef",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/chamados-os/OrdensDoChamado.tsx": {
-      "sha256": "2275fde6701f9a4c39cf71e5fd914e6af10a850a1f4045cf37d35aae49eedaa0",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/pcm/interfaces/chamados-os/QuadroGerencial.test.tsx": {
@@ -4406,24 +4351,10 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/DetalheEvento.tsx": {
-      "sha256": "6c0e96427a2b83c554a826997bc19f9ff278ca35fb4eb23fefb4a304c98ba79d",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/listas-materiais/DisponibilidadeMateriais.test.tsx": {
       "sha256": "bf3d2c2b3f3910fce20792fcd92d4d0743d3c1490090c0445383406837fc2979",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/DisponibilidadeMateriais.tsx": {
-      "sha256": "063434df3d2d6c86a600710653383cf911f4e3a155dcfc48c71110517d094c14",
-      "diagnostics": [
-        "6930c2c718074c1f30aeff0876c36756e73497832cbd6dda3cac52dda35c53ee",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/pcm/interfaces/listas-materiais/EditorMateriais.tsx": {
@@ -4532,11 +4463,10 @@
       ]
     },
     "apps/web/src/features/pcm/interfaces/migracao/DiagnosticoCliente.tsx": {
-      "sha256": "9a0ca725b31aadc9ddae03311dd82022d8bd0380249bc893d9c9f1bc4910b8df",
+      "sha256": "0ce2380372a1cc6bbaa1cb4e1f469b059ee9444a208195a2e56052c708c1f788",
       "diagnostics": [
-        "15bc732100c5ab355a4001fe2791142ca80ac2d0afeadd41f5e43bf7b59c769b",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
+        "60cc1adc5a3e48ff8dd6bf60010d1cb2f96a00e8acd37873cb37d794097ce42d",
+        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
     "apps/web/src/features/pcm/interfaces/migracao/DiagnosticoCodigosLegados.tsx": {

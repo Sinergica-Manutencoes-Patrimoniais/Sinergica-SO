@@ -43,3 +43,26 @@ export function problem(
     ...(opts?.reqId ? { reqId: opts.reqId } : {}),
   };
 }
+
+// E00-S28 AC-7 — o front recebe erro de RPC Postgres (PostgrestError.code), não status HTTP. Hoje
+// cada um dos 434 arquivos que leem flag `VITE_SSO_*` repete seu próprio `if (codigo === "42501")`
+// (ver AcoesVisita.tsx, FormularioRotina.tsx…). Esta função é o ponto único que distingue as duas
+// causas que hoje chegam como o mesmo erro genérico:
+//   - 42501 (RLS/grant) → falta de PERMISSÃO — o usuário não pode, ponto.
+//   - 55000 (gate de banco fechado por padrão, convenção deste repositório) → recurso NÃO ATIVADO
+//     — existe, está desligado; vira `RecursoNaoAtivado`, não um erro de permissão.
+export type CausaErroRpc = "permissao" | "nao_ativado" | "outro";
+
+export function causaErroRpc(codigo: string | undefined | null): CausaErroRpc {
+  if (codigo === "42501") return "permissao";
+  if (codigo === "55000") return "nao_ativado";
+  return "outro";
+}
+
+/** Mensagem segura por causa — mesmo texto em todo o front, em vez de reimplementado por tela. */
+export function mensagemErroRpc(codigo: string | undefined | null): string {
+  const causa = causaErroRpc(codigo);
+  if (causa === "permissao") return "Você não tem permissão para esta ação.";
+  if (causa === "nao_ativado") return "Este recurso ainda não está ativado para a sua operação.";
+  return "Não foi possível concluir a operação. Tente novamente ou procure suporte.";
+}

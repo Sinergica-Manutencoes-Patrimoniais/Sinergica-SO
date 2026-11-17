@@ -12,14 +12,14 @@ Detalhe técnico (assinaturas, contratos, lotes) em `plan.md`. Uma linha por tas
 
 | # | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |---|------|----------|------------|----------------|--------|
-| 1 | Inventariar as 737 flags lidas e gerar `FLAGS_SSO` inicial (nome, padrão `false`, jornada, gate par) | AC-3 | — | `node scripts/check-flags-declaradas.mjs --inventario` lista 737 e 0 sem jornada | todo |
-| 2 | `config/flags-sso.ts` + `flags-sso.test.ts` — registro tipado e `flagLigada` como único leitor de `import.meta.env` | AC-3 | 1 | `cd apps/web && pnpm vitest run src/config/flags-sso.test.ts` | todo |
+| 1 | Inventariar as 737 flags lidas e gerar `FLAGS_SSO` inicial (nome, padrão `false`, jornada, gate par) | AC-3 | — | `node scripts/check-flags-declaradas.mjs --inventario` lista 737 e 0 sem jornada | done |
+| 2 | `config/flags-sso.ts` + `flags-sso.test.ts` — registro tipado e `flagLigada` como único leitor de `import.meta.env` | AC-3 | 1 | `cd apps/web && pnpm vitest run src/config/flags-sso.test.ts` | done — dado movido para `flags-sso.data.json` (lido via `?raw`); ver nota de ferramenta no topo do arquivo |
 | 3 | `env.ts` valida o registro na inicialização (fail-fast, padrão da casa) | AC-3 | 2 | `cd apps/web && pnpm vitest run src/config/env.test.ts` | todo |
-| 4 | `packages/ui/RecursoNaoAtivado.tsx` + teste — detalhe por papel, nunca `null` | AC-4, AC-5, AC-6 | — | `cd apps/web && pnpm vitest run packages/ui/src/RecursoNaoAtivado.test.tsx` | todo |
-| 5 | `scripts/check-flags-declaradas.mjs` + `.test.mjs` — as 4 condições de falha do `plan.md` | AC-1, AC-2 | 2 | `node --test scripts/check-flags-declaradas.test.mjs` | todo |
-| 6 | Traduzir `42501` × `55000` em `lib/http/problem.ts` + teste | AC-7 | 4 | `cd apps/web && pnpm vitest run src/lib/http/problem.test.ts` | todo |
-| 7 | `codemod-flags-registro.mjs` — migra leitura direta para `flagLigada`, idempotente | AC-1 | 2, 5 | `node scripts/codemod-flags-registro.mjs --dry-run` sem diff inesperado | todo |
-| 8 | **Lote 1** `features/pcm/interfaces/chamados-os/` — inclui trocar o `return null` de `CriarOsChamado.tsx:19` | AC-4 | 4, 6, 7 | `node scripts/check-flags-declaradas.mjs --dir apps/web/src/features/pcm/interfaces/chamados-os` | todo |
+| 4 | `packages/ui/RecursoNaoAtivado.tsx` + teste — detalhe por papel, nunca `null` | AC-4, AC-5, AC-6 | — | `cd apps/web && pnpm vitest run packages/ui/src/RecursoNaoAtivado.test.tsx` | done |
+| 5 | `scripts/check-flags-declaradas.mjs` + `.test.mjs` — as 4 condições de falha do `plan.md` | AC-1, AC-2 | 2 | `node --test scripts/check-flags-declaradas.test.mjs` | done |
+| 6 | Traduzir `42501` × `55000` em `lib/http/problem.ts` + teste | AC-7 | 4 | `cd apps/web && pnpm vitest run src/lib/http/problem.test.ts` | done |
+| 7 | `codemod-flags-registro.mjs` — migra leitura direta para `flagLigada`, idempotente | AC-1 | 2, 5 | `node scripts/codemod-flags-registro.mjs --dry-run` sem diff inesperado | todo — Lote 1 (task 8) foi feito manualmente; escrever o codemod antes do Lote 2 para não repetir 400+ edições à mão |
+| 8 | **Lote 1** `features/pcm/interfaces/chamados-os/` — inclui trocar o `return null` de `CriarOsChamado.tsx:19` | AC-4 | 4, 6, 7 | `node scripts/check-flags-declaradas.mjs --dir apps/web/src/features/pcm/interfaces/chamados-os` | done — 0 fuga, 0 não-declarada, 0 órfã; 83 testes verdes; typecheck limpo |
 | 9 | **Lote 2** resto de `features/pcm/` | AC-4 | 8 | `... --dir apps/web/src/features/pcm` | todo |
 | 10 | **Lote 3** `features/area-cliente/` — revisão `@security` do que o síndico vê | AC-6 | 8 | `... --dir apps/web/src/features/area-cliente` + revisão humana | todo |
 | 11 | **Lote 4** `features/financeiro/` + `features/comercial/` | AC-4 | 8 | `... --dir` nos dois | todo |

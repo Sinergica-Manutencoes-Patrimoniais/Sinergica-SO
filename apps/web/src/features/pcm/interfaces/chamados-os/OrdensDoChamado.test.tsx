@@ -9,7 +9,11 @@ vi.mock("../../../../lib/supabase-client", () => ({
   supabase: { auth: { getUser: async () => ({ data: { user: { id: "u" } }, error: null }) } },
 }));
 vi.mock("../../application/resumos-chamados-lote", () => ({ carregarResumosChamados: resumo }));
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); resumo.mockReset(); });
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+  resumo.mockReset();
+});
 it("mostra Em andamento para OS finalizada e cancelada em etapas diferentes", async () => {
   const listar = vi.fn().mockResolvedValue([
     { id: "1", numero: "OS-1", titulo: "Concluída", status: "finalizado" },
@@ -31,7 +35,11 @@ it("mantém a identidade própria de cada OS de um mesmo Chamado", async () => {
     { id: "os-b", numero: "CH-0041-OS-b", titulo: "Extintor", status: "em_execucao" },
   ]);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} />
+    </QueryClientProvider>,
+  );
   expect(await screen.findByText(/CH-0041-OS-a · Quadro · finalizado/)).toBeTruthy();
   expect(screen.getByText(/CH-0041-OS-b · Extintor · em_execucao/)).toBeTruthy();
   expect(screen.getByText(/1 de 2 OS finalizadas · Em andamento/)).toBeTruthy();
@@ -43,15 +51,39 @@ it("abre a OS selecionada sem confundir duas ordens do mesmo Chamado", async () 
   ]);
   const onAbrirOs = vi.fn();
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} onAbrirOs={onAbrirOs} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <OrdensDoChamado
+        usuario="u"
+        cliente="c"
+        chamado="h"
+        leitura={{ listar }}
+        onAbrirOs={onAbrirOs}
+      />
+    </QueryClientProvider>,
+  );
   fireEvent.click(await screen.findByRole("button", { name: "Abrir OS CH-0041-OS-b" }));
   expect(onAbrirOs).toHaveBeenCalledExactlyOnceWith("os-b");
 });
 it("não afirma contagem integral quando a leitura precisou de várias páginas", async () => {
-  const primeira = Array.from({ length: 20 }, (_, i) => ({ id: String(i).padStart(2, "0"), numero: `OS-${i}`, titulo: "Primeira página", status: "finalizado" }));
-  const listar = vi.fn().mockResolvedValueOnce(primeira).mockResolvedValueOnce([{ id: "30", numero: "OS-30", titulo: "Segunda página", status: "em_execucao" }]);
+  const primeira = Array.from({ length: 20 }, (_, i) => ({
+    id: String(i).padStart(2, "0"),
+    numero: `OS-${i}`,
+    titulo: "Primeira página",
+    status: "finalizado",
+  }));
+  const listar = vi
+    .fn()
+    .mockResolvedValueOnce(primeira)
+    .mockResolvedValueOnce([
+      { id: "30", numero: "OS-30", titulo: "Segunda página", status: "em_execucao" },
+    ]);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} />
+    </QueryClientProvider>,
+  );
   fireEvent.click(await screen.findByRole("button", { name: "Carregar mais Ordens de Serviço" }));
   expect(await screen.findByText(/Segunda página/)).toBeTruthy();
   expect(screen.queryByText(/20 de 21 OS finalizadas/)).toBeNull();
@@ -59,22 +91,50 @@ it("não afirma contagem integral quando a leitura precisou de várias páginas"
 });
 it("consulta fotografia única em lote para exibir resumo de lista paginada", async () => {
   vi.stubEnv("VITE_SSO_RESUMO_CHAMADOS_ENABLED", "true");
-  const primeira = Array.from({ length: 20 }, (_, i) => ({ id: String(i).padStart(2, "0"), numero: `OS-${i}`, titulo: "Primeira página", status: "finalizado" }));
-  const listar = vi.fn().mockResolvedValueOnce(primeira).mockResolvedValueOnce([{ id: "30", numero: "OS-30", titulo: "Segunda página", status: "em_execucao" }]);
+  const primeira = Array.from({ length: 20 }, (_, i) => ({
+    id: String(i).padStart(2, "0"),
+    numero: `OS-${i}`,
+    titulo: "Primeira página",
+    status: "finalizado",
+  }));
+  const listar = vi
+    .fn()
+    .mockResolvedValueOnce(primeira)
+    .mockResolvedValueOnce([
+      { id: "30", numero: "OS-30", titulo: "Segunda página", status: "em_execucao" },
+    ]);
   resumo.mockResolvedValue({ h: { total: 22, finalizadas: 20, etapasMistas: true } });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} />
+    </QueryClientProvider>,
+  );
   fireEvent.click(await screen.findByRole("button", { name: "Carregar mais Ordens de Serviço" }));
   expect(await screen.findByText(/20 de 22 OS finalizadas · Em andamento/)).toBeTruthy();
   expect(resumo).toHaveBeenCalledWith(["h"], expect.any(AbortSignal));
 });
 it("oculta contagem paginada quando a fotografia autorizada falha", async () => {
   vi.stubEnv("VITE_SSO_RESUMO_CHAMADOS_ENABLED", "true");
-  const primeira = Array.from({ length: 20 }, (_, i) => ({ id: String(i).padStart(2, "0"), numero: `OS-${i}`, titulo: "Primeira página", status: "finalizado" }));
-  const listar = vi.fn().mockResolvedValueOnce(primeira).mockResolvedValueOnce([{ id: "30", numero: "OS-30", titulo: "Segunda página", status: "em_execucao" }]);
+  const primeira = Array.from({ length: 20 }, (_, i) => ({
+    id: String(i).padStart(2, "0"),
+    numero: `OS-${i}`,
+    titulo: "Primeira página",
+    status: "finalizado",
+  }));
+  const listar = vi
+    .fn()
+    .mockResolvedValueOnce(primeira)
+    .mockResolvedValueOnce([
+      { id: "30", numero: "OS-30", titulo: "Segunda página", status: "em_execucao" },
+    ]);
   resumo.mockRejectedValue(new Error("sem acesso"));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <OrdensDoChamado usuario="u" cliente="c" chamado="h" leitura={{ listar }} />
+    </QueryClientProvider>,
+  );
   fireEvent.click(await screen.findByRole("button", { name: "Carregar mais Ordens de Serviço" }));
   expect(await screen.findByText(/contagem integral indisponível/)).toBeTruthy();
   expect(screen.queryByText(/20 de 21 OS finalizadas/)).toBeNull();
@@ -85,28 +145,46 @@ it("não consulta com flag desligada", () => {
   render(
     <QueryClientProvider client={client}>
       <EntradaOrdensChamado
-        habilitado={undefined}
         usuario="u"
         cliente="c"
         chamado="h"
         chamadoEsperado="h"
+        podeAdministrar={false}
         leitura={{ listar }}
       />
     </QueryClientProvider>,
   );
   expect(listar).not.toHaveBeenCalled();
 });
-it("não consulta com detalhe do Chamado anterior ainda carregado", () => {
+it("E00-S28: flag desligada mostra RecursoNaoAtivado em vez de sumir", () => {
   const listar = vi.fn();
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
       <EntradaOrdensChamado
-        habilitado="true"
+        usuario="u"
+        cliente="c"
+        chamado="h"
+        chamadoEsperado="h"
+        podeAdministrar
+        leitura={{ listar }}
+      />
+    </QueryClientProvider>,
+  );
+  expect(screen.getByText("Ordens de Serviço vinculadas ao Chamado")).toBeInTheDocument();
+});
+it("não consulta com detalhe do Chamado anterior ainda carregado", () => {
+  const listar = vi.fn();
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  vi.stubEnv("VITE_SSO_ORDENS_CHAMADO_ENABLED", "true");
+  render(
+    <QueryClientProvider client={client}>
+      <EntradaOrdensChamado
         usuario="u"
         cliente="a"
         chamado="antigo"
         chamadoEsperado="novo"
+        podeAdministrar={false}
         leitura={{ listar }}
       />
     </QueryClientProvider>,
@@ -175,14 +253,15 @@ it("cancela consulta antiga e não mistura OS de outro Cliente", async () => {
 it("reconsulta após RPC ausente sem recorrer à leitura legada", async () => {
   const listar = vi.fn().mockRejectedValueOnce(new Error("RPC ausente")).mockResolvedValueOnce([]);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  vi.stubEnv("VITE_SSO_ORDENS_CHAMADO_ENABLED", "true");
   render(
     <QueryClientProvider client={client}>
       <EntradaOrdensChamado
-        habilitado="true"
         usuario="u"
         cliente="c"
         chamado="h"
         chamadoEsperado="h"
+        podeAdministrar={false}
         leitura={{ listar }}
       />
     </QueryClientProvider>,

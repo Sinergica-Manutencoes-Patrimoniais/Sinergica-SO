@@ -1,0 +1,4426 @@
+[
+  {
+    "nome": "VITE_SSO_ACESSO_ANEXO_LOCALIZACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Acesso anexo localizacao"
+  },
+  {
+    "nome": "VITE_SSO_ACOES_LOCAIS_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Acoes locais fila"
+  },
+  {
+    "nome": "VITE_SSO_ADEQUACAO_DOCUMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Adequacao documento"
+  },
+  {
+    "nome": "VITE_SSO_ADEQUACAO_FOTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Adequacao foto"
+  },
+  {
+    "nome": "VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Admin contrato origem"
+  },
+  {
+    "nome": "VITE_SSO_AGENDA_TECNICO_CAPACIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Agenda tecnico capacidade"
+  },
+  {
+    "nome": "VITE_SSO_ALOCACAO_DOCUMENTO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Alocacao documento mediada"
+  },
+  {
+    "nome": "VITE_SSO_ALOCAR_FATURAVEL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Alocar faturavel"
+  },
+  {
+    "nome": "VITE_SSO_ALTERACAO_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Alteracao ciclo"
+  },
+  {
+    "nome": "VITE_SSO_ALTERAR_DIA_CONTRATUAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Alterar dia contratual"
+  },
+  {
+    "nome": "VITE_SSO_ALVOS_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Alvos cronograma"
+  },
+  {
+    "nome": "VITE_SSO_ANEXOS_FATURAVEIS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Anexos faturaveis"
+  },
+  {
+    "nome": "VITE_SSO_ANEXO_LOCALIZACAO_ATUALIZADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Anexo localizacao atualizada"
+  },
+  {
+    "nome": "VITE_SSO_APLICAR_CAMPOS_COMPONENTE_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Aplicar campos componente"
+  },
+  {
+    "nome": "VITE_SSO_APLICAR_CAMPOS_LOCALIZACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aplicar campos localizacao"
+  },
+  {
+    "nome": "VITE_SSO_APLICAR_CAMPOS_SISTEMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aplicar campos sistema"
+  },
+  {
+    "nome": "VITE_SSO_APLICAR_LOCALIZACOES_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aplicar localizacoes lote"
+  },
+  {
+    "nome": "VITE_SSO_APROVACAO_FINALIZACAO_ATOMICA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovacao finalizacao atomica"
+  },
+  {
+    "nome": "VITE_SSO_APROVACAO_PARCIAL_ATOR_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovacao parcial ator"
+  },
+  {
+    "nome": "VITE_SSO_APROVACAO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovacao parcial"
+  },
+  {
+    "nome": "VITE_SSO_APROVACAO_VERSAO_ESPERADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovacao versao esperada"
+  },
+  {
+    "nome": "VITE_SSO_APROVAR_CRONOGRAMA_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovar cronograma staging"
+  },
+  {
+    "nome": "VITE_SSO_APROVAR_RETORNO_PCM_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovar retorno pcm"
+  },
+  {
+    "nome": "VITE_SSO_APROVAR_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Aprovar revisao"
+  },
+  {
+    "nome": "VITE_SSO_ATENDER_PARCELA_REVISADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atender parcela revisada"
+  },
+  {
+    "nome": "VITE_SSO_ATESTACAO_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Atestacao servico"
+  },
+  {
+    "nome": "VITE_SSO_ATESTADO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atestado grupo"
+  },
+  {
+    "nome": "VITE_SSO_ATRIBUICAO_DIRETA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Atribuicao direta"
+  },
+  {
+    "nome": "VITE_SSO_ATRIBUICAO_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atribuicao parcela"
+  },
+  {
+    "nome": "VITE_SSO_ATRIBUICAO_PARCELA_ESCOPO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Atribuicao parcela escopo"
+  },
+  {
+    "nome": "VITE_SSO_ATRIBUICAO_TECNICO_DESPESA_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Atribuicao tecnico despesa mediada"
+  },
+  {
+    "nome": "VITE_SSO_ATRIBUIR_CODIGO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Atribuir codigo grupo"
+  },
+  {
+    "nome": "VITE_SSO_ATRIBUIR_TECNICO_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Atribuir tecnico despesa"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZACAO_GRUPOS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizacao grupos lote"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZACAO_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizacao lote"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZAR_GRUPO_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizar grupo levantamento"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZAR_GRUPO_MOTIVADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizar grupo motivado"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZAR_LOCALIZACAO_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizar localizacao levantamento"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZAR_NOME_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizar nome levantamento"
+  },
+  {
+    "nome": "VITE_SSO_ATUALIZAR_OBSERVACOES_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Atualizar observacoes levantamento"
+  },
+  {
+    "nome": "VITE_SSO_AUTORIZACAO_COMPLEMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Autorizacao complemento"
+  },
+  {
+    "nome": "VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Avaliacao evidencia os"
+  },
+  {
+    "nome": "VITE_SSO_AVALIACAO_IMPACTO_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Avaliacao impacto revisao"
+  },
+  {
+    "nome": "VITE_SSO_AVALIACAO_IMPACTO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Avaliacao impacto visita"
+  },
+  {
+    "nome": "VITE_SSO_BACKLOG_COMPOSICAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Backlog composicao"
+  },
+  {
+    "nome": "VITE_SSO_BLOQUEAR_URL_OS_ANEXOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Bloquear url os anexos"
+  },
+  {
+    "nome": "VITE_SSO_BLOQUEIOS_INTENCAO_LOCAL_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Bloqueios intencao local"
+  },
+  {
+    "nome": "VITE_SSO_BREADCRUMB_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Breadcrumb ativo"
+  },
+  {
+    "nome": "VITE_SSO_BREADCRUMB_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Breadcrumb grupo"
+  },
+  {
+    "nome": "VITE_SSO_BUSCAR_CODIGO_GRUPO_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Buscar codigo grupo staging"
+  },
+  {
+    "nome": "VITE_SSO_BUSCA_ATIVOS_RESULTADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Busca ativos resultados"
+  },
+  {
+    "nome": "VITE_SSO_BUSCA_CODIGO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Busca codigo mediada"
+  },
+  {
+    "nome": "VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Busca os materiais"
+  },
+  {
+    "nome": "VITE_SSO_BUSCA_UNIFICADA_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Busca unificada grupo"
+  },
+  {
+    "nome": "VITE_SSO_CAMPOS_COMPONENTE_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Campos componente staging"
+  },
+  {
+    "nome": "VITE_SSO_CAMPOS_LOCALIZACAO_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Campos localizacao staging"
+  },
+  {
+    "nome": "VITE_SSO_CAMPOS_SISTEMA_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Campos sistema staging"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Cancelamento chamado campo"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAMENTO_FATURAVEL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Cancelamento faturavel"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAMENTO_T24_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Cancelamento t24"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_ACEITE_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cancelar aceite lote"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_CHAMADO_CONSERVADOR_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Cancelar chamado conservador"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_CRIACAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Cancelar criacao visita"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_RECEPCAO_MANUAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cancelar recepcao manual"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_TENTATIVA_APROVACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cancelar tentativa aprovacao"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_TENTATIVA_DECISAO_ONDA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cancelar tentativa decisao onda"
+  },
+  {
+    "nome": "VITE_SSO_CANCELAR_TENTATIVA_EVIDENCIA_ONDA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cancelar tentativa evidencia onda"
+  },
+  {
+    "nome": "VITE_SSO_CANDIDATOS_DEVOLUCAO_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Candidatos devolucao ciclo"
+  },
+  {
+    "nome": "VITE_SSO_CANDIDATO_LINHA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Candidato linha"
+  },
+  {
+    "nome": "VITE_SSO_CANDIDATO_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Candidato servico"
+  },
+  {
+    "nome": "VITE_SSO_CANONICALIZAR_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Canonicalizar chamado"
+  },
+  {
+    "nome": "VITE_SSO_CAPACIDADE_AGENDA_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Capacidade agenda"
+  },
+  {
+    "nome": "VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Capacidade cadastro legado"
+  },
+  {
+    "nome": "VITE_SSO_CAPACIDADE_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Capacidade cronograma"
+  },
+  {
+    "nome": "VITE_SSO_CATEGORIA_CANDIDATA_T24_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Categoria candidata t24"
+  },
+  {
+    "nome": "VITE_SSO_CATEGORIA_COMPONENTE_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Categoria componente"
+  },
+  {
+    "nome": "VITE_SSO_CENTRAL_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Central materiais"
+  },
+  {
+    "nome": "VITE_SSO_CENTRAL_MATERIAIS_SITUACAO_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Central materiais situacao"
+  },
+  {
+    "nome": "VITE_SSO_CHAMADO_PREVENTIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Chamado preventivo"
+  },
+  {
+    "nome": "VITE_SSO_CICLOS_POSTERIORES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ciclos posteriores"
+  },
+  {
+    "nome": "VITE_SSO_CICLOS_UNIFORMES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ciclos uniformes"
+  },
+  {
+    "nome": "VITE_SSO_CICLOS_UNIFORMES_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ciclos uniformes mediados"
+  },
+  {
+    "nome": "VITE_SSO_CLASSIFICACAO_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Classificacao cronograma"
+  },
+  {
+    "nome": "VITE_SSO_CLASSIFICACAO_FATO_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Classificacao fato servico"
+  },
+  {
+    "nome": "VITE_SSO_CLASSIFICACAO_LINHA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Classificacao linha"
+  },
+  {
+    "nome": "VITE_SSO_CLASSIFICAR_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Classificar retorno"
+  },
+  {
+    "nome": "VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cliente360 backlog escopo"
+  },
+  {
+    "nome": "VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Codigo atual mediado"
+  },
+  {
+    "nome": "VITE_SSO_CODIGO_GRUPO_PENDENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Codigo grupo pendente"
+  },
+  {
+    "nome": "VITE_SSO_CODIGO_RASCUNHO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Codigo rascunho"
+  },
+  {
+    "nome": "VITE_SSO_CODIGO_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Codigo staging"
+  },
+  {
+    "nome": "VITE_SSO_COINCIDENCIAS_CALENDARIO_FERIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Coincidencias calendario feriado"
+  },
+  {
+    "nome": "VITE_SSO_COINCIDENCIAS_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Coincidencias fila"
+  },
+  {
+    "nome": "VITE_SSO_COMANDOS_DEVOLUCAO_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Comandos devolucao ciclo"
+  },
+  {
+    "nome": "VITE_SSO_COMPARACAO_CAPACIDADE_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Comparacao capacidade visita"
+  },
+  {
+    "nome": "VITE_SSO_COMPARACAO_QUESTIONARIO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Comparacao questionario"
+  },
+  {
+    "nome": "VITE_SSO_COMPARAR_CALENDARIO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Comparar calendario legado"
+  },
+  {
+    "nome": "VITE_SSO_COMPARAR_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Comparar cronograma"
+  },
+  {
+    "nome": "VITE_SSO_COMPARAR_QUANTIDADE_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Comparar quantidade grupo"
+  },
+  {
+    "nome": "VITE_SSO_COMPOSICAO_LOCAL_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Composicao local"
+  },
+  {
+    "nome": "VITE_SSO_COMPOSICAO_MISTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Composicao mista"
+  },
+  {
+    "nome": "VITE_SSO_COMPOSICAO_SISTEMA_ATOMICA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Composicao sistema atomica"
+  },
+  {
+    "nome": "VITE_SSO_COMPOSICAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Composicao visita"
+  },
+  {
+    "nome": "VITE_SSO_COMPROVANTES_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Comprovantes despesa"
+  },
+  {
+    "nome": "VITE_SSO_CONDICAO_ESTRUTURAL_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Condicao estrutural retorno"
+  },
+  {
+    "nome": "VITE_SSO_CONDICAO_EVIDENCIA_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Condicao evidencia retorno"
+  },
+  {
+    "nome": "VITE_SSO_CONDICAO_NAO_INFORMADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Condicao nao informada"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_CAMPOS_LOCALIZACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia campos localizacao"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Conferencia candidato servico"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_COBERTURA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia cobertura"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_CODIGOS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia codigos lote"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_CODIGOS_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia codigos revisao"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_COPIA_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia copia rotina"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Conferencia despesa"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_EVENTO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia evento campo"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_FUSO_SERIES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia fuso series"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_INTEGRADA_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia integrada cronograma"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_ITENS_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Conferencia itens servico"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_LEVANTAMENTOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia levantamentos"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia lote"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_PLANO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia plano legado"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_SERVICO_CONSOLIDADA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Conferencia servico consolidada"
+  },
+  {
+    "nome": "VITE_SSO_CONFERENCIA_TOLERANCIAS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conferencia tolerancias lote"
+  },
+  {
+    "nome": "VITE_SSO_CONFERIR_CONFIRMACAO_CLIENTE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Conferir confirmacao cliente"
+  },
+  {
+    "nome": "VITE_SSO_CONFERIR_ESTORNO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Conferir estorno"
+  },
+  {
+    "nome": "VITE_SSO_CONFIG_EXECUTOR_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Config executor fila"
+  },
+  {
+    "nome": "VITE_SSO_CONFIG_LIMITE_DEMORA_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Config limite demora"
+  },
+  {
+    "nome": "VITE_SSO_CONFIRMACAO_CLIENTE_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Confirmacao cliente visita"
+  },
+  {
+    "nome": "VITE_SSO_CONFIRMAR_CHAMADO_OS_ATOMICO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Confirmar chamado os atomico"
+  },
+  {
+    "nome": "VITE_SSO_CONFIRMAR_FILA_PREVENTIVA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Confirmar fila preventiva"
+  },
+  {
+    "nome": "VITE_SSO_CONFIRMAR_RETORNO_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Confirmar retorno fila"
+  },
+  {
+    "nome": "VITE_SSO_CONFIRMAR_RETORNO_PROPRIEDADE_OS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Confirmar retorno propriedade os"
+  },
+  {
+    "nome": "VITE_SSO_CONFLITOS_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conflitos campo"
+  },
+  {
+    "nome": "VITE_SSO_CONFLITOS_CAPACIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Conflitos capacidade"
+  },
+  {
+    "nome": "VITE_SSO_CONFLITOS_INTERCLIENTES_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Conflitos interclientes"
+  },
+  {
+    "nome": "VITE_SSO_CONFLITOS_PROPRIEDADE_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conflitos propriedade fila"
+  },
+  {
+    "nome": "VITE_SSO_CONFLITOS_PROPRIEDADE_OS_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Conflitos propriedade os"
+  },
+  {
+    "nome": "VITE_SSO_CONFLITOS_WEBHOOK_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Conflitos webhook"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Consultar uso ciclo versao"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTA_CODIGOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Consulta codigos"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTA_CODIGO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Consulta codigo grupo"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTA_LOTE_RECEBIDO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Consulta lote recebido"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTA_PROMOCAO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Consulta promocao parcial"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTA_REALIZACAO_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Consulta realizacao despesa"
+  },
+  {
+    "nome": "VITE_SSO_CONSULTA_RESERVA_CODIGO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Consulta reserva codigo"
+  },
+  {
+    "nome": "VITE_SSO_CONTEUDO_BASICO_OS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Conteudo basico os"
+  },
+  {
+    "nome": "VITE_SSO_CONTEXTO_TECNICO_PENDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Contexto tecnico pendencia"
+  },
+  {
+    "nome": "VITE_SSO_CONTINUACAO_DEVOLVIDA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Continuacao devolvida"
+  },
+  {
+    "nome": "VITE_SSO_CONTINUACAO_PARCELA_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Continuacao parcela ciclo"
+  },
+  {
+    "nome": "VITE_SSO_CONTINUACAO_PARCELA_CONFERIDA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Continuacao parcela conferida"
+  },
+  {
+    "nome": "VITE_SSO_CONTRATOS_EM_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Contratos em revisao"
+  },
+  {
+    "nome": "VITE_SSO_CONTRATO_EVIDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Contrato evidencia"
+  },
+  {
+    "nome": "VITE_SSO_CONTRATO_PERGUNTAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Contrato perguntas"
+  },
+  {
+    "nome": "VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Contrato pergunta mediado"
+  },
+  {
+    "nome": "VITE_SSO_CONVERSAO_ATOR_CONFERIDO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Conversao ator conferido"
+  },
+  {
+    "nome": "VITE_SSO_CONVERSAO_ESCOPO_CONFERIDO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Conversao escopo conferido"
+  },
+  {
+    "nome": "VITE_SSO_CONVERSAO_INTEGRAL_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Conversao integral",
+    "gate": "pcm.chamado_os_gate"
+  },
+  {
+    "nome": "VITE_SSO_CONVERSAO_OS_CONCORRENTE_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Conversao os concorrente"
+  },
+  {
+    "nome": "VITE_SSO_COPIA_PLANO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Copia plano"
+  },
+  {
+    "nome": "VITE_SSO_COPIA_ROTINA_MODELO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Copia rotina modelo"
+  },
+  {
+    "nome": "VITE_SSO_CORRECAO_APOS_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Correcao apos parcial"
+  },
+  {
+    "nome": "VITE_SSO_CORRECAO_COMPROVANTE_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Correcao comprovante mediada"
+  },
+  {
+    "nome": "VITE_SSO_CORRECAO_MODO_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Correcao modo proposta"
+  },
+  {
+    "nome": "VITE_SSO_CORRELACAO_GASTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Correlacao gasto"
+  },
+  {
+    "nome": "VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Correlacao gasto mediada"
+  },
+  {
+    "nome": "VITE_SSO_CORRIGIR_CODIGO_GRUPO_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Corrigir codigo grupo staging"
+  },
+  {
+    "nome": "VITE_SSO_CORRIGIR_CODIGO_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Corrigir codigo staging"
+  },
+  {
+    "nome": "VITE_SSO_CORRIGIR_COMPROVANTE_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Corrigir comprovante despesa"
+  },
+  {
+    "nome": "VITE_SSO_CORRIGIR_DESPESA_REALIZADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Corrigir despesa realizada"
+  },
+  {
+    "nome": "VITE_SSO_CORRIGIR_FATURAVEL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Corrigir faturavel"
+  },
+  {
+    "nome": "VITE_SSO_CORRIGIR_FATURAVEL_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Corrigir faturavel mediado"
+  },
+  {
+    "nome": "VITE_SSO_CRIACAO_ATIVOS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Criacao ativos lote"
+  },
+  {
+    "nome": "VITE_SSO_CRIACAO_GRUPOS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Criacao grupos lote"
+  },
+  {
+    "nome": "VITE_SSO_CRIACAO_LOCALIZACOES_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Criacao localizacoes lote"
+  },
+  {
+    "nome": "VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Criar orcamento operacional"
+  },
+  {
+    "nome": "VITE_SSO_CRIAR_OS_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Criar os chamado",
+    "gate": "pcm.sso_criacao_os_mediada_gate"
+  },
+  {
+    "nome": "VITE_SSO_CRIAR_OS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Criar os grupo"
+  },
+  {
+    "nome": "VITE_SSO_CRIAR_OS_PARCELA_DIRETA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Criar os parcela direta"
+  },
+  {
+    "nome": "VITE_SSO_CRITICIDADE_PENDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Criticidade pendencia"
+  },
+  {
+    "nome": "VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cronograma feriados declarados"
+  },
+  {
+    "nome": "VITE_SSO_CRONOGRAMA_MATRIZ_XLSX_LOCAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cronograma matriz xlsx local"
+  },
+  {
+    "nome": "VITE_SSO_CRONOGRAMA_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cronograma parcial"
+  },
+  {
+    "nome": "VITE_SSO_CRONOLOGIA_EVIDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Cronologia evidencia"
+  },
+  {
+    "nome": "VITE_SSO_CUSTOS_PROPOSTA_ESCOPADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Custos proposta escopados"
+  },
+  {
+    "nome": "VITE_SSO_DATAS_DOCUMENTOS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Datas documentos"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_CORRELACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao correlacao"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_DOCUMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao documento"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_FERIADO_CALENDARIO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao feriado calendario"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_FERIADO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao feriado mediada"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_FOTO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao foto grupo"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_FOTO_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao foto levantamento"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_FOTO_ORIGEM_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao foto origem"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao impacto ocorrencia"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao impacto visita"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_ONDA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao onda"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_PCM_ORCAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao pcm orcamento"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_PMOC_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao pmoc"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_PROPOSTA_PORTAL_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Decisao proposta portal mediada"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_VENCIMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao vencimento"
+  },
+  {
+    "nome": "VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisao vencimento mediada"
+  },
+  {
+    "nome": "VITE_SSO_DECISOES_IMPACTO_MEDIADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisoes impacto mediadas"
+  },
+  {
+    "nome": "VITE_SSO_DECISOES_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Decisoes retorno"
+  },
+  {
+    "nome": "VITE_SSO_DECLARACAO_MATERIAL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Declaracao material"
+  },
+  {
+    "nome": "VITE_SSO_DECLARAR_ETIQUETA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Declarar etiqueta"
+  },
+  {
+    "nome": "VITE_SSO_DECLARAR_ETIQUETA_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Declarar etiqueta grupo"
+  },
+  {
+    "nome": "VITE_SSO_DEMORAS_OBSERVADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Demoras observadas"
+  },
+  {
+    "nome": "VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Deslocamentos semana"
+  },
+  {
+    "nome": "VITE_SSO_DESLOCAMENTO_DECLARADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Deslocamento declarado"
+  },
+  {
+    "nome": "VITE_SSO_DESPESAS_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Despesas visita"
+  },
+  {
+    "nome": "VITE_SSO_DETALHE_COMUNICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Detalhe comunicacao"
+  },
+  {
+    "nome": "VITE_SSO_DETALHE_EVENTO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Detalhe evento campo"
+  },
+  {
+    "nome": "VITE_SSO_DETALHE_RETORNO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "backlog",
+    "descricao": "Detalhe retorno parcial"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnosticos revisao mediados"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_ACEITE_COMPLEMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Diagnostico aceite complemento"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_ANCESTRAIS_GRUPOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Diagnostico ancestrais grupos"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_ANCESTRAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico ancestral"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_APTIDAO_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Diagnostico aptidao chamado"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_CANDIDATAS_T24_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Diagnostico candidatas t24"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_CODIGOS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico codigos grupo"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_CODIGOS_GRUPO_REVISIONADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico codigos grupo revisionado"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Diagnostico codigos legados"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_COMPOSICAO_VAZIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico composicao vazia"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_CONTEUDO_OS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Diagnostico conteudo os"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_CONTINUACAO_DEVOLVIDA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Diagnostico continuacao devolvida"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_DEVOLUCAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico devolucao"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_DOCUMENTOS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Diagnostico documentos"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_EVIDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico evidencia"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_EXECUTOR_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Diagnostico executor fila"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_FALHA_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico falha fila"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_FONTE_RETIFICADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico fonte retificada"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_FUSO_VIGENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico fuso vigencia"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_HIERARQUIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico hierarquia"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_HIERARQUIA_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico hierarquia mediado"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico levantamento"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_LOTE_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico lote revisao"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Diagnostico migracao"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_MODO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico modo visita"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_NORMATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico normativo"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_OBRIGATORIAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico obrigatorias"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_ORIGEM_OS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Diagnostico origem os"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_PMOC_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico pmoc"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_RESOLUCAO_PENDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico resolucao pendencia"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_RETIFICACAO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico retificacao campo"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_SYNC_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Diagnostico sync visita"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Diagnostico vigencias"
+  },
+  {
+    "nome": "VITE_SSO_DIAGNOSTICO_VINCULOS_GRUPOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Diagnostico vinculos grupos"
+  },
+  {
+    "nome": "VITE_SSO_DISPENSA_ORCAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Dispensa orcamento"
+  },
+  {
+    "nome": "VITE_SSO_DISPONIBILIDADE_MATERIAIS_PORTAL_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Disponibilidade materiais portal mediada"
+  },
+  {
+    "nome": "VITE_SSO_DIVIDIR_BACKLOG_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Dividir backlog"
+  },
+  {
+    "nome": "VITE_SSO_DOCUMENTOS_COMPETENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Documentos competencia"
+  },
+  {
+    "nome": "VITE_SSO_DOCUMENTOS_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Documentos levantamento"
+  },
+  {
+    "nome": "VITE_SSO_DOCUMENTOS_STAGING_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Documentos staging ativo"
+  },
+  {
+    "nome": "VITE_SSO_DOCUMENTO_COBRANCA_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Documento cobranca"
+  },
+  {
+    "nome": "VITE_SSO_DOCUMENTO_INTERNO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Documento interno"
+  },
+  {
+    "nome": "VITE_SSO_DOWNLOAD_EVIDENCIA_RESPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Download evidencia resposta"
+  },
+  {
+    "nome": "VITE_SSO_DOWNLOAD_FOTO_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Download foto retorno"
+  },
+  {
+    "nome": "VITE_SSO_EDICAO_ROTINA_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Edicao rotina revisao"
+  },
+  {
+    "nome": "VITE_SSO_EDITAR_ATRIBUTOS_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Editar atributos staging"
+  },
+  {
+    "nome": "VITE_SSO_EDITAR_COMPOSICAO_ESCOPADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Editar composicao escopada"
+  },
+  {
+    "nome": "VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Editar despesas visita"
+  },
+  {
+    "nome": "VITE_SSO_EDITAR_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Editar staging"
+  },
+  {
+    "nome": "VITE_SSO_ENCERRAR_CHAMADO_CONFERIDO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Encerrar chamado conferido"
+  },
+  {
+    "nome": "VITE_SSO_ENVIO_XLSX_DEV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Envio xlsx dev"
+  },
+  {
+    "nome": "VITE_SSO_ENVIO_XLSX_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Envio xlsx"
+  },
+  {
+    "nome": "VITE_SSO_ESCOPO_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Escopo chamado"
+  },
+  {
+    "nome": "VITE_SSO_ESCOPO_ORIGEM_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Escopo origem"
+  },
+  {
+    "nome": "VITE_SSO_ESCOPO_PREVENTIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Escopo preventivo"
+  },
+  {
+    "nome": "VITE_SSO_ESFORCO_CONTINUACAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Esforco continuacao"
+  },
+  {
+    "nome": "VITE_SSO_ESFORCO_DECLARADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Esforco declarado"
+  },
+  {
+    "nome": "VITE_SSO_ESFORCO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Esforco grupo"
+  },
+  {
+    "nome": "VITE_SSO_ESFORCO_GRUPO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Esforco grupo mediado"
+  },
+  {
+    "nome": "VITE_SSO_ESFORCO_OCORRENCIA_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Esforco ocorrencia visita"
+  },
+  {
+    "nome": "VITE_SSO_ESFORCO_RESTANTE_CONTINUACAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Esforco restante continuacao"
+  },
+  {
+    "nome": "VITE_SSO_ESTADO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Estado campo"
+  },
+  {
+    "nome": "VITE_SSO_ESTADO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Estado grupo"
+  },
+  {
+    "nome": "VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Estado ocorrencia vinculada"
+  },
+  {
+    "nome": "VITE_SSO_ESTATISTICAS_TRIAGEM_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Estatisticas triagem"
+  },
+  {
+    "nome": "VITE_SSO_ESTRUTURA_XLSX_DEV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Estrutura xlsx dev"
+  },
+  {
+    "nome": "VITE_SSO_ESTRUTURA_XLSX_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Estrutura xlsx"
+  },
+  {
+    "nome": "VITE_SSO_ESTRUTURA_XLSX_LOCAL_DECLARADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Estrutura xlsx local declarado"
+  },
+  {
+    "nome": "VITE_SSO_EVENTOS_ORIGENS_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Eventos origens mediados"
+  },
+  {
+    "nome": "VITE_SSO_EVENTOS_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Eventos reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIAS_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Evidencias materiais"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIAS_ONDA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Evidencias onda"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIAS_USO_CODIGO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Evidencias uso codigo"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIA_MATERIAL_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Evidencia material mediada"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIA_ORIGEM_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Evidencia origem mediada"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIA_ORIGEM_PENDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Evidencia origem pendencia"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIA_OS_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Evidencia os reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_EVIDENCIA_POR_RESPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Evidencia por resposta"
+  },
+  {
+    "nome": "VITE_SSO_EXCECAO_PRECO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Excecao preco mediada"
+  },
+  {
+    "nome": "VITE_SSO_EXCECAO_PRECO_OPERACIONAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Excecao preco operacional"
+  },
+  {
+    "nome": "VITE_SSO_EXCECAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Excecao visita"
+  },
+  {
+    "nome": "VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Excecoes materiais os"
+  },
+  {
+    "nome": "VITE_SSO_EXIGENCIA_LEGAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exigencia legal"
+  },
+  {
+    "nome": "VITE_SSO_EXIGENCIA_ROTINA_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exigencia rotina mediada"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_PLANO_CSV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exportar plano csv"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_PLANO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exportar plano"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_PLANO_XLSX_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exportar plano xlsx"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_PREVIA_CICLOS_CSV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exportar previa ciclos csv"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_PREVIA_CICLOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exportar previa ciclos"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_PROPOSTA_OPERACIONAL_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Exportar proposta operacional"
+  },
+  {
+    "nome": "VITE_SSO_EXPORTAR_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Exportar reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_FATO_EXECUCAO_DECLARADO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Fato execucao declarado"
+  },
+  {
+    "nome": "VITE_SSO_FATURAVEIS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Faturaveis"
+  },
+  {
+    "nome": "VITE_SSO_FATURAVEL_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Faturavel proposta"
+  },
+  {
+    "nome": "VITE_SSO_FERIADOS_DECLARADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Feriados declarados"
+  },
+  {
+    "nome": "VITE_SSO_FILA_OBRIGACOES_PREPARADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fila obrigacoes preparadas"
+  },
+  {
+    "nome": "VITE_SSO_FILA_PREVENTIVA_CRONOLOGICA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fila preventiva cronologica"
+  },
+  {
+    "nome": "VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fila preventiva pcm"
+  },
+  {
+    "nome": "VITE_SSO_FILA_RETORNO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "backlog",
+    "descricao": "Fila retorno parcial"
+  },
+  {
+    "nome": "VITE_SSO_FILA_SELECIONADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fila selecionada"
+  },
+  {
+    "nome": "VITE_SSO_FILA_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fila visita"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_COMPETENCIA_FATURAVEIS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Filtro competencia faturaveis"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_CONTEXTO_TECNICO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Filtro contexto tecnico"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_CRITICIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Filtro criticidade"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_FATURAVEIS_SERVIDOR_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Filtro faturaveis servidor"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_NOTAS_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Filtro notas fila"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Filtro reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_FILTRO_TECNICO_AGENDA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Filtro tecnico agenda"
+  },
+  {
+    "nome": "VITE_SSO_FINALIZAR_OS_VALIDADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Finalizar os validada"
+  },
+  {
+    "nome": "VITE_SSO_FONTES_AQUISICAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fontes aquisicao"
+  },
+  {
+    "nome": "VITE_SSO_FONTES_DEMANDA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Fontes demanda"
+  },
+  {
+    "nome": "VITE_SSO_FOTOGRAFIA_FERIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fotografia feriados"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Fotos equipamento"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Fotos grupo"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fotos levantamento"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fotos retorno"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Fotos staging ativo"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_STAGING_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Fotos staging grupo"
+  },
+  {
+    "nome": "VITE_SSO_FOTOS_VERIFICADAS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Fotos verificadas grupo"
+  },
+  {
+    "nome": "VITE_SSO_FOTO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Foto grupo"
+  },
+  {
+    "nome": "VITE_SSO_FOTO_INGESTAO_SEGURA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Foto ingestao segura"
+  },
+  {
+    "nome": "VITE_SSO_FOTO_POR_RESPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Foto por resposta"
+  },
+  {
+    "nome": "VITE_SSO_FUSO_PLANO_DECLARADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fuso plano declarado"
+  },
+  {
+    "nome": "VITE_SSO_FUSO_PLANO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Fuso plano mediado"
+  },
+  {
+    "nome": "VITE_SSO_GERACAO_FUSO_SNAPSHOT_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Geracao fuso snapshot"
+  },
+  {
+    "nome": "VITE_SSO_GERACAO_OU_SUPRESSAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Geracao ou supressao"
+  },
+  {
+    "nome": "VITE_SSO_GERAR_VISITA_CONTRATUAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Gerar visita contratual"
+  },
+  {
+    "nome": "VITE_SSO_GESTAO_ESCOPO_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Gestao escopo chamado"
+  },
+  {
+    "nome": "VITE_SSO_GESTAO_RECLASSIFICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Gestao reclassificacao"
+  },
+  {
+    "nome": "VITE_SSO_GRUPOS_LOTE_CODIGO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Grupos lote codigo"
+  },
+  {
+    "nome": "VITE_SSO_GRUPO_ATOMICO_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "Grupo atomico"
+  },
+  {
+    "nome": "VITE_SSO_GUTD_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Gutd parcela"
+  },
+  {
+    "nome": "VITE_SSO_HIERARQUIA_GRUPOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Hierarquia grupos"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_ALERTAS_REPROGRAMACAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico alertas reprogramacao"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_ATRIBUTOS_STAGING_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico atributos staging"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_CADASTRO_LOTES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico cadastro lotes"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_CICLO_CANONICO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico ciclo canonico"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_CODIGO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico codigo grupo"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_COMPOSICAO_MISTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico composicao mista"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_COMPROVANTES_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico comprovantes"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_COMPROVANTES_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico comprovantes mediado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_COMPROVANTES_UNIFICADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico comprovantes unificado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_CONFIG_EXECUTOR_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "Historico config executor"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_CUSTOS_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico custos proposta"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_DEMORA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico demora"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_DISPENSA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico dispensa"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_FATURAVEL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Historico faturavel"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_FATURAVEL_TODAS_ORIGENS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Historico faturavel todas origens"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_FONTES_ORCAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico fontes orcamento"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_IMPEDIMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico impedimento"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico intencao local"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_LEGADO_DECISOES_SEPARADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico legado decisoes separadas"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_LEGADO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico legado mediado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_LEGADO_PRE_OS_DECISOES_SEPARADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico legado pre os decisoes separadas"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico levantamento"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Historico materiais"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_MATERIAIS_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Historico materiais mediado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_MATERIAIS_RETIRADOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Historico materiais retirados"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_MOVIMENTO_OCORRENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico movimento ocorrencia"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_ORCAMENTO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico orcamento legado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_ORCAMENTO_PRE_OS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico orcamento pre os"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_ORIGENS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico origens"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_PROMOCAO_INTEGRAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico promocao integral"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_PROMOCAO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico promocao parcial"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_PROPOSTA_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Historico proposta mediado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_PROPOSTA_OS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Historico proposta os"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_PROVENIENCIA_SIMULACAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico proveniencia simulacao"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_RATEIO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico rateio"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_RATEIO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico rateio mediado"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_RESOLUCAO_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico resolucao ativo"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_REVISAO_FATURAVEL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Historico revisao faturavel"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_SELECAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico selecao"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_SOLICITACOES_RECUPERACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico solicitacoes recuperacao"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_SUPRESSAO_GERADOR_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico supressao gerador"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_SUSPENSAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico suspensao"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_TECNICO_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Historico tecnico despesa"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_TRANSICOES_PLANO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico transicoes plano"
+  },
+  {
+    "nome": "VITE_SSO_HISTORICO_VISITA_SUPRIMIDA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Historico visita suprimida"
+  },
+  {
+    "nome": "VITE_SSO_HORIZONTE_CAPACIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Horizonte capacidade"
+  },
+  {
+    "nome": "VITE_SSO_HORIZONTE_CAPACIDADE_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Horizonte capacidade mediado"
+  },
+  {
+    "nome": "VITE_SSO_HORIZONTE_GRUPO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Horizonte grupo mediado"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTOS_FERIADO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Impactos feriado visita"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTO_EXECUCAO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Impacto execucao grupo"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Impacto grupo"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTO_GRUPO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Impacto grupo mediado"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTO_OCORRENCIAS_DIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Impacto ocorrencias dia"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTO_PMOC_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Impacto pmoc revisao"
+  },
+  {
+    "nome": "VITE_SSO_IMPACTO_REVISAO_OS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Impacto revisao os"
+  },
+  {
+    "nome": "VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Impedimento material os"
+  },
+  {
+    "nome": "VITE_SSO_IMPEDIMENTO_SUSPENSAO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Impedimento suspensao"
+  },
+  {
+    "nome": "VITE_SSO_IMPORTACAO_ESTRUTURA_CSV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Importacao estrutura csv"
+  },
+  {
+    "nome": "VITE_SSO_IMPORTACAO_PLANO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Importacao plano"
+  },
+  {
+    "nome": "VITE_SSO_INBOX_OS_INCERTA_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Inbox os incerta"
+  },
+  {
+    "nome": "VITE_SSO_INCLUIR_RETIRAR_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Incluir retirar revisao"
+  },
+  {
+    "nome": "VITE_SSO_INCONSISTENCIAS_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Inconsistencias fila"
+  },
+  {
+    "nome": "VITE_SSO_INCORPORACAO_ATIVOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Incorporacao ativos"
+  },
+  {
+    "nome": "VITE_SSO_INCORPORACAO_LOCALIZACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Incorporacao localizacao"
+  },
+  {
+    "nome": "VITE_SSO_INCORPORAR_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Incorporar cronograma"
+  },
+  {
+    "nome": "VITE_SSO_INCORPORAR_GRUPO_CODIGO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Incorporar grupo codigo"
+  },
+  {
+    "nome": "VITE_SSO_INCORPORAR_LOTE_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Incorporar lote cronograma"
+  },
+  {
+    "nome": "VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Indicios revisao rotina"
+  },
+  {
+    "nome": "VITE_SSO_INGESTAO_COMPROVANTE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Ingestao comprovante"
+  },
+  {
+    "nome": "VITE_SSO_INGESTAO_MATERIAL_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Ingestao material mediada"
+  },
+  {
+    "nome": "VITE_SSO_INICIO_PROCESSAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Inicio processamento"
+  },
+  {
+    "nome": "VITE_SSO_INTEGRAR_LEGADA_EXISTENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Integrar legada existente"
+  },
+  {
+    "nome": "VITE_SSO_INTENCAO_LOCAL_ENVIO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Intencao local envio"
+  },
+  {
+    "nome": "VITE_SSO_INTENCAO_MATERIAL_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Intencao material"
+  },
+  {
+    "nome": "VITE_SSO_INTENCAO_OS_ENVIADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Intencao os enviada"
+  },
+  {
+    "nome": "VITE_SSO_INTENCAO_OS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Intencao os grupo"
+  },
+  {
+    "nome": "VITE_SSO_INTERRUPCAO_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Interrupcao parcela"
+  },
+  {
+    "nome": "VITE_SSO_INTERVALOS_CAPACIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Intervalos capacidade"
+  },
+  {
+    "nome": "VITE_SSO_INVENTARIO_GERACAO_LEGADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Inventario geracao legada"
+  },
+  {
+    "nome": "VITE_SSO_INVENTARIO_PMOC_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Inventario pmoc revisao"
+  },
+  {
+    "nome": "VITE_SSO_ITENS_ATUAIS_PORTAL_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Itens atuais portal mediados"
+  },
+  {
+    "nome": "VITE_SSO_ITENS_CUSTO_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Itens custo proposta"
+  },
+  {
+    "nome": "VITE_SSO_ITENS_HISTORICOS_CUSTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Itens historicos custo"
+  },
+  {
+    "nome": "VITE_SSO_ITENS_HISTORICOS_PORTAL_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Itens historicos portal mediados"
+  },
+  {
+    "nome": "VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Kanban backlog escopo"
+  },
+  {
+    "nome": "VITE_SSO_LEITURA_ALIASES_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Leitura aliases mediada"
+  },
+  {
+    "nome": "VITE_SSO_LEITURA_COMPROVANTE_UNIFICADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Leitura comprovante unificada"
+  },
+  {
+    "nome": "VITE_SSO_LEITURA_OS_CHAMADO_SEGURA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Leitura os chamado segura"
+  },
+  {
+    "nome": "VITE_SSO_LEVANTAMENTOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Levantamentos"
+  },
+  {
+    "nome": "VITE_SSO_LINHAS_EDITADAS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Linhas editadas lote"
+  },
+  {
+    "nome": "VITE_SSO_LISTAGEM_ALIASES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Listagem aliases"
+  },
+  {
+    "nome": "VITE_SSO_LISTAR_FOTOS_GRUPO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Listar fotos grupo mediado"
+  },
+  {
+    "nome": "VITE_SSO_LISTAS_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Listas materiais"
+  },
+  {
+    "nome": "VITE_SSO_LOCALIZAR_COPIA_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Localizar copia rotina"
+  },
+  {
+    "nome": "VITE_SSO_LOCAL_ATIVO_LEITURA_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Local ativo leitura"
+  },
+  {
+    "nome": "VITE_SSO_LOTE_CALENDARIO_CONFERIDO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Lote calendario conferido"
+  },
+  {
+    "nome": "VITE_SSO_LOTE_CICLOS_CALENDARIO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Lote ciclos calendario"
+  },
+  {
+    "nome": "VITE_SSO_LOTE_CICLOS_LEGADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Lote ciclos legados"
+  },
+  {
+    "nome": "VITE_SSO_LOTE_RASCUNHOS_LEGADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Lote rascunhos legados"
+  },
+  {
+    "nome": "VITE_SSO_LOTE_VISITA_CANONICA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Lote visita canonica"
+  },
+  {
+    "nome": "VITE_SSO_LOTE_VISITA_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Lote visita legado"
+  },
+  {
+    "nome": "VITE_SSO_MAPA_PLANOS_LEGADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Mapa planos legados"
+  },
+  {
+    "nome": "VITE_SSO_MATERIAIS_ATUAIS_PORTAL_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Materiais atuais portal mediados"
+  },
+  {
+    "nome": "VITE_SSO_MATERIALIZAR_CICLO_CANONICO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Materializar ciclo canonico"
+  },
+  {
+    "nome": "VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Materializar ciclo legado"
+  },
+  {
+    "nome": "VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Materializar visita canonica"
+  },
+  {
+    "nome": "VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Materializar visita legado"
+  },
+  {
+    "nome": "VITE_SSO_MATERIAL_LINHA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Material linha"
+  },
+  {
+    "nome": "VITE_SSO_MATERIAL_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Material proposta"
+  },
+  {
+    "nome": "VITE_SSO_MATRIZ_EVIDENCIAS_CLIENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Matriz evidencias cliente"
+  },
+  {
+    "nome": "VITE_SSO_MATRIZ_HOMOLOGACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Matriz homologacao"
+  },
+  {
+    "nome": "VITE_SSO_METADADOS_EXPORTACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Metadados exportacao"
+  },
+  {
+    "nome": "VITE_SSO_MODO_FATURAMENTO_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Modo faturamento proposta"
+  },
+  {
+    "nome": "VITE_SSO_MOTIVOS_HISTORICO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Motivos historico grupo"
+  },
+  {
+    "nome": "VITE_SSO_MOTIVO_CODIGO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Motivo codigo grupo"
+  },
+  {
+    "nome": "VITE_SSO_MOVER_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Mover grupo"
+  },
+  {
+    "nome": "VITE_SSO_MUDANCA_DIA_ATOMICA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Mudanca dia atomica"
+  },
+  {
+    "nome": "VITE_SSO_MUDANCA_DIA_V2_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Mudanca dia v2"
+  },
+  {
+    "nome": "VITE_SSO_MUDANCA_DIA_V2_UI_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Mudanca dia v2 ui"
+  },
+  {
+    "nome": "VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Natureza alvo rotina"
+  },
+  {
+    "nome": "VITE_SSO_NOVA_DATA_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Nova data ciclo"
+  },
+  {
+    "nome": "VITE_SSO_NOVA_DATA_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Nova data visita"
+  },
+  {
+    "nome": "VITE_SSO_OBRIGACOES_PMOC_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Obrigacoes pmoc"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVACAO_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Observacao fila"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVACAO_FILA_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Observacao fila lote"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVACAO_NOVO_CLIENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Observacao novo cliente"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVACOES_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Observacoes materiais"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVACOES_RESERVA_EQUIPMENT_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Observacoes reserva equipment"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVACOES_RESERVA_MEDIADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Observacoes reserva mediadas"
+  },
+  {
+    "nome": "VITE_SSO_OBSERVAR_OS_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Observar os reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_OCORRENCIAS_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ocorrencias revisao"
+  },
+  {
+    "nome": "VITE_SSO_OCORRENCIAS_SEM_OS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Ocorrencias sem os"
+  },
+  {
+    "nome": "VITE_SSO_OCORRENCIAS_SEM_OS_REFERENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Ocorrencias sem os referencia"
+  },
+  {
+    "nome": "VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Orcamento operacional"
+  },
+  {
+    "nome": "VITE_SSO_ORCAMENTO_PARCELAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Orcamento parcelas"
+  },
+  {
+    "nome": "VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Orcamento sem oportunidade"
+  },
+  {
+    "nome": "VITE_SSO_ORDENS_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Ordens chamado"
+  },
+  {
+    "nome": "VITE_SSO_ORFAOS_FILA_ADMIN_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Orfaos fila admin"
+  },
+  {
+    "nome": "VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Origem efetiva ciclo"
+  },
+  {
+    "nome": "VITE_SSO_ORIGEM_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Origem lote"
+  },
+  {
+    "nome": "VITE_SSO_ORIGEM_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Origem rotina"
+  },
+  {
+    "nome": "VITE_SSO_ORIGENS_DESPESA_INCOMPLETAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Origens despesa incompletas"
+  },
+  {
+    "nome": "VITE_SSO_ORIGENS_INTERNAS_MEDIADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Origens internas mediadas"
+  },
+  {
+    "nome": "VITE_SSO_OS_CHAMADO_FOTOGRAFIA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Os chamado fotografia"
+  },
+  {
+    "nome": "VITE_SSO_OS_CICLO_POSTERIOR_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Os ciclo posterior"
+  },
+  {
+    "nome": "VITE_SSO_OS_TRIAGEM_DETALHADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Os triagem detalhada"
+  },
+  {
+    "nome": "VITE_SSO_PAINEL_ORCAMENTOS_OPERACIONAIS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Painel orcamentos operacionais"
+  },
+  {
+    "nome": "VITE_SSO_PARCELA_ADICIONAL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Parcela adicional"
+  },
+  {
+    "nome": "VITE_SSO_PENDENCIAS_FILTRO_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pendencias filtro ativo"
+  },
+  {
+    "nome": "VITE_SSO_PENDENCIAS_RETORNO_APROVADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pendencias retorno aprovado"
+  },
+  {
+    "nome": "VITE_SSO_PENDENCIAS_SEM_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pendencias sem parcela"
+  },
+  {
+    "nome": "VITE_SSO_PENDENCIAS_TECNICAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pendencias tecnicas"
+  },
+  {
+    "nome": "VITE_SSO_PENDENCIA_ORIGEM_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pendencia origem grupo"
+  },
+  {
+    "nome": "VITE_SSO_PERTINENCIA_EVIDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pertinencia evidencia"
+  },
+  {
+    "nome": "VITE_SSO_PESOS_GUTD_AUDITADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pesos gutd auditados"
+  },
+  {
+    "nome": "VITE_SSO_PLANOS_POR_ALVO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Planos por alvo"
+  },
+  {
+    "nome": "VITE_SSO_PMOC_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Pmoc mediado"
+  },
+  {
+    "nome": "VITE_SSO_POLITICA_EQUIPMENT_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Politica equipment"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_ANEXOS_OS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal anexos os"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_ANEXOS_PROPRIOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal anexos proprios"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_CALENDARIO_VISITAS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal calendario visitas"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_CLASSIFICACAO_EXCECAO_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal classificacao excecao"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_COBRANCA_OS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal cobranca os"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_COMUNICACOES_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal comunicacoes"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal materiais"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_PENDENCIAS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal pendencias"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_PENDENCIAS_PUBLICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Portal pendencias publicacao"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_PROPOSTA_OS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal proposta os"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_SITUACAO_OS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal situacao os"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_TIMELINE_OS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal timeline os"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_VISITAS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Portal visitas"
+  },
+  {
+    "nome": "VITE_SSO_PORTAL_VISITAS_PUBLICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Portal visitas publicacao"
+  },
+  {
+    "nome": "VITE_SSO_PRECONDICAO_IMPACTOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Precondicao impactos"
+  },
+  {
+    "nome": "VITE_SSO_PRECONDICAO_IMPACTO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Precondicao impacto mediada"
+  },
+  {
+    "nome": "VITE_SSO_PREFLIGHT_APROVACAO_REVISAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Preflight aprovacao revisao"
+  },
+  {
+    "nome": "VITE_SSO_PREFLIGHT_MIGRACAO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Preflight migracao mediado"
+  },
+  {
+    "nome": "VITE_SSO_PREPARAR_CICLO_VENCIDO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Preparar ciclo vencido"
+  },
+  {
+    "nome": "VITE_SSO_PRESERVAR_CARACTERISTICAS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Preservar caracteristicas grupo"
+  },
+  {
+    "nome": "VITE_SSO_PREVENTIVAS_LEGADAS_LOCAL_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Preventivas legadas local"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_COBERTURA_PERGUNTAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa cobertura perguntas"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_DEVOLUCAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa devolucao"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_EVIDENCIA_RESPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa evidencia resposta"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_FOTOS_DESTINO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa fotos destino"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Previa impedimentos dia"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_IMPEDIMENTOS_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Previa impedimentos parcela"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_MUDANCA_DIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa mudanca dia"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_OCORRENCIA_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa ocorrencia visita"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_ORIGEM_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Previa origem servico"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_PARCELA_DOCUMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Previa parcela documento"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_RECLASSIFICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa reclassificacao"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_SELECAO_COMPOSICAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa selecao composicao"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_VENCIMENTOS_OCORRENCIAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa vencimentos ocorrencias"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_VENCIMENTOS_PLANO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa vencimentos plano"
+  },
+  {
+    "nome": "VITE_SSO_PREVIA_XLSX_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Previa xlsx"
+  },
+  {
+    "nome": "VITE_SSO_PROCESSAMENTOS_DEMORADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Processamentos demorados"
+  },
+  {
+    "nome": "VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Produtor t24 corretivo"
+  },
+  {
+    "nome": "VITE_SSO_PRODUTOR_T24_EMERGENCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Produtor t24 emergencial"
+  },
+  {
+    "nome": "VITE_SSO_PRODUTOR_T24_PREVENTIVO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Produtor t24 preventivo"
+  },
+  {
+    "nome": "VITE_SSO_PROMOCAO_CONTINUIDADE_ATOMICA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Promocao continuidade atomica"
+  },
+  {
+    "nome": "VITE_SSO_PROMOCAO_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Promocao retorno"
+  },
+  {
+    "nome": "VITE_SSO_PROMOCAO_RETORNO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Promocao retorno parcial"
+  },
+  {
+    "nome": "VITE_SSO_PROMOVER_BACKLOG_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Promover backlog chamado"
+  },
+  {
+    "nome": "VITE_SSO_PROPOSTAS_PORTAL_MEDIADAS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Propostas portal mediadas"
+  },
+  {
+    "nome": "VITE_SSO_PROPOSTA_ENCERRAMENTO_OCORRENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Proposta encerramento ocorrencia"
+  },
+  {
+    "nome": "VITE_SSO_PROPOSTA_ITENS_PUBLICOS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Proposta itens publicos"
+  },
+  {
+    "nome": "VITE_SSO_PROPOSTA_PMOC_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Proposta pmoc"
+  },
+  {
+    "nome": "VITE_SSO_PROTOCOLO_REVISAO_1731_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Protocolo revisao 1731"
+  },
+  {
+    "nome": "VITE_SSO_PROVENIENCIA_ROTINA_MODELO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Proveniencia rotina modelo"
+  },
+  {
+    "nome": "VITE_SSO_PROVENIENCIA_SIMULACAO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Proveniencia simulacao"
+  },
+  {
+    "nome": "VITE_SSO_PROXIMO_CICLO_ANCORADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Proximo ciclo ancorado"
+  },
+  {
+    "nome": "VITE_SSO_PUBLICAR_ANEXO_OS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Publicar anexo os"
+  },
+  {
+    "nome": "VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Publicar cobranca os"
+  },
+  {
+    "nome": "VITE_SSO_PUBLICAR_ITENS_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Publicar itens proposta"
+  },
+  {
+    "nome": "VITE_SSO_PUBLICAR_MATERIAIS_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Publicar materiais mediado"
+  },
+  {
+    "nome": "VITE_SSO_PUBLICAR_MATERIAIS_PORTAL_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Publicar materiais portal"
+  },
+  {
+    "nome": "VITE_SSO_PUBLICAR_ORCAMENTO_OPERACIONAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Publicar orcamento operacional"
+  },
+  {
+    "nome": "VITE_SSO_QR_CODIGO_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Qr codigo ativo"
+  },
+  {
+    "nome": "VITE_SSO_QR_CODIGO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Qr codigo grupo"
+  },
+  {
+    "nome": "VITE_SSO_QUADRO_CHAMADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Quadro chamados"
+  },
+  {
+    "nome": "VITE_SSO_QUANTIDADE_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Quantidade grupo"
+  },
+  {
+    "nome": "VITE_SSO_QUANTIDADE_MOTIVADA_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Quantidade motivada grupo"
+  },
+  {
+    "nome": "VITE_SSO_QUARENTENA_CSV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Quarentena csv"
+  },
+  {
+    "nome": "VITE_SSO_RANKING_BACKLOG_ALVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ranking backlog alvo"
+  },
+  {
+    "nome": "VITE_SSO_RANKING_BACKLOG_CONSISTENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ranking backlog consistente"
+  },
+  {
+    "nome": "VITE_SSO_RANKING_RETORNO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ranking retorno parcial"
+  },
+  {
+    "nome": "VITE_SSO_RANKING_UNIFICADO_ENABLED",
+    "padrao": false,
+    "jornada": "backlog",
+    "descricao": "Ranking unificado"
+  },
+  {
+    "nome": "VITE_SSO_RASCUNHO_PLANO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Rascunho plano legado"
+  },
+  {
+    "nome": "VITE_SSO_RASTREABILIDADE_PENDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Rastreabilidade pendencia"
+  },
+  {
+    "nome": "VITE_SSO_RASTREIO_CANDIDATO_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Rastreio candidato servico"
+  },
+  {
+    "nome": "VITE_SSO_RASTREIO_LINHA_MATERIAL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Rastreio linha material"
+  },
+  {
+    "nome": "VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Rateio despesas visita"
+  },
+  {
+    "nome": "VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reabertura reclassificacao"
+  },
+  {
+    "nome": "VITE_SSO_REABRIR_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Reabrir chamado"
+  },
+  {
+    "nome": "VITE_SSO_REABRIR_CONFERENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reabrir conferencia"
+  },
+  {
+    "nome": "VITE_SSO_REABRIR_REJEICAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reabrir rejeicao"
+  },
+  {
+    "nome": "VITE_SSO_REALIZAR_DESPESAS_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Realizar despesas visita"
+  },
+  {
+    "nome": "VITE_SSO_REATESTACAO_COBERTURA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reatestacao cobertura"
+  },
+  {
+    "nome": "VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Recepcao estruturada"
+  },
+  {
+    "nome": "VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recepcao manual envelope"
+  },
+  {
+    "nome": "VITE_SSO_RECEPCAO_MANUAL_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recepcao manual levantamento"
+  },
+  {
+    "nome": "VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibos lotes legados"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_CAPACIDADES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo capacidades"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_CONFIG_EXECUTOR_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "Recibo config executor"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_CONTINUACAO_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Recibo continuacao parcela"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_COPIA_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo copia rotina"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Recibo correcao mediada"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_CORRELACAO_GASTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo correlacao gasto"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_CRIACAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Recibo criacao visita"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_DECISAO_CORRELACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo decisao correlacao"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_DECISAO_PROPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Recibo decisao proposta"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_DEVOLUCAO_PARCIAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo devolucao parcial"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_DISPONIBILIDADE_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "portal",
+    "descricao": "Recibo disponibilidade materiais"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_EDICAO_COMPOSICAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo edicao composicao"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_EVIDENCIA_MATERIAL_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Recibo evidencia material"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_EXIGENCIA_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo exigencia rotina"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Recibo preparacao visita"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_RECEPCAO_MANUAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo recepcao manual"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_SOLICITACAO_RECUPERACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo solicitacao recuperacao"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Recibo tecnico despesa"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_TRANSFERENCIA_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Recibo transferencia visita"
+  },
+  {
+    "nome": "VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recibo vinculo localizacao"
+  },
+  {
+    "nome": "VITE_SSO_RECLASSIFICAR_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Reclassificar grupo"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIACAO_CADEIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reconciliacao cadeia"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIACAO_CICLO_POSTERIOR_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reconciliacao ciclo posterior"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIACAO_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reconciliacao parcela"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIACAO_SERVICO_MATERIAL_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Reconciliacao servico material"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reconciliar legada inerte"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIAR_QUARENTENA_CSV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reconciliar quarentena csv"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIAR_REQUEST_OS_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Reconciliar request os"
+  },
+  {
+    "nome": "VITE_SSO_RECONCILIAR_RESERVA_LEGADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reconciliar reserva legada"
+  },
+  {
+    "nome": "VITE_SSO_RECUPERAR_ATUALIZACAO_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recuperar atualizacao lote"
+  },
+  {
+    "nome": "VITE_SSO_RECUPERAR_INGESTAO_COMPROVANTE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Recuperar ingestao comprovante"
+  },
+  {
+    "nome": "VITE_SSO_RECUPERAR_OBSERVACOES_RESERVA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Recuperar observacoes reserva"
+  },
+  {
+    "nome": "VITE_SSO_RECUPERAR_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Recuperar parcela"
+  },
+  {
+    "nome": "VITE_SSO_REFERENCIAS_FOTO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Referencias foto campo"
+  },
+  {
+    "nome": "VITE_SSO_REFERENCIAS_FOTO_CAMPO_MEDIADAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Referencias foto campo mediadas"
+  },
+  {
+    "nome": "VITE_SSO_REFERENCIAS_RETORNO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Referencias retorno"
+  },
+  {
+    "nome": "VITE_SSO_REFERENCIA_TAREFA_LEGADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Referencia tarefa legada"
+  },
+  {
+    "nome": "VITE_SSO_REGISTRAR_FOTO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Registrar foto grupo"
+  },
+  {
+    "nome": "VITE_SSO_REGISTRAR_OCORRENCIA_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Registrar ocorrencia grupo"
+  },
+  {
+    "nome": "VITE_SSO_REJEICAO_LEVANTAMENTOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Rejeicao levantamentos"
+  },
+  {
+    "nome": "VITE_SSO_RELACAO_PLANO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Relacao plano legado"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_ALOCACAO_PAGAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Relatorio alocacao pagamento"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Relatorio despesas cliente"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_DESPESAS_CLIENTE_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Relatorio despesas cliente mediado"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Relatorio despesas faturaveis"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Relatorio despesas faturaveis mediado"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_DESPESAS_OS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Relatorio despesas os"
+  },
+  {
+    "nome": "VITE_SSO_RELATORIO_DESPESAS_OS_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Relatorio despesas os mediado"
+  },
+  {
+    "nome": "VITE_SSO_REMOVER_CARACTERISTICA_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Remover caracteristica grupo"
+  },
+  {
+    "nome": "VITE_SSO_REPASSE_DESPESAS_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Repasse despesas visita"
+  },
+  {
+    "nome": "VITE_SSO_REPROCESSAR_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reprocessar cronograma"
+  },
+  {
+    "nome": "VITE_SSO_REPROGRAMACAO_ALERTAS_DECLARADOS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Reprogramacao alertas declarados"
+  },
+  {
+    "nome": "VITE_SSO_RESERVAS_ENVIO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reservas envio legado"
+  },
+  {
+    "nome": "VITE_SSO_RESERVAS_EQUIPMENT_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reservas equipment"
+  },
+  {
+    "nome": "VITE_SSO_RESERVAS_EQUIPMENT_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reservas equipment mediada"
+  },
+  {
+    "nome": "VITE_SSO_RESERVA_CRIACAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Reserva criacao visita"
+  },
+  {
+    "nome": "VITE_SSO_RESERVA_RECEPCAO_MANUAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reserva recepcao manual"
+  },
+  {
+    "nome": "VITE_SSO_RESOLUCAO_CONFLITOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resolucao conflitos"
+  },
+  {
+    "nome": "VITE_SSO_RESOLUCAO_HUMANA_PENDENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resolucao humana pendencia"
+  },
+  {
+    "nome": "VITE_SSO_RESOLUCAO_IMPACTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resolucao impacto"
+  },
+  {
+    "nome": "VITE_SSO_RESOLUCAO_MANUAL_FOTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resolucao manual foto"
+  },
+  {
+    "nome": "VITE_SSO_RESOLUCAO_OS_ORIGEM_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resolucao os origem"
+  },
+  {
+    "nome": "VITE_SSO_RESPOSTAS_TARDIAS_T24_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Respostas tardias t24"
+  },
+  {
+    "nome": "VITE_SSO_RESULTADOS_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resultados ativo"
+  },
+  {
+    "nome": "VITE_SSO_RESULTADOS_ATIVO_MEDIADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resultados ativo mediados"
+  },
+  {
+    "nome": "VITE_SSO_RESUMO_CHAMADOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resumo chamados"
+  },
+  {
+    "nome": "VITE_SSO_RESUMO_DESPESAS_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Resumo despesas visita"
+  },
+  {
+    "nome": "VITE_SSO_RESUMO_ESFORCO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Resumo esforco"
+  },
+  {
+    "nome": "VITE_SSO_RESUMO_FOTOS_LOTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resumo fotos lote"
+  },
+  {
+    "nome": "VITE_SSO_RESUMO_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Resumo reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_RETIFICACAO_CLASSIFICACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Retificacao classificacao"
+  },
+  {
+    "nome": "VITE_SSO_RETIFICAR_FONTE_AQUISICAO_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Retificar fonte aquisicao"
+  },
+  {
+    "nome": "VITE_SSO_RETIFICAR_FONTE_UTILIZADA_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Retificar fonte utilizada"
+  },
+  {
+    "nome": "VITE_SSO_RETIFICAR_OS_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Retificar os rotina"
+  },
+  {
+    "nome": "VITE_SSO_RETIFICAR_TRIAGEM_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Retificar triagem"
+  },
+  {
+    "nome": "VITE_SSO_RETIRADA_ANEXO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Retirada anexo"
+  },
+  {
+    "nome": "VITE_SSO_RETIRAR_PENDENCIA_COMPOSICAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Retirar pendencia composicao"
+  },
+  {
+    "nome": "VITE_SSO_RETORNO_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "backlog",
+    "descricao": "Retorno ciclo"
+  },
+  {
+    "nome": "VITE_SSO_RETORNO_PARCIAL_CICLO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Retorno parcial ciclo"
+  },
+  {
+    "nome": "VITE_SSO_RETORNO_PARCIAL_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Retorno parcial mediado"
+  },
+  {
+    "nome": "VITE_SSO_REVALIDAR_PREVIA_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revalidar previa fila"
+  },
+  {
+    "nome": "VITE_SSO_REVALIDAR_VINCULO_CONTEUDO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Revalidar vinculo conteudo"
+  },
+  {
+    "nome": "VITE_SSO_REVERSAO_LOTE_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reversao lote legado"
+  },
+  {
+    "nome": "VITE_SSO_REVERSAO_RASCUNHO_LEGADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Reversao rascunho legado"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_COM_CONTRATOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao com contratos"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_COM_EVIDENCIAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao com evidencias"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao com exigencias"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_CONDICAO_RESOLVIDA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao condicao resolvida"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao contratos mediada"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_LATERAL_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao lateral fila"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_LINHA_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao linha cronograma"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_ORIGENS_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Revisao origens reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_PARCELA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao parcela"
+  },
+  {
+    "nome": "VITE_SSO_REVISAO_QUARENTENA_CSV_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisao quarentena csv"
+  },
+  {
+    "nome": "VITE_SSO_REVISAR_ROTINA_APROVADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revisar rotina aprovada"
+  },
+  {
+    "nome": "VITE_SSO_REVOGAR_AUTORIZACAO_COMPLEMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Revogar autorizacao complemento"
+  },
+  {
+    "nome": "VITE_SSO_SERVICO_EXTRA_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Servico extra"
+  },
+  {
+    "nome": "VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Simulacao manual capacidade"
+  },
+  {
+    "nome": "VITE_SSO_SISTEMAS_DISTRIBUIDOS_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Sistemas distribuidos"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_CICLOS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade ciclos"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_REFERENCIA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade referencia"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_V2_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade v2"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_V3_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade v3"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_V4_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade v4"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_CAPACIDADE_V5_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Snapshot capacidade v5"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_OS_RECONCILIACAO_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Snapshot os reconciliacao"
+  },
+  {
+    "nome": "VITE_SSO_SNAPSHOT_SERVICO_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Snapshot servico mediado"
+  },
+  {
+    "nome": "VITE_SSO_SOLICITAR_RECUPERACAO_FILA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Solicitar recuperacao fila"
+  },
+  {
+    "nome": "VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Substituicao codigos"
+  },
+  {
+    "nome": "VITE_SSO_SUBSTITUICAO_CODIGO_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "estrutura",
+    "descricao": "Substituicao codigo grupo"
+  },
+  {
+    "nome": "VITE_SSO_SUPRESSOES_FERIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Supressoes feriado"
+  },
+  {
+    "nome": "VITE_SSO_SUSPENSAO_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Suspensao chamado"
+  },
+  {
+    "nome": "VITE_SSO_TOLERANCIA_CRONOGRAMA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Tolerancia cronograma"
+  },
+  {
+    "nome": "VITE_SSO_TRANSFERENCIA_CONFIRMADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Transferencia confirmada"
+  },
+  {
+    "nome": "VITE_SSO_TRANSFERENCIA_OS_ENVIADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Transferencia os enviada"
+  },
+  {
+    "nome": "VITE_SSO_TRANSFERENCIA_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Transferencia visita"
+  },
+  {
+    "nome": "VITE_SSO_TRANSFERENCIA_VISITA_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Transferencia visita mediada"
+  },
+  {
+    "nome": "VITE_SSO_TRANSICAO_PLANO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Transicao plano"
+  },
+  {
+    "nome": "VITE_SSO_TRANSICAO_PLANO_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Transicao plano mediada"
+  },
+  {
+    "nome": "VITE_SSO_TRANSICAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Transicao visita"
+  },
+  {
+    "nome": "VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Triagem chamado campo"
+  },
+  {
+    "nome": "VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Triagem ciclo atrasado"
+  },
+  {
+    "nome": "VITE_SSO_TRIAGEM_INTENCAO_OS_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Triagem intencao os"
+  },
+  {
+    "nome": "VITE_SSO_TRIAGEM_INTENCOES_REPROGRAMACAO_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "descricao": "Triagem intencoes reprogramacao"
+  },
+  {
+    "nome": "VITE_SSO_TRIAGEM_ORIGEM_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Triagem origem campo"
+  },
+  {
+    "nome": "VITE_SSO_TRIAGEM_SYNC_EQUIPE_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Triagem sync equipe"
+  },
+  {
+    "nome": "VITE_SSO_ULTIMA_PENDENCIA_EXCECAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Ultima pendencia excecao"
+  },
+  {
+    "nome": "VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Uniao chamado campo"
+  },
+  {
+    "nome": "VITE_SSO_UPLOAD_EVIDENCIA_RESPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Upload evidencia resposta"
+  },
+  {
+    "nome": "VITE_SSO_VALIDACAO_RESPOSTA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Validacao resposta"
+  },
+  {
+    "nome": "VITE_SSO_VIGENCIA_ROTINA_SERIE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vigencia rotina serie"
+  },
+  {
+    "nome": "VITE_SSO_VINCULAR_BACKLOG_CHAMADO_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Vincular backlog chamado"
+  },
+  {
+    "nome": "VITE_SSO_VINCULAR_DOCUMENTO_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vincular documento ativo"
+  },
+  {
+    "nome": "VITE_SSO_VINCULAR_FOTO_ATIVO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vincular foto ativo"
+  },
+  {
+    "nome": "VITE_SSO_VINCULAR_FOTO_VERIFICADA_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vincular foto verificada grupo"
+  },
+  {
+    "nome": "VITE_SSO_VINCULAR_LOCALIZACAO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vincular localizacao"
+  },
+  {
+    "nome": "VITE_SSO_VINCULAR_ROTINA_SERIE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vincular rotina serie"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_ASSESSMENT_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vinculo assessment mediado"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_ATIVO_LEVANTAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vinculo ativo levantamento"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_CICLO_PMOC_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vinculo ciclo pmoc"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_CONTINUIDADE_MEDIADO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vinculo continuidade mediado"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_INTERVALO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Vinculo intervalo"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_OS_GRUPO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Vinculo os grupo"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_OS_ROTINA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "descricao": "Vinculo os rotina"
+  },
+  {
+    "nome": "VITE_SSO_VINCULO_RESPOSTA_SERVICO_ENABLED",
+    "padrao": false,
+    "jornada": "faturaveis",
+    "descricao": "Vinculo resposta servico"
+  },
+  {
+    "nome": "VITE_SSO_VISAO_ESCOPO_EVIDENCIAS_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Visao escopo evidencias"
+  },
+  {
+    "nome": "VITE_SSO_VISIBILIDADE_MATERIAIS_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Visibilidade materiais"
+  },
+  {
+    "nome": "VITE_SSO_VISIBILIDADE_MATERIAIS_MEDIADA_ENABLED",
+    "padrao": false,
+    "jornada": "materiais",
+    "descricao": "Visibilidade materiais mediada"
+  },
+  {
+    "nome": "VITE_SSO_VISIBILIDADE_ORCAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "Visibilidade orcamento"
+  }
+]

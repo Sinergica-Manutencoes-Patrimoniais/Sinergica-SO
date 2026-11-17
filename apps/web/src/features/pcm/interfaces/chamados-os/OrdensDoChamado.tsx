@@ -1,10 +1,16 @@
+import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
+import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { useOrdensDoChamado } from "../../application/chamados-os-queries";
 import { carregarResumosChamados } from "../../application/resumos-chamados-lote";
 import { resumirProgressoChamado } from "../../domain/progresso-chamado";
-import { OrdensChamadoFotografia } from "./OrdensChamadoFotografia";
 import { MateriaisDaOrdem } from "./MateriaisDaOrdem";
+import { OrdensChamadoFotografia } from "./OrdensChamadoFotografia";
+
+const FLAG_FOTOGRAFIA = "VITE_SSO_OS_CHAMADO_FOTOGRAFIA_ENABLED" as const;
+const FLAG_RESUMO = "VITE_SSO_RESUMO_CHAMADOS_ENABLED" as const;
+const FLAG_ORDENS_CHAMADO = "VITE_SSO_ORDENS_CHAMADO_ENABLED" as const;
 
 type Leitura = {
   listar(
@@ -15,10 +21,24 @@ type Leitura = {
     signal?: AbortSignal,
   ): Promise<{ id: string; numero: string; titulo: string; status: string }[]>;
 };
-type Props = { usuario: string; cliente: string; chamado: string; leitura: Leitura; onAbrirOs?: (id: string) => void };
+type Props = {
+  usuario: string;
+  cliente: string;
+  chamado: string;
+  leitura: Leitura;
+  onAbrirOs?: (id: string) => void;
+};
 export function OrdensDoChamado(props: Props) {
-  if (import.meta.env.VITE_SSO_OS_CHAMADO_FOTOGRAFIA_ENABLED === "true") return <OrdensChamadoFotografia
-    key={`${props.usuario}:${props.cliente}:${props.chamado}`} usuario={props.usuario} cliente={props.cliente} chamado={props.chamado} onAbrirOs={props.onAbrirOs} />;
+  if (flagLigada(FLAG_FOTOGRAFIA))
+    return (
+      <OrdensChamadoFotografia
+        key={`${props.usuario}:${props.cliente}:${props.chamado}`}
+        usuario={props.usuario}
+        cliente={props.cliente}
+        chamado={props.chamado}
+        onAbrirOs={props.onAbrirOs}
+      />
+    );
   return <OrdensLegadas {...props} />;
 }
 function OrdensLegadas({ usuario, cliente, chamado, leitura, onAbrirOs }: Props) {
@@ -28,25 +48,39 @@ function OrdensLegadas({ usuario, cliente, chamado, leitura, onAbrirOs }: Props)
     queryKey: ["s167-resumo-chamados", usuario, cliente, chamado],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== usuario || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== usuario || signal.aborted)
+        throw new Error("Sessão alterada.");
       const resultado = await carregarResumosChamados([chamado], signal);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== usuario || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== usuario || signal.aborted)
+        throw new Error("Sessão alterada.");
       return resultado;
     },
-    enabled: import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && maisDeUmaPagina && !consulta.isFetching && !consulta.isError,
+    enabled:
+      flagLigada(FLAG_RESUMO) && maisDeUmaPagina && !consulta.isFetching && !consulta.isError,
     staleTime: 0,
     refetchInterval: 30000,
   });
   const ordens = consulta.data?.pages.flat() ?? [];
   const completa =
-    !consulta.isFetching && !consulta.isError && !!consulta.data && !consulta.hasNextPage && consulta.data.pages.length === 1;
+    !consulta.isFetching &&
+    !consulta.isError &&
+    !!consulta.data &&
+    !consulta.hasNextPage &&
+    consulta.data.pages.length === 1;
   const progressoLocal = resumirProgressoChamado(
     ordens.map((os) => os.status),
     completa,
   );
-  const progresso = import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && maisDeUmaPagina && !consulta.isFetching && !consulta.isError && !resumoServidor.isFetching && !resumoServidor.isError
-    ? resumoServidor.data?.[chamado] ?? null : progressoLocal;
+  const progresso =
+    flagLigada(FLAG_RESUMO) &&
+    maisDeUmaPagina &&
+    !consulta.isFetching &&
+    !consulta.isError &&
+    !resumoServidor.isFetching &&
+    !resumoServidor.isError
+      ? (resumoServidor.data?.[chamado] ?? null)
+      : progressoLocal;
   return (
     <section className="border-t border-line-soft px-4 py-3">
       <h3 className="font-semibold">Ordens de Serviço vinculadas</h3>
@@ -59,9 +93,12 @@ function OrdensLegadas({ usuario, cliente, chamado, leitura, onAbrirOs }: Props)
       {!consulta.isFetching && !consulta.isError && consulta.hasNextPage && (
         <p>Carregue mais OS para consultar a lista.</p>
       )}
-      {!consulta.isFetching && !consulta.isError && consulta.data && !consulta.hasNextPage && maisDeUmaPagina && !progresso && (
-        <p>Lista paginada: contagem integral indisponível sem fotografia única.</p>
-      )}
+      {!consulta.isFetching &&
+        !consulta.isError &&
+        consulta.data &&
+        !consulta.hasNextPage &&
+        maisDeUmaPagina &&
+        !progresso && <p>Lista paginada: contagem integral indisponível sem fotografia única.</p>}
       {consulta.isFetching && <output>Consultando Ordens de Serviço…</output>}
       {consulta.isError && (
         <div role="alert">
@@ -79,8 +116,17 @@ function OrdensLegadas({ usuario, cliente, chamado, leitura, onAbrirOs }: Props)
           {ordens.map((os) => (
             <li key={os.id}>
               {os.numero} · {os.titulo} · {os.status}
-              {onAbrirOs && <button type="button" onClick={() => onAbrirOs(os.id)}>Abrir OS {os.numero}</button>}
-              <MateriaisDaOrdem usuario={usuario} cliente={cliente} ordem={os.id} numero={os.numero} />
+              {onAbrirOs && (
+                <button type="button" onClick={() => onAbrirOs(os.id)}>
+                  Abrir OS {os.numero}
+                </button>
+              )}
+              <MateriaisDaOrdem
+                usuario={usuario}
+                cliente={cliente}
+                ordem={os.id}
+                numero={os.numero}
+              />
             </li>
           ))}
         </ul>
@@ -94,10 +140,22 @@ function OrdensLegadas({ usuario, cliente, chamado, leitura, onAbrirOs }: Props)
   );
 }
 export function EntradaOrdensChamado({
-  habilitado,
   chamadoEsperado,
+  podeAdministrar,
   ...props
-}: Props & { habilitado: string | undefined; chamadoEsperado: string }) {
-  if (habilitado !== "true" || props.chamado !== chamadoEsperado) return null;
+}: Props & { chamadoEsperado: string; podeAdministrar: boolean }) {
+  if (props.chamado !== chamadoEsperado) return null;
+  if (!flagLigada(FLAG_ORDENS_CHAMADO)) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Ordens de Serviço vinculadas ao Chamado"
+        podeAdministrar={podeAdministrar}
+        faltando={[
+          FLAG_ORDENS_CHAMADO,
+          FLAGS_SSO.find((f) => f.nome === FLAG_ORDENS_CHAMADO)?.gate,
+        ].filter((v): v is string => Boolean(v))}
+      />
+    );
+  }
   return <OrdensDoChamado {...props} />;
 }
