@@ -29,7 +29,7 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S27_
+_15 concluídas no histórico · maior ID usado: E00-S28_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -46,6 +46,7 @@ _15 concluídas no histórico · maior ID usado: E00-S27_
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 | E00-S26 | Capacidades sensíveis ponta a ponta (planejar, validar, aprovar, cancelar, exportar, ver custo, administrar) | — | Especificada (2026-11-17) — BL 005 do Pacote Consolidado. Tier arquitetural | [spec](../../specs/E00-S26-capacidades-sensiveis/spec.md) |
 | E00-S27 | Revogação imediata de acesso — sessão, cache e JWT carimbado | — | Especificada (2026-11-17) — BL 006 do Pacote Consolidado. **Exposição de segurança aberta hoje.** Depende de E00-S26 | [spec](../../specs/E00-S27-revogacao-imediata/spec.md) |
+| E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | — | Especificada (2026-11-17) — 694 flags `VITE_SSO_*` usadas e nunca declaradas, 227 `return null` silenciosos. Par de E01-S188 pelo lado do front | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
 _75 concluídas no histórico · maior ID usado: E01-S198_
