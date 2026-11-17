@@ -4,7 +4,18 @@
 -- Rodar com `supabase test db` (requer Docker/Supabase local).
 begin;
 set local app.auvo_sync_write = 'true';
-select plan(16);
+select plan(18);
+
+-- RLS/grant: o wrapper é a única superfície nova desta story — provar o revoke/grant da própria
+-- migration 1854 (negado pra anon/public, permitido pra authenticated), não só herdar de 0890.
+select ok(
+  not has_function_privilege('anon','pcm.sso_liberar_escopo_backlog(uuid,uuid,uuid,integer,uuid,text,text)','EXECUTE'),
+  'anon não tem EXECUTE em sso_liberar_escopo_backlog'
+);
+select ok(
+  has_function_privilege('authenticated','pcm.sso_liberar_escopo_backlog(uuid,uuid,uuid,integer,uuid,text,text)','EXECUTE'),
+  'authenticated tem EXECUTE em sso_liberar_escopo_backlog (terceiro pilar de ativação, 1839)'
+);
 
 -- 0) o wrapper delega o gate de 0890 — sem bypass. Gates todos fechados (default).
 select throws_ok(
