@@ -2,7 +2,7 @@
 
 **Story:** E01-S190 · **Owner:** _(marcar antes de codar)_ · **Created:** 2026-11-13
 **Feature Branch (planejada):** `feat/E01-S190-onda-zero-navegacao`
-**Status:** Especificada — implementação não iniciada. **Exige aceite do Fabrício antes de codar** (ver Decisões pendentes).
+**Status:** Especificada e **desbloqueada em 2026-11-17** pelas respostas 26/27 do Fabrício (ver Decisões resolvidas). Implementação não iniciada.
 
 **Input:** Reanálise do Fabrício de 12/11/2026, seção 7 ("Simplificação recomendada") e decisões solicitadas 1 e 6.
 
@@ -19,14 +19,29 @@ estrutura) ficaram separados em três entradas de menu.
 **O código de banco e integrações é preservado.** A mudança é de navegação, nomenclatura e
 agrupamento — nada de regra de negócio é reescrito.
 
-## Decisões pendentes — bloqueiam o início
+## Decisões resolvidas — 2026-11-17
 
-Esta story **não pode começar** sem resposta a duas perguntas da reanálise (26 e 27):
+As perguntas 26 e 27 da reanálise foram respondidas pelo Fabrício. Texto de referência em
+`docs/Apontamentos/Pacote-Consolidado-2026-11-13-confronto.md`, seção 0.
 
-1. Assessment vira **tipo de Inspeção** chamado "Diagnóstico Inicial do Cliente"? E PMOC vira **modalidade de Plano de Manutenção**?
-2. Clientes, Sistemas e Componentes se reúnem em **"Clientes e Estrutura"**, com entrada pela Visão 360?
+1. **Assessment e PMOC — sim, com ajuste de nomenclatura e escopo.** Assessment **deixa de existir
+   como módulo independente**; sua função útil vira um tipo de Inspeção chamado **"Diagnóstico
+   Inicial do Cliente"**, também aplicável à implantação inicial. **PMOC vira uma modalidade do
+   Plano de Manutenção**, com campos, documentos, responsabilidades e exigências legais próprias;
+   pode ter **visão filtrada específica**, mas **não** mantém módulo nem cadastro independentes que
+   dupliquem o Plano de Manutenção.
+2. **"Clientes e Estrutura" — sim, na navegação e na experiência do usuário.** Entrada única; o
+   usuário acessa o cliente e, pela **Visão 360**, consulta e administra a cadeia
+   `Cliente → Áreas → Locais → Sistemas → Equipamentos → Componentes ou Grupos quantitativos`.
+   Há também **pesquisa global da estrutura** dentro dessa área.
 
-Se a resposta for não a qualquer uma, o escopo correspondente sai e a story encolhe.
+**Restrição dura que acompanha a decisão 2 — vale como regra, não como preferência:**
+a unificação é **de menu e de jornada**. Cliente, Local, Sistema, Equipamento, Componente e Grupo
+quantitativo **continuam entidades diferentes, com regras e vínculos próprios**. Não devem virar um
+único tipo de cadastro nem uma única tabela genérica. Sistemas e Componentes perdem a entrada
+principal no menu, mas continuam separados no modelo técnico. A integração com o Auvo respeita o
+tipo: **Sistemas e equipamentos controlados** podem ter vínculo no Auvo; **Componentes e Grupos
+quantitativos permanecem apenas no SSO**. Qualquer PR que funda essas entidades é SPEC_DEVIATION.
 
 ## User Scenarios & Testing
 
@@ -53,6 +68,8 @@ Se a resposta for não a qualquer uma, o escopo correspondente sai e a story enc
 - **AC-4:** Dado o menu principal, quando reorganizado, então agrupa em **Clientes e Estrutura** (entrada pela Visão 360), **Planejamento e Visitas** (agenda e visitas juntas), **Central de Pendências** (com filtros por origem e decisão do PCM) e **Relatórios** (uma área, visões por finalidade).
 - **AC-5:** Dados tipos, categorias, grupos e palavras-chave, quando o menu for reorganizado, então eles saem do menu principal para **Configurações administrativas**, visíveis apenas a perfis autorizados.
 - **AC-6:** Dado um perfil sem autorização para uma área, quando abrir o sistema, então a área não aparece no menu — ocultar é consequência da permissão, nunca uma lista fixa por papel.
+- **AC-9:** Dentro de "Clientes e Estrutura", quando o usuário pesquisar por nome, código ou TAG, então a **pesquisa global da estrutura** devolve resultados de Local, Sistema, Equipamento, Componente e Grupo quantitativo **identificando o tipo de cada um** — nunca como itens de um tipo só.
+- **AC-10:** Dada a jornada pela Visão 360, quando o usuário navegar `Cliente → Área → Local → Sistema → Equipamento → Componente/Grupo`, então cada nível abre a tela própria da sua entidade, com as regras e vínculos dela preservados.
 
 ### US3 — Nada se perde na consolidação (Priority: P1)
 
@@ -77,6 +94,7 @@ Se a resposta for não a qualquer uma, o escopo correspondente sai e a story enc
 ### Functional Requirements
 
 - **FR-001:** Consolidar Assessment em tipo de Inspeção e PMOC em modalidade de Plano, preservando identidade e histórico, conforme AC-1, AC-2, AC-3.
+- **FR-005:** Prover pesquisa global da estrutura com tipo explícito por resultado, conforme AC-9, AC-10.
 - **FR-002:** Reorganizar o menu principal em áreas, movendo catálogos administrativos para Configurações, conforme AC-4, AC-5, AC-6.
 - **FR-003:** Garantir ausência de regressão de alcance, conforme AC-7, AC-8.
 - **FR-004:** Manter rotas antigas respondendo por redirecionamento, não por erro.
@@ -96,11 +114,14 @@ ser lista de **áreas**, cada uma com visões.
 
 ## Assumptions & Dependencies
 
-- **Bloqueada pelas decisões acima.** Sem aceite, não começa.
+- **Desbloqueada** em 2026-11-17 (decisões 26/27 respondidas).
 - Independente de E01-S188 e E01-S189 em código, mas o Fabrício pede que seja feita **antes** da abertura ampla de gates.
 - Não depende de credencial externa.
 
 ## Fora de escopo
+
+- Fundir entidades de estrutura em tabela genérica — proibido pela restrição da decisão 2.
+- Fechar o anexo "Estrutura técnica" (Equipamento × Componente × Grupo quantitativo): continua **Em validação** no Pacote Consolidado.
 
 - Reescrever regra de negócio de Inspeção, Plano ou PMOC.
 - Redesenho visual das telas internas; aqui é agrupamento e nomenclatura.
