@@ -1,0 +1,730 @@
+
+Pacote consolidado do Sinérgica SO
+Playbook funcional  Auditoria  Simplificação  Backlog executável
+Destinatário  Lucas e equipe TríviaResponsável funcional  Fabrício Medeiros e Sinérgica Manutenções PatrimoniaisVersão  1.0Data  13 de novembro de 2026
+Regras aprovadas orientam implementação. Anexos em validação não autorizam desenvolvimento definitivo.
+
+Destinatário: Lucas e equipe Trívia
+Responsável funcional: Fabrício Medeiros e Sinérgica Manutenções Patrimoniais
+Versão: 1.0
+Data: 13/11/2026
+Finalidade
+Este pacote consolida as decisões funcionais aprovadas para simplificar e evoluir o Sinérgica SO. Ele deve orientar produto, desenvolvimento, testes e homologação. O objetivo imediato é corrigir as fundações do fluxo operacional sem ampliar a complexidade do sistema.
+Regra de precedência
+Quando este pacote divergir de documentos, protótipos, planilhas, telas ou histórias antigas, prevalecem as regras aprovadas aqui. Os anexos marcados como Em validação registram o raciocínio atual, mas não autorizam implementação definitiva.
+Situação dos blocos
+Bloco
+Situação
+Orientação
+Assessment, PMOC e Preventivas
+Aprovado
+Pode orientar implementação
+Pendências, Backlog, Chamados, Demanda e OS
+Aprovado
+Pode orientar implementação
+Planejamento, Visitas, Agenda, capacidade e deslocamento
+Aprovado
+Pode orientar implementação
+T menos 24, Auvo, execução e retorno
+Aprovado
+Pode orientar implementação
+Materiais, orçamento, despesas e faturamento
+Aprovado
+Pode orientar implementação
+Campo, staging, API e MCP
+Aprovado como arquitetura
+Implementar por etapas
+Perfis, permissões e navegação
+Aprovado
+Pode orientar implementação
+Estrutura técnica final
+Em validação
+Não fechar implementação definitiva
+Relatórios e Área do Cliente
+Em validação
+Não fechar implementação definitiva
+Cockpit e indicadores iniciais
+Próxima rodada
+Não bloqueia P0 e P1
+
+Resultado esperado para esta entrega
+corrigir a separação entre Chamado, OS, Visita, Pendência e Backlog;
+adotar Visita como fonte oficial de agenda e planejamento;
+unificar o envio de uma tarefa Auvo por OS em T menos 24;
+simplificar menus, permissões e rotinas do PCM;
+implantar materiais e faturáveis sem criar um estoque ou conferência burocrática;
+preparar uma API de domínio segura antes da integração conversacional;
+preservar os temas ainda não validados para a próxima rodada.
+Playbook funcional aprovado
+Situação: Aprovado
+1. Princípios do SSO
+O SSO é o controlador oficial da gestão da manutenção, planejamento, agenda, Visitas, despesas e acompanhamento operacional.
+O Auvo é o braço de execução em campo.
+Cliente, equipamentos controlados, Sistemas agregadores, tipos de tarefa e questionários possuem integração com o Auvo conforme as regras de cada entidade.
+Uma OS do SSO corresponde a uma tarefa no Auvo.
+Um Chamado pode possuir várias OS.
+Uma Visita pode reunir várias OS de naturezas diferentes.
+Nenhuma interface externa deve gravar diretamente na estrutura oficial sem validação e auditoria.
+2. Inspeção, Assessment e Preventivas
+Assessment não existirá como módulo independente.
+Diagnóstico inicial será uma Inspeção do tipo Inicial ou Implantação.
+PMOC será uma modalidade do Plano de Manutenção com requisitos legais e documentais próprios.
+Preventivas do período aparecem na fila Preventivas do Kanban para planejamento pelo PCM.
+Resultado preventivo pode ser: OK, Não OK, Não aplicável ou Corrigido.
+Preventiva executada como Não OK é concluída e gera Pendências técnicas; a falha não mantém a preventiva aberta.
+Uma falha não cria automaticamente um Chamado ou uma OS.
+3. Pendências, Backlog, Chamados, Demanda e OS
+Pendência é um achado ainda sem compromisso de execução.
+Pendências preventivas são agrupadas por equipamento para análise humana.
+O Backlog é único por cliente e contém itens validados e priorizáveis para tratamento futuro.
+GUT pode priorizar o Backlog.
+Somente os itens selecionados pelo PCM entram no Backlog; itens sem intenção de tratamento não devem poluí-lo.
+Ao selecionar escopo do Backlog, o PCM cria um Chamado e o envia para Demanda.
+Demanda é um estado do Chamado pronto para planejamento, e não uma entidade independente.
+Um Chamado pode agrupar várias Pendências relacionadas e possuir várias OS.
+Uma OS pode ser encerrada sem encerrar o Chamado.
+O Chamado somente é encerrado após as OS necessárias e a validação do PCM.
+Chamado adiado por curto prazo retorna para Demanda.
+Escopo postergado por prazo longo pode voltar ao Backlog com motivo e histórico preservados.
+OS aberta no Auvo sem ID de Chamado cria OS e Chamado provisórios no SSO e entra em conciliação do PCM.
+4. Kanban operacional
+Fluxo aprovado:
+Solicitações | Preventivas | Campo a conciliar | Demanda | Planejamento | Em execução | Validação PCM | Finalizado
+Backlog fica disponível em painel lateral priorizado, e não como etapa comum do Kanban.
+Cancelado permanece como situação consultável e histórico, não como coluna cotidiana obrigatória.
+Solicitação, Preventiva e Campo a conciliar são filas de entrada.
+Demanda, Planejamento, Em execução, Validação e Finalizado são etapas do tratamento.
+5. Visita, cronograma, agenda e capacidade
+Visita é o compromisso de atendimento de um cliente em determinada data, período e equipe.
+A Visita contém várias OS, inclusive preventivas, corretivas, solicitações, melhorias e levantamentos.
+O cronograma contratual gera as Visitas recorrentes.
+O cadastro contratual informa frequência, dia fixo vigente, horas por Visita, período preferencial e regras específicas.
+Alteração permanente de dia possui data de vigência, preserva o histórico e recalcula apenas o futuro.
+Feriado no dia contratual elimina a Visita semanal, sem reposição automática e sem contá-la como não executada.
+Rotinas técnicas por calendário não são eliminadas pelo feriado; continuam pendentes conforme sua regra.
+Visita pode ser prevista, em planejamento, confirmada, enviada ao Auvo, em andamento, concluída, reprogramada, cancelada ou dispensada por feriado.
+Visita extra utiliza o mesmo fluxo, identificada como extra.
+Agenda por técnico e calendário por cliente são projeções das mesmas Visitas, não cadastros paralelos.
+Alertas de capacidade, conflito, ausência, especialidade, certificação e perfil do cliente não bloqueiam o PCM.
+É permitido planejar carga estimada superior à jornada; o sistema alerta e registra ciência.
+6. Deslocamento e jornada
+O deslocamento é opcional no planejamento e pode ser sugerido por cliente e editado na Visita.
+Enquadramento do deslocamento:
+Trajeto residencial - não computado: residência para primeiro cliente; último cliente para residência; inclusive quando o veículo da empresa está sob guarda do técnico.
+Deslocamento operacional - computado: escritório para cliente; cliente para cliente; cliente para escritório; retirada ou entrega realizada a serviço.
+Origem e destino possíveis: residência, escritório, Visita anterior/próxima ou outro.
+Deslocamento computável entra na jornada e ocupa a agenda.
+O sistema calcula tempo computável e eventual excedente a validar; não classifica automaticamente como hora extra.
+O deslocamento não reduz automaticamente as horas contratadas de atendimento do cliente.
+Tempo de deslocamento e despesa de deslocamento são informações diferentes.
+7. T-24 e integração com o Auvo
+A confirmação da Visita pelo PCM autoriza o agendamento do envio.
+Momento de envio: início da Visita menos 24 horas.
+Confirmação feita antes de T-24 deixa as tarefas programadas.
+Confirmação feita dentro de T-24 envia imediatamente.
+Visita não confirmada não gera tarefas e aparece como exceção.
+Confirmação do cliente não é obrigatória por padrão; pode existir para clientes específicos.
+Cada OS gera exatamente uma tarefa no Auvo.
+O ID externo da OS garante idempotência.
+Reprogramação antes do envio apenas recalcula T-24.
+Reprogramação após o envio atualiza a mesma tarefa.
+OS que retorna para Demanda mantém a tarefa atrasada no Auvo; no novo planejamento, a tarefa existente é atualizada.
+Retorno do Auvo atualiza a OS e a envia para Validação PCM; não encerra automaticamente o Chamado.
+Falhas de integração possuem tentativas automáticas, alerta, reprocessamento e nunca apagam o planejamento local.
+8. Materiais, aquisições, despesas, orçamento e faturamento
+O técnico registra no Auvo a necessidade de material e informações de campo.
+O texto original é preservado no SSO.
+Separação em itens estruturados é opcional; formatos padronizados podem ser convertidos deterministicamente.
+O PCM define responsável, impacto na execução, necessidade de orçamento e situação.
+Responsável pela aquisição: Cliente ou Sinérgica.
+Cliente pode informar disponibilidade; isso não equivale a conferência técnica.
+Material faltante ou incorreto encontrado na execução reabre ou atualiza a pendência existente.
+Técnico não lança custos e despesas no SSO; o PCM faz o tratamento administrativo.
+Material da Sinérgica pode ter custo de aquisição, custo operacional, tributos, margem e preço de venda.
+Fator 1,5 significa preço equivalente a 150% do custo, ou markup de 50%, e não 1,5%.
+Tributos e parâmetros são configuráveis e não ficam fixos no código.
+Orçamento operacional é opcional e diferente de proposta comercial e orçamento gerencial.
+Aprovação pode ocorrer no portal ou ser registrada pelo PCM a partir de comunicação externa.
+Cliente nunca visualiza custo interno, nota de aquisição, markup ou margem.
+Despesas podem estar ligadas a Visita, OS, Chamado ou cliente e são classificadas como internas, faturáveis, contratuais ou cobertas por orçamento.
+Item faturável nasce da operação, possui origem única e é validado pelo Financeiro antes da cobrança.
+Estoque completo não faz parte da primeira etapa.
+9. Interfaces de campo, API e MCP
+Técnico de manutenção executa pelo Auvo.
+Engenheiro, inspetor ou cadastrador utiliza o Módulo de Campo.
+PCM valida e organiza pelo SSO administrativo.
+Módulo de Campo grava coletas em staging, nunca diretamente no cadastro oficial.
+API do SSO aplica autenticação, autorização, validações, auditoria e idempotência.
+MCP expõe ferramentas controladas para ChatGPT, Claude ou outras IAs e utiliza a API; não acessa o banco diretamente.
+Conversa por IA pode consultar estrutura, criar lotes de levantamento, propor locais e ativos, importar documentos e enviar para validação.
+Ferramentas genéricas de SQL não serão expostas.
+Arquitetura híbrida: interface estruturada para captura repetitiva/offline; chat para análise, consulta, importação e cadastro assistido.
+10. Perfis, permissões e navegação
+Grupos funcionais iniciais: Administrador, Gestor de Engenharia/PCM, Operador PCM, Inspetor/Engenharia, Financeiro, Comercial e Cliente.
+Grupos são editáveis e novos grupos podem ser criados.
+Pessoas não ficam codificadas nas regras; recebem grupos e capacidades.
+Capacidades sensíveis incluem planejar, validar, aprovar, cancelar, exportar, visualizar valores internos e administrar usuários/configurações.
+Técnico de manutenção não utiliza o SSO nesta fase; trabalha pelo Auvo.
+Inspetor cria coletas e sugestões, mas não aprova o próprio levantamento nem altera diretamente o cadastro oficial.
+Operador PCM executa a rotina de Chamados, OS, planejamento, validação, conciliação e materiais conforme suas capacidades.
+Gestor PCM possui capacidades de aprovação, suspensão, cancelamento e gestão da operação.
+Financeiro consulta a origem operacional, mas não altera a operação.
+Cliente acessa somente os dados permitidos do próprio condomínio.
+Ações sensíveis exigem permissão específica e auditoria.
+Menu é organizado por função e mostra somente módulos e ações pertinentes.
+API, MCP e Módulo de Campo utilizam a identidade e as permissões do usuário.
+Revogação de acesso e desativação de usuário devem produzir efeito imediato.
+Auditoria e lacunas
+Situação: Aprovado
+Critérios
+Aderente
+Parcialmente aderente
+Implementado com regra incorreta
+Ausente
+Obsoleto ou duplicado
+Dependente de integração ou decisão
+Achados consolidados
+Tema
+Situação
+Achado principal
+Assessment
+Obsoleto ou duplicado
+Surgiu como módulo separado, mas suas funções pertencem a Inspeções.
+PMOC
+Parcialmente aderente
+Existe estrutura própria, porém deverá convergir para Plano de Manutenção com modalidade PMOC.
+Preventivas no Kanban
+Parcialmente aderente
+A fila é necessária, mas origem e etapa estão misturadas no mesmo modelo de status.
+Chamado × OS
+Implementado com regra incorreta
+Há documentação e UI tratando ambos como o mesmo item; o aprovado é 1 Chamado para várias OS.
+Backlog GUT
+Implementado com regra incorreta
+Tela atual prioriza OS abertas e permite confirmar Chamado; o Backlog aprovado antecede Chamado e OS.
+Demanda
+Ausente
+Não aparece claramente como etapa do Chamado liberado e ainda não planejado.
+Validação PCM
+Ausente/parcial
+Retorno de execução precisa de etapa explícita antes do encerramento.
+Agenda do Técnico
+Obsoleto ou duplicado
+Cadastro manual separado mostra dados diferentes do calendário das OS.
+Visita
+Ausente/parcial
+Não está consolidada como contêiner canônico de cliente, data, equipe e várias OS.
+Capacidade
+Parcialmente aderente
+Existem horários e agenda, mas não cálculo integrado por Visita e OS.
+Deslocamento
+Ausente
+Falta enquadramento residencial versus operacional e impacto na jornada.
+T-24
+Parcialmente aderente
+Existem gatilhos concorrentes: criação imediata, ao planejar e botão manual. Falta fluxo único comprovado ponta a ponta.
+Integração Auvo
+Parcialmente aderente
+Existem fundamentos de idempotência, sync e retry; falta unificação do gatilho e validação real do contrato.
+Materiais
+Ausente/parcial
+Não existe fluxo operacional consolidado no PCM.
+Despesas
+Parcialmente aderente
+Estrutura existe, mas fonte Auvo apresentou falhas e o responsável aprovado é o PCM.
+Orçamento operacional
+Parcialmente aderente
+Há estruturas comerciais/portal, porém falta ligação simples com OS, material e aquisição.
+Faturáveis
+Parcialmente aderente
+Falta comprovar origem operacional única até o Financeiro.
+Estoque completo
+Obsoleto para a fase atual
+Introduziria complexidade sem necessidade operacional imediata.
+API/MCP
+Ausente
+Deve existir API de domínio e MCP controlado sobre ela.
+Staging de levantamento
+Parcialmente aderente
+Há importação e iniciativas de levantamento, mas falta contrato único entre campo, IA e cadastro oficial.
+Autenticação
+Aderente
+Fundação de autenticação e bloqueio de conta sem perfil já existe.
+Permissão por módulo
+Aderente como fundação
+Leitura/escrita por módulo existe, mas é ampla para ações sensíveis.
+Grupos de usuários
+Parcialmente aderente
+Estrutura existe; edição real e comportamento no navegador ainda precisam de validação completa.
+Permissões por ação
+Ausente
+Aprovar, cancelar, validar, exportar e visualizar custos precisam de capacidades próprias.
+Revogação imediata
+Parcial ou ausente
+Alterações podem depender de renovação do token ou novo login.
+Navegação por função
+Parcialmente aderente
+Módulos podem ser ocultados, mas o menu PCM ainda é extenso e mistura operação, cadastros e administração.
+Técnico como usuário SSO
+Obsoleto nesta fase
+Técnico executa pelo Auvo; não haverá área técnica no SSO agora.
+Permissões no MCP/Campo
+Ausente
+Devem herdar identidade, escopo e capacidades do SSO.
+
+Evidências observadas no sistema publicado
+Agenda do Técnico sem alocações na mesma semana em que o calendário operacional apresentava dezenas de Chamados.
+Backlog descrito como “OS abertas priorizadas” com ações “Confirmar chamado” e “Planejar”.
+Kanban misturando Solicitação, Corretiva, Preventiva, Backlog e etapas de execução.
+Financeiro com módulos de caixa, recebimentos, pagamentos, impostos e rentabilidade, porém sem ponte operacional clara para materiais e faturáveis.
+Comercial com precificação e propostas, sem uma área evidente de orçamento operacional vinculado à OS.
+Pendência em validação
+A análise da estrutura técnica identificou possível conflito entre Equipamento, Componente e Grupo quantitativo. O achado ainda não entra como regra aprovada até validação de Fabrício. Ver em-validacao/08-estrutura-tecnica.md.
+Plano de simplificação
+Situação: Aprovado
+Diretriz
+Simplificar não significa retirar capacidade necessária. Significa eliminar cadastros paralelos, nomes sobrepostos, telas sem dono e diferentes fontes para a mesma informação.
+Transformações aprovadas
+Inspeções
+Remover Assessment como módulo separado.
+Transformar diagnóstico inicial em tipo de Inspeção.
+Reusar a mesma esteira de Pendências.
+Operação
+Separar Chamado e OS no domínio e na interface.
+Introduzir Demanda e Validação PCM como etapas explícitas.
+Retirar Backlog da sequência comum do Kanban e exibi-lo em painel lateral.
+Manter Cancelados como filtro e histórico.
+Planejamento
+Criar Visita como fonte canônica.
+Substituir Agenda manual pela visualização Por técnico das Visitas.
+Fazer calendário, relatório de planejamento e capacidade consumirem Visitas e OS vinculadas.
+Eliminar a união posterior de Agenda e OS com deduplicação.
+Auvo
+Manter um único gatilho normal: confirmação PCM + T-24.
+Transformar criação manual em contingência auditada.
+Atualizar tarefas existentes em reprogramações.
+Materiais e financeiro
+Criar área única “Materiais e Aquisições” no PCM.
+Separar responsabilidades Cliente e Sinérgica.
+Manter orçamento operacional distinto de proposta comercial e orçamento gerencial.
+Não implantar estoque completo agora.
+Levar ao Financeiro apenas itens faturáveis validados, com origem preservada.
+Campo e inteligência artificial
+Manter Módulo de Campo, Auvo e SSO com responsabilidades distintas.
+Usar staging como porta única de entrada para dados propostos.
+Construir API de domínio antes do MCP.
+Permitir chat como interface adicional, sem substituir a captura estruturada quando ela for necessária.
+Perfis e navegação
+Manter grupos editáveis como base de autorização.
+Acrescentar capacidades específicas apenas para ações sensíveis.
+Organizar o PCM em Trabalho, Gestão e Administração.
+Absorver Agenda em Planejamento, Assessment em Inspeções, PMOC/Preventivas em Planos e fila operacional, Componentes/Sistemas na Estrutura Técnica e relatórios numa central única.
+Unificar Ferramentas e Ferramentas por Técnico em Equipes e Recursos.
+Mostrar Administração apenas a usuários autorizados.
+Exibir para cada função somente a navegação necessária à sua rotina.
+Retirar área de técnico do SSO nesta fase.
+Princípios de navegação
+O operador deve enxergar primeiro o que precisa decidir hoje.
+Configurações, diagnósticos técnicos e históricos ficam em níveis secundários.
+Uma entidade tem uma tela principal e pode ter várias projeções; não deve possuir vários cadastros independentes.
+Alertas não bloqueiam a rotina, salvo impossibilidade técnica real.
+Itens ainda não validados
+Consolidação final da Estrutura Técnica.
+Relatórios e Área do Cliente.
+Cockpit e indicadores essenciais.
+Backlog executável
+Situação: Aprovado
+Regra de uso
+Os itens P0 e P1 abaixo derivam de decisões aprovadas e podem ser refinados tecnicamente sem alterar a regra de negócio. Qualquer mudança funcional deve retornar para validação de Fabrício. Os temas marcados como Em validação não autorizam implementação funcional definitiva.
+P0 Correções estruturais
+BL 001 Separar Chamado e OS
+Módulo e tela: Operação, detalhe do Chamado, detalhe da OS e Kanban.
+Comportamento atual: partes da documentação e da interface tratam Chamado e OS como o mesmo item ou como fases sucessivas de um único registro.
+Comportamento esperado: Chamado representa a necessidade; OS representa a unidade planejável e executável. Um Chamado admite uma ou várias OS. Cada OS corresponde a uma tarefa no Auvo.
+Regra de negócio: uma OS pode ser encerrada sem encerrar o Chamado. O Chamado somente encerra após tratamento integral do escopo e validação do PCM.
+Prioridade: P0.
+Dependências: modelo de estados, integração Auvo e migração dos vínculos atuais.
+Critérios de aceite: criar duas OS no mesmo Chamado; encerrar apenas uma; manter o Chamado aberto; exibir o histórico e o estado de cada OS; impedir duas tarefas Auvo para a mesma OS.
+Testes necessários: cardinalidade 1:N; encerramento parcial; cancelamento de uma OS; histórico; permissões; concorrência; idempotência.
+Banco, API ou integração: alteração de banco provável; revisão dos endpoints de Chamado e OS; revisão obrigatória da integração Auvo.
+BL 002 Corrigir o conceito de Backlog
+Módulo e tela: PCM, Backlog GUT e painel lateral do Kanban.
+Comportamento atual: Backlog aparece como fila de OS abertas e contém ações que confirmam ou planejam Chamados.
+Comportamento esperado: Backlog contém escopos já validados, mas ainda sem compromisso de execução. A seleção do PCM cria um Chamado e o envia para Demanda.
+Regra de negócio: Pendência, item de Backlog, Chamado e OS são entidades diferentes. Apenas pendências escolhidas pelo PCM entram no Backlog.
+Prioridade: P0.
+Dependências: BL 001 e BL 006.
+Critérios de aceite: converter pendências selecionadas em um item agrupado de Backlog; priorizar por GUT; criar Chamado apenas na liberação para Demanda; preservar origem e histórico.
+Testes necessários: conversão parcial; agrupamento; retorno do escopo ao Backlog; duplicidade; auditoria; filtros por cliente, criticidade e prazo.
+Banco, API ou integração: separar ou revisar tabelas de pendência, backlog e vínculos; criar operações de conversão transacionais.
+BL 003 Implantar Visita como fonte oficial
+Módulo e tela: Planejamento, Cronograma, Agenda por técnico e detalhe da Visita.
+Comportamento atual: Agenda manual e calendário operacional podem apresentar dados divergentes; não há contêiner canônico comprovado para cliente, data, equipe e várias OS.
+Comportamento esperado: Visita concentra cliente, data, período, equipe, horas, deslocamento, natureza, situação e várias OS. Agenda por técnico e calendário por cliente são projeções da mesma Visita.
+Regra de negócio: uma Visita pode reunir preventivas, corretivas, solicitações, melhorias, levantamentos e serviços de terceiros.
+Prioridade: P0.
+Dependências: BL 001, cronograma contratual, técnicos e regras de capacidade.
+Critérios de aceite: criar uma Visita com várias OS de origens diferentes; visualizar a mesma informação nas visões por dia, técnico e cliente; reprogramar sem duplicar o compromisso.
+Testes necessários: recorrência; visita extra; cancelamento; reprogramação; feriado; múltiplos técnicos; conflito; concorrência.
+Banco, API ou integração: nova entidade ou consolidação da entidade Visita; vínculo N:N ou 1:N conforme o modelo das OS; endpoints próprios; migração da agenda atual.
+BL 004 Unificar o envio ao Auvo em T menos 24
+Módulo e tela: Integrações, Planejamento e monitor de exceções.
+Comportamento atual: coexistem sinais de criação imediata, criação ao planejar e ação manual, sem comprovação de um único fluxo ponta a ponta.
+Comportamento esperado: confirmação do PCM agenda o envio para início da Visita menos 24 horas. Confirmação dentro da janela envia imediatamente. Cada OS gera exatamente uma tarefa Auvo.
+Regra de negócio: reprogramação após o envio atualiza a tarefa existente; retorno para Demanda não cria nova tarefa; falha de integração nunca apaga o planejamento local.
+Prioridade: P0.
+Dependências: BL 001, BL 003 e validação do contrato real da API Auvo.
+Critérios de aceite: comprovar envio único; atualizar data sem duplicidade; reprocessar falha; registrar ID externo, tentativas e erro; permitir contingência manual auditada.
+Testes necessários: antes de T menos 24; dentro da janela; envio repetido; timeout; indisponibilidade; reprogramação; cancelamento; retorno atrasado; concorrência.
+Banco, API ou integração: fila de envio, estados de sincronização, chave idempotente por OS, retry e integração Auvo obrigatórios.
+BL 005 Garantir autorização por capacidades sensíveis
+Módulo e tela: Segurança, Grupos, Usuários, API e ações críticas.
+Comportamento atual: a base de leitura e escrita por módulo existe, mas pode conceder poder amplo demais.
+Comportamento esperado: capacidades específicas para planejar, validar, aprovar, cancelar, exportar, visualizar valores internos e administrar usuários ou configurações.
+Regra de negócio: pessoas recebem grupos e capacidades; nomes de pessoas não são codificados na regra. API, Campo e MCP respeitam a mesma identidade e autorização.
+Prioridade: P0.
+Dependências: autenticação e grupos existentes.
+Critérios de aceite: operador com escrita operacional não aprova plano nem visualiza custos sem capacidade; Financeiro não altera operação; Cliente não acessa outro condomínio.
+Testes necessários: matriz positiva e negativa; rotas; ações de interface; API; revogação; elevação indevida; auditoria.
+Banco, API ou integração: provável ampliação do modelo de permissões; middleware de autorização; propagação para API e futuras ferramentas MCP.
+BL 006 Aplicar revogação imediata de acesso
+Módulo e tela: Autenticação e administração de usuários.
+Comportamento atual: alterações críticas podem depender da renovação do token ou de novo login.
+Comportamento esperado: desativação, revogação e mudança crítica de perfil passam a valer sem atraso operacional relevante.
+Regra de negócio: o acesso deve ser negado em telas, API, Módulo de Campo e MCP após a revogação.
+Prioridade: P0.
+Dependências: BL 005.
+Critérios de aceite: usuário desativado perde acesso na próxima ação; sessões existentes não preservam poderes revogados; evento fica auditado.
+Testes necessários: sessão ativa; múltiplos dispositivos; token expirado e não expirado; API; cache; restauração controlada.
+Banco, API ou integração: controle de versão ou revogação de sessão e invalidação de cache.
+P1 Fluxo operacional
+BL 007 Reorganizar o Kanban operacional
+Módulo e tela: Kanban PCM.
+Comportamento atual: mistura origens, tipos de trabalho e etapas, incluindo Backlog como se fosse uma etapa comum.
+Comportamento esperado: Solicitações | Preventivas | Campo a conciliar | Demanda | Planejamento | Em execução | Validação PCM | Finalizado.
+Regra de negócio: as três primeiras são filas de entrada; as demais são estados de tratamento. Backlog aparece em painel lateral. Cancelado fica em filtro e histórico.
+Prioridade: P1.
+Dependências: BL 001, BL 002 e BL 003.
+Critérios de aceite: arrastar respeita transições permitidas; itens de entrada mantêm a origem; painel lateral não duplica cartões; cancelados são consultáveis.
+Testes necessários: transições; retorno para Demanda; retorno para Planejamento; validação; cancelamento; permissões; atualização simultânea.
+Banco, API ou integração: revisão do modelo de estados e consultas; interface do Kanban.
+BL 008 Organizar Pendências técnicas por ativo
+Módulo e tela: Preventivas, Pendências, Cliente 360 e detalhe do ativo.
+Comportamento atual: falta um fluxo consolidado entre resultado Não OK, análise humana, Backlog e correção.
+Comportamento esperado: cada achado é preservado individualmente, mas a visualização é agrupada por equipamento, Sistema ou objeto técnico.
+Regra de negócio: Não OK conclui a preventiva e gera pendência. Não cria Chamado ou OS automaticamente. O PCM seleciona quais pendências avançam.
+Prioridade: P1.
+Dependências: biblioteca de questionários, estrutura técnica e BL 002.
+Critérios de aceite: sete achados no mesmo quadro aparecem em um cartão com sete pendências; o PCM envia somente duas ao Backlog; as cinco restantes conservam sua situação.
+Testes necessários: resultados OK, Não OK, Não aplicável e Corrigido; evidências; seleção parcial; agrupamento; filtros; reabertura.
+Banco, API ou integração: modelo de pendência atômica e agrupamentos de consulta; vínculo com resposta e ativo.
+BL 009 Consolidar deslocamento e capacidade
+Módulo e tela: Planejamento, Visita, Agenda e alertas.
+Comportamento atual: não há regra consolidada entre trajeto residencial, deslocamento operacional, jornada e horas do cliente.
+Comportamento esperado: registrar origem, destino, tempo e enquadramento. Residência para primeiro cliente e último cliente para residência não computam. Escritório para cliente, cliente para cliente, cliente para escritório e retiradas a serviço computam.
+Regra de negócio: deslocamento computável ocupa agenda e jornada, mas não reduz automaticamente as horas contratadas do cliente. O sistema calcula excedente a validar, sem classificar hora extra automaticamente.
+Prioridade: P1.
+Dependências: BL 003 e cadastro de técnicos/clientes.
+Critérios de aceite: casa para cliente não soma jornada; escritório para cliente soma; veículo da empresa guardado em casa não altera a regra; alertas podem ser sobrepostos com ciência.
+Testes necessários: todos os pares de origem e destino; ida e volta; múltiplas visitas; edição manual; conflito; carga superior à jornada.
+Banco, API ou integração: campos na Visita ou entidade de trecho; motor de capacidade; sem integração externa obrigatória nesta etapa.
+BL 010 Criar Materiais e Aquisições de forma enxuta
+Módulo e tela: PCM, Materiais e Aquisições, OS, Chamado e Cliente 360.
+Comportamento atual: informações chegam como texto e não existe fluxo operacional consolidado; um controle item a item obrigatório criaria burocracia excessiva.
+Comportamento esperado: preservar o texto original e permitir estruturação opcional. O PCM define responsável, impacto, necessidade de orçamento e situação.
+Regra de negócio: responsável é Cliente ou Sinérgica. Informação de disponibilidade do cliente não é conferência técnica. Material faltante ou incorreto atualiza a pendência existente.
+Prioridade: P1.
+Dependências: OS, permissões e portal futuro.
+Critérios de aceite: registrar uma lista textual; atribuir responsabilidade; marcar informação do cliente; reabrir por falta identificada em campo; localizar tudo por cliente e OS.
+Testes necessários: texto livre; lista estruturada; alteração de responsável; compra parcial; material incorreto; permissões; histórico.
+Banco, API ou integração: tabelas simples de levantamento/revisão/estado; integração Auvo para receber texto; sem estoque completo.
+BL 011 Criar orçamento operacional opcional
+Módulo e tela: Materiais e Aquisições, orçamento operacional e área do cliente futura.
+Comportamento atual: estruturas comerciais e financeiras existem, mas a ligação simples com OS, material e aquisição não está consolidada.
+Comportamento esperado: gerar orçamento quando necessário, com itens, preço de venda e aprovação; permitir registrar aprovação obtida por comunicação externa.
+Regra de negócio: orçamento não é obrigatório. Cliente nunca vê custo interno, nota de aquisição, tributos internos, markup ou margem. Fator 1,5 equivale a preço de 150% do custo, isto é, markup de 50%.
+Prioridade: P1.
+Dependências: BL 010, capacidades sensíveis e cadastro do cliente.
+Critérios de aceite: criar orçamento a partir da operação; aprovar no portal ou registrar aprovação externa; prosseguir sem orçamento quando permitido; proteger campos internos.
+Testes necessários: com e sem aprovação; alteração de versão; acesso do cliente; arredondamento; parâmetros configuráveis; cancelamento.
+Banco, API ou integração: orçamento, versão, aprovação e parâmetros; possível integração posterior com comunicação/portal.
+BL 012 Garantir origem única dos faturáveis
+Módulo e tela: Operação, A faturar e Financeiro.
+Comportamento atual: há módulos financeiros, mas falta comprovar a ponte única desde materiais e despesas até a cobrança.
+Comportamento esperado: material ou despesa elegível gera um item faturável com origem rastreável; Financeiro valida antes da cobrança.
+Regra de negócio: uma origem operacional não pode ser faturada duas vezes. Itens podem ser internos, faturáveis, contratuais ou cobertos por orçamento.
+Prioridade: P1.
+Dependências: BL 010, BL 011 e permissões financeiras.
+Critérios de aceite: rastrear item até Visita, OS, Chamado ou cliente; impedir duplicação; permitir recusa ou ajuste auditado pelo Financeiro.
+Testes necessários: duplicidade; estorno; ajuste; orçamento coberto; item interno; acesso do cliente; concorrência.
+Banco, API ou integração: chave de origem única, estados financeiros e integração entre operação e Financeiro.
+BL 013 Simplificar a navegação por função
+Módulo e tela: menu principal e shell do SSO.
+Comportamento atual: PCM mistura rotina, cadastros, configurações, diagnósticos e relatórios no mesmo nível.
+Comportamento esperado: organizar em Trabalho, Gestão e Administração e mostrar apenas menus e ações pertinentes ao grupo do usuário.
+Regra de negócio: Agenda é absorvida por Planejamento; Assessment por Inspeções; PMOC e Preventivas por Planos e fila operacional; relatórios ficam numa central; técnico permanece fora do SSO nesta fase.
+Prioridade: P1.
+Dependências: BL 005 e inventário final de rotas.
+Critérios de aceite: Operador PCM abre diretamente a rotina; Financeiro vê apenas sua área e origens permitidas; Administração não aparece sem autorização; rotas ocultas também são bloqueadas.
+Testes necessários: perfis; menus; acesso por URL; responsividade; favoritos; rotas antigas; redirecionamentos.
+Banco, API ou integração: mudanças principais na interface e autorização; banco apenas se a configuração de menu for persistida.
+P2 Arquitetura assistida
+BL 014 Criar API de domínio para cadastro e inspeção
+Módulo e tela: API, Módulo de Campo, importações e staging.
+Comportamento atual: existem iniciativas de importação e levantamento, mas falta um contrato único e seguro para campo, IA e cadastro oficial.
+Comportamento esperado: API autenticada para consultar estrutura, criar lotes em staging, anexar evidências, validar e aprovar conforme capacidade.
+Regra de negócio: nenhuma interface externa grava diretamente no cadastro oficial. Não haverá SQL genérico exposto.
+Prioridade: P2, com desenho antecipado para evitar novas integrações paralelas.
+Dependências: BL 005, estrutura técnica validada e contrato de staging.
+Critérios de aceite: lote idempotente; prévia; erros por linha/item; aprovação PCM; trilha de auditoria; rejeição sem alteração oficial.
+Testes necessários: autenticação; autorização; payload inválido; repetição; anexos; volume; concorrência; rollback; auditoria.
+Banco, API ou integração: API e staging obrigatórios; storage de anexos; nenhum acesso direto ao banco por clientes externos.
+BL 015 Criar MCP controlado sobre a API
+Módulo e tela: integração conversacional e administração de ferramentas.
+Comportamento atual: não há camada conversacional oficial comprovada.
+Comportamento esperado: ChatGPT, Claude ou outra IA consulta o SSO e cria propostas em staging usando ferramentas específicas da API.
+Regra de negócio: primeira entrega em leitura; escrita posterior apenas em staging e com confirmações. Toda ação herda usuário, escopo, permissões e auditoria.
+Prioridade: P2.
+Dependências: BL 014 concluído e homologado.
+Critérios de aceite: consultar cliente sem cruzar escopos; criar lote provisório; impedir escrita oficial; registrar usuário e ferramenta; revogar acesso imediatamente.
+Testes necessários: isolamento por cliente; prompt malicioso; ferramenta não autorizada; repetição; falha parcial; revogação; logs.
+Banco, API ou integração: servidor MCP e uso exclusivo da API de domínio.
+Temas em validação sem autorização de implementação definitiva
+Estrutura técnica
+Ainda deve ser confirmada a modelagem final entre Equipamento, Componente e Grupo quantitativo, preservando as regras já discutidas de Local, Sistema, equipamentos pai/filho, componentes distribuídos, códigos e integração com o Auvo.
+Relatórios e Área do Cliente
+A estrutura preliminar documenta o processo atual e possibilidades futuras, mas Fabrício ainda fará a leitura e validação. Até isso ocorrer, não transformar a proposta em regra fechada nem desenvolver o portal definitivo com base apenas neste caderno.
+Cockpit e indicadores essenciais
+O painel inicial ainda precisa de uma rodada própria para definir quais decisões devem aparecer primeiro para cada perfil. Não bloquear os itens P0 e P1 por essa definição.
+Registro de decisões
+Situação: Aprovado
+Blocos aprovados até 13/11/2026
+Bloco
+Situação
+Registro
+Assessment, PMOC e Preventivas
+Aprovado
+Assessment incorporado a Inspeções; PMOC como modalidade; Preventivas preservadas no Kanban.
+Pendências, Backlog, Chamado, Demanda e OS
+Aprovado
+Objetos e transições separados; Chamado 1:N OS.
+Planejamento, Visitas, Agenda e capacidade
+Aprovado
+Visita como fonte oficial; Agenda derivada.
+Deslocamento e jornada
+Aprovado
+Trajeto residencial versus deslocamento operacional.
+T-24, Auvo, execução e retorno
+Aprovado
+Um gatilho, uma tarefa por OS, atualização sem duplicidade.
+Materiais, aquisições, despesas e faturamento
+Aprovado
+Fluxo enxuto; orçamento opcional; sem estoque completo agora.
+Separação Auvo × Módulo de Campo × SSO
+Aprovado
+Responsabilidades definidas e staging obrigatório.
+API e MCP
+Aprovado como arquitetura recomendada
+API como base; MCP como camada conversacional controlada.
+Perfis, permissões e navegação
+Aprovado pela recomendação técnica
+Grupos editáveis, capacidades sensíveis e menus por função; técnico permanece no Auvo.
+
+Em validação
+Bloco
+Situação
+Próxima ação
+Estrutura Técnica
+Em validação
+Confirmar distinção Equipamento, Componente e Grupo quantitativo e impacto na implementação atual.
+Relatórios e Área do Cliente
+Em validação
+Modelar primeiro os relatórios realmente entregues hoje; visão do síndico será um bloco posterior e configurável.
+
+Próximos blocos
+1. Relatórios e Área do Cliente.
+2. Cockpit e indicadores essenciais.
+3. Consolidação final, priorização e pacote de entrega.
+Anexo em validação Estrutura técnica
+Situação: Em validação
+Este arquivo ainda não é regra aprovada.
+Achado
+A implementação atual preserva Cliente, Área, Locais, Sistemas e árvore no Cliente 360, mas passou a chamar todos os itens de Componente e escondeu a distinção operacional entre Equipamento e Componente.
+Modelo proposto para validação
+Equipamento: ativo individual, manutenível, rastreável e normalmente sincronizado com o Auvo.
+Componente: item direto de Sistema ou filho de Equipamento; não sincronizado com o Auvo por padrão.
+Grupo quantitativo: quantidade de itens equivalentes em um local; sem TAG individual.
+Sistema: agrupador funcional que pode conter Equipamentos, Componentes diretos e Grupos quantitativos.
+Equipamento pode conter Componentes e Grupos quantitativos.
+Visão por Local e visão por Sistema utilizam os mesmos registros.
+Sistema e Equipamento recebem vínculo Auvo; Componentes e Grupos permanecem no SSO por padrão.
+Impacto provável
+Restaurar classificação de tipo do item.
+Restaurar Equipamento-pai na interface.
+Restringir sincronização Auvo por tipo.
+Criar campos de quantidade e unidade para grupos.
+Manter a árvore e os dados atuais, evitando reconstrução completa.
+Anexo em validação Relatórios e Área do Cliente
+Situação: Em validação
+Registrado em: 13/11/2026
+Este arquivo ainda não é regra aprovada.
+Diretriz corrigida
+O modelo deve partir do que a Sinérgica efetivamente entrega hoje. A visão do síndico será analisada separadamente, com possibilidade de escolher indicadores e seções por cliente.
+1. Planejamento diário da Visita
+Enviado no grupo de WhatsApp do cliente antes do atendimento.
+Conteúdo atual:
+data da Visita;
+técnico ou equipe;
+sequência de execução: primeiro, segundo, terceiro etc.;
+preventivas;
+corretivas;
+solicitações;
+melhorias;
+outros itens planejados.
+Cada item representa uma demanda de execução do técnico e deverá manter vínculo rastreável com a OS correspondente.
+2. Relatório diário / fechamento da Visita
+É essencialmente o planejamento enriquecido com o resultado do dia.
+Para cada item:
+posição na sequência;
+descrição;
+situação da execução;
+link da OS no Auvo;
+motivo quando adiado ou não concluído.
+Situações relatadas:
+executado;
+em andamento;
+adiado por falta de material;
+adiado por falta de tempo;
+adiado por chuva ou impedimento operacional;
+outros motivos editáveis.
+Pode incluir itens extras que não estavam no planejamento original:
+solicitação feita pelo cliente durante a Visita;
+necessidade urgente identificada pelo técnico;
+execução antecipada após alinhamento com PCM/administração.
+3. Relatório mensal do cliente
+Consolida tudo o que foi executado no mês.
+Conteúdo atual:
+resumo inicial das atividades;
+fotos antes e depois;
+descrição das execuções;
+blocos por natureza de serviço;
+preventivas agrupadas por tipo ou Sistema;
+corretivas;
+rondas;
+inconformidades encontradas nas preventivas;
+todas as OS do período anexadas ao final;
+registros de início e fim das Visitas para comprovação dos horários.
+Exemplos de blocos preventivos:
+preventiva de ar-condicionado;
+preventiva de quadros elétricos;
+preventiva de porta corta-fogo;
+demais tipos conforme o cliente e o contrato.
+4. Outros documentos técnicos
+Inspeção predial e respectivo relatório.
+PMOC, quando incluído no contrato de climatização ou vendido separadamente.
+Laudo SPDA.
+Laudo elétrico.
+Outros laudos técnicos.
+Relatório técnico avulso, quando vendido como serviço específico.
+Inspeção predial pode integrar o contrato de manutenção. PMOC não deve ser presumido em todo contrato de climatização; depende do escopo contratado.
+5. Visão futura do síndico
+Será tratada em etapa própria.
+Premissas já levantadas:
+entender o que o cliente quer e precisa visualizar;
+permitir configuração por cliente;
+escolher indicadores X, Y e Z a partir do banco de dados;
+exportar relatórios configurados;
+não expor informações internas ou sensíveis;
+preservar os relatórios atuais enquanto a visão futura é construída.
+Pontos para consolidar na próxima análise
+Relação entre linha do planejamento e OS.
+Tratamento de itens extras.
+Catálogo oficial de situações e motivos de adiamento.
+Forma de geração do texto para WhatsApp.
+Seleção e publicação de fotos antes/depois.
+Regras de agrupamento do relatório mensal.
+Anexação das OS e dos registros de início/fim de Visita.
+Editor de relatório e biblioteca segura de indicadores.
+Escopo contratual de cada documento técnico.
+6. Indicador de pressão do Backlog e capacidade
+Indicador solicitado para comparar a necessidade de execução do cliente com a capacidade de mão de obra disponível no contrato.
+Informações mínimas
+horas restantes estimadas do Backlog ativo;
+horas de Demanda ainda não planejadas;
+horas contratadas por período;
+horas comprometidas com preventivas e rotinas obrigatórias;
+horas já planejadas;
+horas livres estimadas;
+itens sem estimativa, exibidos separadamente.
+Métrica principal proposta
+meses de cobertura = horas de demanda ativa ÷ capacidade mensal disponível para absorver essa demanda
+Exemplo: 80 horas de Backlog e 20 horas mensais livres resultam em aproximadamente 4 meses para absorção.
+Visualização
+linha histórica das horas de Backlog;
+barras de capacidade contratada, comprometida e livre;
+tendência de crescimento ou redução;
+previsão aproximada de absorção;
+quantidade de itens ainda sem estimativa.
+Interpretação
+Backlog crescendo: capacidade insuficiente, novas entradas elevadas ou baixa produtividade; pode justificar Visitas extras, ampliação contratual ou orçamento de projeto.
+Backlog reduzindo: capacidade absorvendo a demanda; se houver ociosidade recorrente, pode indicar oportunidade de ampliar o escopo técnico oferecido ao cliente.
+Backlog baixo não prova sozinho excesso de capacidade: é necessário conferir se o cadastro e as estimativas estão completos.
+Uso
+indicador interno no Cliente 360 e no Cockpit;
+seção opcional no relatório mensal do cliente, com linguagem externa e sem GUT ou informações internas;
+gatilho de oportunidade comercial, sempre sujeito à análise humana;
+limites e período de análise configuráveis por cliente/contrato.
+7. Visão de manutenção para o cliente
+Preventivas
+O cliente poderá consultar:
+preventivas em dia;
+próximas do vencimento;
+atrasadas;
+executadas no período;
+ativos sem rotina aplicável ou com informação incompleta.
+A linguagem externa não deve expor estados técnicos internos. “Tudo OK” deverá significar “sem pendências ou preventivas atrasadas registradas no SSO”, sem representar garantia absoluta sobre condições não inspecionadas.
+Árvore de ativos
+Evolução futura da Área do Cliente:
+navegar por Área e Local;
+navegar por Sistema;
+pesquisar por nome, código, TAG, categoria ou localização;
+abrir o ativo;
+consultar última e próxima preventiva;
+visualizar Pendências publicadas;
+consultar histórico de OS, evidências e documentos autorizados;
+identificar ativos regulares, vencendo, atrasados, com Pendências ou sem informação suficiente.
+Somente dados validados e classificados como visíveis ao cliente serão expostos. GUT, comentários internos, custo e priorização interna permanecem ocultos.
+8. Solicitações por QR Code no condomínio
+Objetivo
+Permitir que moradores, usuários e colaboradores do condomínio registrem necessidades por QR Code fixado em áreas selecionadas.
+Fluxo
+1. Usuário lê o QR Code.
+2. Formulário abre com cliente e Local predefinidos.
+3. Usuário informa descrição, categoria, fotos e dados opcionais de contato/unidade.
+4. Registro entra na fila privada do gestor do condomínio.
+5. Gestor aceita, rejeita, marca duplicidade, solicita informação ou direciona.
+6. Destino possível: Sinérgica, equipe própria, outro fornecedor ou arquivamento.
+7. Quando enviado à Sinérgica, entra no SSO como Solicitação do cliente com origem Portal/QR.
+8. PCM valida e aplica o fluxo Chamado → Demanda → Planejamento.
+Exportação para outro fornecedor
+O gestor poderá gerar PDF contendo:
+protocolo;
+data;
+Área e Local;
+descrição original;
+fotos;
+classificação do gestor;
+observações;
+situação.
+O PDF não expõe dados internos da Sinérgica e pode ser encaminhado pelo próprio gestor a outro fornecedor.
+Segurança mínima
+QR Code com token não adivinhável e vinculado ao cliente/Local;
+nenhuma consulta pública a outras solicitações;
+limite de envios e proteção contra abuso;
+controle de tamanho e tipo de anexos;
+aviso de privacidade;
+dados pessoais opcionais e acesso restrito ao gestor;
+trilha de auditoria das decisões do gestor;
+revogação e substituição do QR Code quando necessário.
+Posicionamento
+Essa capacidade é um módulo de gestão de solicitações do condomínio. A triagem ocorre pelo cliente e somente itens encaminhados à Sinérgica chegam à operação, reduzindo ônus administrativo. Ainda existem custos técnicos de armazenamento, segurança e suporte, que deverão ser considerados no produto/contrato.
