@@ -29,14 +29,17 @@ inventariei por completo os 39 arquivos `sso_backlog*` (`0375` a `1832`). Achado
   `default false`, nenhum tem `update ... habilitado=true` em migration nenhuma. `ADR-0665` é
   explícita: *"Ordem global de locks, integrações/efeitos de gatilhos, autorização e concorrência
   exigem revisão adversarial e testes antes de habilitar."* Isso nunca aconteceu.
-- **Front já escrito e também órfão:** `PromoverComposicao.tsx` chama a RPC certa, com
-  idempotência de sessão, confirmação dupla e invalidação de query — mas é importado só por
-  `Composicoes.tsx`, que por sua vez **não é importado por nenhuma página/rota**. Mesmo padrão
-  medido em `docs/Apontamentos/alcance-no-front-2026-11-17.md`: regra pronta, zero alcance.
-- **GUT no item de Backlog: inexiste, apesar do spec citar "7 migrations".** Busca por `\bgut\b`
-  (case-insensitive) retornou só 4 arquivos: `0001` (coluna de schema), `0020` (GUT **da OS**
-  legada, domínio diferente), `0174`/`0179` (GUT de **item de Inspeção**, domínio diferente). Nenhum
-  é GUT de item de Backlog — AC-3 é novo, sem risco de 8ª migration duplicada.
+- **Front já escrito — CORREÇÃO (17/11/2026, depois de iniciar a task 15/front):** a frase acima
+  ("órfão, não importado por nenhuma página/rota") **estava errada**, baseada em grep raso só por
+  `<Composicoes`/`<PromoverComposicao`. A cadeia real existe e é alcançável:
+  `VisaoClientePage.tsx:539` (Cliente 360, página real) → `PendenciasTecnicasWorkspace`
+  (`Workspace.tsx`) → `Lista` → `ComporBacklog`/`Composicoes` → `PromoverComposicao`/
+  `DividirComposicao`. O gap real é só a mesma classe do `E00-S28` (flag interna não declarada +
+  gate de banco fechado), não rota faltando. Ver correção completa em `ADR-1689`.
+- **GUT no item de Backlog: já existe, via `pcm.sso_priorizar_composicao` (0377)** — ver tabela da
+  seção "Schema" abaixo. A busca inicial por `\bgut\b` (só 4 arquivos, nenhum sobre item de
+  Backlog) foi escopada errado: o nome da coluna/RPC usa `gravidade/urgencia/tendencia/dor_cliente`
+  (GUTD), não a palavra "gut". Front (`Composicoes.tsx`, `Prioridade`) já chama essa RPC.
 - **Nenhum status `'demanda'` existe hoje** (`grep "'demanda'"` em `supabase/migrations` — zero
   resultados). O `plan.md` original presumia `pcm.chamados.status` sem CHECK; **errado** —
   `0134_E01-S88_chamados.sql` tem `check (status in ('aberto','convertido_os','backlog','cancelado'))`.
@@ -96,9 +99,12 @@ de status) e o `ALTER CHECK` de `pcm.chamados.status`. O que falta, em ordem:
 4. **`grant execute`** nas funções que ainda não tiverem (conferir contra `1839_E01-S187`, que é a
    referência de "terceiro pilar de ativação" — flag + gate + grant — descoberta em 12/11/2026,
    achado idêntico ao que motivou `E00-S28` no front);
-5. **Front:** `Composicoes.tsx`/`PromoverComposicao.tsx` já existem e já chamam as RPCs certas —
-   faltam alcançáveis por rota/menu (igual ao achado do E00-S28); `StatusChamado`
-   (`domain/chamados.ts:6`) ganha `"demanda"`.
+5. **Front — feito:** `Composicoes.tsx`/`PromoverComposicao.tsx`/`DividirComposicao.tsx`/`ComporBacklog`
+   já existiam e já são alcançáveis (`VisaoClientePage.tsx` → `PendenciasTecnicasWorkspace` →
+   `Lista`, correção do achado de "órfão" acima). `PromoverComposicao.tsx` trocado pra chamar
+   `sso_liberar_escopo_backlog` em vez de `0890` direto. `StatusChamado` (`domain/chamados.ts:6`)
+   ganha `"demanda"`. Falta só declarar as ~70 flags desta pasta em `FLAGS_SSO` quando `E00-S28`
+   mesclar (cross-branch, não bloqueia esta story).
 
 **Atomicidade:** a GitHub Integration do Supabase roda migration **fora de transação** (diferente da
 CLI local — lição da PR #78). Qualquer passo novo que precise de atomicidade vai em `do $$ ... $$`.
