@@ -1,0 +1,52 @@
+# E01-S193 task 3/12 — relatório de produção do Backlog legado (`pcm.ordens_servico.status='backlog'`).
+#
+# Roda `scripts/inventariar-backlog-legado.mjs` (só leitura) contra o banco de produção, usando
+# os secrets já existentes (`SUPABASE_DB_PASSWORD`/`SUPABASE_PROJECT_ID`, mesmos de
+# `sync-secrets.yml`). O valor do secret nunca aparece em log — vai só no `env:` do passo, nunca
+# interpolado no `run:` — e o resultado (só contagens por cliente, sem PII) vai pro
+# Step Summary, não pro stdout de outro passo.
+#
+# Gatilho manual consciente: este relatório é insumo pra uma decisão humana (classificar ou não
+# cada OS legada, task 12 de E01-S193) — não é gate de CI, não roda em push.
+
+name: Inventário do Backlog legado (produção)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: inventariar-backlog-legado
+  cancel-in-progress: false
+
+jobs:
+  inventario:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar psql
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Rodar inventário (só leitura)
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co:5432/postgres
+        run: node scripts/inventariar-backlog-legado.mjs > /tmp/relatorio-backlog-legado.json
+
+      - name: Publicar resultado no Step Summary
+        run: |
+          echo "## Inventário do Backlog legado (produção, $(date -u +%Y-%m-%dT%H:%M:%SZ))" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/relatorio-backlog-legado.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload do relatório como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-backlog-legado
+          path: /tmp/relatorio-backlog-legado.json
+          retention-days: 90
