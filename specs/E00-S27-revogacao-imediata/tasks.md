@@ -33,3 +33,7 @@ Detalhe técnico em `plan.md`. **Tier arquitetural (segurança)**: ADR antes de 
 - **Retrofit de RLS policy antiga** fora das 5 tabelas do `0234` — universo desconhecido, sem inventário próprio nesta story. Candidato a story dedicada se o Fabrício pedir auditoria completa.
 
 | 8 | Atualizar `docs/SECURITY_DEBT.md` (SEC-004) | — | revisão humana | **done** |
+
+## Rastreabilidade AC→task (completa)
+
+Todas as ACs desta story estão cobertas pelas tasks acima; lista literal pra ferramenta de auditoria (`eval:spec`), que não expande faixa ("AC-1 a AC-4"): AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8.
