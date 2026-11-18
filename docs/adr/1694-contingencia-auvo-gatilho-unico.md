@@ -66,6 +66,6 @@ maior que não coube nesta story. **SPEC_DEVIATION**, achado registrado pra cont
 
 ## Referências
 
-Migration `1855_E01-S196_contingencia_auvo.sql` · `specs/E01-S196-gatilho-unico-auvo/` ·
+Migration `1863_E01-S196_contingencia_auvo.sql` · `specs/E01-S196-gatilho-unico-auvo/` ·
 `1844_E01-S168_cron_despacho_t24.sql` (mecânica reusada) · ADR-1690/1691 (mesmo padrão de
 achado "módulo não basta").

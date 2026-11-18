@@ -52,6 +52,6 @@ lacunas de backend bloqueavam isso:
 
 ## Referências
 
-Migration `1855_E01-S194_validacao_pcm_status.sql` · `specs/E01-S194-kanban-operacional-aprovado/`
+Migration `1861_E01-S194_validacao_pcm_status.sql` · `specs/E01-S194-kanban-operacional-aprovado/`
 · ADR-1689 (E01-S193, introduz `'demanda'`) · `1475_E01-S167_criacoes_concorrentes.sql`,
 `1499_E01-S167_guarda_escritores_multiplas_os.sql` (padrão de cirurgia de texto reusado).

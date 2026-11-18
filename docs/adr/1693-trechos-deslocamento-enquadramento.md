@@ -52,6 +52,6 @@ contratada do Cliente, e gera "excedente a validar" sem classificar hora extra s
 
 ## Referências
 
-Migration `1855_E01-S195_trechos_deslocamento.sql` · `specs/E01-S195-deslocamento-enquadramento/`
+Migration `1862_E01-S195_trechos_deslocamento.sql` · `specs/E01-S195-deslocamento-enquadramento/`
 · `1357-1359_E01-S172_*` (declaração agregada, não editada) · ADR-1203/ADR-1204 (padrão de
 declaração imutável reusado).
