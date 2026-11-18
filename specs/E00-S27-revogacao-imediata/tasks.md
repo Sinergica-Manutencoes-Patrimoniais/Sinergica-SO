@@ -14,7 +14,7 @@ Detalhe técnico em `plan.md`. **Tier arquitetural (segurança)**: ADR antes de 
 |---|------|----------|----------------|--------|
 | 1 | Inventário: `jwt_version`/`versao_sessao` (zero ocorrência) + achar o precedente `0234`/E01-S184 | — | relatório na ADR | **done** — ADR-1691 |
 | 2 | ADR do mecanismo (releitura ao vivo, não versão de sessão) | — | revisão humana | **done** — `docs/adr/1691-revogacao-imediata-generaliza-s184.md` |
-| 3 | Migration: `config.sso_acesso_atual` (generaliza `0234`) + `sso_revogar_usuario`/`sso_reativar_usuario` auditados | AC-1, AC-3, AC-6 | `npx supabase@2.114.0 test db supabase/tests/E00-S27_*.test.sql` | **done** — `1855_E00-S27_revogacao_imediata.sql` |
+| 3 | Migration: `config.sso_acesso_atual` (generaliza `0234`) + `sso_revogar_usuario`/`sso_reativar_usuario` auditados | AC-1, AC-3, AC-6 | `npx supabase@2.114.0 test db supabase/tests/E00-S27_*.test.sql` | **done** — `1859_E00-S27_revogacao_imediata.sql` |
 | 4 | pgTAP: mesma sessão perde e recupera acesso, módulo e RPC sensível, sem novo login | AC-1, AC-4, AC-7 | idem | **done** — 13 assertions |
 | 5 | Guarda de CI: policy nova sem releitura ao vivo | AC-8 | `node scripts/check-revogacao-coberta.mjs` | **done** — step novo em `ci.yml` |
 | 6 | `/revisao-adversarial` | — | sem achado alto/médio | **done** — achado corrigido: autorrevogação travava `sso_reativar_usuario`; bloqueada (`nao_pode_revogar_a_si_mesmo`) |

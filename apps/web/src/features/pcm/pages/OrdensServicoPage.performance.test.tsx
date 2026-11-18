@@ -58,6 +58,7 @@ function item(id: string, titulo: string): ItemOperacaoResumo {
     tipoOs: null,
     pmocScheduleId: null,
     orientacao: null,
+    ocorrenciaPreventivaId: null,
   };
 }
 

@@ -29,8 +29,7 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S28_
-| ID | Título | Owner | Status | Spec |
+_15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
 | E00-S25 | Workflow enxuto — ROADMAP compacto, Spec Kit, gates só nos afetados | Claude (sessão Lucas) | Em andamento | [spec](../../specs/E00-S25-workflow-enxuto/spec.md) |
 | E00-S09 | Grupos e permissões por módulo — fundação: schema, resolver, hook JWT, Edge Function de g… | Claude (sessão Lucas) | PR #9 aberto — db-tests (pgTAP) achou e… | [spec](../../specs/E00-S09-grupos-permissao-modulo/spec.md) |
@@ -48,8 +47,7 @@ _15 concluídas no histórico · maior ID usado: E00-S28_
 | E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | Claude (sessão Lucas) | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
 | E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
 | E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
-| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | Claude (sessão Lucas) | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) || E01-S194 | Kanban operacional aprovado — Campo a conciliar, Demanda e Validação PCM como etapas | — | Especificada (2026-11-17) — BL 007. Depende de E01-S193 e E00-S26 | [spec](../../specs/E01-S194-kanban-operacional-aprovado/spec.md) |
-| E01-S195 | Deslocamento: enquadramento residencial × operacional e impacto na jornada | — | Especificada (2026-11-17) — BL 009 | [spec](../../specs/E01-S195-deslocamento-enquadramento/spec.md) |
+| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | Claude (sessão Lucas) | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) || E01-S194 | Kanban operacional aprovado — Campo a conciliar, Demanda e Validação PCM como etapas | — | Especificada (2026-11-17) — BL 007. Depende de E01-S193 e E00-S26 | [spec](../../specs/E01-S194-kanban-operacional-aprovado/spec.md) || E01-S195 | Deslocamento: enquadramento residencial × operacional e impacto na jornada | — | Especificada (2026-11-17) — BL 009 | [spec](../../specs/E01-S195-deslocamento-enquadramento/spec.md) |
 | E01-S196 | Gatilho único do Auvo — criação manual vira contingência auditada | — | Especificada (2026-11-17) — resto do BL 004 (o acionador entrou na 1844). Tier arquitetural | [spec](../../specs/E01-S196-gatilho-unico-auvo/spec.md) |
 | E01-S197 | Pendências técnicas agrupadas por ativo, sem perder o achado individual | — | Especificada (2026-11-17) — BL 008. Depende de E01-S193 | [spec](../../specs/E01-S197-pendencias-agrupadas-ativo/spec.md) |
 | E01-S198 | API de domínio sobre o staging | — | Especificada (2026-11-17) — BL 014, P2. Tier arquitetural. Depende de E00-S26/S27 | [spec](../../specs/E01-S198-api-dominio-staging/spec.md) |

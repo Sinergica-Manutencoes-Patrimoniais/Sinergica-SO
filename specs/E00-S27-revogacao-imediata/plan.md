@@ -13,7 +13,7 @@ Ver `docs/adr/1691-revogacao-imediata-generaliza-s184.md` para a decisão comple
 - `config.s184_acesso_interno_atual(modulo)` (`0234`) — releitura ao vivo como policy RESTRICTIVE, em produção, provada por `E01-S184_protecao_custos_portal_us3.test.sql`.
 - `config.sso_autorizar_acao` (`0239`) — mesma ideia, lado RPC, já usado por dezenas de funções.
 
-## Migration `1855_E00-S27_revogacao_imediata.sql`
+## Migration `1859_E00-S27_revogacao_imediata.sql`
 
 - `config.sso_acesso_atual(p_modulo, p_nivel)` — generalização de `0234`.
 - `config.sso_revogar_usuario`/`config.sso_reativar_usuario` — comando auditado (CQRS, idempotente por `request_id`, `audit.events`). Bloqueiam autorrevogação (achado de `/revisao-adversarial`).
