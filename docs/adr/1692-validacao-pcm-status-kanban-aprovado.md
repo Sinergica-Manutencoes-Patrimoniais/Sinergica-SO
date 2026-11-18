@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1692-validacao-pcm-status-kanban-aprovado-md"
+description: "Documento Sinérgica SO: ADR-1692 — Status `validacao_pcm` e fechamento do dead-end de `demanda` (E01-S194)"
+alwaysApply: false
+---
+
 # ADR-1692 — Status `validacao_pcm` e fechamento do dead-end de `demanda` (E01-S194)
 
 **Status:** aceita · **Data:** 2026-11-18 · **Story:** E01-S194
