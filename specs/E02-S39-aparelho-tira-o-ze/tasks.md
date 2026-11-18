@@ -10,20 +10,28 @@ alwaysApply: false
 
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 0  | **Diagnóstico**: por que a mensagem do celular não aparece hoje. Conferir (a) `supabase functions list` — `pcm-whatsapp-webhook` deployada depois de `44d2cd90`; (b) logs da função com evento `fromMe` chegando; (c) `select direcao, remetente_tipo, origem_envio, count(*) from atendimento.mensagens group by 1,2,3`. Registrar a evidência no PR | AC-0 | — | teste que falha antes e passa depois da correção | todo |
-| 1  | ADR `1688-mensagem-do-aparelho-tira-o-ze.md` (inclui a decisão A: corrida aceita) | — | 0 | revisão humana | todo |
-| 2  | Migration `1836` — `canal_aparelho`, normalização, validação de textos, RLS force | AC-10, AC-12 | 1 | `pnpm run db:test -- canal_aparelho` | todo |
-| 3  | RPCs `fn_ler/fn_salvar_configuracao_do_aparelho` com CAS e validação de pessoa | AC-10, AC-11, AC-12 | 2 | `pnpm run db:test -- configuracao_aparelho` | todo |
-| 4  | Migration `1837` — `fn_registrar_mensagem_do_aparelho` (eco, automática, atraso, pausa, fila) | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8 | 2 | `pnpm run db:test -- mensagem_do_aparelho` | todo |
-| 5  | `_shared/evolution-aparelho.ts` — porte direto, marcadores, horário, ignorados `[P]` | AC-7, AC-9, AC-13 | — | `deno test supabase/functions/_shared/evolution-aparelho.test.ts` | todo |
-| 6  | Webhook despacha `fromMe` para a RPC nova, com `automatica` e `atrasada` resolvidos | AC-1, AC-5, AC-6 | 4, 5 | `deno test supabase/functions/atendimento-evolution-webhook/aparelho.test.ts` | todo |
-| 7  | `domain/configuracao-do-aparelho.ts` — validação espelhada no cliente `[P]` | AC-12 | 1 | `pnpm vitest run apps/web/src/features/atendimento/domain/configuracao-do-aparelho.test.ts` | todo |
-| 8  | `components/RespostasPeloAparelho.tsx` — select, textarea, CAS, avisos | AC-3, AC-10, AC-11, AC-12 | 3, 7 | `pnpm vitest run apps/web/src/features/atendimento/components/RespostasPeloAparelho.test.tsx` | todo |
-| 9  | Rótulo "Mensagem automática do WhatsApp" na bolha (`origem_envio='celular_automatico'`) `[P]` | AC-5 | 4 | `pnpm vitest run apps/web/src/features/atendimento/components/MensagemBubble.test.tsx` | todo |
-| 10 | Teste do risco aceito: resposta do Zé já em voo chega mesmo assim, sem corromper estado | AC-2 | 4 | `pnpm run db:test -- aparelho_corrida` | todo |
-| 11 | Deixar de chamar `fn_registrar_mensagem_celular` (função permanece, não é apagada) | AC-1 | 6 | `grep -r "fn_registrar_mensagem_celular" supabase/functions` retorna vazio | todo |
-| 12 | Glossário: aparelho, responsável do aparelho, texto automático do canal, eco | — | 1 | `grep` em `docs/glossary.md` | todo |
-| 13 | `/revisao-adversarial` (tier arquitetural) | todos | 9 | achado reproduzido vira teste | todo |
+| 0  | **Diagnóstico**: por que a mensagem do celular não aparece hoje | AC-0 | — | — | **bloqueado — sem acesso a produção neste ambiente** |
+| 1  | ADR `1688-mensagem-do-aparelho-tira-o-ze.md` (decisão A: corrida aceita) | — | 0 | revisão humana | done |
+| 2  | Migration `1849` (renumerada) — `canal_aparelho`, normalização, validação de textos, RLS force | AC-10, AC-12 | 1 | `supabase test db` — `mensagem_do_aparelho.test.sql` | done (ver nota de validação) |
+| 3  | RPCs `fn_ler/fn_salvar_configuracao_do_aparelho` com CAS e validação de pessoa | AC-10, AC-11, AC-12 | 2 | idem, teste 6 (pessoa inativa recusada) | done |
+| 4  | Migration `1850` (renumerada) — `fn_registrar_mensagem_do_aparelho` (eco, automática, atraso, pausa, fila) | AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8 | 2 | idem, testes 1-5 (matriz de decisão) | done |
+| 5  | `_shared/evolution-aparelho.ts` — porte direto, marcadores, horário | AC-7, AC-9, AC-13 | — | `deno test .../evolution-aparelho.test.ts` (10 testes) | done |
+| 6  | Webhook despacha `fromMe` para a RPC nova | AC-1, AC-5, AC-6 | 4, 5 | `deno test .../handler.test.ts` (17 testes, todo o pacote) | done |
+| 7  | `domain/configuracao-do-aparelho.ts` — validação espelhada no cliente `[P]` | AC-12 | 1 | — | todo |
+| 8  | `components/RespostasPeloAparelho.tsx` — select, textarea, CAS, avisos | AC-3, AC-10, AC-11, AC-12 | 3, 7 | — | todo |
+| 9  | Rótulo "Mensagem automática do WhatsApp" na bolha | AC-5 | 4 | — | todo |
+| 10 | Teste do risco aceito: resposta do Zé já em voo chega mesmo assim | AC-2 | 4 | — | todo (risco documentado no ADR, teste específico não escrito) |
+| 11 | Deixar de chamar `fn_registrar_mensagem_celular` no caminho novo (função permanece) | AC-1 | 6 | webhook já chama só `fn_registrar_mensagem_do_aparelho` | done |
+| 12 | Glossário: aparelho, responsável do aparelho, texto automático do canal, eco | — | 1 | — | todo |
+| 13 | `/revisao-adversarial` (tier arquitetural) | todos | 9 | — | todo |
+
+> **Nota de validação:** mesma ressalva de S36 — `supabase test db` roda contra o banco já em
+> execução, não um reset limpo (bloqueado pela migration 1273 pré-existente). Verificado por
+> leitura cuidadosa; CI valida de fato.
+> **AC-0 permanece aberto.** Sem acesso a produção, não dá pra confirmar a causa raiz do bug
+> relatado (mensagem do celular não aparecia). A RPC nova resolve o comportamento **correto** daqui
+> pra frente (pausa + atribui + cancela fila), mas não prova que o caminho antigo estava de fato
+> quebrado em produção por uma causa específica — isso fica para quem tiver acesso ao projeto.
 
 ## Plano de teste
 
