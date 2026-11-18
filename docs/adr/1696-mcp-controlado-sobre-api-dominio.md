@@ -65,4 +65,4 @@ direto — e a primeira entrega é só leitura.
 ## Referências
 
 `supabase/functions/pcm-mcp/index.ts` · `scripts/check-mcp-ferramentas-controladas.mjs` ·
-`supabase/migrations/1855_E02-S43_registro_uso_mcp.sql` · ADR-1695 (E01-S198, API de domínio).
+`supabase/migrations/1865_E02-S43_registro_uso_mcp.sql` · ADR-1695 (E01-S198, API de domínio).
