@@ -4,10 +4,11 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { GrupoQuantitativo } from "../../application/estrutura-tecnica-gateway";
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; grupo: GrupoQuantitativo; disponivel: boolean };
 const pedido = z.object({ requestId: z.string().guid(), userId: z.string().guid(), clienteId: z.string().guid(), grupoId: z.string().guid(), revision: z.number().int().positive(), chave: z.string().min(1).max(200), motivo: z.string().min(1).max(2000) }).strict(); type Pedido = z.infer<typeof pedido>;
 const evento = z.object({ request_id: z.string().guid(), revisao_anterior: z.number().int().positive(), revisao_nova: z.number().int().positive(), chave: z.string(), motivo: z.string(), antes: z.record(z.string(), z.unknown()), depois: z.record(z.string(), z.unknown()), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict();
-export function RemoverCaracteristicaGrupo(props: Props) { if (import.meta.env.VITE_SSO_REMOVER_CARACTERISTICA_GRUPO_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.grupo.id])} {...props}/>; }
+export function RemoverCaracteristicaGrupo(props: Props) { if (!flagLigada("VITE_SSO_REMOVER_CARACTERISTICA_GRUPO_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.grupo.id])} {...props}/>; }
 function Conteudo({ userId, clienteId, grupo, disponivel }: Props) {
   const key = `sso-remover-caracteristica:${JSON.stringify([userId, clienteId, grupo.id])}`; const client = useQueryClient(); const trava = useRef(false);
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.userId === userId && p.clienteId === clienteId && p.grupoId === grupo.id ? p : "invalido"; } catch { return "invalido"; } });

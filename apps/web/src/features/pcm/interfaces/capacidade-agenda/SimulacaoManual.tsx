@@ -3,6 +3,7 @@ import { calcularDisponibilidade, calcularEsforcoEstimado, simularRemanejamento 
 import { semanaCapacidade } from "../../domain/semana-capacidade";
 import { SnapshotCapacidade } from "./SnapshotCapacidade";
 import { DeslocamentosSemana } from "./DeslocamentosSemana";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Verificacao = "nao_verificado" | "sim" | "nao";
 type Resultado = ReturnType<typeof simularRemanejamento>;
@@ -209,7 +210,7 @@ export function SimulacaoManual({ userId, clienteId, datasIniciais, aoSimular }:
         ))}
         <button type="submit">Simular</button>
       </form>
-      {import.meta.env.VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED === "true" && <section aria-label="Hipótese de deslocamentos semanais">
+      {flagLigada("VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED") && <section aria-label="Hipótese de deslocamentos semanais">
         <h4>Deslocamentos semanais como hipótese parcial</h4>
         <p>Os subtotais são opcionais e incompletos. Se usar, confira que as demandas informadas acima não incluem deslocamento e que o esforço a mover inclui apenas o deslocamento da atividade reprogramada.</p>
         {semanaOrigem && <DeslocamentosSemana key={`origem:${userId}:${clienteId}:${semanaOrigem}`} userId={userId} clienteId={clienteId} semana={semanaOrigem} aoUsarParcial={(d) => {
@@ -226,7 +227,7 @@ export function SimulacaoManual({ userId, clienteId, datasIniciais, aoSimular }:
           <button type="button" onClick={() => { setDeslocamentoSemanalOrigem(null); setDeslocamentoSemanalDestino(null); setConferiuDeslocamentos(false); setResultado(null); aoSimular?.(null); }}>Remover subtotais de deslocamento</button>
         </>}
       </section>}
-      {import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED") && (
         <div>
           <label>
             <input type="checkbox" checked={consultarContexto} onChange={(e) => setConsultarContexto(e.target.checked)} />

@@ -9,6 +9,7 @@ import { FotosRetorno } from "./FotosRetorno";
 import { UploadEvidenciaResposta } from "./UploadEvidenciaResposta";
 import { PreviaCoberturaPerguntas } from "./PreviaCoberturaPerguntas";
 import { PendenciasRetornoAprovado } from "./PendenciasRetornoAprovado";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Retorno = {retorno_id:string;os_id:string;envelope_id:string;revisao_evidencias:number};
 type Pedido = {requestId:string;clienteId:string;retornoId:string;evidenciaId:string;revision:number;tipo:string;referencia:string;descricao:string};
@@ -60,14 +61,14 @@ export function EvidenciasDeclaradas({userId,clienteId}:{userId:string;clienteId
         {evidencias.isFetching && <output>Carregando evidências…</output>}{evidencias.isError && <p role="alert">Evidências indisponíveis. <button type="button" onClick={() => void evidencias.refetch()}>Tentar novamente</button></p>}
         {!evidencias.isFetching && !evidencias.isError && <ul>{evidencias.data?.pages.flat().map((e) => <li key={e.id}>{e.tipo} · {e.referencia} · {e.descricao} · revisão {e.revisao}</li>)}</ul>}
         {evidencias.hasNextPage && <button type="button" onClick={() => void evidencias.fetchNextPage()}>Mais evidências</button>}
-        {import.meta.env.VITE_SSO_CONFERENCIA_COBERTURA_ENABLED === "true" && !evidencias.isFetching && !evidencias.isError && evidencias.data && <ConferenciaCobertura userId={userId} clienteId={clienteId} retornoId={r.retorno_id} revision={r.revisao_evidencias} evidencias={evidencias.data.pages.flat()} />}
-        {import.meta.env.VITE_SSO_EVIDENCIA_POR_RESPOSTA_ENABLED === "true" && !evidencias.isFetching && !evidencias.isError && evidencias.data && <EvidenciaPorResposta userId={userId} clienteId={clienteId} retornoId={r.retorno_id} revision={r.revisao_evidencias} evidencias={evidencias.data.pages.flat()} />}
-        {import.meta.env.VITE_SSO_PREVIA_EVIDENCIA_RESPOSTA_ENABLED === "true" && <PreviaEvidenciasResposta userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
-        {import.meta.env.VITE_SSO_FOTOS_RETORNO_ENABLED === "true" && <FotosRetorno userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
-        {import.meta.env.VITE_SSO_UPLOAD_EVIDENCIA_RESPOSTA_ENABLED === "true" && <UploadEvidenciaResposta userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
-        {import.meta.env.VITE_SSO_PREVIA_COBERTURA_PERGUNTAS_ENABLED === "true" && <PreviaCoberturaPerguntas userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
-        {import.meta.env.VITE_SSO_PENDENCIAS_RETORNO_APROVADO_ENABLED === "true" && <PendenciasRetornoAprovado userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
-        {import.meta.env.VITE_SSO_DECISOES_RETORNO_ENABLED === "true" && <DecisoesRetorno userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
+        {flagLigada("VITE_SSO_CONFERENCIA_COBERTURA_ENABLED") && !evidencias.isFetching && !evidencias.isError && evidencias.data && <ConferenciaCobertura userId={userId} clienteId={clienteId} retornoId={r.retorno_id} revision={r.revisao_evidencias} evidencias={evidencias.data.pages.flat()} />}
+        {flagLigada("VITE_SSO_EVIDENCIA_POR_RESPOSTA_ENABLED") && !evidencias.isFetching && !evidencias.isError && evidencias.data && <EvidenciaPorResposta userId={userId} clienteId={clienteId} retornoId={r.retorno_id} revision={r.revisao_evidencias} evidencias={evidencias.data.pages.flat()} />}
+        {flagLigada("VITE_SSO_PREVIA_EVIDENCIA_RESPOSTA_ENABLED") && <PreviaEvidenciasResposta userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
+        {flagLigada("VITE_SSO_FOTOS_RETORNO_ENABLED") && <FotosRetorno userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
+        {flagLigada("VITE_SSO_UPLOAD_EVIDENCIA_RESPOSTA_ENABLED") && <UploadEvidenciaResposta userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
+        {flagLigada("VITE_SSO_PREVIA_COBERTURA_PERGUNTAS_ENABLED") && <PreviaCoberturaPerguntas userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
+        {flagLigada("VITE_SSO_PENDENCIAS_RETORNO_APROVADO_ENABLED") && <PendenciasRetornoAprovado userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
+        {flagLigada("VITE_SSO_DECISOES_RETORNO_ENABLED") && <DecisoesRetorno userId={userId} clienteId={clienteId} retornoId={r.retorno_id} />}
       </>}
     </li>)}</ul>}
     {retornos.hasNextPage && <button type="button" onClick={() => void retornos.fetchNextPage()}>Mais retornos</button>}

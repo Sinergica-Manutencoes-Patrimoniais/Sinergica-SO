@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DecidirCorrelacaoGasto } from "./DecidirCorrelacaoGasto";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const pedidoSchema = z.object({ atorId: uuid, clienteId: uuid, listaId: uuid, requestId: uuid, fonteId: uuid, despesaId: uuid, vinculoId: uuid,
@@ -37,7 +38,7 @@ export function CorrelacionarGasto({ usuario, cliente, listaId, fonte, parcela, 
   async function conferirAtor() { const { data, error } = await supabase.auth.getUser(); if (error || data.user?.id !== usuario) throw new Error("Sessão alterada"); }
   const consulta = useInfiniteQuery({ queryKey: raiz, initialPageParam: null as string | null, gcTime: 0, retry: false,
     queryFn: async ({ pageParam, signal }) => {
-      await conferirAtor(); const mediado = import.meta.env.VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED === "true"; const { data, error } = await supabase.schema("comercial").rpc(import.meta.env.VITE_SSO_DECISAO_CORRELACAO_ENABLED === "true" ? (mediado ? "sso_listar_correlacoes_gasto_v2_mediado" : "sso_listar_correlacoes_gasto_v2") : (mediado ? "sso_listar_correlacoes_gasto_mediado" : "sso_listar_correlacoes_gasto"), {
+      await conferirAtor(); const mediado = flagLigada("VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED"); const { data, error } = await supabase.schema("comercial").rpc(flagLigada("VITE_SSO_DECISAO_CORRELACAO_ENABLED") ? (mediado ? "sso_listar_correlacoes_gasto_v2_mediado" : "sso_listar_correlacoes_gasto_v2") : (mediado ? "sso_listar_correlacoes_gasto_mediado" : "sso_listar_correlacoes_gasto"), {
         p_ator_id: usuario, p_cliente_id: cliente, p_lista_id: listaId, p_apos: pageParam, p_limite: 30,
       }).abortSignal(signal); if (error) throw error;
       const pagina = z.array(linha).max(30).parse(data); let anterior = pageParam ?? "";
@@ -81,7 +82,7 @@ export function CorrelacionarGasto({ usuario, cliente, listaId, fonte, parcela, 
     if (trava.current) return; trava.current = true; setOcupado(true); setAviso(""); const serializado = JSON.stringify(p);
     try {
       await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
-      const { data, error } = await supabase.schema("comercial").rpc(import.meta.env.VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED === "true" ? "sso_declarar_correlacao_gasto_mediado" : "sso_declarar_correlacao_gasto", {
+      const { data, error } = await supabase.schema("comercial").rpc(flagLigada("VITE_SSO_CORRELACAO_GASTO_MEDIADA_ENABLED") ? "sso_declarar_correlacao_gasto_mediado" : "sso_declarar_correlacao_gasto", {
         p_ator_id: p.atorId, p_cliente_id: p.clienteId, p_request_id: p.requestId, p_fonte_id: p.fonteId,
         p_despesa_id: p.despesaId, p_vinculo_id: p.vinculoId, p_despesa_revision: p.despesaRevision, p_rateio_revision: p.rateioRevision, p_motivo: p.motivo,
       }); if (error) throw error;
@@ -103,7 +104,7 @@ export function CorrelacionarGasto({ usuario, cliente, listaId, fonte, parcela, 
   }
   return <section aria-label="Correlação declarada de gasto">
     <h4>Mesmo gasto em duas fontes</h4>
-    {import.meta.env.VITE_SSO_DECISAO_CORRELACAO_ENABLED === "true" && <DecidirCorrelacaoGasto key={JSON.stringify([usuario, cliente, listaId])}
+    {flagLigada("VITE_SSO_DECISAO_CORRELACAO_ENABLED") && <DecidirCorrelacaoGasto key={JSON.stringify([usuario, cliente, listaId])}
       usuario={usuario} cliente={cliente} listaId={listaId} disponivel={disponivel} />}
     <p>Selecione uma aquisição e uma parcela acima para declarar que representam o mesmo gasto. A ausência nas páginas carregadas não comprova inexistência de correlação.</p>
     {consulta.isFetching && <p role="status">Consultando correlações…</p>}
@@ -114,7 +115,7 @@ export function CorrelacionarGasto({ usuario, cliente, listaId, fonte, parcela, 
       {consulta.hasNextPage && <><p>Há outras páginas. Carregue todas as correlações antes de confirmar a composição; isso não substitui a verificação do servidor.</p><button type="button" onClick={() => void consulta.fetchNextPage()}>Mais correlações</button></>}</>}
     {pendente === "invalido" ? <p role="alert">Tentativa inválida. Procure suporte.</p> : pendente ? <>
       <p>Há uma tentativa pendente; o resultado pode ser incerto.</p><button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button>
-      {import.meta.env.VITE_SSO_RECIBO_CORRELACAO_GASTO_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</button>}
+      {flagLigada("VITE_SSO_RECIBO_CORRELACAO_GASTO_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo</button>}
     </> : <form onSubmit={(e) => { e.preventDefault(); iniciar(); }}>
       {fonte && parcela && <p>Aquisição: {fonte.descricao} · {fonte.valor_centavos} centavos. Parcela: {parcela.descricao} · {parcela.valor_centavos} centavos.</p>}
       <label>Motivo <textarea required maxLength={1000} value={motivo} onChange={(e) => { setMotivo(e.target.value); setConfirmacao(null); }} /></label>

@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z
   .object({
@@ -25,7 +27,15 @@ type Props = {
 };
 type Cursor = { plano: string; versao: string; rotina: string };
 export function PlanosDoAlvo(props: Props) {
-  if (import.meta.env.VITE_SSO_PLANOS_POR_ALVO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PLANOS_POR_ALVO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Planos por alvo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PLANOS_POR_ALVO_ENABLED"]}
+      />
+    );
+  }
   return (
     <Abrir key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.id])} {...props} />
   );

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ItensHistoricosCusto } from "./ItensHistoricosCusto";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const valor = z.number().int().nonnegative().safe().nullable();
 const linha = z.object({ versao: z.number().int().positive(), criado_em: z.string().datetime({ offset: true }), custo_total_centavos: valor, piso_centavos: valor, preco_sugerido_centavos: valor, preco_centavos: valor }).strict();
@@ -25,7 +26,7 @@ export function HistoricoCustosProposta({ userId, clienteId, propostaId }: { use
     {aberto && <><p>Valores registrados em cada versão. Campos indisponíveis não são substituídos pelos atuais.</p>
       {consulta.isFetching && <output>Consultando versões…</output>}{(consulta.isError || !consistentes) && <p role="alert">Histórico indisponível ou divergente. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
       {!consulta.isFetching && !consulta.isError && consistentes && consulta.data && <><ol>{linhas.map((item) => <li key={item.versao}>Versão {item.versao} · {item.criado_em} · custo {dinheiro(item.custo_total_centavos)} · piso {dinheiro(item.piso_centavos)} · sugerido {dinheiro(item.preco_sugerido_centavos)} · venda {dinheiro(item.preco_centavos)}
-        {import.meta.env.VITE_SSO_ITENS_HISTORICOS_CUSTO_ENABLED === "true" && <><button type="button" aria-expanded={versaoAberta === item.versao} onClick={() => setVersaoAberta(versaoAberta === item.versao ? null : item.versao)}>Itens desta versão</button>{versaoAberta === item.versao && <ItensHistoricosCusto userId={userId} clienteId={clienteId} propostaId={propostaId} versao={item.versao} />}</>}</li>)}</ol>{linhas.length === 0 && <p>Nenhuma versão encontrada.</p>}</>}
+        {flagLigada("VITE_SSO_ITENS_HISTORICOS_CUSTO_ENABLED") && <><button type="button" aria-expanded={versaoAberta === item.versao} onClick={() => setVersaoAberta(versaoAberta === item.versao ? null : item.versao)}>Itens desta versão</button>{versaoAberta === item.versao && <ItensHistoricosCusto userId={userId} clienteId={clienteId} propostaId={propostaId} versao={item.versao} />}</>}</li>)}</ol>{linhas.length === 0 && <p>Nenhuma versão encontrada.</p>}</>}
       {consulta.hasNextPage && !consulta.isError && consistentes && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais versões</button>}</>}
   </section>;
 }

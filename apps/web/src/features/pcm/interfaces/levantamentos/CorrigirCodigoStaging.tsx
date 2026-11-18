@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const schema = z
   .object({
     requestId: z.string().guid(),
@@ -28,11 +29,11 @@ type Props = {
 };
 export function CorrigirCodigoStaging(props: Props) {
   if (
-    import.meta.env.VITE_SSO_CORRIGIR_CODIGO_STAGING_ENABLED !== "true" ||
+    !flagLigada("VITE_SSO_CORRIGIR_CODIGO_STAGING_ENABLED") ||
     (!["sistema", "equipamento", "componente"].includes(props.tipo) &&
       !(
         props.tipo === "grupo_quantitativo" &&
-        import.meta.env.VITE_SSO_CORRIGIR_CODIGO_GRUPO_STAGING_ENABLED === "true"
+        flagLigada("VITE_SSO_CORRIGIR_CODIGO_GRUPO_STAGING_ENABLED")
       ))
   )
     return null;

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid(); const revisao = z.number().int().positive(); const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const estadoSchema = z.object({ clienteId: id, cicloId: id, parcelaId: id, propostaId: id, cicloEstado: z.enum(["em_tratamento", "devolvido", "concluido"]),
@@ -35,7 +36,7 @@ export function DevolverParcialCiclo({ userId, clienteId, composicaoId, cicloId,
   async function conferirAtor() { const { data, error } = await supabase.auth.getUser(); if (error || data.user?.id !== userId) throw new Error("Sessão alterada"); }
   const consulta = useQuery({ queryKey: ["backlog-retorno-parcial-contexto", userId, clienteId, cicloId, propostaId], gcTime: 0, refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => { await conferirAtor(); const parametros = { p_cliente_id: clienteId, p_ciclo_id: cicloId, p_proposta_id: propostaId };
-      const requisicao = import.meta.env.VITE_SSO_RETORNO_PARCIAL_MEDIADO_ENABLED === "true"
+      const requisicao = flagLigada("VITE_SSO_RETORNO_PARCIAL_MEDIADO_ENABLED")
         ? supabase.schema("pcm").rpc("sso_consultar_retorno_parcial_mediado", { ...parametros, p_ator_id: userId })
         : supabase.schema("pcm").rpc("sso_consultar_retorno_parcial", parametros);
       const { data, error } = await requisicao.abortSignal(signal);
@@ -52,7 +53,7 @@ export function DevolverParcialCiclo({ userId, clienteId, composicaoId, cicloId,
     if (trava.current) return; trava.current = true; setOcupado(true); setAviso(""); const serializado = JSON.stringify(pedido);
     try {
       await conferirAtor(); if (sessionStorage.getItem(chave) !== serializado) throw new Error("Tentativa alterada");
-      const nome = import.meta.env.VITE_SSO_RETORNO_PARCIAL_MEDIADO_ENABLED === "true" ? "sso_devolver_continuacao_parcial_mediado" : "sso_devolver_continuacao_parcial";
+      const nome = flagLigada("VITE_SSO_RETORNO_PARCIAL_MEDIADO_ENABLED") ? "sso_devolver_continuacao_parcial_mediado" : "sso_devolver_continuacao_parcial";
       const { data, error } = await supabase.schema("pcm").rpc(nome, {
         p_request_id: pedido.requestId, p_ator_esperado: pedido.atorId, p_cliente_id: pedido.clienteId, p_ciclo_id: pedido.cicloId,
         p_retorno_id: pedido.retornoId, p_ciclo_revision: pedido.cicloRevision, p_suspensao_revision: pedido.suspensaoRevision,
@@ -114,7 +115,7 @@ export function DevolverParcialCiclo({ userId, clienteId, composicaoId, cicloId,
       <p>Suspensão {atual.suspensaoEstado ?? "ausente"} · interrupção {atual.interrupcaoEstado ?? "ausente"} · revisão humana {atual.revisaoHumana ?? "ausente"} · vínculo {atual.vinculoRequestId ? "declarado" : "ausente"}.</p>
       {!elegivel && <p>Condições carregadas não permitem registrar o retorno neste caminho.</p>}</>}
     {recuperacao.invalido ? <p role="alert">Tentativa local inválida. Procure suporte.</p> : pendente ? <><p>Há retorno pendente para proposta {pendente.propostaId}; a resposta pode ter sido perdida.</p><Button variant="secondary" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</Button>
-      {import.meta.env.VITE_SSO_RECIBO_DEVOLUCAO_PARCIAL_ENABLED === "true" && <Button variant="secondary" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar confirmação</Button>}</> : <>
+      {flagLigada("VITE_SSO_RECIBO_DEVOLUCAO_PARCIAL_ENABLED") && <Button variant="secondary" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar confirmação</Button>}</> : <>
       <label>Motivo <textarea className="input" maxLength={2000} value={motivo} disabled={ocupado || !elegivel} onChange={(e) => { setMotivo(e.target.value); setConfirmacao(null); }} /></label>
       {confirmacao && confirmacao !== fotografia && <p role="alert">Os dados mudaram. Confira novamente.</p>}
       <label><input type="checkbox" checked={Boolean(fotografia && confirmacao === fotografia)} disabled={ocupado || !elegivel || !fotografia} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Confirmo o restante e as revisões exibidas.</label>

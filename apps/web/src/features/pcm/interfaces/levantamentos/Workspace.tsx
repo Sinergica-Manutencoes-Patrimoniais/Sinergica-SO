@@ -85,12 +85,12 @@ function Conteudo({
   });
   const consultaDireta = useQuery({
     queryKey:["levantamentos",userId,clienteId,"lote-recebido",loteRecebido],
-    enabled:import.meta.env.VITE_SSO_CONSULTA_LOTE_RECEBIDO_ENABLED === "true" && Boolean(userId && clienteId && loteRecebido && gateway.consultarLoteRecebido),
+    enabled:flagLigada("VITE_SSO_CONSULTA_LOTE_RECEBIDO_ENABLED") && Boolean(userId && clienteId && loteRecebido && gateway.consultarLoteRecebido),
     gcTime:0, retry:false, refetchOnWindowFocus:true,
     queryFn:({signal})=>gateway.consultarLoteRecebido!(userId,clienteId,loteRecebido!,signal),
   });
   useEffect(()=>{
-    if(lotes.isError && loteRecebido && import.meta.env.VITE_SSO_CONSULTA_LOTE_RECEBIDO_ENABLED === "true" && gateway.consultarLoteRecebido && erroListaRevalidado.current !== lotes.errorUpdatedAt){
+    if(lotes.isError && loteRecebido && flagLigada("VITE_SSO_CONSULTA_LOTE_RECEBIDO_ENABLED") && gateway.consultarLoteRecebido && erroListaRevalidado.current !== lotes.errorUpdatedAt){
       erroListaRevalidado.current=lotes.errorUpdatedAt;
       void consultaDireta.refetch();
     }
@@ -210,7 +210,7 @@ function Conteudo({
             {loteAtual && <ReferenciasCampo userId={userId} clienteId={clienteId} loteId={loteAtual.id} chave={linha.chave} />}
             {loteAtual && <FotosLevantamento userId={userId} clienteId={clienteId} loteId={loteAtual.id} chave={linha.chave} />}
             {loteAtual && <DocumentosLevantamento userId={userId} clienteId={clienteId} loteId={loteAtual.id} chave={linha.chave} />}
-            {import.meta.env.VITE_SSO_CONFERENCIA_LEVANTAMENTOS_ENABLED === "true" && loteAtual && (
+            {flagLigada("VITE_SSO_CONFERENCIA_LEVANTAMENTOS_ENABLED") && loteAtual && (
               <Conferencia
                 key={`${loteAtual.id}:${linha.chave}`}
                 userId={userId}
@@ -260,3 +260,4 @@ function Conteudo({
 }
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";

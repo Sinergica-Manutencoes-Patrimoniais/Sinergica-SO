@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const resposta = z.object({ clienteId: uuid, itemId: uuid, fatoId: uuid, declaracaoId: uuid, snapshotId: uuid, osId: uuid,
@@ -8,7 +10,15 @@ const resposta = z.object({ clienteId: uuid, itemId: uuid, fatoId: uuid, declara
   execucaoFisicaComprovada: z.literal(false), exclusividadeComprovada: z.literal(false), autorizaFaturamento: z.literal(false) }).strict();
 
 export function RastreioCandidatoServico(props: { usuario: string; cliente: string; itemId: string }) {
-  if (import.meta.env.VITE_SSO_RASTREIO_CANDIDATO_SERVICO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RASTREIO_CANDIDATO_SERVICO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Rastreio candidato servico"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RASTREIO_CANDIDATO_SERVICO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.itemId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, itemId }: { usuario: string; cliente: string; itemId: string }) {

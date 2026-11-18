@@ -6,6 +6,7 @@ import {
   supabaseOrcamentoOperacionalAdapter,
   validarPrepararOrcamento,
 } from "../../infrastructure/supabase-orcamento-operacional-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = {
   usuario: string;
@@ -36,7 +37,7 @@ export function PrepararOrcamentoOperacional(props: Props) {
   </section>;
   if(parcelasPendentes && (!manualPendente || modoRecuperacao==="parcelas")) return <PrepararParcelas {...props} aoSalvar={aoSalvar} />;
   if(manualPendente && (!parcelasPendentes || modoRecuperacao==="manual")) return <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.propostaId,props.listaId])} {...props} aoSalvar={aoSalvar} />;
-  if (import.meta.env.VITE_SSO_ORCAMENTO_PARCELAS_ENABLED === "true") return <PrepararParcelas {...props} aoSalvar={aoSalvar} />;
+  if (flagLigada("VITE_SSO_ORCAMENTO_PARCELAS_ENABLED")) return <PrepararParcelas {...props} aoSalvar={aoSalvar} />;
   return (
     <Conteudo
       key={JSON.stringify([

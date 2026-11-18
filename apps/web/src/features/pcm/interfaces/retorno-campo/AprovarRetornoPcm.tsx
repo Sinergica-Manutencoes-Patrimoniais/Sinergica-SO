@@ -5,6 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { FinalizarOsValidada } from "./FinalizarOsValidada";
 import { AprovarFinalizarAtomico } from "./AprovarFinalizarAtomico";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; justificativa: string };
 const respostaAprovacao = z.object({ retornoId: z.string().guid(), condicaoEvidenciaId: z.string().guid(), decisaoId: z.string().guid(), revision: z.number().int().positive(), pendenciasProcessadas: z.number().int().nonnegative(), osEncerrada: z.literal(false), conteudoAutenticado: z.literal(false), requestId: z.string().guid() }).strict();
 const historicoSchema = z.object({request_id:z.string().guid(),condicao_evidencia_id:z.string().guid(),decisao_id:z.string().guid(),revisao_decisao:z.number().int().positive(),justificativa:z.string(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
@@ -39,7 +40,7 @@ function Conteudo({ userId, clienteId, retornoId, conferenciaId, evidencias, dec
   if (permissao.isPending || permissao.isFetching) return <p>Verificando autorização…</p>;
   if (permissao.isError) return <p role="alert">Autorização indisponível. <button type="button" onClick={() => void permissao.refetch()}>Tentar novamente</button></p>;
   if (!permitido) return null;
-  const atomico = import.meta.env.VITE_SSO_APROVACAO_FINALIZACAO_ATOMICA_ENABLED === "true";
+  const atomico = flagLigada("VITE_SSO_APROVACAO_FINALIZACAO_ATOMICA_ENABLED");
   return <section aria-label="Atestação e aprovação PCM"><h5>Atestar e aprovar retorno</h5><p>O PCM confirma a revisão; o servidor revalida requisitos de resposta/evidência e prepara pendências Não OK. Isso não autentica conteúdo nem chama Auvo.</p>
     {!historicoCompleto && <p>Histórico não reconciliado; operação bloqueada.</p>}
     {atomico && !pendente ? <AprovarFinalizarAtomico userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={evidencias} decisao={decisao} historicoCompleto={historicoCompleto} /> : !atomico && <form onSubmit={(e) => { e.preventDefault(); if (pendente || confirmado!==fotografia || !historicoCompleto || !justificativa.trim()) return; enviar({ requestId: crypto.randomUUID(), clienteId, retornoId, conferenciaId, evidencias, decisao, justificativa: justificativa.trim() }); }}>
@@ -49,7 +50,7 @@ function Conteudo({ userId, clienteId, retornoId, conferenciaId, evidencias, dec
     </form>}
     {historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}
     {historico.data && !historico.isFetching && !historico.isError && <ul>{historico.data.pages.flat().map((r) => <li key={r.request_id}>Decisão {r.decisao_id} · revisão {r.revisao_decisao} · {r.justificativa} · {r.ator_id} · {r.criado_em}
-      {import.meta.env.VITE_SSO_FINALIZAR_OS_VALIDADA_ENABLED === "true" && <FinalizarOsValidada userId={userId} clienteId={clienteId} retornoId={retornoId} atestacaoId={r.request_id} decisaoRevision={r.revisao_decisao} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
+      {flagLigada("VITE_SSO_FINALIZAR_OS_VALIDADA_ENABLED") && <FinalizarOsValidada userId={userId} clienteId={clienteId} retornoId={retornoId} atestacaoId={r.request_id} decisaoRevision={r.revisao_decisao} />}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente,true)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
   </section>;
 }

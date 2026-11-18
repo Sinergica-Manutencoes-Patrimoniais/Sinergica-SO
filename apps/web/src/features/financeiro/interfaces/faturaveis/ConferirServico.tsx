@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { prepararConferenciaFaturavel } from "../../domain/faturaveis";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid=z.string().guid();
 const pedidoSchema=z.object({requestId:uuid,clienteId:uuid,itemId:uuid,fatoId:uuid,revision:z.number().int().positive().safe(),atestacaoRevision:z.number().int().positive().safe(),valorCentavos:z.number().int().nonnegative().safe(),motivo:z.string().max(2000).nullable()}).strict();
@@ -36,7 +38,15 @@ export function RecuperarConferenciasServico({usuario,cliente,itensVisiveis}:{us
       setPedidos(encontrados);setErro("");setAviso(encontrados.length?`${encontrados.length} tentativa(s) encontrada(s) nesta aba.`:"Nenhuma tentativa encontrada nesta aba.");
     }catch{setPedidos([]);setErro("Não foi possível ler as tentativas desta aba. Procure suporte.");}
   }
-  if(import.meta.env.VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia candidato servico"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED"]}
+      />
+    );
+  }
   return <section aria-label="Recuperar conferências de serviço"><button type="button" onClick={procurar}>Procurar conferências pendentes nesta aba</button>
     {erro&&<p role="alert">{erro}</p>}{aviso&&<p role="status">{aviso}</p>}
     {pedidos.filter(p=>!itensVisiveis.includes(p.itemId)).map(p=><div key={p.requestId}><p>Item {p.itemId}, fora da lista exibida.</p><ConferirServico usuario={usuario} cliente={cliente} itemId={p.itemId} fatoId={p.fatoId} revision={p.revision} valorOriginal={p.valorCentavos} status="recuperacao" onRecuperado={()=>{setPedidos(atuais=>atuais.filter(item=>item.requestId!==p.requestId));setAviso(`Conferência do item ${p.itemId} confirmada. Nenhuma cobrança foi criada.`);}} /></div>)}
@@ -44,7 +54,15 @@ export function RecuperarConferenciasServico({usuario,cliente,itensVisiveis}:{us
 }
 
 export function ConferirServico(props:Props){
-  if(import.meta.env.VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia candidato servico"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_CANDIDATO_SERVICO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.itemId,props.fatoId])} {...props}/>;
 }
 function Conteudo({usuario,cliente,itemId,fatoId,revision,valorOriginal,status,onRecuperado}:Props){

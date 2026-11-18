@@ -2,11 +2,12 @@ import { useInfiniteQuery,useQueryClient } from "@tanstack/react-query";
 import { useEffect,useRef,useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Base={userId:string;clienteId:string};
 type Props=Base&{grupoId:string;nome:string;revisao:number;ativo:boolean;disponivel:boolean};
 const pedidoSchema=z.object({requestId:z.string().guid(),userId:z.string().guid(),clienteId:z.string().guid(),grupoId:z.string().guid(),revision:z.number().int().positive(),ativo:z.boolean(),motivo:z.string().min(1).max(2000)}).strict();
 const linhaSchema=z.object({id:z.string().guid(),nome:z.string(),revisao:z.number().int().positive(),local_id:z.string().guid()}).strict();
-export function EstadoGrupo(p:Props){if(import.meta.env.VITE_SSO_ESTADO_GRUPO_ENABLED!=="true")return null;return <Comando key={JSON.stringify([p.userId,p.clienteId,p.grupoId])} {...p}/>;}
+export function EstadoGrupo(p:Props){if(!flagLigada("VITE_SSO_ESTADO_GRUPO_ENABLED"))return null;return <Comando key={JSON.stringify([p.userId,p.clienteId,p.grupoId])} {...p}/>;}
 function Comando(p:Props){
  const key=`sso-estado-grupo:${JSON.stringify([p.userId,p.clienteId,p.grupoId])}`;
  const [pendente,setPendente]=useState<z.infer<typeof pedidoSchema>|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const v=pedidoSchema.parse(JSON.parse(raw));return v.userId===p.userId&&v.clienteId===p.clienteId&&v.grupoId===p.grupoId?v:"invalido";}catch{return "invalido";}});
@@ -31,7 +32,7 @@ function Comando(p:Props){
   </form>}</>}{aviso&&<p role="status">{aviso}</p>}
  </section>;
 }
-export function GruposInativos(p:Base&{locais:{id:string;nome:string}[]}){if(import.meta.env.VITE_SSO_ESTADO_GRUPO_ENABLED!=="true")return null;return <Lista key={JSON.stringify([p.userId,p.clienteId])} {...p}/>;}
+export function GruposInativos(p:Base&{locais:{id:string;nome:string}[]}){if(!flagLigada("VITE_SSO_ESTADO_GRUPO_ENABLED"))return null;return <Lista key={JSON.stringify([p.userId,p.clienteId])} {...p}/>;}
 function Lista(p:Base&{locais:{id:string;nome:string}[]}){
  const consulta=useInfiniteQuery({queryKey:["grupos-inativos",p.userId,p.clienteId],initialPageParam:null as string|null,gcTime:0,staleTime:0,retry:false,refetchOnWindowFocus:true,
   queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_listar_grupos_inativos",{p_cliente_id:p.clienteId,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(linhaSchema).max(20).parse(data);},getNextPageParam:pagina=>pagina.length===20?pagina.at(-1)?.id:undefined});

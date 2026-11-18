@@ -9,6 +9,7 @@ import { LoteOcorrenciasVisita } from "./LoteOcorrenciasVisita";
 import { OrigemGeracaoRotina } from "./OrigemGeracaoRotina";
 import { conflitoPreparacaoVisita } from "./conflito-preparacao-visita";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Candidato = {
   visita_id: string;
@@ -79,7 +80,7 @@ function Conteudo({
   const [filaAberta, setFilaAberta] = useState(false);
   const [confirmado, setConfirmado] = useState<string | null>(null);
   const modo =
-    import.meta.env.VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED === "true"
+    flagLigada("VITE_SSO_MATERIALIZAR_VISITA_CANONICA_ENABLED")
       ? "canonico"
       : "anterior";
   const [pedido, setPedido] = useState<Pedido | "invalido" | null>(() => {
@@ -467,7 +468,7 @@ function Conteudo({
                   </button>
                 )}
               {selecionado === c.visita_id &&
-                import.meta.env.VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED === "true" && (
+                flagLigada("VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED") && (
                   <ConferenciaPmocCiclo
                     key={c.visita_id}
                     userId={userId}
@@ -562,7 +563,7 @@ function Conteudo({
       )}
       {periodo &&
         !candidatos.isError &&
-        import.meta.env.VITE_SSO_LOTE_VISITA_CANONICA_ENABLED === "true" && (
+        flagLigada("VITE_SSO_LOTE_VISITA_CANONICA_ENABLED") && (
           <LoteOcorrenciasVisita
             userId={userId}
             clienteId={clienteId}
@@ -580,7 +581,7 @@ function Conteudo({
           <p>
             Visita {resultado.visitaId} · ocorrência preparada {resultado.ocorrenciaId}.
           </p>
-          {import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_FILA_VISITA_ENABLED") && (
             <button
               type="button"
               aria-expanded={filaAberta}
@@ -619,7 +620,7 @@ function Conteudo({
             Repetir mesmo pedido
           </button>
           {(pedido.modo ?? "anterior") === "anterior" &&
-            import.meta.env.VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED === "true" && (
+            flagLigada("VITE_SSO_RECIBO_PREPARACAO_VISITA_ENABLED") && (
               <button
                 type="button"
                 disabled={envio.isPending || reciboAnterior.isPending}

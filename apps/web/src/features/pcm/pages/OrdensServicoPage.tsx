@@ -14,6 +14,7 @@ import {
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { flagLigada } from "../../../config/flags-sso";
 import { supabase } from "../../../lib/supabase-client";
 import { useDebouncedValue } from "../../../lib/use-debounced-value";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
@@ -245,7 +246,7 @@ export function OrdensServicoPage({
     enabled:
       consultasAtivas &&
       visao === "kanban" &&
-      import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" &&
+      flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") &&
       chamadosParaResumo.length > 0,
     staleTime: 0,
     refetchInterval: 30000,
@@ -268,7 +269,7 @@ export function OrdensServicoPage({
     await Promise.all([
       visao === "kanban" ? feedsKanban.refetch() : feed.refetch(),
       queryKpis.refetch(),
-      ...(import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length
+      ...(flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length
         ? [resumoChamados.refetch()]
         : []),
     ]);
@@ -481,7 +482,7 @@ export function OrdensServicoPage({
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível aplicar em lote.");
     } finally {
-      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length)
+      if (flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length)
         await resumoChamados.refetch();
       setSalvando(false);
     }
@@ -512,7 +513,7 @@ export function OrdensServicoPage({
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
-      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length)
+      if (flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length)
         await resumoChamados.refetch();
       setSalvando(false);
     }
@@ -832,7 +833,7 @@ export function OrdensServicoPage({
               {visao === "kanban" &&
                 user &&
                 filtros.clienteId !== "todos" &&
-                import.meta.env.VITE_SSO_QUADRO_CHAMADOS_ENABLED === "true" && (
+                flagLigada("VITE_SSO_QUADRO_CHAMADOS_ENABLED") && (
                   <QuadroGerencial
                     key={`${user.id}:${filtros.clienteId}`}
                     usuario={user.id}
@@ -847,7 +848,7 @@ export function OrdensServicoPage({
               {visao === "kanban" &&
                 user &&
                 filtros.clienteId !== "todos" &&
-                import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && (
+                flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && (
                   <PainelLateralBacklog
                     key={`${user.id}:${filtros.clienteId}`}
                     userId={user.id}
@@ -857,7 +858,7 @@ export function OrdensServicoPage({
               {visao === "kanban" &&
                 user &&
                 filtros.clienteId === "todos" &&
-                import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && (
+                flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && (
                   <p>Selecione um Cliente para consultar seu backlog de escopo.</p>
                 )}
               {visao === "kanban" && (

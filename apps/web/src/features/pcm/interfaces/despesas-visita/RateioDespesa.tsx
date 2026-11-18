@@ -1,5 +1,7 @@
+import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { dividirRateioIgual } from "../../domain/despesas-visita";
 import {
@@ -13,11 +15,15 @@ import {
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function RateioDespesa(props: Props) {
-  if (
-    import.meta.env.VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED !== "true" ||
-    props.despesa.status !== "ativa"
-  )
-    return null;
+  if (props.despesa.status !== "ativa") return null;
+  if (!flagLigada("VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED"))
+    return (
+      <RecursoNaoAtivado
+        recurso="Rateio de despesas da Visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RATEIO_DESPESAS_VISITA_ENABLED"]}
+      />
+    );
   return (
     <Conteudo
       key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])}

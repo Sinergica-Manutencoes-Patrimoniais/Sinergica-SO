@@ -19,6 +19,7 @@ import { IntervalosDeclarados } from "./IntervalosDeclarados";
 import { OcorrenciasSemOs } from "./OcorrenciasSemOs";
 import { SnapshotCapacidade } from "./SnapshotCapacidade";
 import { SimulacaoManual } from "./SimulacaoManual";
+import { flagLigada } from "../../../../config/flags-sso";
 
 /** Consulta parcial de declarações; não calcula demanda nem confirma capacidade efetiva. */
 export function CapacidadeAgendaWorkspace({
@@ -162,7 +163,7 @@ export function CapacidadeAgendaWorkspace({
                 <button type="button" onClick={() => setFormulario(item)}>
                   Revisar
                 </button>
-                {import.meta.env.VITE_SSO_INTERVALOS_CAPACIDADE_ENABLED === "true" && (
+                {flagLigada("VITE_SSO_INTERVALOS_CAPACIDADE_ENABLED") && (
                   <IntervalosDeclarados
                     userId={userId}
                     clienteId={clienteId}
@@ -170,7 +171,7 @@ export function CapacidadeAgendaWorkspace({
                     revision={item.revisao}
                   />
                 )}
-                {import.meta.env.VITE_SSO_CONFLITOS_CAPACIDADE_ENABLED === "true" && (
+                {flagLigada("VITE_SSO_CONFLITOS_CAPACIDADE_ENABLED") && (
                   <DiagnosticoConflitos
                     userId={userId}
                     clienteId={clienteId}
@@ -178,7 +179,7 @@ export function CapacidadeAgendaWorkspace({
                     revision={item.revisao}
                   />
                 )}
-                {import.meta.env.VITE_SSO_CONFLITOS_INTERCLIENTES_ENABLED === "true" && (
+                {flagLigada("VITE_SSO_CONFLITOS_INTERCLIENTES_ENABLED") && (
                   <ConflitosInterclientes
                     userId={userId}
                     clienteId={clienteId}
@@ -198,7 +199,7 @@ export function CapacidadeAgendaWorkspace({
       )}
       {semanaSelecionada && (
         <section>
-          {import.meta.env.VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED") && (
             <SimulacaoManual key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
           )}
           <h3>Disponibilidade e Visitas por técnico</h3>
@@ -206,19 +207,19 @@ export function CapacidadeAgendaWorkspace({
           {(lista.hasNextPage || vinculos.hasNextPage) && <p>Carregue todas as páginas de disponibilidade e vínculos para relacionar por técnico.</p>}
           {agrupamentoInconsistente && <p role="alert">Os registros carregados são inconsistentes ou duplicados. A comparação foi suspensa. <button type="button" onClick={() => { void lista.refetch(); void vinculos.refetch(); }}>Atualizar fontes</button></p>}
           {porTecnico && <ul>{porTecnico.map((t) => <li key={t.funcionarioId}>Técnico {t.funcionarioId} · disponibilidade declarada {t.disponibilidade === null ? "não informada" : `${t.disponibilidade} min`} · {t.participacoes} participação(ões) em Visitas · {t.estimativaCompleta === null ? "estimativa incompleta ou não informada" : `${t.estimativaCompleta} min estimados`} · {t.estimativasPendentes} estimativa(s) pendente(s)</li>)}</ul>}
-          {import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED") && (
             <SnapshotCapacidade userId={userId} clienteId={clienteId} semana={semana} />
           )}
-          {import.meta.env.VITE_SSO_AGENDA_TECNICO_CAPACIDADE_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_AGENDA_TECNICO_CAPACIDADE_ENABLED") && (
             <AgendaTecnicoContexto userId={userId} clienteId={clienteId} semana={semana} />
           )}
-          {import.meta.env.VITE_SSO_HORIZONTE_CAPACIDADE_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_HORIZONTE_CAPACIDADE_ENABLED") && (
             <HorizonteCapacidade userId={userId} clienteId={clienteId} semana={semana} />
           )}
-          {import.meta.env.VITE_SSO_FONTES_DEMANDA_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_FONTES_DEMANDA_ENABLED") && (
             <FontesDemanda userId={userId} clienteId={clienteId} semana={semana} />
           )}
-          {import.meta.env.VITE_SSO_OCORRENCIAS_SEM_OS_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_OCORRENCIAS_SEM_OS_ENABLED") && (
             <OcorrenciasSemOs userId={userId} clienteId={clienteId} semana={semana} />
           )}
           <h3>Vínculos de equipe em Visitas</h3>

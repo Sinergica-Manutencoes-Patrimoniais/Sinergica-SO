@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, ator: uuid, cliente: uuid, plano: uuid, rotina: uuid,
@@ -12,7 +14,15 @@ type Props = { userId: string; clienteId: string; planoId: string; versaoId: str
   alvoId: string; revisao: number; onAtualizar: () => void };
 
 export function NaturezaAlvoRotina(props: Props) {
-  if (import.meta.env.VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Natureza alvo rotina"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId, props.versaoId, props.rotinaId, props.alvoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, alvoId, revisao, onAtualizar }: Props) {

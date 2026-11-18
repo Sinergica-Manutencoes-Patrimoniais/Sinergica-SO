@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 const camposSchema=z.object({descricao:z.string().nullable().optional(),tipo:z.string().nullable().optional(),ordem:z.number().int().nonnegative().max(999999).optional()}).strict().refine(x=>Object.keys(x).length>0);
 const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),chave:z.string(),campos:camposSchema,motivo:z.string().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number;tipo:string};
-export function CamposLocalizacaoStaging(props:Props){if(import.meta.env.VITE_SSO_CAMPOS_LOCALIZACAO_STAGING_ENABLED!=="true" || !["area","local","sublocal"].includes(props.tipo))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
+export function CamposLocalizacaoStaging(props:Props){if (!["area","local","sublocal"].includes(props.tipo)) return null; if (!flagLigada("VITE_SSO_CAMPOS_LOCALIZACAO_STAGING_ENABLED")) return <RecursoNaoAtivado recurso="Campos localizacao staging" podeAdministrar={false} faltando={["VITE_SSO_CAMPOS_LOCALIZACAO_STAGING_ENABLED"]} />;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.chave])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,chave,revisao,tipo}:Props){
  const storage=`sso-campos-localizacao:${JSON.stringify([userId,clienteId,loteId,chave])}`;const client=useQueryClient();const trava=useRef(false);
  const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const raw=sessionStorage.getItem(storage);if(!raw)return null;const p=pedidoSchema.parse(JSON.parse(raw));return p.loteId===loteId && p.chave===chave?p:"invalido";}catch{return "invalido";}});

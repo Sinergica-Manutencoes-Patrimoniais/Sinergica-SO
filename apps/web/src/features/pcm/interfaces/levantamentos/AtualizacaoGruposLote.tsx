@@ -2,6 +2,7 @@ import { createContext, useContext, useRef, useState, type ReactNode } from "rea
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const itemSchema=z.object({chave:z.string().min(1).max(200),grupoId:z.string().guid(),grupoRevision:z.number().int().positive().safe(),
   localId:z.string().guid(),atributos:z.record(z.string(), z.unknown()),caracteristicas:z.record(z.string(), z.string()),motivo:z.string().min(1).max(2000),
@@ -11,7 +12,7 @@ const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 const Contexto=createContext<((item:Item)=>void)|null>(null);
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;children:ReactNode};
-export function AtualizacaoGruposLote(props:Props){if(import.meta.env.VITE_SSO_ATUALIZACAO_GRUPOS_LOTE_ENABLED!=="true")return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
+export function AtualizacaoGruposLote(props:Props){if(!flagLigada("VITE_SSO_ATUALIZACAO_GRUPOS_LOTE_ENABLED"))return <>{props.children}</>;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,revisao,children}:Props){
  const storage=`sso-atualizar-grupos-lote:${JSON.stringify([userId,clienteId,loteId])}`;const client=useQueryClient();const trava=useRef(false);
  const [itens,setItens]=useState<Item[]>([]);const [confirmado,setConfirmado]=useState<string|null>(null);const [aviso,setAviso]=useState("");

@@ -6,6 +6,7 @@ import { EventosOrigem } from "./EventosOrigem";
 import { HistoricoObservacaoOrigem } from "./HistoricoObservacaoOrigem";
 import { OrigensDespesaIncompletas } from "./OrigensDespesaIncompletas";
 import { CustosProposta } from "./CustosProposta";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Origem = { chave:string; descricao:string; classificacao:string; osId?: string };
 const comercialSchema = z.object({ proposta_id: z.string().guid(), os_id: z.string().guid(), lista_id: z.string().guid(),
@@ -20,7 +21,7 @@ function Secao({userId,clienteId,tipo,onAbrirOs}:{userId:string;clienteId:string
     queryFn:async ({pageParam,signal}) => {
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-      const mediada=import.meta.env.VITE_SSO_ORIGENS_INTERNAS_MEDIADAS_ENABLED === "true";
+      const mediada=flagLigada("VITE_SSO_ORIGENS_INTERNAS_MEDIADAS_ENABLED");
       const nome=tipo === "comercial" ? (mediada ? "sso_reconciliacao_comercial_mediada" : "sso_listar_reconciliacao_comercial") : (mediada ? "sso_reconciliacao_financeiro_mediada" : "sso_listar_reconciliacao_financeiro");
       const {data,error}=await supabase.schema("pcm").rpc(nome,{p_cliente_id:clienteId,p_apos:pageParam,p_limite:50,...(mediada?{p_ator_id:userId}:{})}).abortSignal(signal);
       if(error) throw error;
@@ -47,10 +48,10 @@ function Secao({userId,clienteId,tipo,onAbrirOs}:{userId:string;clienteId:string
     {consulta.data && !consulta.isFetching && !consulta.isError && !divergentes && origens.length === 0 && <p>Nenhum vínculo encontrado nesta consulta.</p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && !divergentes && <ul>{origens.map((r) => <li key={r.chave}>{r.descricao} · {r.classificacao}
       {r.osId && onAbrirOs && <button type="button" onClick={() => onAbrirOs(r.osId!)}>Abrir OS</button>}
-      {tipo === "comercial" && import.meta.env.VITE_SSO_CUSTOS_PROPOSTA_ESCOPADOS_ENABLED === "true" && <CustosProposta userId={userId} clienteId={clienteId} propostaId={r.chave} />}
-      {import.meta.env.VITE_SSO_EVENTOS_RECONCILIACAO_ENABLED === "true" && <button type="button" onClick={() => setSelecionado(selecionado === r.chave ? null : r.chave)}>Eventos locais</button>}
-      {selecionado === r.chave && import.meta.env.VITE_SSO_EVENTOS_RECONCILIACAO_ENABLED === "true" && <EventosOrigem userId={userId} clienteId={clienteId} tipo={tipo} id={r.chave} />}
-      {import.meta.env.VITE_SSO_HISTORICO_ORIGENS_ENABLED === "true" && <><button type="button" aria-expanded={observacaoSelecionada === r.chave} onClick={() => setObservacaoSelecionada(observacaoSelecionada === r.chave ? null : r.chave)}>Observações locais</button>
+      {tipo === "comercial" && flagLigada("VITE_SSO_CUSTOS_PROPOSTA_ESCOPADOS_ENABLED") && <CustosProposta userId={userId} clienteId={clienteId} propostaId={r.chave} />}
+      {flagLigada("VITE_SSO_EVENTOS_RECONCILIACAO_ENABLED") && <button type="button" onClick={() => setSelecionado(selecionado === r.chave ? null : r.chave)}>Eventos locais</button>}
+      {selecionado === r.chave && flagLigada("VITE_SSO_EVENTOS_RECONCILIACAO_ENABLED") && <EventosOrigem userId={userId} clienteId={clienteId} tipo={tipo} id={r.chave} />}
+      {flagLigada("VITE_SSO_HISTORICO_ORIGENS_ENABLED") && <><button type="button" aria-expanded={observacaoSelecionada === r.chave} onClick={() => setObservacaoSelecionada(observacaoSelecionada === r.chave ? null : r.chave)}>Observações locais</button>
         {observacaoSelecionada === r.chave && <HistoricoObservacaoOrigem userId={userId} clienteId={clienteId} tipo={tipo} objetoId={r.chave} />}</>}
     </li>)}</ul>}
     {consulta.hasNextPage && !consulta.isError && !divergentes && <button type="button" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais origens</button>}
@@ -60,6 +61,6 @@ export function OrigensInternas({userId,clienteId,onAbrirOs}:{userId:string;clie
   return <section aria-label="Origens Comercial e Financeiro"><h3>Vínculos internos</h3>
     <p>Somente vínculos comprovados. Observação não é confirmação ou resolução de divergência. Valores omitidos.</p>
     <Secao key={JSON.stringify([userId,clienteId,"comercial"])} userId={userId} clienteId={clienteId} tipo="comercial" onAbrirOs={onAbrirOs}/><Secao key={JSON.stringify([userId,clienteId,"financeiro"])} userId={userId} clienteId={clienteId} tipo="financeiro"/>
-    {import.meta.env.VITE_SSO_ORIGENS_DESPESA_INCOMPLETAS_ENABLED === "true" && <OrigensDespesaIncompletas userId={userId} clienteId={clienteId} />}
+    {flagLigada("VITE_SSO_ORIGENS_DESPESA_INCOMPLETAS_ENABLED") && <OrigensDespesaIncompletas userId={userId} clienteId={clienteId} />}
   </section>;
 }

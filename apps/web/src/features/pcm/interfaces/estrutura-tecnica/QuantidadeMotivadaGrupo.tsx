@@ -4,11 +4,12 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { GrupoQuantitativo } from "../../application/estrutura-tecnica-gateway";
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const schema=z.object({requestId:z.string().guid(),userId:z.string().guid(),clienteId:z.string().guid(),grupoId:z.string().guid(),revision:z.number().int().positive(),quantidade:z.number().int().safe().positive(),motivo:z.string().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;grupo:GrupoQuantitativo;disponivel:boolean};
-export function QuantidadeMotivadaGrupo(props:Props){if(import.meta.env.VITE_SSO_QUANTIDADE_MOTIVADA_GRUPO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.grupo.id])} {...props}/>;}
+export function QuantidadeMotivadaGrupo(props:Props){if(!flagLigada("VITE_SSO_QUANTIDADE_MOTIVADA_GRUPO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.grupo.id])} {...props}/>;}
 function Conteudo({userId,clienteId,grupo,disponivel}:Props){
   const key=`sso-quantidade-grupo:${JSON.stringify([userId,clienteId,grupo.id])}`;
   const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=schema.parse(JSON.parse(raw));return p.userId===userId && p.clienteId===clienteId && p.grupoId===grupo.id ? p : "invalido";}catch{return "invalido";}});

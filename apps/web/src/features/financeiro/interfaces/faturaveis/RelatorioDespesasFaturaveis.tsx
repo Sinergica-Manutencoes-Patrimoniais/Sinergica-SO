@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const contagem = z.number().int().nonnegative().safe();
 const centavos = z.string().regex(/^(0|[1-9]\d*)$/);
@@ -11,7 +12,7 @@ export function RelatorioDespesasFaturaveis(props: { usuario: string; cliente: s
   return <Conteudo key={JSON.stringify([props.usuario,props.cliente])} {...props}/>;
 }
 function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
-  const mediado=import.meta.env.VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_MEDIADO_ENABLED==="true";
+  const mediado=flagLigada("VITE_SSO_RELATORIO_DESPESAS_FATURAVEIS_MEDIADO_ENABLED");
   const [inicio, setInicio] = useState(""); const [fim, setFim] = useState(""); const [periodo, setPeriodo] = useState<{ inicio: string; fim: string } | null>(null); const [erro, setErro] = useState("");
   const consulta = useQuery({ queryKey: ["relatorio-despesas-faturaveis", usuario, cliente, periodo, mediado], enabled: !!periodo, gcTime: 0, retry: false,
     queryFn: async ({ signal }) => { if (!periodo) throw new Error("Período ausente"); const antes=await supabase.auth.getUser();if(antes.error || antes.data.user?.id!==usuario || signal.aborted)throw new Error("Sessão alterada."); const parametros={p_cliente_id:cliente,p_inicio:periodo.inicio,p_fim:periodo.fim};const requisicao=mediado?supabase.schema("financeiro").rpc("sso_relatorio_despesas_faturaveis_mediado",{...parametros,p_ator_esperado:usuario}):supabase.schema("financeiro").rpc("sso_relatorio_despesas_faturaveis",parametros);const { data, error } = await requisicao.abortSignal(signal); if (error) throw error; const r = resultado.parse(data); if (r.inicio !== periodo.inicio || r.fim !== periodo.fim) throw new Error("Período divergente"); const depois=await supabase.auth.getUser();if(depois.error || depois.data.user?.id!==usuario || signal.aborted)throw new Error("Sessão alterada."); return r; } });

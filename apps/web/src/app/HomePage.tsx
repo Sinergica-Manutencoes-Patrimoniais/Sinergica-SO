@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { flagLigada } from "../config/flags-sso";
 import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
 import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
@@ -1066,7 +1067,7 @@ export function HomePage() {
                     onAbrirOs={abrirOsDoCliente}
                     periodo={clientePeriodo ?? undefined}
                     painelOrcamentoOs={
-                      user?.id && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                      user?.id && flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
                         ? (ordemServicoId) => (
                             <OrcamentosDaOs
                               usuario={user?.id ?? ""}
@@ -1166,7 +1167,7 @@ export function HomePage() {
                   painelOrcamentoOs={
                     user?.id &&
                     osDeepLink?.origemClienteId &&
-                    import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                    flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
                       ? (ordemServicoId) =>
                           ordemServicoId === osDeepLink?.osId ? (
                             <OrcamentosDaOs

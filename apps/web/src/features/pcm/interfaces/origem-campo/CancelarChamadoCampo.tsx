@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 export const pedidoCancelamentoChamadoCampoSchema = z.object({ requestId: uuid, clienteId: uuid, osId: uuid, chamadoId: uuid, revision: z.number().int().positive().safe(),
@@ -11,7 +13,15 @@ type Pedido = z.infer<typeof schema>;
 type Props = { userId: string; clienteId: string; osId: string; chamadoId: string; revision: number; osUpdatedAt: string | null; taskId: string | null; disponivel: boolean };
 
 export function CancelarChamadoCampo(props: Props) {
-  if (import.meta.env.VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Cancelamento chamado campo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${props.userId}:${props.clienteId}:${props.osId}`} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId, chamadoId, revision, osUpdatedAt, taskId, disponivel }: Props) {

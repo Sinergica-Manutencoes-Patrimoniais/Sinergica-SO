@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { consolidarEsforcoVisitas } from "../../domain/consolidar-esforco-visitas";
 import { EsforcoDeclarado } from "./EsforcoDeclarado";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const minutos = z.number().int().nonnegative().nullable();
 const linha = z.object({
@@ -28,7 +29,7 @@ export function OcorrenciasSemOs({
   semana,
 }: { userId: string; clienteId: string; semana: string }) {
   const [editada, setEditada] = useState<string | null>(null);
-  const referenciaProgramada = import.meta.env.VITE_SSO_OCORRENCIAS_SEM_OS_REFERENCIA_ENABLED === "true";
+  const referenciaProgramada = flagLigada("VITE_SSO_OCORRENCIAS_SEM_OS_REFERENCIA_ENABLED");
   const q = useInfiniteQuery({
     queryKey: ["capacidade-ocorrencias-sem-os", userId, clienteId, semana, referenciaProgramada],
     gcTime: 0,
@@ -147,7 +148,7 @@ export function OcorrenciasSemOs({
         {linhas.map((f) => (
           <li key={`${f.tipo}:${f.ocorrencia_id}`}>
             {f.tipo} {f.ocorrencia_id} · vencimento {f.vencimento_original}{referenciaProgramada && f.data_referencia && <> · referência na agenda {f.data_referencia}</>} · execução desconhecida
-            {import.meta.env.VITE_SSO_ESFORCO_DECLARADO_ENABLED === "true" && (f.tipo === "calendario" || import.meta.env.VITE_SSO_ESFORCO_OCORRENCIA_VISITA_ENABLED === "true") && (
+            {flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") && (f.tipo === "calendario" || flagLigada("VITE_SSO_ESFORCO_OCORRENCIA_VISITA_ENABLED")) && (
               <>
                 <button type="button" onClick={() => setEditada(editada === `${f.tipo}:${f.ocorrencia_id}` ? null : `${f.tipo}:${f.ocorrencia_id}`)}>Declarar esforço da ocorrência</button>
                 {editada === `${f.tipo}:${f.ocorrencia_id}` && <EsforcoDeclarado key={`${f.tipo}:${f.ocorrencia_id}`} userId={userId} clienteId={clienteId} osId={f.ocorrencia_id} origemTipo={f.tipo === "visita" ? "ocorrencia_visita" : "ocorrencia"} />}

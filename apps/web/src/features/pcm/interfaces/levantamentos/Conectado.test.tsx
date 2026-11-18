@@ -20,23 +20,28 @@ beforeEach(() => {
   vi.resetAllMocks();
   api.autorizarAcao.mockResolvedValue(true);
 });
-it("mantém funcionalidade fechada sem flag explícita", () => {
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+it("mantém funcionalidade fechada sem flag explícita — mostra RecursoNaoAtivado, não some", () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <EntradaLevantamentos userId="usuario" clienteId="cliente" habilitado={undefined} />
+      <EntradaLevantamentos userId="usuario" clienteId="cliente" podeAdministrar={false} />
     </QueryClientProvider>,
   );
   expect(api.autorizarAcao).not.toHaveBeenCalled();
   expect(api.listarLotes).not.toHaveBeenCalled();
   expect(screen.queryByText("Levantamentos pendentes")).toBeNull();
+  expect(screen.getByText(/ainda não está disponível/i)).toBeInTheDocument();
 });
 it("habilita somente com valor explícito e exige capacidade atual", async () => {
+  vi.stubEnv("VITE_SSO_LEVANTAMENTOS_ENABLED", "true");
   api.listarLotes.mockResolvedValue([]);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <EntradaLevantamentos userId="usuario" clienteId="cliente" habilitado="true" />
+      <EntradaLevantamentos userId="usuario" clienteId="cliente" podeAdministrar={false} />
     </QueryClientProvider>,
   );
   await screen.findByText("Nenhum levantamento recebido.");

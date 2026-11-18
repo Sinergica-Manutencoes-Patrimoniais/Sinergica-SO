@@ -1,11 +1,21 @@
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; osId: string };
 const item = z.object({ nota_id: z.string().guid(), enviado_em: z.string() }).strict();
 export function AnexosPropriosOs(props: Props) {
-  if (import.meta.env.VITE_SSO_PORTAL_ANEXOS_PROPRIOS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_ANEXOS_PROPRIOS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal anexos proprios"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_ANEXOS_PROPRIOS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: Props) {

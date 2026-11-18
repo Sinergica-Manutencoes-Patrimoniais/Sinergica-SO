@@ -2,6 +2,8 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid=z.string().guid();
 const pedido=z.object({ator:uuid,cliente:uuid,os:uuid,requestId:uuid,lista:uuid,evento:z.number().int().min(2),revision:z.number().int().nonnegative(),estado:z.enum(["suspenso","retomado"]),motivo:z.string().trim().min(1).max(2000)}).strict();
@@ -9,7 +11,15 @@ type Pedido=z.infer<typeof pedido>;
 const evento=z.object({revisao:z.number().int().positive(),lista_id:uuid,evento_revision:z.number().int().min(2),estado:z.enum(["suspenso","retomado"]),motivo:z.string(),ator_id:uuid,criado_em:z.string()}).strict();
 type Props={usuario:string;cliente:string;os:string;lista:string;eventoRevision:number};
 export function ImpedimentoMaterialOs(props:Props){
-  if(import.meta.env.VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Impedimento material os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.os,props.lista,props.eventoRevision])} {...props}/>;
 }
 function Conteudo({usuario,cliente,os,lista,eventoRevision}:Props){

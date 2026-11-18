@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const count = z.union([z.number(), z.string().regex(/^\d+$/)]).refine(v => Number.isSafeInteger(Number(v)) && Number(v) >= 0).transform(Number);
@@ -13,7 +15,15 @@ const itens = z.object({ ...comum, declaracoesMaterial: count, itensPropostaInte
   itensCancelados: count, itensNaoCancelados: count }).strict();
 
 export function ConferenciaServicoConsolidada(props: { usuario: string; cliente: string; declaracao: string }) {
-  if (import.meta.env.VITE_SSO_CONFERENCIA_SERVICO_CONSOLIDADA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_SERVICO_CONSOLIDADA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia servico consolidada"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_SERVICO_CONSOLIDADA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.declaracao])} {...props}/>;
 }
 function Conteudo({ usuario, cliente, declaracao }: { usuario: string; cliente: string; declaracao: string }) {

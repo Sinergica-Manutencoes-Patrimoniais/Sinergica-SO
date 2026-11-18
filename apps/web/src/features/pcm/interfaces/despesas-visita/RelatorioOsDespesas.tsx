@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const inteiro = z.number().int().nonnegative().safe();
 const linha = z.object({ despesas: inteiro, previsto_nao_realizado_centavos: inteiro, realizado_centavos: inteiro,
@@ -9,7 +11,15 @@ const linha = z.object({ despesas: inteiro, previsto_nao_realizado_centavos: int
 const moeda = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v / 100);
 type Props = { userId: string; clienteId: string; osId: string };
 export function RelatorioOsDespesas(props: Props) {
-  if (import.meta.env.VITE_SSO_RELATORIO_DESPESAS_OS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RELATORIO_DESPESAS_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Relatorio despesas os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RELATORIO_DESPESAS_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: Props) {
@@ -20,7 +30,7 @@ function Conteudo({ userId, clienteId, osId }: Props) {
       if (!periodo) throw new Error("Período ausente.");
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const parametros={p_cliente_id:clienteId,p_os_id:osId,p_inicio:periodo.inicio,p_fim:periodo.fim};
-      const requisicao=import.meta.env.VITE_SSO_RELATORIO_DESPESAS_OS_MEDIADO_ENABLED==="true"
+      const requisicao=flagLigada("VITE_SSO_RELATORIO_DESPESAS_OS_MEDIADO_ENABLED")
         ? supabase.schema("pcm").rpc("sso_relatorio_despesas_os_mediado",{...parametros,p_ator_id:userId})
         : supabase.schema("pcm").rpc("sso_relatorio_despesas_os",parametros);
       const { data, error } = await requisicao.abortSignal(signal);

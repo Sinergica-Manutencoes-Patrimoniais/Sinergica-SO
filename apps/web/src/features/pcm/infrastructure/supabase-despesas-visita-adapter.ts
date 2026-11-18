@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { flagLigada } from "../../../config/flags-sso";
 import { supabase } from "../../../lib/supabase-client";
 import type { DespesasVisitaGateway } from "../application/despesas-visita";
 
@@ -111,7 +112,7 @@ export async function ingerirComprovanteDespesa(
 }
 export async function baixarComprovanteDespesa(despesaId: string): Promise<Blob> {
   z.string().guid().parse(despesaId);
-  const unificada = import.meta.env.VITE_SSO_LEITURA_COMPROVANTE_UNIFICADA_ENABLED === "true";
+  const unificada = flagLigada("VITE_SSO_LEITURA_COMPROVANTE_UNIFICADA_ENABLED");
   const { data, error } = unificada
     ? await supabase.functions.invoke<Blob>("despesa-visita-comprovante-unificado", {
         body: {},

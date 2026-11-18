@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({
   request_id: z.string().guid(),
@@ -16,7 +18,15 @@ type Props = { userId: string; clienteId: string; feriadoId: string; data: strin
 
 export function HistoricoSupressaoGerador(props: Props) {
   const [aberto, setAberto] = useState(false);
-  if (import.meta.env.VITE_SSO_HISTORICO_SUPRESSAO_GERADOR_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_SUPRESSAO_GERADOR_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico supressao gerador"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_SUPRESSAO_GERADOR_ENABLED"]}
+      />
+    );
+  }
   return <>
     <button type="button" aria-expanded={aberto} onClick={() => setAberto((atual) => !atual)}>
       {aberto ? "Ocultar histórico do gerador" : "Consultar histórico do gerador"}

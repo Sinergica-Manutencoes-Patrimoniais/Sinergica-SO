@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { useState } from "react";
 import { HistoricoDemora } from "./HistoricoDemora";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const item = z.object({ outbox_id: z.string().guid(), entidade: z.enum(["sistemas", "equipamentos"]), objeto_id: z.string().guid(),
   estado: z.enum(["inicio_desconhecido", "tempo_excedido_observado", "processamento_encerrado_na_fonte", "novo_processamento_observado"]),
@@ -26,7 +27,7 @@ export function DemorasObservadas({ userId, clienteId }: { userId: string; clien
     {consulta.isError && <p role="alert">Observações indisponíveis. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && consulta.data && (consulta.data.pages.flat().length === 0 ? <p>Nenhuma observação registrada nesta consulta.</p> :
       <ul>{consulta.data.pages.flat().map((x) => <li key={x.outbox_id}>Item {x.outbox_id} · {x.entidade === "equipamentos" ? "Componente" : "Sistema"} {x.objeto_id} · {rotulos[x.estado]} · início {x.iniciado_em ?? "desconhecido"} · limite {x.limite_minutos} min · revisão {x.revisao} · observado {x.atualizado_em}
-        {import.meta.env.VITE_SSO_HISTORICO_DEMORA_ENABLED === "true" && <><button type="button" aria-expanded={selecionado === x.outbox_id} onClick={() => setSelecionado(selecionado === x.outbox_id ? null : x.outbox_id)}>Consultar histórico</button>
+        {flagLigada("VITE_SSO_HISTORICO_DEMORA_ENABLED") && <><button type="button" aria-expanded={selecionado === x.outbox_id} onClick={() => setSelecionado(selecionado === x.outbox_id ? null : x.outbox_id)}>Consultar histórico</button>
           {selecionado === x.outbox_id && <HistoricoDemora key={`${userId}:${clienteId}:${x.outbox_id}`} userId={userId} clienteId={clienteId} outboxId={x.outbox_id} />}</>}</li>)}</ul>)}
     {consulta.hasNextPage && !consulta.isFetching && !consulta.isError && <button type="button" onClick={() => void consulta.fetchNextPage()}>Mais observações</button>}
   </section>;

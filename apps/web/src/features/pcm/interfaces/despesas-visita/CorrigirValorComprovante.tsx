@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { enviarComprovanteDespesa, type DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
 import { CorrigirComprovanteMediado } from "./CorrigirComprovanteMediado";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const esquema = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), valorCentavos: z.number().int().nonnegative().safe(),
@@ -12,8 +13,8 @@ const esquema = z.object({ requestId: z.string().guid(), despesaId: z.string().g
 type Pedido = z.infer<typeof esquema>;
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function CorrigirValorComprovante(props: Props) {
-  const legadoHabilitado = import.meta.env.VITE_SSO_CORRIGIR_COMPROVANTE_DESPESA_ENABLED === "true";
-  const mediadoHabilitado = import.meta.env.VITE_SSO_CORRECAO_COMPROVANTE_MEDIADA_ENABLED === "true";
+  const legadoHabilitado = flagLigada("VITE_SSO_CORRIGIR_COMPROVANTE_DESPESA_ENABLED");
+  const mediadoHabilitado = flagLigada("VITE_SSO_CORRECAO_COMPROVANTE_MEDIADA_ENABLED");
   if (!legadoHabilitado && !mediadoHabilitado) return null;
   if (props.despesa.status !== "ativa" || props.despesa.realizadoCentavos === null) {
     // Preserve access to an uncertain request even if the server state changed.

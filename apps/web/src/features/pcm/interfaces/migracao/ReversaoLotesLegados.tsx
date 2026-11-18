@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoReversaoLote } from "./HistoricoReversaoLote";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 const loteSchema = z.object({ lote_id: id, quantidade: z.number().int().min(1).max(20), criado_em: z.string().datetime({ offset: true }) }).strict();
@@ -89,7 +90,7 @@ function Conteudo({ userId, clienteId }: Props) {
     <p>Nenhum histórico será apagado. Sem cobertura de dependências, os Planos permanecem pendentes de reconciliação.</p>
     {pendente === "invalido" ? <p role="alert">Tentativa ilegível. Procure suporte.</p> : pendente ? <>
       <p>Tentativa pendente para lote {pendente.loteId}, {pendente.itens.length} Plano(s).</p><button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesma tentativa</button>
-      {import.meta.env.VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void enviar(pendente, true)}>Consultar recibo sem repetir</button>}
+      {flagLigada("VITE_SSO_RECIBOS_LOTES_LEGADOS_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void enviar(pendente, true)}>Consultar recibo sem repetir</button>}
     </> : <>
       {lotes.isFetching && <p>Consultando lotes…</p>}{lotes.isError && <p role="alert">Lotes indisponíveis. <button type="button" onClick={() => void lotes.refetch()}>Tentar novamente</button></p>}
       <label>Lote <select value={loteId} disabled={lotes.isFetching || lotes.isError} onChange={(e) => { setLoteId(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>

@@ -2,11 +2,21 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 type Alvo = { alvo_tipo: string; alvo_id: string; alvo_nome: string | null };
 type Props = { userId: string; clienteId: string; alvos: Alvo[] };
 const linha = z.object({ resposta_id: z.string().guid(), retorno_id: z.string().guid(), os_id: z.string().guid(), chave_pergunta: z.string(), resultado: z.enum(["corrigido", "nao_ok", "nao_aplicavel"]), observacao: z.string().nullable(), fotos_registradas: z.number().int().nonnegative(), decisao_retorno: z.string().nullable() }).strict();
 export function ResultadosAtivo(props: Props) {
-  if (import.meta.env.VITE_SSO_RESULTADOS_ATIVO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RESULTADOS_ATIVO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Resultados ativo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RESULTADOS_ATIVO_ENABLED"]}
+      />
+    );
+  }
   return <Abrir key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
 }
 
@@ -14,7 +24,15 @@ export function ResultadosAtivo(props: Props) {
 export function ResultadosDoAlvo({ userId, clienteId, tipo, id, nome }: {
   userId: string; clienteId: string; tipo: "sistema" | "componente" | "grupo"; id: string; nome: string;
 }) {
-  if (import.meta.env.VITE_SSO_RESULTADOS_ATIVO_ENABLED !== "true" || import.meta.env.VITE_SSO_RESULTADOS_ATIVO_MEDIADOS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RESULTADOS_ATIVO_ENABLED") || !flagLigada("VITE_SSO_RESULTADOS_ATIVO_MEDIADOS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Resultados do ativo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RESULTADOS_ATIVO_ENABLED", "VITE_SSO_RESULTADOS_ATIVO_MEDIADOS_ENABLED"]}
+      />
+    );
+  }
   return <AbrirResultadosDoAlvo key={JSON.stringify([userId, clienteId, tipo, id])} userId={userId} clienteId={clienteId} tipo={tipo} id={id} nome={nome}/>;
 }
 
@@ -38,7 +56,7 @@ function Selecao({ userId, clienteId, alvos }: Props) {
   const alvo = alvoManual ?? unicos.find(([k]) => k === chave)?.[1];
   return <section><h3>Resultados por ativo</h3><p>Fonte incompleta: somente retornos preparados vinculados à rotina versionada. Fotos são contagens registradas, não prova de autenticidade. Corrigido não cria Pendência nesta consulta.</p>
     <label>Ativo <select value={!alvoManual && alvo ? chave : ""} onChange={e => { setAlvoManual(null); setChave(e.target.value); setErro(""); }}><option value="">Selecione um ativo das Pendências carregadas</option>{unicos.map(([k, a]) => <option key={k} value={k}>{a.alvo_tipo} · {a.alvo_nome ?? a.alvo_id}</option>)}</select></label>
-    {import.meta.env.VITE_SSO_BUSCA_ATIVOS_RESULTADOS_ENABLED === "true" && <BuscarAtivo userId={userId} clienteId={clienteId} aoSelecionar={(selecionado) => { setChave(""); setAlvoManual(selecionado); setErro(""); }} />}
+    {flagLigada("VITE_SSO_BUSCA_ATIVOS_RESULTADOS_ENABLED") && <BuscarAtivo userId={userId} clienteId={clienteId} aoSelecionar={(selecionado) => { setChave(""); setAlvoManual(selecionado); setErro(""); }} />}
     <form onSubmit={(e) => { e.preventDefault(); const id=idManual.trim(); if(!z.string().guid().safeParse(id).success){setErro("Informe um identificador de ativo válido.");return;}
       setChave("");setAlvoManual({alvo_tipo:tipoManual,alvo_id:id,alvo_nome:null});setErro(""); }}>
       <p>Para consultar resultado de ativo sem Pendência carregada, informe o tipo e identificador. A consulta continua sujeita à autorização e não comprova existência de resultados fora desta fonte.</p>
@@ -79,7 +97,7 @@ function Resultados({ userId, clienteId, alvo }: { userId: string; clienteId: st
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-      const mediada=import.meta.env.VITE_SSO_RESULTADOS_ATIVO_MEDIADOS_ENABLED === "true";
+      const mediada=flagLigada("VITE_SSO_RESULTADOS_ATIVO_MEDIADOS_ENABLED");
       const parametros={p_cliente_id: clienteId, p_alvo_tipo: alvo.alvo_tipo, p_alvo_id: alvo.alvo_id, p_apos: pageParam, p_limite: 20};
       const { data, error } = await (mediada
         ? supabase.schema("pcm").rpc("sso_listar_resultados_ativo_mediada",{...parametros,p_ator_id:userId})

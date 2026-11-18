@@ -5,6 +5,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import { EntradaLevantamentos } from "../levantamentos/Conectado";
 import { diagnosticarRecepcao } from "../../domain/diagnostico-recepcao-levantamento";
 import { RecepcaoEstruturada } from "./RecepcaoEstruturada";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({
   chave: z.string().trim().min(1).max(200),
@@ -38,7 +40,7 @@ type Pedido = z.infer<typeof pedido>;
 type Props = { userId: string; clienteId: string; envelopeId: string; osId: string; disponivel: boolean };
 
 export function RecepcaoEnvelope(props: Props) {
-  if (import.meta.env.VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED !== "true" || !props.osId) return null;
+  if (!props.osId) return null; if (!flagLigada("VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED")) return <RecursoNaoAtivado recurso="Recepção manual de envelope" podeAdministrar={false} faltando={["VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.envelopeId, props.osId])} {...props} />;
 }
 
@@ -293,9 +295,9 @@ function Conteudo({ userId, clienteId, envelopeId, osId, disponivel }: Props) {
         </fieldset>
       </form>}
     {aviso && <p role="status">{aviso}</p>}
-    {loteRecebido && import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED === "true" && <section aria-label="Conferência do lote recebido">
+    {loteRecebido && flagLigada("VITE_SSO_LEVANTAMENTOS_ENABLED") && <section aria-label="Conferência do lote recebido">
       <button type="button" aria-expanded={conferenciaAberta} onClick={() => setConferenciaAberta((aberta) => !aberta)}>{conferenciaAberta ? "Ocultar conferência" : "Abrir conferência do lote"}</button>
-      {conferenciaAberta && <EntradaLevantamentos habilitado={import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED} userId={userId} clienteId={clienteId} loteRecebido={loteRecebido} />}
+      {conferenciaAberta && <EntradaLevantamentos podeAdministrar={false} userId={userId} clienteId={clienteId} loteRecebido={loteRecebido} />}
     </section>}
   </section>;
 }

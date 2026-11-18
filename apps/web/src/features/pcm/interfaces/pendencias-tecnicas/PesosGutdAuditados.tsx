@@ -2,9 +2,10 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const pesosSchema=z.object({g:z.number().int().min(0).max(100),u:z.number().int().min(0).max(100),t:z.number().int().min(0).max(100),d:z.number().int().min(0).max(100)}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),antes:pesosSchema,depois:pesosSchema,motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof pedidoSchema>;
-export function PesosGutdAuditados({userId}:{userId:string}){if(import.meta.env.VITE_SSO_PESOS_GUTD_AUDITADOS_ENABLED!=="true")return null;return <Conteudo key={userId} userId={userId}/>;}
+export function PesosGutdAuditados({userId}:{userId:string}){if(!flagLigada("VITE_SSO_PESOS_GUTD_AUDITADOS_ENABLED"))return null;return <Conteudo key={userId} userId={userId}/>;}
 function Conteudo({userId}:{userId:string}){
   const key=`sso-pesos-gutd:${userId}`;const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);return raw ? pedidoSchema.parse(JSON.parse(raw)) : null;}catch{return "invalido";}});const [aberto,setAberto]=useState(false);const [antes,setAntes]=useState<z.infer<typeof pesosSchema>|null>(null);const [valores,setValores]=useState({g:"",u:"",t:"",d:""});const [motivo,setMotivo]=useState("");const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
   const atual=useQuery({queryKey:["pesos-gutd-auditados",userId,"atual"],gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("config").from("priorizacao_gutd").select("peso_gravidade,peso_urgencia,peso_tendencia,peso_dor_cliente").eq("id",1).abortSignal(signal).single();if(error)throw error;return pesosSchema.parse({g:data.peso_gravidade,u:data.peso_urgencia,t:data.peso_tendencia,d:data.peso_dor_cliente});}});

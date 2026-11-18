@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 export function DiagnosticoVinculosGrupos({userId,clienteId}:{userId:string;clienteId:string}){
-  const ativo=import.meta.env.VITE_SSO_DIAGNOSTICO_VINCULOS_GRUPOS_ENABLED==="true";
+  const ativo=flagLigada("VITE_SSO_DIAGNOSTICO_VINCULOS_GRUPOS_ENABLED");
   const q=useQuery({queryKey:["estrutura-tecnica",userId,clienteId,"diagnostico-vinculos-grupos"],enabled:ativo,gcTime:0,queryFn:async({signal})=>{
     const {data,error}=await supabase.schema("pcm").rpc("sso_diagnostico_vinculos_grupos",{p_cliente_id:clienteId}).abortSignal(signal);if(error)throw error;
     const r=z.object({clienteId:z.string().guid(),totalGrupos:z.number().int().nonnegative(),localOuAreaIndisponivel:z.number().int().nonnegative(),sistemaIndisponivel:z.number().int().nonnegative()}).strict().parse(data);if(r.clienteId!==clienteId || r.localOuAreaIndisponivel>r.totalGrupos || r.sistemaIndisponivel>r.totalGrupos)throw new Error("Diagnóstico divergente");return r;

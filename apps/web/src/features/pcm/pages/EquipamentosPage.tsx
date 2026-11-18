@@ -26,6 +26,7 @@ import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-id
 import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { HistoricoGrupo } from "../interfaces/estrutura-tecnica/HistoricoGrupo";
 import { MovimentacaoDetalhe } from "../interfaces/estrutura-tecnica/MovimentacaoDetalhe";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Estado =
   | { fase: "carregando" }
@@ -50,7 +51,7 @@ async function conferirGestao(userId: string, clientes: Array<string | null | un
 }
 
 function CapacidadeEquipamento({ userId, clienteId, temEscrita, children }: { userId: string; clienteId: string | null; temEscrita: boolean; children: (permitido: boolean) => ReactNode }) {
-  const habilitado = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
   const consulta = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
     enabled: habilitado && temEscrita && !!userId && !!clienteId, refetchOnWindowFocus: true,
     queryFn: async () => { await conferirGestao(userId, [clienteId]); return true; } });
@@ -97,7 +98,7 @@ export function EquipamentosPage() {
   async function salvar(input: EquipamentoFormData) {
     if (!user) return;
     setErroAcao(null);
-    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED")) {
       await conferirGestao(user.id, modal?.modo === "editar" ? [modal.equipamento.clientId, input.clientId] : [input.clientId]);
     }
     if (modal?.modo === "editar") {
@@ -136,7 +137,7 @@ export function EquipamentosPage() {
 
   async function desativar() {
     if (!user || !desativarInfo) return;
-    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") await conferirGestao(user.id, [desativarInfo.equipamento.clientId]);
+    if (flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED")) await conferirGestao(user.id, [desativarInfo.equipamento.clientId]);
     await desativarEquipamento(supabaseEquipamentosAdapter, {
       id: desativarInfo.equipamento.id,
       userId: user.id,

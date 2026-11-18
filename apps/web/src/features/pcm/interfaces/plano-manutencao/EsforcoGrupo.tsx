@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Esforco = { estado: "estimativa" | "tempo_a_validar"; motivo?: string; quantidadeAprovada?: string; tempoPorUnidadeMinutos?: string; esforcoMinutos: string | null; capacidadeReservada: false };
 export function EsforcoGrupo(props: { userId: string; clienteId: string; ocorrenciaId: string }) {
-  if (import.meta.env.VITE_SSO_ESFORCO_GRUPO_MEDIADO_ENABLED !== "true") return <p>Consulta de esforço mediada indisponível.</p>;
+  if (!flagLigada("VITE_SSO_ESFORCO_GRUPO_MEDIADO_ENABLED")) return <p>Consulta de esforço mediada indisponível.</p>;
   return <EsforcoGrupoMediado {...props} />;
 }
 function EsforcoGrupoMediado({ userId, clienteId, ocorrenciaId }: { userId: string; clienteId: string; ocorrenciaId: string }) {

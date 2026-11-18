@@ -1,9 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props={userId:string;clienteId:string;loteId:string;chave:string;revisao:number};
 export function HistoricoAtributos({userId,clienteId,loteId,chave,revisao}:Props){
-  const ativo=import.meta.env.VITE_SSO_HISTORICO_ATRIBUTOS_STAGING_ENABLED==="true";
+  const ativo=flagLigada("VITE_SSO_HISTORICO_ATRIBUTOS_STAGING_ENABLED");
   const q=useInfiniteQuery({queryKey:["levantamentos",userId,clienteId,loteId,chave,"historico-atributos",revisao],enabled:ativo,gcTime:0,initialPageParam:null as number|null,queryFn:async({pageParam,signal})=>{
     const {data,error}=await supabase.schema("pcm").rpc("sso_historico_edicao_linha_autorizado",{p_lote_id:loteId,p_chave:chave,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;
     return z.array(z.object({revisao:z.number().int().positive(),antes:z.record(z.string(), z.unknown()),depois:z.record(z.string(), z.unknown()),motivo:z.string(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict()).max(20).parse(data);

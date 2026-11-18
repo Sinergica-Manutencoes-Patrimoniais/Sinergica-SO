@@ -18,6 +18,7 @@ import { LimiteDemoraIntegracao } from "./LimiteDemoraIntegracao";
 import { DiagnosticoExecutorFila } from "./DiagnosticoExecutorFila";
 import { ConfigurarExecutorFila } from "./ConfigurarExecutorFila";
 import { ContratosOrigemCampo } from "./ContratosOrigemCampo";
+import { flagLigada } from "../../../config/flags-sso";
 
 const CHAVE_EMAIL = "email";
 const CHAVE_MERCADOPAGO = "mercadopago";
@@ -190,11 +191,11 @@ export function IntegracoesPage() {
         </p>
       </div>
 
-      {import.meta.env.VITE_SSO_ORFAOS_FILA_ADMIN_ENABLED === "true" && <OrfaosFilaAdmin userId={user.id} />}
-      {import.meta.env.VITE_SSO_CONFIG_LIMITE_DEMORA_ENABLED === "true" && <LimiteDemoraIntegracao key={user.id} userId={user.id} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_EXECUTOR_FILA_ENABLED === "true" && <DiagnosticoExecutorFila key={user.id} userId={user.id} />}
-      {import.meta.env.VITE_SSO_CONFIG_EXECUTOR_FILA_ENABLED === "true" && <ConfigurarExecutorFila key={user.id} userId={user.id} />}
-      {import.meta.env.VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED === "true" && <ContratosOrigemCampo key={user.id} userId={user.id} />}
+      {flagLigada("VITE_SSO_ORFAOS_FILA_ADMIN_ENABLED") && <OrfaosFilaAdmin userId={user.id} />}
+      {flagLigada("VITE_SSO_CONFIG_LIMITE_DEMORA_ENABLED") && <LimiteDemoraIntegracao key={user.id} userId={user.id} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_EXECUTOR_FILA_ENABLED") && <DiagnosticoExecutorFila key={user.id} userId={user.id} />}
+      {flagLigada("VITE_SSO_CONFIG_EXECUTOR_FILA_ENABLED") && <ConfigurarExecutorFila key={user.id} userId={user.id} />}
+      {flagLigada("VITE_SSO_ADMIN_CONTRATO_ORIGEM_ENABLED") && <ContratosOrigemCampo key={user.id} userId={user.id} />}
 
       {erro && (
         <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">

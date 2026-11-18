@@ -2,19 +2,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; planoId: string; revision: number; versaoId: string; modo: "contratos" | "evidencias" | "exigencias" };
 
 export function IniciarRevisaoContratos({ userId, clienteId, planoId, revision, permitirNova = true }: { userId: string; clienteId: string; planoId: string; revision: number; permitirNova?: boolean }) {
   const cache = useQueryClient(); const storageKey = `sso-revisao-contratos:${JSON.stringify([userId, clienteId, planoId])}`;
   const trava = useRef(false);
-  const mediada = import.meta.env.VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED === "true";
+  const mediada = flagLigada("VITE_SSO_REVISAO_CONTRATOS_MEDIADA_ENABLED");
   const montado = useRef(false);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
   }
-  const modo = import.meta.env.VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED === "true" ? "exigencias" : import.meta.env.VITE_SSO_REVISAO_COM_EVIDENCIAS_ENABLED === "true" ? "evidencias" : "contratos";
+  const modo = flagLigada("VITE_SSO_REVISAO_COM_EXIGENCIAS_ENABLED") ? "exigencias" : flagLigada("VITE_SSO_REVISAO_COM_EVIDENCIAS_ENABLED") ? "evidencias" : "contratos";
   const [confirmado, setConfirmado] = useState(false); const [aviso, setAviso] = useState("");
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(storageKey); if (!raw) return null; const p = JSON.parse(raw) as Pedido;
     return p.clienteId === clienteId && p.planoId === planoId && typeof p.requestId === "string" && typeof p.versaoId === "string" && Number.isSafeInteger(p.revision) && (p.modo === "contratos" || p.modo === "evidencias" || p.modo === "exigencias") ? p : "invalido";

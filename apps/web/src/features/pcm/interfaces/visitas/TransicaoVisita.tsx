@@ -6,6 +6,7 @@ import { semanaCapacidade } from "../../domain/semana-capacidade";
 import { SnapshotCapacidade } from "../capacidade-agenda/SnapshotCapacidade";
 import { SimulacaoManual, type SimulacaoDeclarada } from "../capacidade-agenda/SimulacaoManual";
 import { converterHorarioLocal } from "./horario-local";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Pedido = {requestId:string;visitaId:string;clienteId:string;revision:number;acao:"reprogramar"|"cancelar";inicio:string|null;fim:string|null;motivo:string;simulacao?:SimulacaoDeclarada};
 
@@ -47,7 +48,7 @@ export function TransicaoVisita({userId,clienteId,visita,bloqueado}:{userId:stri
   const chave=`sso-visita-transicao:${JSON.stringify([userId,clienteId,visita.id])}`;
   const [acao,setAcao]=useState<Pedido["acao"]>("reprogramar");const [inicio,setInicio]=useState("");const [fim,setFim]=useState("");const [motivo,setMotivo]=useState("");const [mensagem,setMensagem]=useState("");
   const [simulacao,setSimulacao]=useState<SimulacaoDeclarada|null>(null);const [confirmacao,setConfirmacao]=useState<string|null>(null);
-  const exigirSimulacao=import.meta.env.VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED==="true"&&import.meta.env.VITE_SSO_REPROGRAMACAO_ALERTAS_DECLARADOS_ENABLED==="true";
+  const exigirSimulacao=flagLigada("VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED")&&flagLigada("VITE_SSO_REPROGRAMACAO_ALERTAS_DECLARADOS_ENABLED");
   const enviando = useRef(false);
   const [pedido,setPedido]=useState<Pedido|"invalido"|null>(() => {try {const salvo=sessionStorage.getItem(chave);if(!salvo)return null;
     const p=JSON.parse(salvo) as Pedido;return p && p.visitaId===visita.id && p.clienteId===clienteId && typeof p.requestId==="string" &&
@@ -89,14 +90,14 @@ export function TransicaoVisita({userId,clienteId,visita,bloqueado}:{userId:stri
   const simulacaoAtual=!!datasSimulacao&&!!simulacao&&simulacao.programada===datasSimulacao.programada&&simulacao.destino===datasSimulacao.destino;
   const confirmacaoAtual=simulacaoAtual&&confirmacao===JSON.stringify([simulacao,visita.revisao,inicio,fim,motivo]);
   const provenienciaNecessaria = !!simulacao && (simulacao.origemParcial === true || simulacao.destinoParcial === true);
-  const provenienciaDisponivel = import.meta.env.VITE_SSO_PROVENIENCIA_SIMULACAO_ENABLED === "true";
+  const provenienciaDisponivel = flagLigada("VITE_SSO_PROVENIENCIA_SIMULACAO_ENABLED");
   return <section aria-label="Reprogramar ou cancelar Visita"><h4>Reprogramar ou cancelar Visita</h4>
     <p>Somente antes de envio ou efeito remoto identificado. A operação não altera tarefas Auvo nem remove vínculos de OS. Horários informados no fuso do dispositivo; fuso da Visita: {visita.fuso}.</p>
     {permissao.isFetching && <output>Verificando permissão…</output>}{permissao.isError && <p role="alert">Permissão indisponível. <button type="button" onClick={() => void permissao.refetch()}>Tentar novamente</button></p>}
     {!permissao.isFetching&&!permissao.isError&&!permissao.data && <p>Sem permissão para esta ação.</p>}
     <form onSubmit={(event) => {event.preventDefault();if(!permitido||pedido||enviando.current||!motivo.trim()||(exigirSimulacao&&acao==="reprogramar"&&(!confirmacaoAtual||(provenienciaNecessaria&&!provenienciaDisponivel))))return;
       try {const p:Pedido={requestId:crypto.randomUUID(),visitaId:visita.id,clienteId,revision:visita.revisao,acao,
-        inicio:acao==="reprogramar" ? converterHorarioLocal(inicio) : null,fim:acao==="reprogramar" ? converterHorarioLocal(fim) : null,motivo:motivo.trim(),...(exigirSimulacao&&acao==="reprogramar"&&simulacao?{simulacao:import.meta.env.VITE_SSO_PROVENIENCIA_SIMULACAO_ENABLED === "true" ? {...simulacao,protocolo:"proveniencia" as const} : simulacao}:{})};
+        inicio:acao==="reprogramar" ? converterHorarioLocal(inicio) : null,fim:acao==="reprogramar" ? converterHorarioLocal(fim) : null,motivo:motivo.trim(),...(exigirSimulacao&&acao==="reprogramar"&&simulacao?{simulacao:flagLigada("VITE_SSO_PROVENIENCIA_SIMULACAO_ENABLED") ? {...simulacao,protocolo:"proveniencia" as const} : simulacao}:{})};
         if(p.inicio&&p.fim&&p.fim<=p.inicio){setMensagem("Fim deve ser posterior ao início.");return;}
         if(sessionStorage.getItem(chave)!==null){setMensagem("Há tentativa anterior; reabra para recuperar.");return;}
         sessionStorage.setItem(chave,JSON.stringify(p));setPedido(p);enviando.current=true;envio.mutate(p);
@@ -110,8 +111,8 @@ export function TransicaoVisita({userId,clienteId,visita,bloqueado}:{userId:stri
       {exigirSimulacao&&acao==="reprogramar"&&provenienciaNecessaria&&!provenienciaDisponivel&&<p role="alert">A simulação usa subtotais parciais, mas o registro de proveniência está indisponível. Retire os subtotais ou aguarde a liberação segura.</p>}
       <button type="submit" disabled={!permitido||(exigirSimulacao&&acao==="reprogramar"&&(!confirmacaoAtual||(provenienciaNecessaria&&!provenienciaDisponivel)))}>Confirmar transição local</button>
     </fieldset></form>
-    {permitido && !pedido && acao === "reprogramar" && inicio && import.meta.env.VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED === "true" && import.meta.env.VITE_SSO_COMPARACAO_CAPACIDADE_VISITA_ENABLED === "true" && <ComparacaoCapacidade userId={userId} clienteId={clienteId} visita={visita} inicio={inicio} />}
-    {permitido && !pedido && datasSimulacao && import.meta.env.VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED === "true" && <>
+    {permitido && !pedido && acao === "reprogramar" && inicio && flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED") && flagLigada("VITE_SSO_COMPARACAO_CAPACIDADE_VISITA_ENABLED") && <ComparacaoCapacidade userId={userId} clienteId={clienteId} visita={visita} inicio={inicio} />}
+    {permitido && !pedido && datasSimulacao && flagLigada("VITE_SSO_SIMULACAO_MANUAL_CAPACIDADE_ENABLED") && <>
       <p>Simulação auxiliar: informe o vencimento da ocorrência e confira as datas. {exigirSimulacao?"A confirmação registra os alertas informados, sem comprovar capacidade ou vencimento.":"Seu resultado não é salvo nem valida a reprogramação."}</p>
       <SimulacaoManual key={JSON.stringify([userId, clienteId, visita.id, datasSimulacao.programada, datasSimulacao.destino])} userId={userId} clienteId={clienteId} datasIniciais={datasSimulacao} aoSimular={(s)=>{setSimulacao(s);setConfirmacao(null);}}/>
     </>}

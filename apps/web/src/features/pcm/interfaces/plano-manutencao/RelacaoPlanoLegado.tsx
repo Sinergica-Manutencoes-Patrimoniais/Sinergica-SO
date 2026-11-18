@@ -6,6 +6,7 @@ import { ConferenciaPlanoLegado } from "./ConferenciaPlanoLegado";
 import { MaterializarCicloLegado } from "./MaterializarCicloLegado";
 import { MaterializarVisitaLegado } from "./MaterializarVisitaLegado";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -348,7 +349,7 @@ export function RelacaoPlanoLegado({
           Mais histórico
         </button>
       )}
-      {import.meta.env.VITE_SSO_CONFERENCIA_PLANO_LEGADO_ENABLED === "true" &&
+      {flagLigada("VITE_SSO_CONFERENCIA_PLANO_LEGADO_ENABLED") &&
         !historico.isFetching &&
         !historico.isError &&
         ultimo?.decisao === "declarar" && (
@@ -361,7 +362,7 @@ export function RelacaoPlanoLegado({
             legadoId={legadoId}
           />
         )}
-      {import.meta.env.VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED === "true" &&
+      {flagLigada("VITE_SSO_MATERIALIZAR_CICLO_LEGADO_ENABLED") &&
         (!origemPreparada || origemPreparada.tipo === "calendario") &&
         !historico.isFetching &&
         !historico.isError &&
@@ -379,7 +380,7 @@ export function RelacaoPlanoLegado({
             }
           />
         )}
-      {import.meta.env.VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED === "true" &&
+      {flagLigada("VITE_SSO_MATERIALIZAR_VISITA_LEGADO_ENABLED") &&
         (!origemPreparada || origemPreparada.tipo === "visita") &&
         !historico.isFetching &&
         !historico.isError &&

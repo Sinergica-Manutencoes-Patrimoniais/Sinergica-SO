@@ -16,6 +16,7 @@ import type {
   VincularAssessmentCommand,
 } from "../application/proposta-gateway";
 import type { Proposta, PropostaItem } from "../domain/proposta";
+import { flagLigada } from "../../../config/flags-sso";
 
 const PROPOSTA_COLS =
   "id,oportunidade_id,tipo,status,assessment_id,escopo,observacoes,custo_total_centavos,piso_centavos,preco_sugerido_centavos,preco_centavos,desconto_pct,valido_ate,versao_atual,created_at";
@@ -242,7 +243,7 @@ export const supabasePropostaAdapter: PropostaGateway = {
   },
 
   async vincularAssessment(input: VincularAssessmentCommand) {
-    if (import.meta.env.VITE_SSO_VINCULO_ASSESSMENT_MEDIADO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_VINCULO_ASSESSMENT_MEDIADO_ENABLED")) {
       if (!input.clienteId) throw new Error("Cliente não informado para o vínculo.");
       const antes = await supabase.auth.getUser();
       if (antes.error || !antes.data.user) throw new Error("Sessão indisponível.");

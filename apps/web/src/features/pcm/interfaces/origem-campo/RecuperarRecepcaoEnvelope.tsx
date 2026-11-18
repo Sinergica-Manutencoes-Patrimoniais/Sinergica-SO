@@ -4,13 +4,23 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { EntradaLevantamentos } from "../levantamentos/Conectado";
 import { pedidoRecepcaoEnvelope } from "./RecepcaoEnvelope";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Pedido = z.infer<typeof pedidoRecepcaoEnvelope>;
 type Tentativa = { chave: string; texto: string; pedido: Pedido };
 type Acao = { tentativa: Tentativa; tipo: "consultar" | "repetir" };
 
 export function RecuperarRecepcaoEnvelope({ userId }: { userId: string }) {
-  if (import.meta.env.VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Recepcao manual envelope"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RECEPCAO_MANUAL_ENVELOPE_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={userId} userId={userId} />;
 }
 
@@ -96,9 +106,9 @@ function Lista({ userId }: { userId: string }) {
       </div> : <button type="button" disabled={consulta.isPending} onClick={() => setConfirmando(JSON.stringify([t.chave, t.texto]))}>Repetir mesma recepção</button>}
     </section>)}
     {aviso && <p role="status">{aviso}</p>}
-    {recebido && import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED === "true" && <section aria-label="Conferência do lote recuperado">
+    {recebido && flagLigada("VITE_SSO_LEVANTAMENTOS_ENABLED") && <section aria-label="Conferência do lote recuperado">
       <button type="button" aria-expanded={conferenciaAberta} onClick={() => setConferenciaAberta((aberta) => !aberta)}>{conferenciaAberta ? "Ocultar conferência" : "Abrir conferência do lote"}</button>
-      {conferenciaAberta && <EntradaLevantamentos key={JSON.stringify([userId, recebido.clienteId, recebido.loteId])} habilitado={import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED} userId={userId} clienteId={recebido.clienteId} loteRecebido={recebido.loteId} />}
+      {conferenciaAberta && <EntradaLevantamentos key={JSON.stringify([userId, recebido.clienteId, recebido.loteId])} podeAdministrar={false} userId={userId} clienteId={recebido.clienteId} loteRecebido={recebido.loteId} />}
     </section>}
   </section>;
 }

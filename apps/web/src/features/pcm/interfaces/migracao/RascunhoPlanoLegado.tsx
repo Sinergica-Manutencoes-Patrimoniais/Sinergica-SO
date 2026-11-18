@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ReverterRascunhoLegado } from "./ReverterRascunhoLegado";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const fotografia = z.object({ id: uuid, cliente_id: uuid, nome: z.string().min(1), questionario_id: uuid,
@@ -86,7 +87,7 @@ function Formulario({ userId, clienteId, planoId, disponivel = true, elegivel = 
       {!consulta.isFetching && !consulta.isError && consulta.data && <>
         <p>{consulta.data.fotografia.nome} · questionário {consulta.data.fotografia.questionario_id} · tipo de tarefa {consulta.data.fotografia.tipo_tarefa_id} · regra anterior {consulta.data.fotografia.intervalo_n} {consulta.data.fotografia.intervalo_unidade}, base {consulta.data.fotografia.primeira_data}.</p>
         {consulta.data.rascunhoExistente ? <><p>Já existe Plano com esse identificador; requer reconciliação.</p>
-          {import.meta.env.VITE_SSO_REVERSAO_RASCUNHO_LEGADO_ENABLED === "true" && <ReverterRascunhoLegado userId={userId} clienteId={clienteId} planoId={planoId} />}</> : <form onSubmit={(e) => { e.preventDefault(); iniciar(); }}>
+          {flagLigada("VITE_SSO_REVERSAO_RASCUNHO_LEGADO_ENABLED") && <ReverterRascunhoLegado userId={userId} clienteId={clienteId} planoId={planoId} />}</> : <form onSubmit={(e) => { e.preventDefault(); iniciar(); }}>
           <label>Modo <select required value={modo} onChange={(e) => { setModo(e.target.value); setConfirmacao(null); }}><option value="">Escolher</option><option value="calendario">Por calendário</option><option value="visita">Por Visita</option></select></label>
           <label>Intervalo <input required inputMode="numeric" value={intervalo} onChange={(e) => { setIntervalo(e.target.value); setConfirmacao(null); }} /></label>
           <label>Unidade <select required value={unidade} onChange={(e) => { setUnidade(e.target.value); setConfirmacao(null); }}><option value="">Escolher</option><option value="dias">Dias</option><option value="semanas">Semanas</option><option value="meses">Meses</option><option value="anos">Anos</option></select></label>

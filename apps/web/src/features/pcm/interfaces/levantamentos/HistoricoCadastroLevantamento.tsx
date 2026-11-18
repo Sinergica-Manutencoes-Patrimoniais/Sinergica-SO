@@ -2,9 +2,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; tipo: "area" | "local" | "sublocal" | "sistema" | "equipamento" | "componente" | "grupo_quantitativo"; entidadeId: string };
 const evento = z.object({ request_id: z.string().guid(), lote_id: z.string().guid(), linha_chave: z.string(), revisao_lote: z.number().int().positive(), operacao: z.string(), motivo: z.string().nullable(), ator_id: z.string().guid(), ocorrido_em: z.string().datetime({ offset: true }) }).strict();
-export function HistoricoCadastroLevantamento(props: Props) { if (import.meta.env.VITE_SSO_HISTORICO_CADASTRO_LOTES_ENABLED !== "true") return null; return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.entidadeId])} {...props}/>; }
+export function HistoricoCadastroLevantamento(props: Props) { if (!flagLigada("VITE_SSO_HISTORICO_CADASTRO_LOTES_ENABLED")) return null; return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.entidadeId])} {...props}/>; }
 function Abrir(props: Props) { const [aberto, setAberto] = useState(false); return <section><button type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar histórico de levantamento" : "Ver histórico de levantamento"}</button>{aberto && <Conteudo {...props}/>}</section>; }
 function Conteudo({ userId, clienteId, tipo, entidadeId }: Props) {
   const q = useInfiniteQuery({ queryKey: ["historico-cadastro-levantamento", userId, clienteId, tipo, entidadeId], gcTime: 0, initialPageParam: null as string | null, queryFn: async ({ pageParam, signal }) => { const { data, error } = await supabase.schema("pcm").rpc("sso_historico_cadastro_levantamentos", { p_cliente_id: clienteId, p_tipo: tipo, p_entidade_id: entidadeId, p_apos: pageParam, p_limite: 20 }).abortSignal(signal); if (error) throw error; return z.array(evento).max(20).parse(data); }, getNextPageParam: p => p.length === 20 ? p[p.length - 1]?.request_id : undefined });

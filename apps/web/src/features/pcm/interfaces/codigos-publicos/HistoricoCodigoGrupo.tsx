@@ -2,13 +2,14 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z.object({ id: z.string().guid(), codigo: z.string().min(1).max(200), atual: z.boolean(), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict();
 type Cursor = { data: string; id: string } | null;
 
 export function HistoricoCodigoGrupo({ userId, clienteId, grupoId }: { userId: string; clienteId: string; grupoId: string }) {
   const [aberto, setAberto] = useState(false);
-  const ativo = import.meta.env.VITE_SSO_HISTORICO_CODIGO_GRUPO_ENABLED === "true";
+  const ativo = flagLigada("VITE_SSO_HISTORICO_CODIGO_GRUPO_ENABLED");
   const consulta = useInfiniteQuery({
     queryKey: ["codigos-publicos", userId, clienteId, "historico-grupo", grupoId],
     enabled: ativo && aberto, gcTime: 0, retry: false, initialPageParam: null as Cursor,
@@ -49,7 +50,7 @@ export function HistoricoCodigoGrupo({ userId, clienteId, grupoId }: { userId: s
 
 function MotivoCorrecao({ userId, clienteId, grupoId, codigoId }: { userId: string; clienteId: string; grupoId: string; codigoId: string }) {
   const [aberto, setAberto] = useState(false);
-  const ativo = import.meta.env.VITE_SSO_MOTIVO_CODIGO_GRUPO_ENABLED === "true";
+  const ativo = flagLigada("VITE_SSO_MOTIVO_CODIGO_GRUPO_ENABLED");
   const consulta = useQuery({
     queryKey: ["codigos-publicos", userId, clienteId, "motivo-grupo", grupoId, codigoId], enabled: ativo && aberto, gcTime: 0, retry: false,
     queryFn: async ({ signal }) => {

@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ declaracao_id: z.string().guid(), os_id: z.string().guid(), lista_id: z.string().guid(), lista_revisao: z.number().int().positive(),
   descricao_declarada: z.string(), evidencia_declarada: z.string(), proposta_id: z.string().guid(), versao: z.number().int().positive(),
@@ -13,7 +15,15 @@ export function RastreioLinhaMaterial({ usuario, cliente, itemId }: { usuario: s
       const { data, error } = await supabase.schema("financeiro").rpc("sso_rastrear_candidato_linha", { p_cliente_id: cliente, p_item_id: itemId }).abortSignal(signal);
       if (error) throw error; return z.array(item).max(1).parse(data);
     } });
-  if (import.meta.env.VITE_SSO_RASTREIO_LINHA_MATERIAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RASTREIO_LINHA_MATERIAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Rastreio linha material"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RASTREIO_LINHA_MATERIAL_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" onClick={() => setAberto((v) => !v)}>{aberto ? "Ocultar origem" : "Ver origem e evidência declarada"}</button>
     {aberto && consulta.isFetching && <p>Consultando origem…</p>}
     {aberto && consulta.isError && <p role="alert">Origem indisponível ou sem acesso. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}

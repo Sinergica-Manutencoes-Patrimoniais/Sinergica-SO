@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { ONDAS_PILOTO } from "../../domain/migracao-programa";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 // Roteiro documental: docs/planejamento/plano-manutencao/matriz-rastreabilidade.md.
 // Não representa execução, evidência ou aceite de qualquer cenário.
@@ -42,7 +44,15 @@ export function MatrizCenarios() {
     const termo = filtro.trim().toLocaleLowerCase("pt-BR");
     return termo ? cenarios.filter(c => c.some(v => v.toLocaleLowerCase("pt-BR").includes(termo))) : cenarios;
   }, [filtro]);
-  if (import.meta.env.VITE_SSO_MATRIZ_HOMOLOGACAO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_MATRIZ_HOMOLOGACAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Matriz homologacao"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_MATRIZ_HOMOLOGACAO_ENABLED"]}
+      />
+    );
+  }
   return <section aria-label="Roteiro documental de homologação">
     <h3>Roteiro documental CT-001–030</h3>
     <p>Consulta da matriz de rastreabilidade, sem resultados ou evidências de execução. Não autoriza piloto, geração real, aceite ou retirada de planilhas.</p>

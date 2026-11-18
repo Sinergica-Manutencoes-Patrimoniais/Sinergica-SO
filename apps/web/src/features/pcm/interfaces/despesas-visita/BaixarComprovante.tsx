@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { baixarComprovanteDespesa } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export function BaixarComprovante({ userId, clienteId, visitaId, despesaId }: { userId: string; clienteId: string; visitaId: string; despesaId: string }) {
   const [carregando, setCarregando] = useState(false);
@@ -12,7 +14,15 @@ export function BaixarComprovante({ userId, clienteId, visitaId, despesaId }: { 
     montado.current = true; geracao.current++; ocupado.current = null; setCarregando(false); setErro(false);
     return () => { montado.current = false; geracao.current++; };
   }, [contexto]);
-  if (import.meta.env.VITE_SSO_COMPROVANTES_DESPESA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_COMPROVANTES_DESPESA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Comprovantes despesa"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_COMPROVANTES_DESPESA_ENABLED"]}
+      />
+    );
+  }
   async function baixar() {
     if (ocupado.current !== null) return;
     const geracaoSolicitada = geracao.current;

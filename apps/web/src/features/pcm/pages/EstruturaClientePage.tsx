@@ -66,6 +66,7 @@ import { DiagnosticoCodigosLegados } from "../interfaces/migracao/DiagnosticoCod
 import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
 import { ClassificarRetorno } from "../interfaces/retorno-campo/ClassificarRetorno";
 import { EstadoCampo } from "../interfaces/origem-campo/EstadoCampo";
+import { flagLigada } from "../../../config/flags-sso";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
 type ModalLocal =
@@ -131,7 +132,7 @@ export function EstruturaClientePage({
   const [localParaExcluir, setLocalParaExcluir] = useState<LocalArvoreNode | null>(null);
   const toast = useToast();
   const queryClient = useQueryClient();
-  const capacidadeHabilitada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const capacidadeHabilitada = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
   async function conferirCapacidade() {
     const antes = await supabase.auth.getUser();
     if (antes.error || antes.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
@@ -493,18 +494,18 @@ export function EstruturaClientePage({
         onAdicionar={adicionarTipoDeLocal}
         onRemover={setTipoParaRemover}
       />
-      {import.meta.env.VITE_SSO_CONSULTA_CODIGOS_ENABLED === "true" && <ConsultaCodigoPublico key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_CONSULTA_CODIGOS_ENABLED") && <ConsultaCodigoPublico key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
       <PoliticaEquipment userId={userId} />
       <ReservasEquipment userId={userId} clienteId={clienteId} />
-      {import.meta.env.VITE_SSO_CAPACIDADE_AGENDA_ENABLED === "true" && <CapacidadeAgendaWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {import.meta.env.VITE_SSO_REFERENCIAS_RETORNO_ENABLED === "true" && <ReferenciasRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {import.meta.env.VITE_SSO_IMPORTACAO_PLANO_ENABLED === "true" && <ImportacaoPlanoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {import.meta.env.VITE_SSO_RECONCILIACAO_ENABLED === "true" && <ReconciliacaoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED === "true" && <DiagnosticoCliente key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED === "true" && <DiagnosticoCodigosLegados key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_CAPACIDADE_AGENDA_ENABLED") && <CapacidadeAgendaWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_REFERENCIAS_RETORNO_ENABLED") && <ReferenciasRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_IMPORTACAO_PLANO_ENABLED") && <ImportacaoPlanoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_RECONCILIACAO_ENABLED") && <ReconciliacaoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED") && <DiagnosticoCliente key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED") && <DiagnosticoCodigosLegados key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
       <SistemasDistribuidos key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
-      {import.meta.env.VITE_SSO_CLASSIFICAR_RETORNO_ENABLED === "true" && <ClassificarRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {import.meta.env.VITE_SSO_ESTADO_CAMPO_ENABLED === "true" && <EstadoCampo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+      {flagLigada("VITE_SSO_CLASSIFICAR_RETORNO_ENABLED") && <ClassificarRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_ESTADO_CAMPO_ENABLED") && <EstadoCampo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
       <CentralMateriais usuario={userId} cliente={clienteId} onAbrirOs={onAbrirOs} />
       <GruposQuantitativos
         key={clienteId}
@@ -523,7 +524,10 @@ export function EstruturaClientePage({
         <EntradaLevantamentos
           userId={userId}
           clienteId={clienteId}
-          habilitado={import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED}
+          // E00-S28: nenhum destes 5 pontos de chamada tinha acesso a user.papel na cadeia de
+          // props; padrão seguro é false (mensagem genérica) até uma story própria encanar
+          // podeAdministrar de verdade por aqui — não é regressão, era return null antes.
+          podeAdministrar={false}
         />
       )}
       {importando && (

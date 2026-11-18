@@ -4,6 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { receberEstruturaXlsx, reconciliarTentativaEstruturaXlsx } from "../../infrastructure/receber-estrutura-xlsx";
 import { receberEstruturaXlsxLocal, recuperarEstruturaXlsxLocal } from "../../infrastructure/receber-estrutura-xlsx-local";
 import { PreviaXlsxEstrutura } from "./PreviaXlsxEstrutura";
+import { flagLigada } from "../../../../config/flags-sso";
 
 /** A interface e a recepção no servidor possuem flags independentes, fechadas por padrão. */
 export function ImportacaoXlsxExperimental({ userId, clienteId, onRecebido }: { userId: string; clienteId: string; onRecebido?: (loteId: string) => void }) {
@@ -15,10 +16,10 @@ export function ImportacaoXlsxExperimental({ userId, clienteId, onRecebido }: { 
   if (contexto.current.userId !== userId || contexto.current.clienteId !== clienteId)
     contexto.current = { userId, clienteId, geracao: contexto.current.geracao + 1 };
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
-  const desenvolvimento = import.meta.env.DEV && import.meta.env.VITE_SSO_ESTRUTURA_XLSX_DEV_ENABLED === "true";
-  const interfaceHabilitada = desenvolvimento || import.meta.env.VITE_SSO_ESTRUTURA_XLSX_ENABLED === "true";
+  const desenvolvimento = import.meta.env.DEV && flagLigada("VITE_SSO_ESTRUTURA_XLSX_DEV_ENABLED");
+  const interfaceHabilitada = desenvolvimento || flagLigada("VITE_SSO_ESTRUTURA_XLSX_ENABLED");
   if (!interfaceHabilitada) return null;
-  const localHabilitado = import.meta.env.VITE_SSO_ESTRUTURA_XLSX_LOCAL_DECLARADO_ENABLED === "true";
+  const localHabilitado = flagLigada("VITE_SSO_ESTRUTURA_XLSX_LOCAL_DECLARADO_ENABLED");
   let tentativaLocal = false; let armazenamentoIndisponivel = false;
   if (localHabilitado) { try { tentativaLocal = sessionStorage.getItem(`sso-xlsx-local:${JSON.stringify([userId, clienteId])}`) !== null; } catch { armazenamentoIndisponivel = true; } }
   async function recuperarLocal() {

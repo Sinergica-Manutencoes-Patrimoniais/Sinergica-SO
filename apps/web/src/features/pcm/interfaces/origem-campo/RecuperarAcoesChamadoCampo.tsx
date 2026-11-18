@@ -5,6 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { pedidoTriagemChamadoCampoSchema } from "./TriagemChamadoProvisorio";
 import { pedidoUniaoChamadoCampoSchema } from "./UnirChamadoCampo";
 import { pedidoCancelamentoChamadoCampoSchema } from "./CancelarChamadoCampo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const fontes = [
   { tipo: "triagem", prefixo: "sso-triagem-chamado-campo:", schema: pedidoTriagemChamadoCampoSchema },
@@ -18,7 +19,7 @@ type Tentativa =
 const uuid = z.string().guid();
 
 export function RecuperarAcoesChamadoCampo({ userId }: { userId: string }) {
-  if (import.meta.env.VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED !== "true" && import.meta.env.VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED !== "true" && import.meta.env.VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED") && !flagLigada("VITE_SSO_UNIAO_CHAMADO_CAMPO_ENABLED") && !flagLigada("VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED")) return null;
   return <Lista key={userId} userId={userId} />;
 }
 function Lista({ userId }: { userId: string }) {

@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const cicloSchema = z.array(z.object({ revisao: z.number().int().positive(), codigo: z.string().nullable(),
   aprovado_em: z.string().nullable(), sincronizado_em: z.string().nullable(), etiquetado_em: z.string().nullable(), referenciado_os_em: z.string().nullable() }).strict()).length(1);
@@ -11,7 +13,15 @@ const pedidoSchema = z.object({ requestId: z.string().guid(), tipo: z.enum(["sis
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; tipo: "sistema" | "componente"; ativoId: string; onAtualizado?: () => void };
 export function EdicaoRascunhoCodigo(props: Props) {
-  if (import.meta.env.VITE_SSO_CODIGO_RASCUNHO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CODIGO_RASCUNHO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Codigo rascunho"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CODIGO_RASCUNHO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.ativoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, tipo, ativoId, onAtualizado }: Props) {

@@ -1,4 +1,5 @@
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 export type ResultadoCodigoPublico =
   | { situacao: "nao_encontrado" | "ambiguo" }
@@ -50,7 +51,7 @@ export async function localizarCodigoPublico(
   if (!clienteId.trim() || !userId.trim() || !codigo.trim() || codigo.length > 200)
     throw new Error("Código ou Cliente inválido.");
   const parametros = { p_cliente_id: clienteId, p_codigo: codigo };
-  const consulta = import.meta.env.VITE_SSO_BUSCA_CODIGO_MEDIADA_ENABLED === "true"
+  const consulta = flagLigada("VITE_SSO_BUSCA_CODIGO_MEDIADA_ENABLED")
     ? supabase.schema("pcm").rpc("sso_localizar_codigo_publico_mediada", { ...parametros, p_ator_id: userId })
     : supabase.schema("pcm").rpc("sso_localizar_codigo_publico", parametros);
   const { data, error } = await (signal ? consulta.abortSignal(signal) : consulta);

@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const centavos = z.number().int().nonnegative().safe();
 const pedidoSchema = z.object({ requestId: z.string().guid(), propostaId: z.string().guid(), expectedRevision: z.number().int().positive(),
@@ -9,7 +11,15 @@ const pedidoSchema = z.object({ requestId: z.string().guid(), propostaId: z.stri
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; propostaId: string; versao: number };
 export function ExcecaoPreco(props: Props) {
-  if (import.meta.env.VITE_SSO_EXCECAO_PRECO_OPERACIONAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EXCECAO_PRECO_OPERACIONAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Excecao preco operacional"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EXCECAO_PRECO_OPERACIONAL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.propostaId])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico, propostaId, versao }: Props) {
@@ -23,7 +33,7 @@ function Conteudo({ usuario, cliente, ordemServico, propostaId, versao }: Props)
   });
   async function conferirSessao(signal?: AbortSignal) { const atual = await supabase.auth.getUser(); if (atual.error || atual.data.user?.id !== usuario || signal?.aborted) throw new Error("Sessão alterada."); }
   const condicoes = useQuery({ queryKey: ["excecao-preco", usuario, cliente, propostaId], gcTime: 0, retry: false,
-    queryFn: async ({ signal }) => { await conferirSessao(signal); const { data, error } = await (import.meta.env.VITE_SSO_EXCECAO_PRECO_MEDIADA_ENABLED === "true" ? supabase.schema("comercial").rpc("sso_condicoes_excecao_preco_mediada", { p_ator_id: usuario, p_cliente_id: cliente, p_proposta_id: propostaId }) : supabase.schema("comercial").rpc("sso_condicoes_excecao_preco", { p_proposta_id: propostaId })).abortSignal(signal);
+    queryFn: async ({ signal }) => { await conferirSessao(signal); const { data, error } = await (flagLigada("VITE_SSO_EXCECAO_PRECO_MEDIADA_ENABLED") ? supabase.schema("comercial").rpc("sso_condicoes_excecao_preco_mediada", { p_ator_id: usuario, p_cliente_id: cliente, p_proposta_id: propostaId }) : supabase.schema("comercial").rpc("sso_condicoes_excecao_preco", { p_proposta_id: propostaId })).abortSignal(signal);
       if (error) throw error; const resultado = z.array(z.object({ versao: z.number().int().positive(), status: z.string(), preco_centavos: centavos,
         piso_centavos: centavos, sugerido_centavos: centavos }).strict()).length(1).parse(data)[0]; await conferirSessao(signal); return resultado; } });
   const enviar = useMutation({ mutationFn: async (p: Pedido) => {
@@ -53,7 +63,7 @@ function Conteudo({ usuario, cliente, ordemServico, propostaId, versao }: Props)
     {atual && !condicoes.isFetching && !condicoes.isError && <p>Preço atual {atual.preco_centavos} centavos · piso {atual.piso_centavos} · sugerido {atual.sugerido_centavos} · versão {atual.versao}.</p>}
     <form onSubmit={(e) => { e.preventDefault(); if (!atual || condicoes.isFetching || condicoes.isError || atual.status !== "rascunho" || atual.versao !== versao || pendente || enviar.isPending || confirmacao !== fotografia) return;
       try { const p = pedidoSchema.parse({ requestId: crypto.randomUUID(), propostaId, expectedRevision: versao,
-        precoCentavos: /^\d+$/.test(preco) ? Number(preco) : NaN, motivo, ...(import.meta.env.VITE_SSO_EXCECAO_PRECO_MEDIADA_ENABLED === "true" ? { protocolo: "mediado" as const } : {}) });
+        precoCentavos: /^\d+$/.test(preco) ? Number(preco) : NaN, motivo, ...(flagLigada("VITE_SSO_EXCECAO_PRECO_MEDIADA_ENABLED") ? { protocolo: "mediado" as const } : {}) });
         if (p.precoCentavos >= atual.piso_centavos) throw new Error("Preço não exige exceção"); registrar(p);
       } catch { setMensagem("Informe preço inteiro abaixo do piso e motivo."); }
     }}><fieldset disabled={!!pendente || enviar.isPending || condicoes.isFetching || condicoes.isError || !atual || atual.status !== "rascunho" || atual.versao !== versao}>

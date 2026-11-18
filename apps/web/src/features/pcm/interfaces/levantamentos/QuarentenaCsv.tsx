@@ -3,10 +3,11 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { DiagnosticoLinhaCsv } from "../../application/importacao-estrutura-csv";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; chaveOrigem: string; diagnosticos: DiagnosticoLinhaCsv[] | null };
 const linha = z.object({ numero: z.number().int().min(2), estado: z.enum(["apta_estruturalmente", "rejeitada"]), celulas: z.array(z.string()).min(1).max(100), erros: z.array(z.string().min(1).max(500)).max(30) }).strict();
 const pedido = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), chaveOrigem: z.string().min(1).max(200), linhas: z.array(linha).min(1).max(1000) }).strict(); type Pedido = z.infer<typeof pedido>;
-export function QuarentenaCsv(props: Props) { if (import.meta.env.VITE_SSO_QUARENTENA_CSV_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props}/>; }
+export function QuarentenaCsv(props: Props) { if (!flagLigada("VITE_SSO_QUARENTENA_CSV_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props}/>; }
 function Conteudo({ userId, clienteId, chaveOrigem, diagnosticos }: Props) {
   const key = `sso-quarentena-csv:${JSON.stringify([userId, clienteId])}`; const client = useQueryClient(); const trava = useRef(false); const [confirmacao, setConfirmacao] = useState<string | null>(null); const [aviso, setAviso] = useState("");
   const fotografia = JSON.stringify({ userId, clienteId, chaveOrigem: chaveOrigem.trim(), diagnosticos });

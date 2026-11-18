@@ -1,5 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { listarTimelineOs } from "../infrastructure/supabase-portal-timeline-adapter";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; osId: string };
 const STATUS: Record<string, string> = {
@@ -7,7 +9,15 @@ const STATUS: Record<string, string> = {
   em_execucao: "Em execução", finalizado: "Finalizado", cancelado: "Cancelado",
 };
 export function TimelineOsPortal(props: Props) {
-  if (import.meta.env.VITE_SSO_PORTAL_TIMELINE_OS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_TIMELINE_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal timeline os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_TIMELINE_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId }: Props) {

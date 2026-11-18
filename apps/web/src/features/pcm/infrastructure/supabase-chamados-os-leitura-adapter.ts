@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 const ordensSchema = z.array(
   z
@@ -23,7 +24,7 @@ export const supabaseChamadosOsLeituraAdapter = {
   ) {
     if (!Number.isSafeInteger(limite) || limite < 1 || limite > 100)
       throw new Error("Paginação inválida.");
-    const funcao = import.meta.env.VITE_SSO_LEITURA_OS_CHAMADO_SEGURA_ENABLED === "true"
+    const funcao = flagLigada("VITE_SSO_LEITURA_OS_CHAMADO_SEGURA_ENABLED")
       ? "sso_listar_ordens_chamado_segura" : "sso_listar_ordens_chamado";
     let consulta = supabase.schema("pcm").rpc(funcao, {
       p_cliente_id: clienteId,

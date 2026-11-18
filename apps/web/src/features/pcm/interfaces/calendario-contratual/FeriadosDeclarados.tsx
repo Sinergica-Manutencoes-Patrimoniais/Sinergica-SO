@@ -8,6 +8,7 @@ import { CoincidenciasCalendario } from "./CoincidenciasCalendario";
 import { SupressoesFeriado } from "./SupressoesFeriado";
 import { RegistrarSupressao } from "./RegistrarSupressao";
 import { HistoricoSupressaoGerador } from "./HistoricoSupressaoGerador";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Feriado={id:string;contrato_id:string|null;data:string;fonte:string;motivo:string;ativo:boolean;revisao:number};
 type Pedido={requestId:string;clienteId:string;id:string;revision:number;acao:"declarar"|"retirar";contratoId:string|null;data:string|null;fonte:string|null;motivo:string};
@@ -28,7 +29,7 @@ function ConteudoFeriados({userId,clienteId,contratos,regras=[],onUsar}:Props) {
   const [periodo,setPeriodo]=useState<{inicio:string;fim:string;contrato:string|null}|null>(null);
   const [verificando,setVerificando]=useState(false);const travaConferencia=useRef(false);
   const montado=useRef(false);useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
-  const fotografia=import.meta.env.VITE_SSO_FOTOGRAFIA_FERIADOS_ENABLED==="true";
+  const fotografia=flagLigada("VITE_SSO_FOTOGRAFIA_FERIADOS_ENABLED");
   async function lerPagina(p:Periodo,c:Cursor,signal?:AbortSignal):Promise<Pagina>{
     const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal?.aborted)throw new Error("Sessão alterada.");
     const parametros={p_cliente_id:clienteId,p_contrato_id:p.contrato,p_inicio:p.inicio,p_fim:p.fim,p_apos:c.apos,p_limite:50};
@@ -74,7 +75,7 @@ function ConteudoFeriados({userId,clienteId,contratos,regras=[],onUsar}:Props) {
         p_expected_revision: p.revision, p_acao: p.acao, p_contrato_id: p.contratoId,
         p_data: p.data, p_fonte: p.fonte, p_motivo: p.motivo,
       };
-      const consulta = import.meta.env.VITE_SSO_DECISAO_FERIADO_MEDIADA_ENABLED === "true"
+      const consulta = flagLigada("VITE_SSO_DECISAO_FERIADO_MEDIADA_ENABLED")
         ? supabase.schema("pcm").rpc("sso_decidir_feriado_mediado", { ...parametros, p_ator_id: userId })
         : supabase.schema("pcm").rpc("sso_decidir_feriado_declarado", parametros);
       const { data: resultado, error } = await consulta;

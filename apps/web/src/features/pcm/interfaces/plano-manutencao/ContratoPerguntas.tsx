@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; revision: number; perguntaId: string; obrigatoria: boolean; justificativa: string };
 const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),planoId:z.string().guid(),versaoId:z.string().guid(),rotinaId:z.string().guid(),revision:z.number().int().positive().safe(),perguntaId:z.string().trim().min(1).max(250),obrigatoria:z.boolean(),justificativa:z.string().trim().min(1).max(2000)}).strict();
 
 export function ContratoPerguntas(props: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; revision: number }) {
-  if (import.meta.env.VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED !== "true") return <p>Contratos de perguntas indisponíveis.</p>;
+  if (!flagLigada("VITE_SSO_CONTRATO_PERGUNTA_MEDIADO_ENABLED")) return <p>Contratos de perguntas indisponíveis.</p>;
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.versaoId,props.rotinaId])} {...props}/>;
 }
 function Conteudo({ userId, clienteId, planoId, versaoId, rotinaId, revision }: { userId: string; clienteId: string; planoId: string; versaoId: string; rotinaId: string; revision: number }) {

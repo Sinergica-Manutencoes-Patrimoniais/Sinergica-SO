@@ -16,6 +16,7 @@ import { EstadoOcorrenciaVinculada } from "./EstadoOcorrenciaVinculada";
 import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
 import { MaterializarCicloCanonico } from "./MaterializarCicloCanonico";
 import { TriagemCicloAtrasado } from "./TriagemCicloAtrasado";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const obrigacao = z
   .object({
@@ -67,7 +68,7 @@ function Conteudo({
     ciclo: number;
   } | null>(null);
   const ocorrenciasHabilitadas =
-    import.meta.env.VITE_SSO_PREVIA_VENCIMENTOS_OCORRENCIAS_ENABLED === "true";
+    flagLigada("VITE_SSO_PREVIA_VENCIMENTOS_OCORRENCIAS_ENABLED");
   const dias =
     (Date.parse(`${referencia}T00:00:00Z`) - Date.parse(`${inicio}T00:00:00Z`)) / 86_400_000;
   const valida = Number.isFinite(dias) && dias >= 0 && dias <= 366;
@@ -254,7 +255,7 @@ function Conteudo({
     enabled:
       selecionadaAtual &&
       ocorrenciasHabilitadas &&
-      import.meta.env.VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED === "true",
+      flagLigada("VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED"),
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }) => {
@@ -302,7 +303,7 @@ function Conteudo({
       return itens[0] ?? null;
     },
   });
-  const usoHabilitado = import.meta.env.VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED === "true";
+  const usoHabilitado = flagLigada("VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED");
   const fontesConflitantes =
     !!preparada.data &&
     !!usoCanonico.data &&
@@ -390,8 +391,8 @@ function Conteudo({
                     ? "referência após a tolerância"
                     : "referência dentro da tolerância"}
                   {(ocorrenciasHabilitadas ||
-                    import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true" ||
-                    import.meta.env.VITE_SSO_PREPARAR_CICLO_VENCIDO_ENABLED === "true") && (
+                    flagLigada("VITE_SSO_DECISAO_VENCIMENTO_ENABLED") ||
+                    flagLigada("VITE_SSO_PREPARAR_CICLO_VENCIDO_ENABLED")) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -449,7 +450,7 @@ function Conteudo({
                 Vencimento {selecionada.vencimento} · Rotina {selecionada.rotinaId}. A consulta não
                 comprova execução nem ausência de registros em outras versões.
               </p>
-              {import.meta.env.VITE_SSO_PREPARAR_CICLO_VENCIDO_ENABLED === "true" && (
+              {flagLigada("VITE_SSO_PREPARAR_CICLO_VENCIDO_ENABLED") && (
                 <MaterializarCicloCanonico
                   vencido
                   userId={userId}
@@ -483,7 +484,7 @@ function Conteudo({
                   </p>
                 )}
               {ocorrenciasHabilitadas &&
-                import.meta.env.VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED === "true" && (
+                flagLigada("VITE_SSO_CONSULTAR_USO_CICLO_VERSAO_ENABLED") && (
                   <>
                     <button
                       type="button"
@@ -524,7 +525,7 @@ function Conteudo({
                       : " · reutilizada de outra versão"}
                     ; estado de execução não comprovado.
                   </p>
-                  {import.meta.env.VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED === "true" && (
+                  {flagLigada("VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED") && (
                     <EstadoOcorrenciaVinculada
                       userId={userId}
                       clienteId={clienteId}
@@ -532,7 +533,7 @@ function Conteudo({
                       preparadaId={preparadaResolvida}
                     />
                   )}
-                  {import.meta.env.VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED === "true" && (
+                  {flagLigada("VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED") && (
                     <FilaPreventivaPcm
                       userId={userId}
                       clienteId={clienteId}
@@ -541,7 +542,7 @@ function Conteudo({
                     />
                   )}
                   {preparada.data &&
-                    import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED === "true" && (
+                    flagLigada("VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED") && (
                       <TriagemCicloAtrasado
                         userId={userId}
                         clienteId={clienteId}
@@ -552,7 +553,7 @@ function Conteudo({
                     )}
                 </>
               )}
-              {import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true" && (
+              {flagLigada("VITE_SSO_DECISAO_VENCIMENTO_ENABLED") && (
                 <DecidirVencimento
                   userId={userId}
                   clienteId={clienteId}

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { DevolverParcialCiclo } from "./DevolverParcialCiclo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
@@ -31,7 +32,7 @@ export function ContinuacoesParcelaCiclo({ userId, clienteId, composicaoId, cicl
   const [propostaId, setPropostaId] = useState(""); const [motivo, setMotivo] = useState("");
   const [confirmacao, setConfirmacao] = useState<string | null>(null); const [ocupado, setOcupado] = useState(false); const [aviso, setAviso] = useState("");
   const trava = useRef(false); const cache = useQueryClient();
-  const mediado = import.meta.env.VITE_SSO_VINCULO_CONTINUIDADE_MEDIADO_ENABLED === "true";
+  const mediado = flagLigada("VITE_SSO_VINCULO_CONTINUIDADE_MEDIADO_ENABLED");
   async function conferirAtor() { const { data, error } = await supabase.auth.getUser(); if (error || data.user?.id !== userId) throw new Error("Sessão alterada"); }
   const consulta = useInfiniteQuery({ queryKey: ["backlog-continuacoes-ciclo", userId, clienteId, cicloId], initialPageParam: null as string | null, gcTime: 0, refetchOnWindowFocus: true,
     queryFn: async ({ pageParam, signal }) => { await conferirAtor(); const { data, error } = await supabase.schema("pcm").rpc(mediado ? "sso_continuacoes_para_parcela_mediado" : "sso_continuacoes_para_parcela", {
@@ -79,7 +80,7 @@ export function ContinuacoesParcelaCiclo({ userId, clienteId, composicaoId, cicl
       <label>Proposta <select className="input" value={propostaId} disabled={ocupado || consulta.isFetching || consulta.isError || paginasDivergentes} onChange={(e) => { setPropostaId(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>{itens.map((item) => <option key={item.proposta_id} value={item.proposta_id}>{item.descricao_restante} · {item.minutos_restantes} min · {item.situacao}</option>)}</select></label>
       {consulta.hasNextPage && !paginasDivergentes && <Button variant="secondary" disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>Mais propostas</Button>}
       {proposta && <p>OS {proposta.os_id} · revisão do Chamado {proposta.chamado_revision}. {proposta.vinculo_declarado_atual ? "Vínculo já declarado para este conteúdo." : "Vínculo ainda não declarado para este conteúdo."}</p>}
-      {import.meta.env.VITE_SSO_RETORNO_PARCIAL_CICLO_ENABLED === "true" && proposta && <DevolverParcialCiclo key={`${userId}:${clienteId}:${cicloId}:${parcelaId}:${proposta.proposta_id}`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={cicloId} parcelaId={parcelaId} propostaId={proposta.proposta_id} />}
+      {flagLigada("VITE_SSO_RETORNO_PARCIAL_CICLO_ENABLED") && proposta && <DevolverParcialCiclo key={`${userId}:${clienteId}:${cicloId}:${parcelaId}:${proposta.proposta_id}`} userId={userId} clienteId={clienteId} composicaoId={composicaoId} cicloId={cicloId} parcelaId={parcelaId} propostaId={proposta.proposta_id} />}
       <label>Motivo <textarea className="input" maxLength={2000} value={motivo} disabled={ocupado} onChange={(e) => { setMotivo(e.target.value); setConfirmacao(null); }} /></label>
       {confirmacao && confirmacao !== fotografia && <p role="alert">A proposta ou revisão mudou. Confira novamente.</p>}
       <label><input type="checkbox" checked={Boolean(fotografia && confirmacao === fotografia)} disabled={ocupado || !fotografia} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Declaro o vínculo desta proposta com esta parcela.</label>

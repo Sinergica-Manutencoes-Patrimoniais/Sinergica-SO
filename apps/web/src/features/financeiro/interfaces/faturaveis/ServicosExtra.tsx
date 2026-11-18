@@ -7,6 +7,7 @@ import { IdentidadeFatoServico } from "./IdentidadeFatoServico";
 import { ReconciliacaoServicoMaterial } from "./ReconciliacaoServicoMaterial";
 import { SnapshotServico } from "./SnapshotServico";
 import { CandidatoServico } from "./CandidatoServico";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const linha = z.object({ id: uuid, os_id: uuid, proposta_id: uuid, versao: z.number().int(), linha_id: uuid, quantidade: z.number().int(), preco_unitario_centavos: z.string(), chave_evento: z.string(), justificativa: z.string(), ator_id: uuid, decisao: z.enum(["aceita", "rejeitada"]).nullable() }).strict();
@@ -48,9 +49,9 @@ export function ServicosExtra({ usuario, cliente }: { usuario: string; cliente: 
       {!x.decisao && x.ator_id !== usuario && <><button type="button" onClick={() => setSelecionado(x.id)}>Revisar declaração</button>{selecionado === x.id && <form onSubmit={(e) => { e.preventDefault(); if (!motivo.trim()) { setMensagem("Informe o motivo da decisão."); return; } iniciar("decidir", { p_declaracao_id: x.id, p_decisao: decisao, p_motivo: motivo.trim() }); }}><label>Decisão <select value={decisao} onChange={(e) => setDecisao(e.target.value as "aceita" | "rejeitada")} disabled={!!pendente}><option value="aceita">Aceitar declaração interna</option><option value="rejeitada">Rejeitar declaração interna</option></select></label><label>Motivo <textarea required maxLength={1000} value={motivo} onChange={(e) => setMotivo(e.target.value)} disabled={!!pendente} /></label><label><input type="checkbox" checked={fotoDecisao !== null && confirmacao === fotoDecisao} onChange={(e) => setConfirmacao(e.target.checked ? fotoDecisao : null)} disabled={!!pendente || !fotoDecisao} /> Conferi a declaração.</label><button type="submit" disabled={!fotoDecisao || confirmacao !== fotoDecisao || !!pendente || comando.isPending}>Registrar decisão interna</button></form>}</>}
       {x.decisao === "aceita" && <SnapshotServico usuario={usuario} cliente={cliente} declaracao={x.id} />}
       {x.decisao === "aceita" && <CandidatoServico usuario={usuario} cliente={cliente} declaracao={x.id} />}
-      {x.decisao === "aceita" && import.meta.env.VITE_SSO_VINCULO_RESPOSTA_SERVICO_ENABLED === "true" && <VinculoRespostaServico usuario={usuario} cliente={cliente} declaracao={x.id} />}
-      {x.decisao === "aceita" && import.meta.env.VITE_SSO_FATO_EXECUCAO_DECLARADO_ENABLED === "true" && <IdentidadeFatoServico usuario={usuario} cliente={cliente} declaracao={x.id} />}
-      {import.meta.env.VITE_SSO_RECONCILIACAO_SERVICO_MATERIAL_ENABLED === "true" && <ReconciliacaoServicoMaterial usuario={usuario} cliente={cliente} servico={x.id} os={x.os_id} />}
+      {x.decisao === "aceita" && flagLigada("VITE_SSO_VINCULO_RESPOSTA_SERVICO_ENABLED") && <VinculoRespostaServico usuario={usuario} cliente={cliente} declaracao={x.id} />}
+      {x.decisao === "aceita" && flagLigada("VITE_SSO_FATO_EXECUCAO_DECLARADO_ENABLED") && <IdentidadeFatoServico usuario={usuario} cliente={cliente} declaracao={x.id} />}
+      {flagLigada("VITE_SSO_RECONCILIACAO_SERVICO_MATERIAL_ENABLED") && <ReconciliacaoServicoMaterial usuario={usuario} cliente={cliente} servico={x.id} os={x.os_id} />}
     </li>)}</ul>}{lista.hasNextPage && <button type="button" disabled={lista.isFetching} onClick={() => void lista.fetchNextPage()}>Mais declarações</button>}
     {pendente === "invalido" && <p role="alert">Pedido ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={comando.isPending} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</button>}{mensagem && <p role="status">{mensagem}</p>}
   </section>;

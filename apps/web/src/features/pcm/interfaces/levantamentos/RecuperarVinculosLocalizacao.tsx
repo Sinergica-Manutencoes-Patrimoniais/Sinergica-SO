@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { pedidoVinculoLocalizacaoSchema } from "./VincularLocalizacao";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const prefixo = "sso-vincular-localizacao:";
 type Tentativa = { chaveStorage: string; texto: string; pedido: z.infer<typeof pedidoVinculoLocalizacaoSchema> };
@@ -10,7 +12,15 @@ const recibo = z.object({ requestId: z.string().guid(), aggregateId: z.string().
   linkedIds: z.object({ entidadeId: z.string().guid(), tipo: z.string() }).strict(), warnings: z.array(z.string()) }).strict();
 
 export function RecuperarVinculosLocalizacao({ userId, clienteId }: { userId: string; clienteId: string }) {
-  if (import.meta.env.VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Recibo vinculo localizacao"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RECIBO_VINCULO_LOCALIZACAO_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} />;
 }
 

@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const semanaSchema=z.object({semana_inicio:z.string(),declaracoes:z.number().int().nonnegative().safe(),visitas:z.number().int().nonnegative().safe(),
   disponibilidade_completa:z.literal(false),demanda_completa:z.literal(false),disponibilidade_minutos:z.null(),demanda_minutos:z.null(),saldo_minutos:z.null()}).strict();
 export function HorizonteCapacidade({userId,clienteId,semana}:{userId:string;clienteId:string;semana:string}) {
   const [quantidade,setQuantidade]=useState("4");const [solicitado,setSolicitado]=useState(4);
   const [gruposAbertos,setGruposAbertos]=useState(false);
-  const mediado=import.meta.env.VITE_SSO_HORIZONTE_CAPACIDADE_MEDIADO_ENABLED==="true";
+  const mediado=flagLigada("VITE_SSO_HORIZONTE_CAPACIDADE_MEDIADO_ENABLED");
   const consulta=useQuery({queryKey:["capacidade-horizonte",userId,clienteId,semana,solicitado,mediado],gcTime:0,refetchOnWindowFocus:true,
     queryFn:async({signal}) => {
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
@@ -32,7 +33,7 @@ export function HorizonteCapacidade({userId,clienteId,semana}:{userId:string;cli
       <label>Semanas <input required type="number" min="1" max="12" value={quantidade} onChange={(e) => setQuantidade(e.target.value)}/></label><button type="submit">Consultar horizonte</button></form>
     {consulta.isFetching&&<output>Carregando horizonte…</output>}{consulta.isError&&<p role="alert">Horizonte indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data&&!consulta.isFetching&&!consulta.isError&&<ul>{consulta.data.map((s) => <li key={s.semana_inicio}>Semana {s.semana_inicio} · {s.declaracoes} declarações · {s.visitas} Visitas · disponibilidade {s.disponibilidade_completa?"completa":"incompleta"} · demanda {s.demanda_completa?"completa":"incompleta"} · saldo não calculado</li>)}</ul>}
-    {import.meta.env.VITE_SSO_HORIZONTE_GRUPO_MEDIADO_ENABLED==="true" && <><button type="button" aria-expanded={gruposAbertos} onClick={()=>setGruposAbertos(v=>!v)}>{gruposAbertos?"Ocultar estimativas de Grupos":"Consultar estimativas de Grupos"}</button>
+    {flagLigada("VITE_SSO_HORIZONTE_GRUPO_MEDIADO_ENABLED") && <><button type="button" aria-expanded={gruposAbertos} onClick={()=>setGruposAbertos(v=>!v)}>{gruposAbertos?"Ocultar estimativas de Grupos":"Consultar estimativas de Grupos"}</button>
       {gruposAbertos && <HorizonteGrupos key={JSON.stringify([userId,clienteId,semana,solicitado])} userId={userId} clienteId={clienteId} semana={semana} quantidade={solicitado}/>}</>}
   </section>;
 }

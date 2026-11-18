@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../../lib/supabase-client";
 import { z } from "zod";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function ComparacaoQuestionario({ userId, clienteId, planoId, revisao, rotinaId }: { userId: string; clienteId: string; planoId: string; revisao: number; rotinaId: string }) {
-  const habilitado = import.meta.env.VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED");
   const consulta = useQuery({ queryKey: ["comparacao-questionario-revisao", userId, clienteId, planoId, revisao, rotinaId], enabled: habilitado, gcTime: 0, retry: false, queryFn: async ({ signal }) => {
     await conferirSessaoDiagnostico(userId, signal);
     const { data, error } = await supabase.schema("pcm").rpc("sso_comparar_questionario_mediado", { p_ator_id: userId, p_cliente_id: clienteId, p_plano_id: planoId, p_revisao: revisao, p_rotina_logica_id: rotinaId }).abortSignal(signal);

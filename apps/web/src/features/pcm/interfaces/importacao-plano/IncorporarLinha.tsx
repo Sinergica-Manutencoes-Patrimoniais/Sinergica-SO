@@ -5,6 +5,7 @@ import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-pl
 import { conferirToleranciasLote, incorporarLinhaCronograma, listarMapeamentosCronograma, prepararImportacaoCronograma, type PedidoIncorporacaoCronograma } from "../../infrastructure/supabase-importacao-plano-adapter";
 import { ReprocessarLinha } from "./ReprocessarLinha";
 import { IncorporarLote } from "./IncorporarLote";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function IncorporarLinha({ userId, clienteId, loteId }: { userId: string; clienteId: string; loteId: string }) {
   const cache = useQueryClient(); const storageKey = `sso-incorporacao-cronograma:${JSON.stringify([userId, clienteId, loteId])}`;
@@ -32,7 +33,7 @@ export function IncorporarLinha({ userId, clienteId, loteId }: { userId: string;
     new Set(mapasCarregados.map((m) => m.id.toLowerCase())).size === mapasCarregados.length;
   const linhaAtual=linhas.data?.pages.flat().find((l)=>l.chave===linhaSelecionada && l.candidata);
   const mapaAtual=mapeamentos.data?.pages.flat().find((m)=>m.id===linhaAtual?.mapeamento_id && m.chave===linhaAtual?.chave);
-  const toleranciaHabilitada=import.meta.env.VITE_SSO_CONFERENCIA_TOLERANCIAS_LOTE_ENABLED === "true";
+  const toleranciaHabilitada=flagLigada("VITE_SSO_CONFERENCIA_TOLERANCIAS_LOTE_ENABLED");
   const tolerancia=useQuery({queryKey:["cronograma-tolerancias-individual",userId,clienteId,loteId,linhaAtual?.revisao_lote,mapaAtual?.id],gcTime:0,retry:false,
     enabled:toleranciaHabilitada&&consistentes&&!!linhaAtual&&!!mapaAtual&&!linhas.isFetching&&!linhas.isError&&!mapeamentos.isFetching&&!mapeamentos.isError,
     queryFn:({signal})=>conferirToleranciasLote(userId,clienteId,loteId,linhaAtual!.revisao_lote,[mapaAtual!.id],signal)});
@@ -88,7 +89,7 @@ export function IncorporarLinha({ userId, clienteId, loteId }: { userId: string;
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}
     {pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente,true)}>Repetir tentativa pendente</button>}
     {aviso && <p role="status">{aviso}</p>}
-    {consistentes && planoId && import.meta.env.VITE_SSO_REPROCESSAR_CRONOGRAMA_ENABLED === "true" && <ReprocessarLinha key={planoId} userId={userId} clienteId={clienteId} loteId={loteId} planoId={planoId} />}
-    {consistentes && planoId && import.meta.env.VITE_SSO_INCORPORAR_LOTE_CRONOGRAMA_ENABLED === "true" && <IncorporarLote key={planoId} userId={userId} clienteId={clienteId} loteId={loteId} planoId={planoId} />}
+    {consistentes && planoId && flagLigada("VITE_SSO_REPROCESSAR_CRONOGRAMA_ENABLED") && <ReprocessarLinha key={planoId} userId={userId} clienteId={clienteId} loteId={loteId} planoId={planoId} />}
+    {consistentes && planoId && flagLigada("VITE_SSO_INCORPORAR_LOTE_CRONOGRAMA_ENABLED") && <IncorporarLote key={planoId} userId={userId} clienteId={clienteId} loteId={loteId} planoId={planoId} />}
   </section>;
 }

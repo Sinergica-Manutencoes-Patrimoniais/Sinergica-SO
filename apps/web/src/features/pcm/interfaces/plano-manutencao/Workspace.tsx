@@ -10,6 +10,7 @@ import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-pl
 import { AcoesRevisaoPlano } from "./AcoesRevisaoPlano";
 import { DetalhePlano } from "./DetalhePlano";
 import { TransicaoPlano } from "./TransicaoPlano";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function PlanoManutencaoWorkspace(props: {
   userId: string;
@@ -245,7 +246,7 @@ function ConteudoPlanoManutencao({
               plano={plano}
               bloqueado={aberto || Boolean(pendente) || edicaoRotinaId === plano.id || consultaBloqueada}
             />
-            {import.meta.env.VITE_SSO_TRANSICAO_PLANO_ENABLED === "true" && (
+            {flagLigada("VITE_SSO_TRANSICAO_PLANO_ENABLED") && (
               <TransicaoPlano userId={userId} clienteId={clienteId} plano={plano}
                 onAbrirRotinas={() => { setEdicaoRotinaId(null); setPlanoAbertoId(plano.id); }}
                 bloqueado={aberto || Boolean(pendente) || Boolean(edicaoRotinaId) || consultaBloqueada} />

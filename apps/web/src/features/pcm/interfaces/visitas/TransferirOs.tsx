@@ -8,6 +8,7 @@ import {
 } from "../../infrastructure/supabase-transferencia-visita-adapter";
 import { supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-adapter";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; visitas: VisitaResumo[]; bloqueado: boolean };
 
@@ -37,7 +38,7 @@ function TransferirOsInterna({ userId, clienteId, visitas, bloqueado }: Props) {
   const [ocupado, setOcupado] = useState(false);
   const enviando = useRef(false);
   const queryClient = useQueryClient();
-  const permitirConfirmadas = import.meta.env.VITE_SSO_TRANSFERENCIA_CONFIRMADA_ENABLED === "true";
+  const permitirConfirmadas = flagLigada("VITE_SSO_TRANSFERENCIA_CONFIRMADA_ENABLED");
   const elegiveis = visitas.filter((v) => v.estado === "rascunho" || v.estado === "planejada" || (permitirConfirmadas && v.estado === "confirmada"));
   const origem = elegiveis.find((v) => v.id === origemId);
   const destino = elegiveis.find((v) => v.id === destinoId && v.id !== origemId);
@@ -136,7 +137,7 @@ function TransferirOsInterna({ userId, clienteId, visitas, bloqueado }: Props) {
       {recuperacao.falhou && <p role="alert">Operação guardada inválida. Consulte o suporte antes de continuar.</p>}
       {erro && <p role="alert">{erro}</p>}
       {pendente ? <><button type="button" disabled={ocupado || bloqueado} onClick={() => void enviar(pendente)}>Repetir transferência pendente</button>
-        {import.meta.env.VITE_SSO_RECIBO_TRANSFERENCIA_VISITA_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo da transferência</button>}</> : !recuperacao.falhou && (
+        {flagLigada("VITE_SSO_RECIBO_TRANSFERENCIA_VISITA_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar recibo da transferência</button>}</> : !recuperacao.falhou && (
         <form onSubmit={(event) => { event.preventDefault(); iniciar(); }} className="space-y-2">
           <label>Origem <select required value={origemId} onChange={(event) => { setOrigemId(event.target.value); setVinculoId(""); setConfirmacao(null); }}>
             <option value="">Selecione</option>{elegiveis.map((v) => <option key={v.id} value={v.id}>{rotulo(v)}</option>)}

@@ -5,6 +5,8 @@ import { supabase } from "../../../../lib/supabase-client";
 import { VincularMaterialProposta } from "./VincularMaterialProposta";
 import { VincularLinhaMaterial } from "./VincularLinhaMaterial";
 import { ReconhecerLinhaMaterial } from "./ReconhecerLinhaMaterial";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ id: z.string().guid(), os_id: z.string().guid(), lista_id: z.string().guid(), lista_revisao: z.number().int().positive(),
   descricao: z.string(), evidencia: z.string(), estado: z.enum(["pendente", "aceita", "rejeitada"]), revisao: z.number().int().positive(), criado_em: z.string() }).strict();
@@ -14,7 +16,15 @@ const pedido = z.discriminatedUnion("tipo", [
 ]);
 type Pedido = z.infer<typeof pedido>;
 export function DeclaracoesMaterial(props: { usuario: string; cliente: string }) {
-  if (import.meta.env.VITE_SSO_DECLARACAO_MATERIAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DECLARACAO_MATERIAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Declaracao material"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DECLARACAO_MATERIAL_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
@@ -53,9 +63,9 @@ function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {
     {lista.isFetching && <p>Consultando declarações…</p>}
     {lista.isError && <p role="alert">Não foi possível consultar declarações. <button type="button" onClick={() => void lista.refetch()}>Tentar novamente</button></p>}
     {!lista.isError && lista.data?.pages.flat().map((d) => <article key={d.id}><p>{d.descricao} · OS {d.os_id} · lista {d.lista_id} revisão {d.lista_revisao} · {d.estado}</p><p>Evidência declarada: {d.evidencia}</p>
-      {d.estado === "aceita" && import.meta.env.VITE_SSO_MATERIAL_PROPOSTA_ENABLED === "true" && <VincularMaterialProposta usuario={usuario} cliente={cliente} declaracaoId={d.id} />}
-      {d.estado === "aceita" && import.meta.env.VITE_SSO_MATERIAL_LINHA_ENABLED === "true" && <VincularLinhaMaterial usuario={usuario} cliente={cliente} declaracaoId={d.id} />}
-      {d.estado === "aceita" && import.meta.env.VITE_SSO_CANDIDATO_LINHA_ENABLED === "true" && <ReconhecerLinhaMaterial usuario={usuario} cliente={cliente} declaracaoId={d.id} />}
+      {d.estado === "aceita" && flagLigada("VITE_SSO_MATERIAL_PROPOSTA_ENABLED") && <VincularMaterialProposta usuario={usuario} cliente={cliente} declaracaoId={d.id} />}
+      {d.estado === "aceita" && flagLigada("VITE_SSO_MATERIAL_LINHA_ENABLED") && <VincularLinhaMaterial usuario={usuario} cliente={cliente} declaracaoId={d.id} />}
+      {d.estado === "aceita" && flagLigada("VITE_SSO_CANDIDATO_LINHA_ENABLED") && <ReconhecerLinhaMaterial usuario={usuario} cliente={cliente} declaracaoId={d.id} />}
       {d.estado === "pendente" && <div><label>Motivo da revisão <input value={motivos[d.id] ?? ""} maxLength={1000} onChange={(e) => setMotivos((v) => ({ ...v, [d.id]: e.target.value }))} /></label>
         {(["aceita", "rejeitada"] as const).map((decisao) => <button key={decisao} type="button" disabled={!!pendente || comando.isPending || !(motivos[d.id] ?? "").trim()}
           onClick={() => iniciar({ tipo: "revisar", requestId: crypto.randomUUID(), id: d.id, revisao: d.revisao, decisao, motivo: motivos[d.id]!.trim() })}>{decisao === "aceita" ? "Aceitar declaração" : "Rejeitar declaração"}</button>)}</div>}

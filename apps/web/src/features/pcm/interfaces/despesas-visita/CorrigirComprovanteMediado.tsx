@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ingerirComprovanteDespesa, type DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), visitaId: z.string().guid(), despesaId: z.string().guid(),
   revisao: z.number().int().positive(), valor: z.number().int().nonnegative().safe(), motivo: z.string().trim().min(1).max(2000),
@@ -16,7 +18,15 @@ async function hashArquivo(arquivo: File) {
 }
 
 export function CorrigirComprovanteMediado(props: Props) {
-  if (import.meta.env.VITE_SSO_CORRECAO_COMPROVANTE_MEDIADA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CORRECAO_COMPROVANTE_MEDIADA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Correcao comprovante mediada"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CORRECAO_COMPROVANTE_MEDIADA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])} {...props} />;
 }
 
@@ -131,10 +141,10 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
     {(!pendente || (pendente !== "invalido" && !pendente.objetoId)) && <label>Comprovante PDF, JPEG ou PNG até 10 MB <input type="file" accept="application/pdf,image/jpeg,image/png" disabled={ocupado || envio.isPending} onChange={(e) => { setArquivo(e.target.files?.[0] ?? null); setConfirmado(false); }} /></label>}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
     {pendente && pendente !== "invalido" && <p>Correção pendente de {pendente.valor} centavos, revisão {pendente.revisao}. {!pendente.objetoId ? "Selecione o mesmo arquivo para repetir." : "O upload foi confirmado; repita a correção."}</p>}
-    {import.meta.env.VITE_SSO_RECUPERAR_INGESTAO_COMPROVANTE_ENABLED === "true" && pendente && pendente !== "invalido" && !pendente.objetoId &&
+    {flagLigada("VITE_SSO_RECUPERAR_INGESTAO_COMPROVANTE_ENABLED") && pendente && pendente !== "invalido" && !pendente.objetoId &&
       <button type="button" disabled={ocupado || envio.isPending || recibo.isPending} onClick={() => void recuperarUpload(pendente)}>Consultar confirmação do upload</button>}
     <button type="button" disabled={pendente === "invalido" || ocupado || envio.isPending || recibo.isPending || (!pendente && (!confirmado || !arquivo))} onClick={() => void executar()}>{pendente ? "Repetir tentativa" : "Registrar correção mediada"}</button>
-    {import.meta.env.VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED === "true" && pendente && pendente !== "invalido" && pendente.objetoId &&
+    {flagLigada("VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED") && pendente && pendente !== "invalido" && pendente.objetoId &&
       <button type="button" disabled={ocupado || envio.isPending || recibo.isPending} onClick={() => { if (trava.current) return; trava.current = true; recibo.mutate(pendente); }}>Consultar confirmação</button>}
     {aviso && <p role="status">{aviso}</p>}
   </section>;

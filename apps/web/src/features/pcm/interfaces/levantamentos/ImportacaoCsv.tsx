@@ -5,12 +5,22 @@ import { supabase } from "../../../../lib/supabase-client";
 import { analisarEstruturaCsv, COLUNAS_ESTRUTURA, type DiagnosticoLinhaCsv, type LinhaImportacaoEstrutura } from "../../application/importacao-estrutura-csv";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { QuarentenaCsv } from "./QuarentenaCsv";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const pedidoSchema=z.object({requestId:z.string().guid(),clienteId:z.string().guid(),chaveOrigem:z.string().trim().min(1).max(200),
   linhas:z.array(z.object({chave:z.string().min(1).max(200),tipo:z.enum(["area","local","sublocal","sistema","equipamento","componente","grupo_quantitativo"]),atributos:z.record(z.string(), z.string())}).strict()).min(1).max(1000)}).strict();
 type Pedido=z.infer<typeof pedidoSchema>;
 export function ImportacaoCsv(props:{userId:string;clienteId:string;onRecebido?:(loteId:string)=>void}){
-  if(import.meta.env.VITE_SSO_IMPORTACAO_ESTRUTURA_CSV_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_IMPORTACAO_ESTRUTURA_CSV_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Importacao estrutura csv"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_IMPORTACAO_ESTRUTURA_CSV_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId])} {...props} />;
 }
 function Conteudo({userId,clienteId,onRecebido}:{userId:string;clienteId:string;onRecebido?:(loteId:string)=>void}){

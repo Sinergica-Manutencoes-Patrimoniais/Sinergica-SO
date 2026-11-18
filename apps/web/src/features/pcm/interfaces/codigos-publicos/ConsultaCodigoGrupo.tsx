@@ -2,12 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const resposta = z.object({ grupoId: z.string().guid(), clienteId: z.string().guid(),
   codigoAtual: z.string().min(1).max(200), codigoHistorico: z.boolean() }).strict().nullable();
 
 export function ConsultaCodigoGrupo({ userId, clienteId }: { userId: string; clienteId: string }) {
-  if (import.meta.env.VITE_SSO_CONSULTA_CODIGO_GRUPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONSULTA_CODIGO_GRUPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Consulta codigo grupo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONSULTA_CODIGO_GRUPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} />;
 }
 

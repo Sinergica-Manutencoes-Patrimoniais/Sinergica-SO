@@ -2,9 +2,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const linha=z.object({lote_id:z.string().guid(),linha_chave:z.string(),nome:z.string().nullable(),estado:z.enum(["incorporada","rejeitada","pendente"])}).strict();
 export function BuscarCodigoGrupo({userId,clienteId}:{userId:string;clienteId:string}){
-  const ativo=import.meta.env.VITE_SSO_BUSCAR_CODIGO_GRUPO_STAGING_ENABLED==="true";const [entrada,setEntrada]=useState("");const [codigo,setCodigo]=useState("");
+  const ativo=flagLigada("VITE_SSO_BUSCAR_CODIGO_GRUPO_STAGING_ENABLED");const [entrada,setEntrada]=useState("");const [codigo,setCodigo]=useState("");
   const q=useInfiniteQuery({queryKey:["levantamentos",userId,clienteId,"codigo-grupo",codigo],enabled:ativo && codigo.length>0,gcTime:0,initialPageParam:null as {lote:string;chave:string}|null,queryFn:async({pageParam,signal})=>{
     const {data,error}=await supabase.schema("pcm").rpc("sso_buscar_codigo_grupo_staging",{p_cliente_id:clienteId,p_codigo:codigo,p_apos_lote:pageParam?.lote ?? null,p_apos_chave:pageParam?.chave ?? null,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(linha).max(20).parse(data);
   },getNextPageParam:p=>{const ultima=p.length===20 ? p[p.length - 1] : undefined;return ultima ? {lote:ultima.lote_id,chave:ultima.linha_chave} : undefined;}});

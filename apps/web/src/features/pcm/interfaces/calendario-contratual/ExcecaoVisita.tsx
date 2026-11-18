@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -11,7 +13,15 @@ type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; visitaId: string; aoAprovar: () => void };
 
 export function ExcecaoVisita(props: Props) {
-  if (import.meta.env.VITE_SSO_EXCECAO_VISITA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EXCECAO_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Excecao visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EXCECAO_VISITA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, visitaId, aoAprovar }: Props) {

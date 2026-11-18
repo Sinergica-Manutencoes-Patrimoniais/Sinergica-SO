@@ -1,6 +1,8 @@
+import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
+import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { supabase } from "../../../../lib/supabase-client";
 import type { LancamentoItem } from "../../domain/lancamento";
@@ -25,13 +27,15 @@ export function PublicarCobrancaPortal({
   usuario,
   lancamento,
 }: { usuario: string; lancamento: LancamentoItem }) {
-  if (
-    import.meta.env.VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED !== "true" ||
-    lancamento.tipo !== "entrada" ||
-    !lancamento.osId ||
-    !lancamento.clienteId
-  )
-    return null;
+  if (lancamento.tipo !== "entrada" || !lancamento.osId || !lancamento.clienteId) return null;
+  if (!flagLigada("VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED"))
+    return (
+      <RecursoNaoAtivado
+        recurso="Publicar cobrança da OS"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PUBLICAR_COBRANCA_OS_ENABLED"]}
+      />
+    );
   return (
     <Conteudo
       key={JSON.stringify([usuario, lancamento.clienteId, lancamento.id])}

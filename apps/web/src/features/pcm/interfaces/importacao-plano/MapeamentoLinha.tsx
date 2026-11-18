@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listarAlvosCronograma, listarMapeamentosCronograma, mapearLinhaCronograma, type PedidoMapeamento } from "../../infrastructure/supabase-importacao-plano-adapter";
 import { ToleranciaLinha } from "./ToleranciaLinha";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function MapeamentoLinha({ userId, clienteId, loteId, revisao }: {
   userId: string; clienteId: string; loteId: string; revisao: number;
@@ -126,7 +127,7 @@ export function MapeamentoLinha({ userId, clienteId, loteId, revisao }: {
   {mapeamentos.isError && <p role="alert">Não foi possível carregar mapeamentos. <button type="button" onClick={() => void mapeamentos.refetch()}>Tentar novamente</button></p>}
   {mapeamentos.data && <ul>{mapeamentos.data.pages.flat().map((m) => <li key={m.chave}>
     Linha {m.chave}: {m.disciplina} · {m.nome} · {m.alvoTipo} {m.alvoId} · {m.modo} · revisão {m.revisao}
-    {import.meta.env.VITE_SSO_TOLERANCIA_CRONOGRAMA_ENABLED === "true" && <ToleranciaLinha userId={userId} clienteId={clienteId} loteId={loteId} revisao={revisao} chave={m.chave} mapeamentoId={m.id} />}
+    {flagLigada("VITE_SSO_TOLERANCIA_CRONOGRAMA_ENABLED") && <ToleranciaLinha userId={userId} clienteId={clienteId} loteId={loteId} revisao={revisao} chave={m.chave} mapeamentoId={m.id} />}
   </li>)}</ul>}
   {mapeamentos.hasNextPage && <button type="button" onClick={() => void mapeamentos.fetchNextPage()}>Mais mapeamentos</button>}
   </div>;

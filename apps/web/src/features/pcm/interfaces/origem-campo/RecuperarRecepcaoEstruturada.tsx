@@ -4,12 +4,22 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { EntradaLevantamentos } from "../levantamentos/Conectado";
 import { pedidoEstruturadoSchema, type PedidoEstruturado } from "./RecepcaoEstruturada";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Tentativa = { chave: string; texto: string; pedido: PedidoEstruturado };
 const prefixo = "sso-recepcao-estruturada:";
 
 export function RecuperarRecepcaoEstruturada({ userId }: { userId: string }) {
-  if (import.meta.env.VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Recepcao estruturada"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RECEPCAO_ESTRUTURADA_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={userId} userId={userId} />;
 }
 function Lista({ userId }: { userId: string }) {
@@ -73,9 +83,9 @@ function Lista({ userId }: { userId: string }) {
       </div> : <button type="button" disabled={ocupado} onClick={() => setConfirmacao(JSON.stringify([t.chave, t.texto]))}>Repetir mesmo pedido</button>}
     </section>)}
     {aviso && <p role="status">{aviso}</p>}
-    {recebido && import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED === "true" && <section>
+    {recebido && flagLigada("VITE_SSO_LEVANTAMENTOS_ENABLED") && <section>
       <button type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar lote" : "Abrir conferência do lote"}</button>
-      {aberto && <EntradaLevantamentos key={JSON.stringify([userId, recebido.clienteId, recebido.loteId])} habilitado={import.meta.env.VITE_SSO_LEVANTAMENTOS_ENABLED} userId={userId} clienteId={recebido.clienteId} loteRecebido={recebido.loteId} />}
+      {aberto && <EntradaLevantamentos key={JSON.stringify([userId, recebido.clienteId, recebido.loteId])} podeAdministrar={false} userId={userId} clienteId={recebido.clienteId} loteRecebido={recebido.loteId} />}
     </section>}
   </section>;
 }

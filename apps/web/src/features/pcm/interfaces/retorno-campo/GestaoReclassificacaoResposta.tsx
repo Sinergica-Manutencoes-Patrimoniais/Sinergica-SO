@@ -2,13 +2,15 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 type Props = { userId: string; clienteId: string; retornoId: string; respostaId: string };
 const resultado = z.enum(["ok", "nao_ok", "nao_aplicavel", "nao_inspecionado", "corrigido"]);
 const pedido = z.discriminatedUnion("tipo", [z.object({ tipo: z.literal("proposta"), requestId: z.string().guid(), clienteId: z.string().guid(), retornoId: z.string().guid(), respostaId: z.string().guid(), propostaRevision: z.number().int().nonnegative(), validacaoRevision: z.number().int().nonnegative(), resultado, observacao: z.string().max(4000), motivo: z.string().min(1).max(2000) }).strict(), z.object({ tipo: z.literal("decisao"), requestId: z.string().guid(), clienteId: z.string().guid(), retornoId: z.string().guid(), respostaId: z.string().guid(), propostaId: z.string().guid(), decisaoRevision: z.number().int().nonnegative(), validacaoRevision: z.number().int().nonnegative(), decisao: z.enum(["aceita", "rejeitada"]), motivo: z.string().min(1).max(2000) }).strict()]); type Pedido = z.infer<typeof pedido>;
 const contexto = z.object({ respostaId: z.string().guid(), propostaRevision: z.number().int().nonnegative(), decisaoRevision: z.number().int().nonnegative(), validacaoRevision: z.number().int().nonnegative(), historicoReconciliado: z.boolean(), ultimaValidacao: z.string().nullable(), jaAprovado: z.boolean() }).strict();
 const evento = z.object({ id: z.string().guid(), tipo: z.enum(["proposta", "decisao"]), revisao: z.number().int().positive(), resultado: z.string().nullable(), observacao: z.string().nullable(), decisao: z.string().nullable(), motivo: z.string(), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }) }).strict();
 const previa = z.object({ respostaId: z.string().guid(), original: z.object({ resultado: z.string(), observacao: z.string().nullable() }).strict(), proposta: z.object({ id: z.string().guid(), revisao: z.number().int().positive(), resultado: z.string(), observacao: z.string().nullable(), decisao: z.enum(["aceita", "rejeitada"]).nullable(), decisaoRevisao: z.number().int().positive().nullable() }).strict().nullable(), efetivada: z.literal(false), integracaoTransversalConcluida: z.literal(false) }).strict();
-export function GestaoReclassificacaoResposta(props: Props) { if (import.meta.env.VITE_SSO_GESTAO_RECLASSIFICACAO_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.respostaId])} {...props}/>; }
+export function GestaoReclassificacaoResposta(props: Props) { if (!flagLigada("VITE_SSO_GESTAO_RECLASSIFICACAO_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.respostaId])} {...props}/>; }
 function Conteudo({ userId, clienteId, retornoId, respostaId }: Props) {
   const montado=useRef(false);
   useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
@@ -44,7 +46,7 @@ function ReaberturaReclassificacao({ userId, clienteId, retornoId, respostaId, r
   const [motivo, setMotivo] = useState(""); const [confirmado, setConfirmado] = useState(false); const [aviso, setAviso] = useState(""); const trava = useRef(false);
   const envio = useMutation({
     mutationFn: async (p: Reabertura) => {
-      if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") throw new Error("Reabertura desabilitada");
+      if (!flagLigada("VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED")) throw new Error("Reabertura desabilitada");
       await conferirSessao();
       if(sessionStorage.getItem(key)!==JSON.stringify(p))throw new Error("Tentativa alterada.");
       const { data, error } = await supabase.schema("pcm").rpc("sso_reabrir_reclassificacao_mediada", {
@@ -68,6 +70,14 @@ function ReaberturaReclassificacao({ userId, clienteId, retornoId, respostaId, r
   });
   function enviar(p: Reabertura) { if (trava.current) return; trava.current = true; envio.mutate(p); }
   function iniciar() { if (pendente || trava.current || revision === null || !consultaAtual || !reconciliado || !confirmado || !motivo.trim()) return; try { const p = reaberturaSchema.parse({ requestId: crypto.randomUUID(), clienteId, retornoId, revision, motivo: motivo.trim() }); if (sessionStorage.getItem(key) !== null) throw new Error(); sessionStorage.setItem(key, JSON.stringify(p)); setPendente(p); enviar(p); } catch { setAviso("Confira motivo e revisão. Nada enviado."); } }
-  if (import.meta.env.VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Reabertura reclassificacao"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_REABERTURA_RECLASSIFICACAO_ENABLED"]}
+      />
+    );
+  }
   return <section><h6>Reabertura para reclassificação</h6><p>Reabertura registra nova revisão. Não apaga conferências anteriores nem garante invalidação de todos os consumidores; propostas bloqueiam aprovação, criação de Pendências e finalização enquanto a trava estiver habilitada.</p>{pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}{pendente && pendente !== "invalido" ? <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir reabertura</button> : !pendente && <form onSubmit={e => { e.preventDefault(); iniciar(); }}><label>Motivo <textarea required maxLength={2000} value={motivo} onChange={e => setMotivo(e.target.value)}/></label><label><input type="checkbox" checked={confirmado} onChange={e => setConfirmado(e.target.checked)}/> Confirmo reabertura do retorno, sem efetivar resposta.</label><button type="submit" disabled={revision === null || !consultaAtual || !reconciliado || !confirmado || !motivo.trim() || envio.isPending}>Reabrir retorno</button></form>}{aviso && <p role="status">{aviso}</p>}</section>;
 }

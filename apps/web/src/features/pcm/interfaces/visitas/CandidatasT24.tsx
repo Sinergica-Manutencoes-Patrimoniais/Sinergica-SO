@@ -4,6 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { CancelarCandidataT24 } from "./CancelarCandidataT24";
 import { RespostasTardiasT24 } from "./RespostasTardiasT24";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid=z.string().guid();
 const linha=z.object({id:uuid,revisao:z.number().int().positive(),estado:z.enum(["aguardando","reservado","iniciado","incerto","reconciliacao","confirmado","bloqueado","cancelado"]),elegivel_em:z.string().datetime({offset:true})}).strict();
@@ -12,7 +14,15 @@ type Props={userId:string;clienteId:string;visitaId:string;osId:string};
 async function sessao(userId:string,signal:AbortSignal){const {data,error}=await supabase.auth.getUser();if(error || data.user?.id!==userId || signal.aborted)throw new Error("Sessão alterada.");}
 
 export function CandidatasT24(props:Props){
- if(import.meta.env.VITE_SSO_DIAGNOSTICO_CANDIDATAS_T24_ENABLED!=="true")return null;
+ if (!flagLigada("VITE_SSO_DIAGNOSTICO_CANDIDATAS_T24_ENABLED")) {
+   return (
+     <RecursoNaoAtivado
+       recurso="Diagnostico candidatas t24"
+       podeAdministrar={false}
+       faltando={["VITE_SSO_DIAGNOSTICO_CANDIDATAS_T24_ENABLED"]}
+     />
+   );
+ }
  return <Lista key={JSON.stringify([props.userId,props.clienteId,props.visitaId,props.osId])} {...props}/>;
 }
 function Lista({userId,clienteId,visitaId,osId}:Props){
@@ -24,7 +34,7 @@ function Lista({userId,clienteId,visitaId,osId}:Props){
  const selecionadoVisivel=!!selecionado && !!consulta.data?.pages.flat().some((item)=>item.id===selecionado);
  const detalhe=useQuery({queryKey:["t24-diagnostico",userId,clienteId,visitaId,osId,selecionado],enabled:selecionadoVisivel && !consulta.isFetching && !consulta.isError,gcTime:0,retry:false,
   queryFn:async({signal})=>{await sessao(userId,signal);const {data,error}=await supabase.schema("pcm").rpc("sso_t24_diagnosticar_candidata",{p_ator_id:userId,p_cliente_id:clienteId,p_tentativa_id:selecionado}).abortSignal(signal);if(error)throw error;const r=diagnostico.parse(data);if(r.tentativaId!==selecionado || r.visitaId!==visitaId || r.osId!==osId)throw new Error("Diagnóstico divergente.");await sessao(userId,signal);return r;}});
- const categoria=useQuery({queryKey:["t24-categoria-candidata",userId,clienteId,visitaId,osId,selecionado],enabled:import.meta.env.VITE_SSO_CATEGORIA_CANDIDATA_T24_ENABLED==="true" && selecionadoVisivel && !consulta.isFetching && !consulta.isError,gcTime:0,retry:false,
+ const categoria=useQuery({queryKey:["t24-categoria-candidata",userId,clienteId,visitaId,osId,selecionado],enabled:flagLigada("VITE_SSO_CATEGORIA_CANDIDATA_T24_ENABLED") && selecionadoVisivel && !consulta.isFetching && !consulta.isError,gcTime:0,retry:false,
   queryFn:async({signal})=>{await sessao(userId,signal);const {data,error}=await supabase.schema("pcm").rpc("sso_t24_categoria_candidata",{p_ator_id:userId,p_cliente_id:clienteId,p_tentativa_id:selecionado}).abortSignal(signal);if(error)throw error;
    const r=z.object({tentativaId:uuid,clienteId:uuid,visitaId:uuid,osId:uuid,categoriaFotografada:z.enum(["corretiva","emergencial"]).nullable(),categoriaAtual:z.string(),categoriaCoincide:z.boolean().nullable(),autorizaEnvio:z.literal(false)}).strict().parse(data);
    if(r.tentativaId!==selecionado||r.clienteId!==clienteId||r.visitaId!==visitaId||r.osId!==osId||(r.categoriaFotografada===null)!==(r.categoriaCoincide===null)||(r.categoriaFotografada!==null&&r.categoriaCoincide!==(r.categoriaFotografada===r.categoriaAtual)))throw new Error("Categoria divergente.");await sessao(userId,signal);return r;}});
@@ -35,12 +45,12 @@ function Lista({userId,clienteId,visitaId,osId}:Props){
   {selecionado && detalhe.isFetching && <p role="status">Consultando bloqueios…</p>}{selecionado && detalhe.isError && <p role="alert">Diagnóstico indisponível. <button type="button" onClick={()=>void detalhe.refetch()}>Tentar novamente</button></p>}
   {selecionado && !consulta.isFetching && !consulta.isError && !selecionadoVisivel && <p>Seleção não encontrada nas páginas carregadas; consulte novamente.</p>}
   {selecionadoVisivel && !consulta.isFetching && !consulta.isError && !detalhe.isFetching && !detalhe.isError && detalhe.data && <p>Revisão atual {detalhe.data.revisaoObservada}; tentativa {detalhe.data.revisaoTentativa}. Bloqueios: {detalhe.data.bloqueios.join(", ").replaceAll("_"," ")}. Não autoriza envio.</p>}
-  {selecionadoVisivel && !consulta.isFetching && !consulta.isError && import.meta.env.VITE_SSO_CATEGORIA_CANDIDATA_T24_ENABLED==="true" && <>
+  {selecionadoVisivel && !consulta.isFetching && !consulta.isError && flagLigada("VITE_SSO_CATEGORIA_CANDIDATA_T24_ENABLED") && <>
    {categoria.isFetching && <p role="status">Conferindo categoria…</p>}
    {categoria.isError && <p role="alert">Categoria indisponível. <button type="button" onClick={()=>void categoria.refetch()}>Tentar novamente</button></p>}
    {!categoria.isFetching && !categoria.isError && categoria.data && <p>Categoria atual da OS: {categoria.data.categoriaAtual}; categoria fotografada: {categoria.data.categoriaFotografada ?? "não disponível na tentativa histórica"}. {categoria.data.categoriaCoincide===false ? "Categoria mudou; candidata precisa ser reavaliada." : categoria.data.categoriaCoincide===true ? "Categorias coincidem nesta consulta." : "Não presumir categoria histórica."} Consulta não autoriza envio.</p>}
   </>}
-  {selecionadoVisivel && selecionado && !consulta.isFetching && !consulta.isError && import.meta.env.VITE_SSO_CANCELAMENTO_T24_ENABLED==="true" && <CancelarCandidataT24 userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} tentativaId={selecionado}/>}
-  {selecionadoVisivel && selecionado && !consulta.isFetching && !consulta.isError && import.meta.env.VITE_SSO_RESPOSTAS_TARDIAS_T24_ENABLED==="true" && <RespostasTardiasT24 userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} tentativaId={selecionado}/>}
+  {selecionadoVisivel && selecionado && !consulta.isFetching && !consulta.isError && flagLigada("VITE_SSO_CANCELAMENTO_T24_ENABLED") && <CancelarCandidataT24 userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} tentativaId={selecionado}/>}
+  {selecionadoVisivel && selecionado && !consulta.isFetching && !consulta.isError && flagLigada("VITE_SSO_RESPOSTAS_TARDIAS_T24_ENABLED") && <RespostasTardiasT24 userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId} tentativaId={selecionado}/>}
  </section>;
 }

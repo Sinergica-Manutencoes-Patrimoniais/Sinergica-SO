@@ -44,10 +44,134 @@ _15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner 
 | E00-S23 | Gesto do drawer móvel, interrompível | Claude (sessão Lucas) | Lote 2. Não implementado (2026-08-18):… | [spec](../../specs/E00-S23-gesto-drawer/spec.md) |
 | E00-S26 | Capacidades sensíveis ponta a ponta (planejar, validar, aprovar, cancelar, exportar, ver custo, administrar) | — | Especificada (2026-11-17) — BL 005 do Pacote Consolidado. Tier arquitetural | [spec](../../specs/E00-S26-capacidades-sensiveis/spec.md) |
 | E00-S27 | Revogação imediata de acesso — sessão, cache e JWT carimbado | — | Especificada (2026-11-17) — BL 006 do Pacote Consolidado. **Exposição de segurança aberta hoje.** Depende de E00-S26 | [spec](../../specs/E00-S27-revogacao-imediata/spec.md) |
+| E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | **Fechada (2026-11-17)** — 0 fuga/0 não-declarada/0 órfã no repositório inteiro, 737 flags; gate ligado em `ci.yml`; inventário em `docs/ativacao/flags.md`. Pendência documentada: `podeAdministrar` real só em ~20 componentes, resto nasce `false` (lado seguro) — ver tasks.md | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
+
+### E01 — PCM · Operação
+_75 concluídas no histórico · maior ID usado: E01-S198_
+
+| ID | Título | Owner | Status | Spec |
+|----|--------|-------|--------|------|
+| E01-S02 | Abertura de chamado via Agente Zé | Codex | Implementação local parcial (Fluxo A) —… | [spec](../../specs/0002-abertura-chamado-ze/spec.md) |
+| E01-S04 | PMOC — Inventário de equipamentos de climatização (cadastro + wizard) | Claude (sessão Lucas) | Implementado localmente (2026-07-20). C… | [spec](../../specs/E01-S04-inventario-climatizacao/spec.md) |
+| E01-S07 | Hub de OS — Fila unificada de Ordens de Serviço (C1/C2/P1/P2/IN, SLA, prioridade) | Claude (sessão Lucas) | Implementado (2026-07-20). Resolve a De… | [spec](../../specs/E01-S07-hub-de-os/design.md) |
+| E01-S13 | Import inicial de clientes Auvo → PCM (bootstrap, direção invertida do fluxo padrão PCM→A… | Claude (sessão Lucas) | Implementado — migration 0014 (GRANT se… | [spec](../../specs/E01-S13-import-inicial-clientes-auvo/spec.md) |
+| E01-S02 | Abertura de chamado via Agente Zé — WhatsApp → OS direto (status='solicitacao', origem='z… | Codex | Implementação local parcial (Fluxo A) —… | [spec](../../specs/0002-abertura-chamado-ze/spec.md) |
+| E01-S14 | para cliente já existente (pcm.clientes) pedindo serviço extra-contratual | Codex → E09-S09 | RESOLVIDA POR OUTRA VIA — descoberto na… | [spec](../../specs/E01-S14-fluxo-b-orcamento/design.md) |
+| E01-S15 | Enriquecer webhook de OS (estende E01-S10) — capturar relato do usuário, anexos/fotos, qu… | Codex | Implementado localmente — migration 001… | [spec](../../specs/E01-S15-webhook-os-rico/spec.md) |
+| E01-S16 | decisão do usuário (2026-07-04): Auvo continua dono do dado de equipamento, PCM NÃO dupli… | Codex | Implementado localmente — migration 001… | [spec](../../specs/E01-S16-relacionamento-equipamento-auvo-pcm/spec.md) |
+| E01-S17 | Painel financeiro/tickets do cliente na Visão 360 (fase 2 já prevista em E01-S12 §4) — es… | Codex | Bloqueado / não implementado por decisã… | [spec](../../specs/E01-S17-visao-360-financeiro-tickets-auvo/spec.md) |
+| E01-S18 | Abertura manual de OS no PCM — tela/modal inspirada no PCM antigo, com campos selecionáve… | Codex | Implementado localmente — botão "Nova O… | [spec](../../specs/E01-S18-abertura-manual-os-pcm/spec.md) |
+| E01-S03b | sem spec.md/tasks.md | Codex → Claude (sessão… | Reconciliado (2026-07-20) — spec.md/tas… | [spec](../../specs/E01-S03-pmoc-schema/design.md) |
+| E01-S22 | Motor de sync Auvo (write path) — outbox transacional pcm.auvo_sync_outbox + drain genéri… | Claude (sessão Lucas) | Implementado localmente (branch feat/E0… | [spec](../../specs/E01-S22-motor-sync-auvo-write/product.md) |
+| E01-S23 | Motor de sync Auvo (read path) — dispatcher de webhook genérico (User/Customer/Equipment/… | Codex | Implementado localmente — registry ganh… | [spec](../../specs/E01-S23-motor-sync-auvo-read/product.md) |
+| E01-S24 | Tipos de Tarefa (cron) — primeira entidade do catálogo, valida o motor ponta a ponta | Codex | Implementado localmente — migration 002… | [spec](../../specs/E01-S24-catalogo-tipos-tarefa/spec.md) |
+| E01-S25 | Segmentos + Palavras-chave (cron) | Codex | Implementado localmente — migration 002… | [spec](../../specs/E01-S25-catalogo-segmentos-palavras-chave/spec.md) |
+| E01-S26 | Categorias (produto + equipamento) (cron) | Codex | Implementado localmente — migration 002… | [spec](../../specs/E01-S26-catalogo-categorias/spec.md) |
+| E01-S27 | Grupos de Clientes (cron, sem PATCH) + Clientes CRUD (webhook Customer) — primeiro write-… | Codex | Implementado localmente — migration 003… | [spec](../../specs/E01-S27-clientes-crud-grupos/spec.md) |
+| E01-S28 | Funcionários (webhook User) — promove pcm.tecnicos_cache para tabela editável, com criaçã… | Codex | Implementado localmente — migration 003… | [spec](../../specs/E01-S28-funcionarios/spec.md) |
+| E01-S33 | Tickets (webhook Ticket) | Claude (sessão Lucas) | Implementada localmente — pcm.tickets,… | [spec](../../specs/E01-S33-tickets/spec.md) |
+| E01-S34 | Reconciliação Auvo→PCM — liga o pg_cron real das 9 entidades com cronSchedule (era metada… | Claude (sessão Lucas) | Achado durante teste manual do PR #30 (… | [spec](../../specs/E01-S34-reconciliacao-sync-auvo-pcm/product.md) |
+| E01-S35 | BLOQUEIA toda a integração Auvo. | Claude (sessão Lucas) | Implementado localmente (código) — as 1… | [spec](../../specs/E01-S35-deploy-edge-functions-auvo/design.md) |
+| E01-S36 | Write path instantâneo PCM→Auvo (todas as entidades) — flip writeEnabled (só com mapeamen… | Claude (sessão Lucas) | Parcialmente implementado. Migration 00… | [spec](../../specs/E01-S36-write-path-instantaneo-auvo/design.md) |
+| E01-S46 | Banner de transparência "escrita local ainda não vai pro Auvo" em Ferramentas/Categorias… | Claude (sessão Lucas) | Implementado. Novo BannerEscritaAuvoPen… | [spec](../../specs/E01-S46-banner-escrita-auvo-pendente/spec.md) |
+| E01-S47 | Verificar contrato Auvo real e habilitar escrita (funcionário → ferramenta → categoria →… | Codex (sessão 2026-07-1… | Implementada parcialmente com contrato… | [spec](../../specs/E01-S47-habilitar-escrita-real-auvo/spec.md) |
+| E01-S51 | Cliente-360 mais rico — nova pcm.clientes.detalhes jsonb (mesmo padrão do auvo_detalhes d… | Claude (sessão Lucas) | Escopo cortado em runtime (mesma causa… | [spec](../../specs/E01-S51-cliente-360-mais-rico/design.md) |
+| E01-S52 | GPS da equipe — pull GET /gps → pcm.gps_posicoes (retenção 7d) + card "Equipe agora" no d… | Codex + Claude (sessão… | Implementado localmente (migration 0078… | [spec](../../specs/E01-S52-gps-equipe/spec.md) |
+| E01-S53 | Tier arquitetural — design.md + ADR antes de codar; bloqueada em credencial de API | Codex | Design pronto — design.md + ADR-0008 (d… | [spec](../../specs/E01-S53-preventivo-service-orders/spec.md) |
+| E01-S54 | Custo real da OS — espelhos pcm.despesa_tipos/pcm.despesas (/expenses+/expensetypes, writ… | Codex + Claude (sessão… | Implementado localmente (migration 0079… | [spec](../../specs/E01-S54-custo-real-despesas/spec.md) |
+| E01-S55 | Pesquisa de satisfação — espelho pcm.satisfacao_respostas (/satisfactionsurveys), nota mé… | Codex + Claude (sessão… | Implementado localmente (migration 0080… | [spec](../../specs/E01-S55-pesquisa-satisfacao/spec.md) |
+| E01-S56 | Catálogo de questionários — espelho pcm.questionarios (/questionnaires, read-only), check… | Codex + Claude (sessão… | Implementado localmente e contrato veri… | [spec](../../specs/E01-S56-catalogo-questionarios/spec.md) |
+| E01-S57 | Criação de tarefa rica — pcm-auvo-create-task passa a enviar anexo de contexto (histórico… | Codex | Parcial — gerador puro de contexto/prod… | [spec](../../specs/E01-S57-criacao-tarefa-rica/spec.md) |
+| E01-S58 | Reconciliação de tarefas excluídas — GET /tasks/GetDeletedTasks no sync cancela OS locais… | Codex + Claude (sessão… | Implementado localmente e contrato veri… | [spec](../../specs/E01-S58-reconciliacao-tarefas-excluidas/spec.md) |
+| E01-S59 | Refino de densidade operacional — compacta shell, inputs, KPIs e painéis PCM; ocupa corre… | Codex | Implementado localmente e QA autenticad… | [spec](../../specs/E01-S59-refino-densidade-operacional/spec.md) |
+| E01-S60 | Acabamento visual transversal V1 — primitives compartilhadas, Login, shell responsivo, PC… | Codex + Claude (sessão… | Implementado e verificado — gates reexe… | [spec](../../specs/E01-S60-acabamento-visual-v1/spec.md) |
+| E01-S61 | Kanban — arrastar card entre colunas muda status de verdade (HTML5 Drag and Drop nativo,… | Claude (sessão Lucas) | Implementado. OsKanbanView.tsx ganha dr… | [spec](../../specs/E01-S61-kanban-drag-drop/spec.md) |
+| E01-S64 | Reserva de ferramenta por data/período (unidade específica ou genérica), com detecção de… | Claude (sessão Lucas) | Implementado localmente — pcm.ferrament… | [spec](../../specs/E01-S64-ferramentas-reserva/spec.md) |
+| E01-S65 | Cadastro rico de ferramenta — mais fácil, com valor/custo/código Auvo visíveis + imagem.… | Claude (sessão Lucas) | Implementado localmente (caminho conser… | [spec](../../specs/E01-S65-ferramentas-cadastro-rico/spec.md) |
+| E01-S68 | Fix crítico do sync de tarefas. | Claude (sessão Lucas) | Código implementado localmente (tasks 1… | [spec](../../specs/E01-S68-fix-sync-tarefas/spec.md) |
+| E01-S69 | OS clicável e editável | Claude (sessão Lucas) | Implementado localmente — NovaOrdemServ… | [spec](../../specs/E01-S69-os-clicavel-editavel/spec.md) |
+| E01-S70 | Todas as abas do Auvo no PCM | Claude (sessão Lucas) | Implementado localmente — montarDetalhe… | [spec](../../specs/E01-S70-abas-ricas-auvo/spec.md) |
+| E01-S71 | Imagem e anexos de equipamentos | Claude (sessão Lucas) | Implementado localmente — migration 008… | [spec](../../specs/E01-S71-imagem-equipamentos/spec.md) |
+| E01-S74 | Serviço → Auvo (write path) | Claude (sessão Lucas) | Implementado localmente — teste de cont… | [spec](../../specs/E01-S74-servico-write-auvo/spec.md) |
+| E01-S84 | Kanban de OS: colunas customizáveis | Claude (sessão Lucas) | "preventiva", "preventiva" é coluna vir… | — |
+| E01-S99 | Chamado como ID único — remover numeração própria de OS | Claude (sessão Lucas) | Implementado localmente (2026-07-28). C… | [spec](../../specs/E01-S99-chamado-id-unico-remove-os/product.md) |
+| E01-S100 | Categoria "Atendimento Emergencial" — SLA 2h | Claude (sessão Lucas) | Implementado localmente (2026-07-28). t… | [spec](../../specs/E01-S100-sla-atendimento-emergencial/spec.md) |
+| E01-S101 | Tela de abertura de chamado com campos da OS + 3 datas | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S101-abertura-chamado-campos-os/spec.md) |
+| E01-S102 | Filtro por cliente na tela de Chamados | Claude (sessão Lucas) | Implementado localmente (2026-07-28). t… | [spec](../../specs/E01-S102-filtro-cliente-chamados/spec.md) |
+| E01-S103 | Responsável pelo cliente no cadastro | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S103-responsavel-cliente/spec.md) |
+| E01-S104 | Board semanal de agenda do técnico | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S104-agenda-tecnico-board/spec.md) |
+| E01-S106 | Ferramenta alocável em um cliente | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S106-ferramenta-alocavel-cliente/spec.md) |
+| E01-S107 | Local do Chamado/OS: seleção da lista do cliente + "Outro" | Claude (sessão Lucas) | Implementado localmente (2026-07-29). S… | [spec](../../specs/E01-S107-local-selecao-lista-cliente/spec.md) |
+| E01-S108 | Fix: modal perde dados ao trocar de aba/tela do PCM | Claude (sessão Lucas) | Implementado localmente (2026-07-29). N… | [spec](../../specs/E01-S108-fix-modal-perde-dados-troca-aba/spec.md) |
+| E01-S110 | Todas as listagens/seletores de cliente mostram só Ativos | Claude (sessão Lucas) | Implementado localmente (2026-07-29). A… | [spec](../../specs/E01-S110-filtro-ativos-listagens-cliente/spec.md) |
+| E01-S111 | Contatos completos do cliente | Claude (sessão Lucas) | Implementado (2026-07-29). Migrations 0… | [spec](../../specs/E01-S111-contatos-completos-cliente/spec.md) |
+| E01-S112 | Agenda do Técnico: horário de início e fim | Claude (sessão Lucas) | Implementado (2026-07-29). Migration 01… | [spec](../../specs/E01-S112-agenda-tecnico-horario-inicio-fim/spec.md) |
+| E01-S119 | Anotações do Chamado | Codex | Implementado localmente (2026-07-29). M… | [spec](../../specs/E01-S119-anotacoes-chamado/spec.md) |
+| E01-S113 | "Ferramentas por Técnico" vira hub único (técnico + cliente) | Claude (sessão Lucas) | Implementado localmente (2026-07-29). Q… | [spec](../../specs/E01-S113-ferramentas-hub-tecnico-cliente/spec.md) |
+| E01-S153 | Fix modal Estrutura (Portal) + OS escolhe Equipamento (Alvo) + flip Sistema→Auvo | Claude (sessão Lucas) | Implementado localmente (2026-09-24). M… | — |
+| E01-S157 | Siglas + identificador de ativo | Codex | Em validação (2026-09-30) — aguarda db-tests, E2E e AC-10 no Auvo | [spec](../../specs/E01-S157-siglas-identificador-ativo/spec.md) |
+| E01-S158 | Descrição completa no Auvo | Codex | Migration `0223` e Edge Functions Auvo em produção; db-tests e E2E autenticado pendentes | [spec](../../specs/E01-S158-descricao-completa-auvo/spec.md) |
+| E01-S159 | Cadastro completo na Visão 360 | Codex | Implementado localmente; E2E autenticado pendente | [spec](../../specs/E01-S159-cadastro-ativos-visao-360/spec.md) |
+| E01-S160 | Aba Árvore na Visão 360 | Codex | Implementada localmente; teste de componente verde, E2E autenticado pendente | [spec](../../specs/E01-S160-arvore-ativos-360/spec.md) |
+| E01-S161 | Importação/exportação da estrutura via Excel | Codex | Implementada localmente; E2E autenticado pendente | [spec](../../specs/E01-S161-importacao-excel-estrutura/spec.md) |
+| E01-S114 | Nav: "Backlog GUT"/"Ordens de Serviço" viram submenu de "Chamados" | Claude (sessão Lucas) | Implementado localmente (2026-07-29). P… | [spec](../../specs/E01-S114-nav-chamados-submenu-backlog-os/spec.md) |
+| E01-S115 | Limpar dados de teste E2E do banco | — (livre) | Feito (2026-07-29). Inventário revisado… | [spec](../../specs/E01-S115-limpar-dados-teste-e2e/spec.md) |
+| E01-S118 | Operação unifica Chamados no board | Claude (sessão Lucas) | Implementado localmente (2026-07-29). B… | [spec](../../specs/E01-S118-operacao-unifica-chamados-board/spec.md) |
+| E01-S117 | Operação (Kanban): Chamado e OS são o mesmo item | Claude (sessão Lucas) | Implementado localmente (2026-07-29). r… | [spec](../../specs/E01-S117-kanban-operacao-chamado-os-unificado/spec.md) |
+| E01-S116 | Ordens de Serviço: botão "Ver Chamado" no painel de detalhe | Claude (sessão Lucas) | Implementado localmente (2026-07-29). c… | [spec](../../specs/E01-S116-kanban-os-abre-chamado/spec.md) |
+| E01-S120 | ID do Auvo visível na tela do Chamado/OS | Codex | Implementado localmente (2026-08-06). D… | [spec](../../specs/E01-S120-auvo-id-tela-chamado/spec.md) |
+| E01-S121 | Editar campos da OS no modal + re-sincronizar com o Auvo | Claude (sessão Lucas) | Descoberta desbloqueada (2026-08-06). L… | [spec](../../specs/E01-S121-editar-campos-sync-auvo/spec.md) |
+| E01-S122 | Tooltips explicando os badges do cliente | Codex | Parcial local (2026-08-06). Tooltips de… | [spec](../../specs/E01-S122-tooltip-badges-cliente/spec.md) |
+| E01-S123 | Saúde Auvo: drill-down dos erros | Codex | Implementado localmente (2026-08-06). D… | [spec](../../specs/E01-S123-saude-auvo-drilldown-erros/spec.md) |
+| E01-S124 | Mover Chamado (Solicitação)→Corretiva converte em OS | Codex | Implementado localmente (2026-08-06). C… | [spec](../../specs/E01-S124-mover-chamado-corretiva-converte-os/spec.md) |
+| E01-S125 | Abertura de OS no Auvo sob demanda | Codex | Implementado localmente (2026-08-06). M… | [spec](../../specs/E01-S125-abertura-os-auvo-sob-demanda/product.md) |
+| E01-S126 | Relatório de planejamento/execução (dia/técnico/cliente) | Codex | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S126-relatorio-planejamento-execucao/spec.md) |
+| E01-S127 | Guia SO atualizado (todos os módulos) | Codex | Implementado localmente (2026-08-06). P… | [spec](../../specs/E01-S127-guia-so-atualizado/spec.md) |
+| E01-S129 | Release do PCM para produção (checklist/hardening) | Claude (sessão Lucas) | Produção aplicada (2026-08-06). Migrati… | [spec](../../specs/E01-S129-release-pcm-producao/spec.md) |
+| E01-S131 | Ferramenta: cadastro item-cêntrico | Codex | Implementado localmente (2026-08-06). U… | [spec](../../specs/E01-S131-ferramenta-cadastro-item-centrico/spec.md) |
+| E01-S133 | Redesign do relatório de apontamento de horas | Codex | Implementado localmente (2026-08-06). R… | [spec](../../specs/E01-S133-apontamento-horas-redesign/spec.md) |
+| E01-S134 | Relatório diário da operação (Fabricio) | Codex | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S134-relatorio-diario-operacao/spec.md) |
+| E01-S135 | Relatório do cliente (HTML + PDF + Portal) | Codex | Implementado localmente (2026-08-06). O… | [spec](../../specs/E01-S135-relatorio-cliente-html-pdf-portal/spec.md) |
+| E01-S136 | Dashboard PCM vira cockpit "bom dia" | Codex | Implementado localmente (2026-08-06). B… | [spec](../../specs/E01-S136-dashboard-cockpit-bom-dia/spec.md) |
+| E01-S137 | Ferramentas por Técnico rico | Codex | Implementado localmente (2026-08-06). L… | [spec](../../specs/E01-S137-ferramentas-por-tecnico-rico/spec.md) |
+| E01-S138 | Funcionário: perfil completo | Codex | Implementado localmente (2026-08-06). P… | [spec](../../specs/E01-S138-funcionario-detalhe-completo/spec.md) |
+| E01-S139 | Identidade visual nos PDFs de relatório | Claude (sessão Lucas) | Implementado localmente (2026-08-07). H… | [spec](../../specs/E01-S139-identidade-visual-pdf/spec.md) |
+| E01-S141 | Relatório de Inspeção: item vira Chamado pendente | Claude (sessão Lucas) | Superada por E01-S143 (2026-08-10) — Lu… | [spec](../../specs/E01-S141-inspecao-item-vira-chamado/spec.md) |
+| E01-S145 | Fluidez e performance de Chamados/OS | Codex | Implementado localmente (2026-08-10). M… | [spec](../../specs/E01-S145-fluidez-performance-chamados/product.md) |
+| E01-S163 | Cliente 360 como cockpit operacional | Codex | Spec, plano e tarefas prontos para Terra (2026-10-06) | [spec](../../specs/E01-S163-cliente-360-cockpit-operacional/spec.md) |
+| E01-S165 | Plano multialvo, versões de Rotina e questionários referenciados | Terra | Em andamento — fundação isolada (2026-10-27) | [spec](../../specs/E01-S165-plano-versoes-rotinas/spec.md) |
+| E01-S166 | Calendário contratual, recorrência por modo e ocorrências idempotentes | Terra | Em andamento — fundação e cadastro inicial (2026-10-27) | [spec](../../specs/E01-S166-calendario-ocorrencias-capacidade/spec.md) |
+| E01-S167 | Chamado 1:N OS, continuidade e encerramento integral | Terra | Em andamento — US1 pronta (banco+UI), gate fechado; US2/e2e/revisão pendentes (2026-11-10) | [spec](../../specs/E01-S167-chamados-os-visitas/spec.md) |
+| E01-S168 | Auvo T−24, serialização e validação PCM | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S168-auvo-t24-validacao/spec.md) |
+| E01-S169 | Importação e exportação dos Planos Rimini e I Home | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S169-importacao-despesas-exportacao/spec.md) |
+| E01-S170 | Permissões por ação e governança configurável do programa | Terra | Em andamento — fundação de capacidades (2026-10-26) | [spec](../../specs/E01-S170-governanca-plano/spec.md) |
+
+| E01-S171 | Visita operacional e associação histórica de OS | Terra | Em andamento — fundação isolada (2026-10-27) | [spec](../../specs/E01-S171-visitas-operacionais/spec.md) |
+| E01-S172 | Agenda oficial e capacidade por técnico, Cliente e semana | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S172-agenda-capacidade-consolidada/spec.md) |
+| E01-S173 | Pendências técnicas atômicas, resultados e agrupamento por ativo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S173-pendencias-tecnicas/spec.md) |
+| E01-S174 | Backlog canônico e conversões de escopo sem perda | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S174-backlog-escopo-rastreavel/spec.md) |
+| E01-S175 | OS de origem Auvo e triagem do Chamado provisório | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S175-origem-campo-auvo/spec.md) |
+| E01-S176 | Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos | Terra | Em andamento — integridade de hierarquia (2026-10-26) | [spec](../../specs/E01-S176-estrutura-tecnica-grupos/spec.md) |
+| E01-S177 | Código público protegido, aliases e política de Equipment Auvo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S177-codigos-publicos-alias/spec.md) |
+| E01-S178 | Levantamentos de planilha/Auvo e aprovação PCM em staging | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S178-levantamentos-staging-aprovacao/spec.md) |
+| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
+| E01-S180 | Despesas previstas/realizadas por Visita | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S180-despesas-visita/spec.md) |
+| E01-S181 | Orçamento operacional canônico no Comercial | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S181-orcamentos-operacionais/spec.md) |
+| E01-S182 | Fila A Faturar e efetivação por origem única | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S182-faturaveis-origem/spec.md) |
+| E01-S183 | Portal de materiais, orçamento e cobrança | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S183-portal-operacional/spec.md) |
+| E01-S184 | Proteção imediata de custos no Portal e documentos | Terra | Em andamento — proteção parcial (2026-10-26) | [spec](../../specs/E01-S184-protecao-custos-portal/spec.md) |
+| E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
+| E01-S186 | Migração auditável, pilotos por ondas e homologação do programa | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S186-migracao-pilotos-homologacao/spec.md) |
+| E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
+| E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
+| E01-S189 | Alcance dos sete escritores sem gate (orçamento, despesas, cobrança, grupos) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S189-alcance-escritores-sem-gate/spec.md) |
+
 | E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | Claude (sessão Lucas) | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
 | E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
 | E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
-| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | Claude (sessão Lucas) | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) || E01-S194 | Kanban operacional aprovado — Campo a conciliar, Demanda e Validação PCM como etapas | — | Especificada (2026-11-17) — BL 007. Depende de E01-S193 e E00-S26 | [spec](../../specs/E01-S194-kanban-operacional-aprovado/spec.md) || E01-S195 | Deslocamento: enquadramento residencial × operacional e impacto na jornada | — | Especificada (2026-11-17) — BL 009 | [spec](../../specs/E01-S195-deslocamento-enquadramento/spec.md) |
+| E01-S193 | Backlog como escopo validado que antecede Chamado e OS | Claude (sessão Lucas) | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) |
+| E01-S194 | Kanban operacional aprovado — Campo a conciliar, Demanda e Validação PCM como etapas | — | Especificada (2026-11-17) — BL 007. Depende de E01-S193 e E00-S26 | [spec](../../specs/E01-S194-kanban-operacional-aprovado/spec.md) |
+| E01-S195 | Deslocamento: enquadramento residencial × operacional e impacto na jornada | — | Especificada (2026-11-17) — BL 009 | [spec](../../specs/E01-S195-deslocamento-enquadramento/spec.md) |
 | E01-S196 | Gatilho único do Auvo — criação manual vira contingência auditada | — | Especificada (2026-11-17) — resto do BL 004 (o acionador entrou na 1844). Tier arquitetural | [spec](../../specs/E01-S196-gatilho-unico-auvo/spec.md) |
 | E01-S197 | Pendências técnicas agrupadas por ativo, sem perder o achado individual | — | Especificada (2026-11-17) — BL 008. Depende de E01-S193 | [spec](../../specs/E01-S197-pendencias-agrupadas-ativo/spec.md) |
 | E01-S198 | API de domínio sobre o staging | — | Especificada (2026-11-17) — BL 014, P2. Tier arquitetural. Depende de E00-S26/S27 | [spec](../../specs/E01-S198-api-dominio-staging/spec.md) |
@@ -127,7 +251,7 @@ _0 concluídas no histórico · maior ID usado: E07-S00_
 ### E08 — Gestão · Cockpit
 _0 concluídas no histórico · maior ID usado: E08-S00_
 
-### E09 — Área do Cliente (Portal do Cliente / Portal do Síndico)
+### E09 — Área do Cliente (Portal do Cliente / Portal do Síndico) |
 _10 concluídas no histórico · maior ID usado: E09-S11_
 
 | ID | Título | Owner | Status | Spec |

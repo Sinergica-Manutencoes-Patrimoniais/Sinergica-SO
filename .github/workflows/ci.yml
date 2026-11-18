@@ -116,6 +116,13 @@ jobs:
           done
           exit $fail
 
+      # E00-S28 task 14 — liga só depois dos 6 lotes fecharem (0 fuga em apps/web/src inteiro,
+      # confirmado em 2026-11-17). Flag VITE_SSO_* lida fora do registro, registro com flag morta,
+      # ou construção dinâmica de nome de flag quebram o build a partir de agora.
+      - name: Flags VITE_SSO_* declaradas no registro (E00-S28)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: node scripts/check-flags-declaradas.mjs
+
   migrations:
     # Squawk = SEGURANÇA de migration (locks, breaking change, downtime). lint-migrations.mjs =
     # convenções da Trivia que nenhum tool pronto cobre (DROP sem reverso, CREATE POLICY sem

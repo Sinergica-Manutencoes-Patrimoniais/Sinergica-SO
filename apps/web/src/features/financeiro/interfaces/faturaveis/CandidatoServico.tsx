@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const competencia = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/).refine(x => !x.startsWith("0000"));
@@ -10,7 +12,15 @@ type Pedido = z.infer<typeof pedidoSchema>;
 const atestacao = z.object({ clienteId: uuid, fatoId: uuid, revision: z.number().int().nonnegative().safe(), estado: z.enum(["confirmada", "retirada"]).nullable(), revisaoPcmId: uuid, revisaoPcmAtual: z.boolean(), execucaoFisicaComprovada: z.literal(false), exclusividadeComprovada: z.literal(false), geraFaturavel: z.literal(false) }).strict();
 
 export function CandidatoServico(props: { usuario: string; cliente: string; declaracao: string }) {
-  if (import.meta.env.VITE_SSO_CANDIDATO_SERVICO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CANDIDATO_SERVICO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Candidato servico"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CANDIDATO_SERVICO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.declaracao])} {...props} />;
 }
 function Conteudo({ usuario, cliente, declaracao }: { usuario: string; cliente: string; declaracao: string }) {

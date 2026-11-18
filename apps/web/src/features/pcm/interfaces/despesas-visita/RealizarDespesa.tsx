@@ -10,6 +10,8 @@ import {
   ingerirComprovanteDespesa,
   validarRealizarDespesa,
 } from "../../infrastructure/supabase-despesas-visita-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 const uploadSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), visitaId: z.string().guid(), despesaId: z.string().guid(), expectedRevision: z.number().int().positive(), realizadoCentavos: z.number().int().nonnegative().safe(), caminho: z.string(), hash: z.string().regex(/^[0-9a-f]{64}$/), tipo: z.enum(["application/pdf", "image/jpeg", "image/png"]), tamanho: z.number().int().positive().max(10 * 1024 * 1024), modo: z.literal("mediado").optional() }).strict();
@@ -20,12 +22,20 @@ async function hashArquivo(arquivo: File) {
 }
 
 export function RealizarDespesa(props: Props) {
-  if (import.meta.env.VITE_SSO_REALIZAR_DESPESAS_VISITA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_REALIZAR_DESPESAS_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Realizar despesas visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_REALIZAR_DESPESAS_VISITA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])} {...props} />;
 }
 
 function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
-  const mediadoHabilitado = import.meta.env.VITE_SSO_INGESTAO_COMPROVANTE_ENABLED === "true";
+  const mediadoHabilitado = flagLigada("VITE_SSO_INGESTAO_COMPROVANTE_ENABLED");
   const queryClient = useQueryClient();
   const chave = `sso-realizacao-despesa:${userId}:${clienteId}:${visitaId}:${despesa.id}`;
   const chaveUpload = `sso-upload-despesa:${userId}:${clienteId}:${visitaId}:${despesa.id}`;
@@ -237,11 +247,11 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Contate suporte.</p>}
     {upload === "invalido" && <p role="alert">Tentativa de upload ilegível. Contate suporte; o objeto não será apagado.</p>}
     {upload && upload !== "invalido" && !pendente && <p role="alert">Upload pendente: valor {upload.realizadoCentavos} centavos, revisão {upload.expectedRevision}. {upload.modo === "mediado" && mediadoHabilitado ? "Selecione o mesmo arquivo para repetir a tentativa." : "Recuperação bloqueada até verificar a integridade do objeto armazenado; procure suporte."}</p>}
-    {import.meta.env.VITE_SSO_RECUPERAR_INGESTAO_COMPROVANTE_ENABLED === "true" && upload && upload !== "invalido" && upload.modo === "mediado" && mediadoHabilitado && !pendente &&
+    {flagLigada("VITE_SSO_RECUPERAR_INGESTAO_COMPROVANTE_ENABLED") && upload && upload !== "invalido" && upload.modo === "mediado" && mediadoHabilitado && !pendente &&
       <button type="button" disabled={enviandoArquivo || enviar.isPending || consultaConfirmacao.isPending} onClick={() => void recuperarUpload(upload)}>Consultar confirmação do upload</button>}
     {!pendente && !upload && <label><input type="checkbox" checked={confirmado} disabled={enviandoArquivo || enviar.isPending} onChange={(e) => setFotoConfirmada(e.target.checked ? foto : null)} /> Conferi despesa, valor e comprovante.</label>}
     {pendente && pendente !== "invalido" ? <><button type="button" disabled={enviar.isPending || consultaConfirmacao.isPending} onClick={() => repetir(pendente)}>Repetir tentativa</button>
-      {import.meta.env.VITE_SSO_CONSULTA_REALIZACAO_DESPESA_ENABLED === "true" && <button type="button" disabled={enviar.isPending || consultaConfirmacao.isPending} onClick={() => consultar(pendente)}>Consultar confirmação</button>}</>
+      {flagLigada("VITE_SSO_CONSULTA_REALIZACAO_DESPESA_ENABLED") && <button type="button" disabled={enviar.isPending || consultaConfirmacao.isPending} onClick={() => consultar(pendente)}>Consultar confirmação</button>}</>
       : <button type="button" disabled={!!pendente || (!!upload && (upload === "invalido" || upload.modo !== "mediado" || !mediadoHabilitado)) || !arquivo || (!upload && (!/^\d+$/.test(valor) || !confirmado)) || enviar.isPending || enviandoArquivo || despesa.status !== "ativa" || despesa.realizadoCentavos !== null} onClick={() => void iniciar()}>{upload && upload !== "invalido" && upload.modo === "mediado" ? "Retomar tentativa" : "Registrar realização"}</button>}
     {mensagem && <p role="status">{mensagem}</p>}
   </section>;

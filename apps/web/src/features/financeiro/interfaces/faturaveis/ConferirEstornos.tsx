@@ -2,12 +2,22 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const esquema = z.object({ requestId: z.string().guid(), conferenciaId: z.string().guid(), estornoId: z.string().guid(),
   saidaId: z.string().guid(), referencia: z.string().trim().min(1).max(200), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof esquema>;
 export function ConferirEstornos(props: { usuario: string; cliente: string }) {
-  if (import.meta.env.VITE_SSO_CONFERIR_ESTORNO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONFERIR_ESTORNO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferir estorno"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERIR_ESTORNO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 function Conteudo({ usuario, cliente }: { usuario: string; cliente: string }) {

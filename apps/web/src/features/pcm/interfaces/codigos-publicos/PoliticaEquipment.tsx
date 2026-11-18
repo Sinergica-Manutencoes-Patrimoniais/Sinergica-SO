@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { useAuth } from "../../../../app/auth-context";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linhaSchema = z.object({ categoria_id: z.string().guid(), nome: z.string().min(1), controlado: z.boolean().nullable(), revisao: z.number().int().nonnegative() }).strict();
 const pedidoSchema = z.object({ requestId: z.string().guid(), categoriaId: z.string().guid(), revision: z.number().int().nonnegative(), controlado: z.boolean(), motivo: z.string().min(1).max(2000) }).strict();
@@ -12,7 +14,17 @@ type Linha = z.infer<typeof linhaSchema>;
 
 export function PoliticaEquipment({ userId }: { userId: string }) {
   const { user } = useAuth();
-  if (import.meta.env.VITE_SSO_POLITICA_EQUIPMENT_ENABLED !== "true" || user?.id !== userId || user.papel !== "superadmin") return null;
+  if (user?.id !== userId || user.papel !== "superadmin") return null; // identidade/papel errado, não é "desativado"
+  if (!flagLigada("VITE_SSO_POLITICA_EQUIPMENT_ENABLED")) {
+    // chegou até aqui: já é superadmin de verdade, então podeAdministrar é sempre true.
+    return (
+      <RecursoNaoAtivado
+        recurso="Política de Equipment"
+        podeAdministrar
+        faltando={["VITE_SSO_POLITICA_EQUIPMENT_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={userId} userId={userId} />;
 }
 

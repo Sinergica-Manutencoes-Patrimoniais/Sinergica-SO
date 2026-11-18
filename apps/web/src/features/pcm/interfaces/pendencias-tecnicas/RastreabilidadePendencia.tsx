@@ -2,12 +2,22 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; pendenciaId: string };
 const origem = z.object({ pendenciaId: z.string().guid(), respostaId: z.string().guid(), retornoId: z.string().guid(), osOrigemId: z.string().guid(), ocorrenciaId: z.string().guid().nullable(), ocorrenciaGrupoId: z.string().guid().nullable().optional(), tipoOrigem: z.enum(["legada", "grupo"]).optional(), rotinaId: z.string().guid(), alvoTipo: z.string(), alvoId: z.string().guid() }).strict().refine((r) => r.tipoOrigem === "grupo" ? r.ocorrenciaId === null && !!r.ocorrenciaGrupoId : !!r.ocorrenciaId && !r.ocorrenciaGrupoId);
 const vinculo = z.object({ composicao_id: z.string().guid(), chamado_id: z.string().guid().nullable(), parcela_id: z.string().guid().nullable(), os_atribuida_id: z.string().guid().nullable() }).strict();
 export function RastreabilidadePendencia(props: Props) {
-  if (import.meta.env.VITE_SSO_RASTREABILIDADE_PENDENCIA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RASTREABILIDADE_PENDENCIA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Rastreabilidade pendencia"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RASTREABILIDADE_PENDENCIA_ENABLED"]}
+      />
+    );
+  }
   return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.pendenciaId])} {...props} />;
 }
 function Abrir(props: Props) {
@@ -18,7 +28,7 @@ function Conteudo({ userId, clienteId, pendenciaId }: Props) {
   const conferirSessao = async (signal: AbortSignal) => { const atual=await supabase.auth.getUser(); if(atual.error||atual.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada."); };
   const fonte = useQuery({ queryKey: ["pendencia-rastreabilidade", userId, clienteId, pendenciaId, "origem"], gcTime: 0, queryFn: async ({ signal }) => {
     await conferirSessao(signal);
-    const { data, error } = await supabase.schema("pcm").rpc(import.meta.env.VITE_SSO_PENDENCIA_ORIGEM_GRUPO_ENABLED === "true" ? "sso_origem_pendencia_v2" : "sso_origem_pendencia", { p_pendencia_id: pendenciaId }).abortSignal(signal); if (error) throw error;
+    const { data, error } = await supabase.schema("pcm").rpc(flagLigada("VITE_SSO_PENDENCIA_ORIGEM_GRUPO_ENABLED") ? "sso_origem_pendencia_v2" : "sso_origem_pendencia", { p_pendencia_id: pendenciaId }).abortSignal(signal); if (error) throw error;
     const r = origem.parse(data); if (r.pendenciaId !== pendenciaId) throw new Error("Pendência divergente"); await conferirSessao(signal); return r;
   }});
   const lista = useInfiniteQuery({ queryKey: ["pendencia-rastreabilidade", userId, clienteId, pendenciaId, "vinculos"], gcTime: 0, initialPageParam: null as string | null,

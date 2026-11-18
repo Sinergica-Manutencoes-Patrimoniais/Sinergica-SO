@@ -3,6 +3,7 @@ import { UsersRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { z } from "zod";
 import { useAuth } from "../../../app/auth-context";
+import { flagLigada } from "../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../lib/mensagem-ativacao";
 import { criarGrupo } from "../application/criar-grupo";
 import { editarGrupo } from "../application/editar-grupo";
@@ -129,7 +130,7 @@ export function GruposPage() {
   } | null>(null);
 
   const verificarCriacaoGuardada = useCallback(() => {
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED !== "true" || !user?.id) {
+    if (!flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED") || !user?.id) {
       setCriacaoGuardada(null);
       return;
     }
@@ -146,7 +147,7 @@ export function GruposPage() {
   }, [verificarCriacaoGuardada]);
 
   const verificarEdicoesGuardadas = useCallback(() => {
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED !== "true" || !user?.id) {
+    if (!flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED") || !user?.id) {
       setEdicoesGuardadas(null);
       return;
     }

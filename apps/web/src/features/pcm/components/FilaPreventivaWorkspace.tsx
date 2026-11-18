@@ -8,6 +8,7 @@ import { FilaPreventivaPcm } from "../interfaces/plano-manutencao/FilaPreventiva
 import { EstadoOcorrenciaVinculada } from "../interfaces/plano-manutencao/EstadoOcorrenciaVinculada";
 import { FilaVisitaWorkspace } from "./FilaVisitaWorkspace";
 import { AplicarRetiradasFila } from "../interfaces/plano-manutencao/AplicarRetiradasFila";
+import { flagLigada } from "../../../config/flags-sso";
 
 const tamanhoPagina = 50;
 const entrada = z.object({
@@ -69,7 +70,7 @@ function Conteudo({ clienteId, userId }: { clienteId: string; userId: string }) 
   const [estadoFiltro, setEstadoFiltro] = useState<"todos" | "aguardando" | "verificacao" | "cancelado">("todos");
   const [inicioFiltro, setInicioFiltro] = useState("");
   const [fimFiltro, setFimFiltro] = useState("");
-  const cronologica = import.meta.env.VITE_SSO_FILA_PREVENTIVA_CRONOLOGICA_ENABLED === "true";
+  const cronologica = flagLigada("VITE_SSO_FILA_PREVENTIVA_CRONOLOGICA_ENABLED");
   const periodoInvalido = !!inicioFiltro && !!fimFiltro && inicioFiltro > fimFiltro;
   const planos = useInfiniteQuery({
     queryKey: ["fila-preventiva-planos", userId, clienteId], gcTime: 0, retry: false,
@@ -148,7 +149,7 @@ function Conteudo({ clienteId, userId }: { clienteId: string; userId: string }) 
         </select></label>
         <label>Vencimento a partir de <input type="date" value={inicioFiltro} onChange={(event) => setInicioFiltro(event.target.value)} /></label>
         <label>Vencimento até <input type="date" value={fimFiltro} onChange={(event) => setFimFiltro(event.target.value)} /></label>
-        <p>{cronologica ? "O filtro de calendário é aplicado na consulta; carregue as próximas páginas para ver mais resultados." : "No calendário, filtro e ordem por vencimento consideram somente as páginas carregadas."} {import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && "Para Visitas, o filtro é aplicado na consulta."} Não alteram programação ou situação.</p>
+        <p>{cronologica ? "O filtro de calendário é aplicado na consulta; carregue as próximas páginas para ver mais resultados." : "No calendário, filtro e ordem por vencimento consideram somente as páginas carregadas."} {flagLigada("VITE_SSO_FILA_VISITA_ENABLED") && "Para Visitas, o filtro é aplicado na consulta."} Não alteram programação ou situação.</p>
       </fieldset>}
       {periodoInvalido && <p role="alert">A data inicial deve ser anterior ou igual à final.</p>}
     {filaVisivel && <>
@@ -157,11 +158,11 @@ function Conteudo({ clienteId, userId }: { clienteId: string; userId: string }) 
       <ul>{itensOrdenados.map((item) => <li key={item.ciclo_id} hidden={!ciclosVisiveis.has(item.ciclo_id)}>
         Vencimento {item.vencimento.split("-").reverse().join("/")} · {item.estado === "aguardando" ? "registro aguardando" : item.estado === "verificacao" ? "conferir: execução desconhecida" : "registro cancelado"} · {item.rotina_nome ? `Rotina de referência: ${item.rotina_nome}` : "Rotina não identificada"} · {item.alvo_tipo && item.alvo_id ? `alvo ${item.alvo_tipo}: ${item.alvo_id}` : "alvo não identificado"} · ciclo {item.ciclo_id} · revisão {item.revisao}
         {item.alvo_tipo && item.alvo_id && <NomeAlvo key={`${item.alvo_tipo}:${item.alvo_id}`} userId={userId} clienteId={clienteId} tipo={item.alvo_tipo} id={item.alvo_id} />}
-        {import.meta.env.VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED === "true" && <EstadoOcorrenciaVinculada userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={item.preparada_id} />}
+        {flagLigada("VITE_SSO_ESTADO_OCORRENCIA_VINCULADA_ENABLED") && <EstadoOcorrenciaVinculada userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={item.preparada_id} />}
         <button type="button" aria-expanded={cicloGerenciado?.cicloId === item.ciclo_id} onClick={() => setCicloGerenciado(cicloGerenciado?.cicloId === item.ciclo_id ? null : { cicloId: item.ciclo_id, preparadaId: item.preparada_id })}>
           {cicloGerenciado?.cicloId === item.ciclo_id ? "Ocultar gestão da entrada" : "Gerenciar entrada"}
         </button>
-        {import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_ENABLED === "true" && item.estado !== "cancelado" && item.versao_origem_id && item.rotina_id && item.ciclo_indice !== null && plano && <>
+        {flagLigada("VITE_SSO_DECISAO_VENCIMENTO_ENABLED") && item.estado !== "cancelado" && item.versao_origem_id && item.rotina_id && item.ciclo_indice !== null && plano && <>
           <button type="button" aria-expanded={cicloSelecionado === item.ciclo_id} onClick={() => setCicloSelecionado(cicloSelecionado === item.ciclo_id ? null : item.ciclo_id)}>
             {cicloSelecionado === item.ciclo_id ? "Ocultar decisão" : "Consultar decisão"}
           </button>
@@ -172,8 +173,8 @@ function Conteudo({ clienteId, userId }: { clienteId: string; userId: string }) 
       {fila.hasNextPage && <button type="button" disabled={fila.isFetching} onClick={() => void fila.fetchNextPage()}>Carregar mais entradas</button>}
       {fila.hasNextPage && <p>Existem mais páginas; esta não é a lista completa.</p>}
     </>}
-    {planoSelecionado && import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" && <FilaVisitaWorkspace userId={userId} clienteId={clienteId} planoId={planoId} estado={estadoFiltro} inicio={inicioFiltro} fim={fimFiltro} />}
-    {planoSelecionado && import.meta.env.VITE_SSO_RESOLUCAO_IMPACTO_ENABLED === "true" && <AplicarRetiradasFila userId={userId} clienteId={clienteId} planoId={planoId} />}
+    {planoSelecionado && flagLigada("VITE_SSO_FILA_VISITA_ENABLED") && <FilaVisitaWorkspace userId={userId} clienteId={clienteId} planoId={planoId} estado={estadoFiltro} inicio={inicioFiltro} fim={fimFiltro} />}
+    {planoSelecionado && flagLigada("VITE_SSO_RESOLUCAO_IMPACTO_ENABLED") && <AplicarRetiradasFila userId={userId} clienteId={clienteId} planoId={planoId} />}
     {cicloGerenciado && <div hidden={!planoSelecionado}>{!ciclosVisiveis.has(cicloGerenciado.cicloId) && <p>A gestão aberta permanece disponível mesmo com a entrada fora dos resultados carregados. A ação usa uma consulta independente e atual. <button type="button" onClick={() => setCicloGerenciado(null)}>Fechar gestão</button></p>}<FilaPreventivaPcm userId={userId} clienteId={clienteId} planoId={planoId} preparadaId={cicloGerenciado.preparadaId} /></div>}
   </section>;
 }

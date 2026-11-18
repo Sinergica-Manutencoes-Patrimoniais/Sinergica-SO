@@ -1,7 +1,17 @@
 import { useDecisoesOnda } from "../../application/decisoes-onda-queries";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export function HistoricoDecisoesOnda({ userId, clienteId, onda }: { userId: string; clienteId: string; onda: number }) {
-  if (import.meta.env.VITE_SSO_DECISAO_ONDA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DECISAO_ONDA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Decisao onda"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DECISAO_ONDA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${userId}:${clienteId}:${onda}`} userId={userId} clienteId={clienteId} onda={onda} />;
 }
 function Conteudo({ userId, clienteId, onda }: { userId: string; clienteId: string; onda: number }) {

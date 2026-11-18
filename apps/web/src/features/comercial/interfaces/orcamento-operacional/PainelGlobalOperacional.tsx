@@ -2,13 +2,23 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ResumoDecisaoPcm } from "./ResumoDecisaoPcm";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const item = z.object({ id: z.string().guid(), cliente_id: z.string().guid(), cliente_nome: z.string(),
   os_id: z.string().guid(), os_numero: z.string(), status: z.string(), versao: z.number().int().positive(),
   criada_em: z.string(), tem_oportunidade: z.boolean() }).strict();
 type Props = { usuario: string; inicio: string; fim: string };
 export function PainelGlobalOperacional(props: Props) {
-  if (import.meta.env.VITE_SSO_PAINEL_ORCAMENTOS_OPERACIONAIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PAINEL_ORCAMENTOS_OPERACIONAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Painel orcamentos operacionais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PAINEL_ORCAMENTOS_OPERACIONAIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.inicio, props.fim])} {...props} />;
 }
 function Conteudo({ usuario, inicio, fim }: Props) {
@@ -30,7 +40,7 @@ function Conteudo({ usuario, inicio, fim }: Props) {
     {!consulta.isFetching && !consulta.isError && consulta.data && <ul>{consulta.data.pages.flat().map((p) => <li key={p.id}>
       {p.cliente_nome} · OS {p.os_numero} · {p.status === "aceita" ? "aprovada" : p.status} · versão {p.versao}
       {p.tem_oportunidade ? " · vinculada a oportunidade" : " · origem operacional"}
-      {import.meta.env.VITE_SSO_DECISAO_PCM_ORCAMENTO_ENABLED === "true" && <ResumoDecisaoPcm usuario={usuario} cliente={p.cliente_id} os={p.os_id} proposta={p.id} versao={p.versao} />}
+      {flagLigada("VITE_SSO_DECISAO_PCM_ORCAMENTO_ENABLED") && <ResumoDecisaoPcm usuario={usuario} cliente={p.cliente_id} os={p.os_id} proposta={p.id} versao={p.versao} />}
     </li>)}</ul>}
     {!consulta.isError && consulta.hasNextPage && <button type="button" onClick={() => void consulta.fetchNextPage()}>Mais propostas</button>}
   </section>;

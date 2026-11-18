@@ -8,6 +8,7 @@ import type {
 } from "../application/ordem-servico-gateway";
 import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
 import type { PesosGutd } from "../domain/priorizacao-backlog";
+import { flagLigada } from "../../../config/flags-sso";
 
 function montarDescricao(input: CriarOrdemServicoInput): string | null {
   const blocos = [input.descricao?.trim()].filter(Boolean);
@@ -280,7 +281,7 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
   async confirmarChamado(input): Promise<{ numero: string }> {
     // Uma tentativa atômica incerta nunca pode cair no fluxo legado se a flag mudar.
     const chaveAtomica = `sso-confirmar-chamado-os:${JSON.stringify([input.userId, input.ordemId])}`;
-    if (input.somenteRepetir || import.meta.env.VITE_SSO_CONFIRMAR_CHAMADO_OS_ATOMICO_ENABLED === "true" || sessionStorage.getItem(chaveAtomica) !== null) {
+    if (input.somenteRepetir || flagLigada("VITE_SSO_CONFIRMAR_CHAMADO_OS_ATOMICO_ENABLED") || sessionStorage.getItem(chaveAtomica) !== null) {
       return confirmarChamadoAtomico(input);
     }
     const { data: ordem, error: ordemError } = await supabase

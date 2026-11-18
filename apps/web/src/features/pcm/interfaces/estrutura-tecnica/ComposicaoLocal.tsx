@@ -14,6 +14,8 @@ import { FotosStagingGrupo } from "./FotosStagingGrupo";
 import { FotosVerificadasGrupo } from "./FotosVerificadasGrupo";
 import { HistoricoGrupo } from "./HistoricoGrupo";
 import { PlanosDoAlvo } from "./PlanosDoAlvo";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; localId: string; caminho: string[] };
 const item = z.object({
@@ -38,7 +40,15 @@ const vinculo = z.object({
 });
 
 export function ComposicaoLocal(props: Props) {
-  if (import.meta.env.VITE_SSO_COMPOSICAO_LOCAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_COMPOSICAO_LOCAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Composicao local"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_COMPOSICAO_LOCAL_ENABLED"]}
+      />
+    );
+  }
   return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.localId])} {...props} />;
 }
 function Abrir(props: Props) {
@@ -370,7 +380,7 @@ function DetalhesGrupo({
         <>
           <p>
             Verificação da localização:{" "}
-            {import.meta.env.VITE_SSO_BREADCRUMB_GRUPO_ENABLED === "true" ? (
+            {flagLigada("VITE_SSO_BREADCRUMB_GRUPO_ENABLED") ? (
               <BreadcrumbGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} />
             ) : (
               "consulta de hierarquia não habilitada; confira o caminho acima."
@@ -386,7 +396,7 @@ function DetalhesGrupo({
           />
           <PendenciasDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} />
           <PlanosDoAlvo userId={userId} clienteId={clienteId} tipo="grupo" id={grupoId} />
-          {import.meta.env.VITE_SSO_FOTOS_GRUPO_ENABLED !== "true" && (
+          {!flagLigada("VITE_SSO_FOTOS_GRUPO_ENABLED") && (
             <p>Fotos do Grupo não habilitadas nesta visão.</p>
           )}
           <FotosGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} podeEditar={false} />
@@ -451,9 +461,9 @@ function DetalhesItem({
             Somente fotos de levantamento com vínculo temporário e acesso mediado; outras fontes não
             são apresentadas aqui.
           </p>
-          {(import.meta.env.VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED !== "true" ||
+          {(!flagLigada("VITE_SSO_FOTOS_STAGING_ATIVO_ENABLED") ||
             (tipo === "equipamento" &&
-              import.meta.env.VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED !== "true")) && (
+              !flagLigada("VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED"))) && (
             <p>Fotos de levantamento não habilitadas nesta visão.</p>
           )}
           <FotosStagingAtivo

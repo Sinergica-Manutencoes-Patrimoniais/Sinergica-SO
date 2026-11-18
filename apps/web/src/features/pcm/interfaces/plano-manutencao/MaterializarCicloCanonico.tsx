@@ -6,6 +6,7 @@ import { ConferenciaPmocCiclo } from "./ConferenciaPmocCiclo";
 import { FilaAposPreparacao } from "./FilaAposPreparacao";
 import { IntegrarOrigemOcorrencia } from "./IntegrarOrigemOcorrencia";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = {
   requestId: string;
   clienteId: string;
@@ -39,7 +40,7 @@ export function MaterializarCicloCanonico(props: Props) {
     props.vencimento,
     props.vencido ?? false,
   ]);
-  if (import.meta.env.VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED === "true")
+  if (flagLigada("VITE_SSO_ORIGEM_EFETIVA_CICLO_ENABLED"))
     return <ComOrigem key={key} {...props} />;
   return <MaterializarCicloSessao key={key} {...props} vencido={props.vencido ?? false} />;
 }
@@ -376,7 +377,7 @@ function MaterializarCicloSessao({
         {vencido
           ? "O servidor aceita somente ciclo vencido de versão e Rotina elegíveis; a preparação não comprova ausência de execução."
           : "Vencidos não são gerados neste comando."}{" "}
-        {import.meta.env.VITE_SSO_GERACAO_FUSO_SNAPSHOT_ENABLED === "true"
+        {flagLigada("VITE_SSO_GERACAO_FUSO_SNAPSHOT_ENABLED")
           ? "Janela usa fuso explícito congelado na versão; versões antigas sem fuso ficam bloqueadas."
           : "Fuso operacional ainda exige validação."}{" "}
         Não usar antes de homologação.

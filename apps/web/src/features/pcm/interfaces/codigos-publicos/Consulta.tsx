@@ -11,12 +11,13 @@ import { EvidenciasUso } from "./EvidenciasUso";
 import { CategoriaComponente } from "./CategoriaComponente";
 import { ConsultaCodigoGrupo } from "./ConsultaCodigoGrupo";
 import { ConsultaUnificada } from "./ConsultaUnificada";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function ConsultaCodigoPublico({
   userId,
   clienteId,
 }: { userId: string; clienteId: string }) {
-  if (import.meta.env.VITE_SSO_BUSCA_UNIFICADA_GRUPO_ENABLED === "true") return <ConsultaUnificada userId={userId} clienteId={clienteId} />;
+  if (flagLigada("VITE_SSO_BUSCA_UNIFICADA_GRUPO_ENABLED")) return <ConsultaUnificada userId={userId} clienteId={clienteId} />;
   return <Conteudo key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} />;
 }
 
@@ -53,13 +54,13 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
   const encontrado = permitido && !resultado.isFetching && !resultado.isError && busca === codigo && resultado.data?.situacao === "encontrado" && "tipo" in resultado.data && "ativoId" in resultado.data ? resultado.data : null;
   const atual = useQuery({
     queryKey: ["codigos-publicos", userId, clienteId, "codigo-atual", encontrado?.tipo, encontrado?.ativoId],
-    enabled: permitido && !!encontrado && (import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" || import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true"),
+    enabled: permitido && !!encontrado && (flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") || flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")),
     gcTime: 0,
     queryFn: async ({ signal }) => {
       if (!encontrado) throw new Error("Ativo não selecionado.");
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
-      if (import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true") {
+      if (flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")) {
         const { data, error } = await supabase.schema("pcm").rpc("sso_consultar_codigo_atual_mediado", {
           p_ator_id: userId, p_cliente_id: clienteId, p_tipo: encontrado.tipo, p_ativo_id: encontrado.ativoId,
         }).abortSignal(signal);
@@ -150,7 +151,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
               {resultado.data.tipo === "sistema" ? "Sistema" : "Equipamento ou Componente (cadastro compartilhado)"} · ID{" "}
               {resultado.data.ativoId}
             </p>
-            {import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED === "true" && <section aria-label="Código atual do cadastro">
+            {flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && <section aria-label="Código atual do cadastro">
               {atual.isFetching && <output>Consultando código atual…</output>}
               {atual.isError && <p role="alert">Código atual indisponível. <button type="button" onClick={() => void atual.refetch()}>Tentar novamente</button></p>}
               {!atual.isFetching && !atual.isError && atual.data && <p>Código consultado: {busca} · código atual: {atual.data}. Códigos anteriores permanecem no histórico quando disponíveis.</p>}
@@ -160,9 +161,9 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
             <EvidenciasUso userId={userId} clienteId={clienteId} tipo={resultado.data.tipo} ativoId={resultado.data.ativoId} />
             {resultado.data.tipo === "componente" && <CategoriaComponente userId={userId} clienteId={clienteId} componenteId={resultado.data.ativoId} />}
             <DeclaracaoEtiqueta userId={userId} clienteId={clienteId} tipo={resultado.data.tipo} ativoId={resultado.data.ativoId} />
-            {import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" && import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED !== "true" && atual.isFetching && <output>Consultando código atual…</output>}
-            {import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" && import.meta.env.VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED !== "true" && atual.isError && <p role="alert">Código atual indisponível; correção não oferecida. <button type="button" onClick={() => void atual.refetch()}>Tentar novamente</button></p>}
-            {import.meta.env.VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED === "true" && !atual.isFetching && !atual.isError && atual.data && (
+            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && atual.isFetching && <output>Consultando código atual…</output>}
+            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && atual.isError && <p role="alert">Código atual indisponível; correção não oferecida. <button type="button" onClick={() => void atual.refetch()}>Tentar novamente</button></p>}
+            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !atual.isFetching && !atual.isError && atual.data && (
               <SubstituicaoCodigoPublico
                 key={JSON.stringify([userId, clienteId, resultado.data.tipo, resultado.data.ativoId, atual.data])}
                 userId={userId}

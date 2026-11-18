@@ -2,10 +2,20 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 type Props = { userId: string; clienteId: string; composicaoId: string };
 const evento = z.object({ request_id: z.string().guid(), ator_id: z.string().guid(), itens: z.array(z.object({ id: z.string().guid(), revision: z.number().int().positive() }).strict()).min(1).max(100) }).strict();
 export function HistoricoSelecao(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_SELECAO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_SELECAO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico selecao"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_SELECAO_ENABLED"]}
+      />
+    );
+  }
   return <Abrir key={JSON.stringify([props.userId, props.clienteId, props.composicaoId])} {...props} />;
 }
 function Abrir(props: Props) {

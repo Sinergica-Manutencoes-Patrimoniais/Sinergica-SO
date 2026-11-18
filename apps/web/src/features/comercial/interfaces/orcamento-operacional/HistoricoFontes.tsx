@@ -2,13 +2,23 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const fonte = z.object({ despesaId: z.string().guid(), despesaRevision: z.number().int().positive(), rateioRevision: z.number().int().positive(), vinculoId: z.string().guid(), grupo: z.enum(["aquisicao","operacional"]), valorCentavos: z.number().int().safe().nonnegative(), base: z.enum(["previsto","realizado"]), descricaoFonte: z.string().min(1).max(10000) }).strict();
 const linha = z.object({ posicao: z.number().int().positive(), fonte }).strict();
 type Props = { usuario: string; cliente: string; propostaId: string; versao: number };
 export function HistoricoFontes(props: Props) {
   const [aberto,setAberto] = useState(false);
-  if (import.meta.env.VITE_SSO_HISTORICO_FONTES_ORCAMENTO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_FONTES_ORCAMENTO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico fontes orcamento"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_FONTES_ORCAMENTO_ENABLED"]}
+      />
+    );
+  }
   return <section><button type="button" aria-expanded={aberto} onClick={() => setAberto(v=>!v)}>{aberto ? "Ocultar fontes da versão" : "Consultar fontes da versão"}</button>{aberto && <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.propostaId,props.versao])} {...props} />}</section>;
 }
 function Conteudo({usuario,cliente,propostaId,versao}:Props) {

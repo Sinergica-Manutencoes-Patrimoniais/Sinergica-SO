@@ -2,9 +2,10 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const schema=z.object({requestId:z.string().guid(),fotoId:z.string().guid(),revision:z.number().int().nonnegative(),estado:z.enum(["inadequada","reavaliada"]),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;fotoId:string};
-export function AdequacaoFoto(props:Props){if(import.meta.env.VITE_SSO_ADEQUACAO_FOTO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
+export function AdequacaoFoto(props:Props){if(!flagLigada("VITE_SSO_ADEQUACAO_FOTO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
 function Conteudo({userId,clienteId,fotoId}:Props){
   const key=`sso-adequacao-foto:${JSON.stringify([userId,clienteId,fotoId])}`;const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=schema.parse(JSON.parse(raw));return p.fotoId===fotoId ? p : "invalido";}catch{return "invalido";}});const [estado,setEstado]=useState<"inadequada"|"reavaliada">("inadequada");const [motivo,setMotivo]=useState("");const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
   const historico=useInfiniteQuery({queryKey:["levantamentos",userId,clienteId,"adequacao-foto",fotoId],gcTime:0,initialPageParam:null as number|null,queryFn:async({pageParam,signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_adequacao_foto_autorizada",{p_foto_id:fotoId,p_apos:pageParam,p_limite:20}).abortSignal(signal);if(error)throw error;return z.array(z.object({revisao:z.number().int().positive(),estado:z.enum(["inadequada","reavaliada"]),motivo:z.string(),ator_id:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict()).max(20).parse(data);},getNextPageParam:p=>p.length===20 ? p[p.length - 1]?.revisao : undefined});

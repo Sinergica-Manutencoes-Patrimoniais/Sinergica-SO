@@ -2,13 +2,23 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; loteId: string; chave: string };
 const linha = z.object({ posicao: z.number().int().positive().max(10000), referencia: z.string().min(1).max(200) }).strict();
 
 export function ReferenciasCampo(props: Props) {
   const [aberto, setAberto] = useState(false);
-  if (import.meta.env.VITE_SSO_REFERENCIAS_FOTO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_REFERENCIAS_FOTO_CAMPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Referencias foto campo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_REFERENCIAS_FOTO_CAMPO_ENABLED"]}
+      />
+    );
+  }
   return <section>
     <button type="button" aria-expanded={aberto} onClick={() => setAberto((atual) => !atual)}>{aberto ? "Ocultar referências declaradas" : "Consultar referências declaradas de fotos"}</button>
     {aberto && <Lista key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props} />}
@@ -23,7 +33,7 @@ function Lista({ userId, clienteId, loteId, chave }: Props) {
       const antes = await supabase.auth.getUser();
       if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
       const { data, error } = await supabase.schema("pcm").rpc(
-        import.meta.env.VITE_SSO_REFERENCIAS_FOTO_CAMPO_MEDIADAS_ENABLED === "true"
+        flagLigada("VITE_SSO_REFERENCIAS_FOTO_CAMPO_MEDIADAS_ENABLED")
           ? "sso_listar_referencias_foto_campo_mediado" : "sso_listar_referencias_foto_campo", {
         p_ator_id: userId, p_cliente_id: clienteId, p_lote_id: loteId, p_chave: chave, p_apos: pageParam, p_limite: 30,
       }).abortSignal(signal);

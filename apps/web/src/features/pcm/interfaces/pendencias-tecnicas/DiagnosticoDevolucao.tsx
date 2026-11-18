@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { CandidatosDevolucaoCiclo } from "./CandidatosDevolucaoCiclo";
 import { CiclosPosteriores } from "./CiclosPosteriores";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linhaSchema = z.object({
   pendencia_id: z.string().guid(), parcela_id: z.string().guid(), situacao: z.string(),
@@ -36,8 +37,8 @@ export function DiagnosticoDevolucao({ userId, clienteId, composicaoId }: {
   return <section aria-label="Sinais para devolução de escopo">
     <h5>Sinais administrativos por parcela</h5>
     <p>Informações parciais: não comprovam parada nem autorizam devolução do escopo.</p>
-    {import.meta.env.VITE_SSO_CANDIDATOS_DEVOLUCAO_CICLO_ENABLED === "true" && <CandidatosDevolucaoCiclo userId={userId} clienteId={clienteId} composicaoId={composicaoId} />}
-    {import.meta.env.VITE_SSO_CICLOS_POSTERIORES_ENABLED === "true" && <CiclosPosteriores userId={userId} clienteId={clienteId} composicaoId={composicaoId} />}
+    {flagLigada("VITE_SSO_CANDIDATOS_DEVOLUCAO_CICLO_ENABLED") && <CandidatosDevolucaoCiclo userId={userId} clienteId={clienteId} composicaoId={composicaoId} />}
+    {flagLigada("VITE_SSO_CICLOS_POSTERIORES_ENABLED") && <CiclosPosteriores userId={userId} clienteId={clienteId} composicaoId={composicaoId} />}
     {consulta.isFetching && <output>Consultando sinais…</output>}
     {consulta.isError && <p role="alert">Não foi possível consultar os sinais. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && consulta.data && <>

@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ResolverConflitoWebhook } from "./ResolverConflitoWebhook";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const conflitoSchema = z.object({
   id: z.string().guid(), task_id: z.string().regex(/^\d+$/),
@@ -41,7 +42,7 @@ export function ConflitosWebhook({ usuario, cliente, os, statusAtual, taskAtual,
     {consulta.isError && !consulta.isFetching && <p role="alert">Não foi possível consultar conflitos. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {!consulta.isFetching && !consulta.isError && consulta.data && <>
       {consulta.data.pages.flat().length === 0 ? <p>Nenhum conflito registrado.</p> : <ul>{consulta.data.pages.flat().map((item) => <li key={item.id}>Auvo {item.task_id} · {item.status_remoto} · {item.resolvido_em ? "Resolvido" : "Aberto"} · {new Date(item.criado_em).toLocaleString("pt-BR")}
-        {!item.resolvido_em && import.meta.env.VITE_SSO_RESOLUCAO_CONFLITOS_ENABLED === "true" && statusAtual && atualizadoEm && <ResolverConflitoWebhook usuario={usuario} cliente={cliente} os={os} conflito={item.id} statusRemoto={item.status_remoto} statusAtual={statusAtual} taskId={item.task_id} taskAtual={taskAtual ?? null} atualizadoEm={atualizadoEm} />}
+        {!item.resolvido_em && flagLigada("VITE_SSO_RESOLUCAO_CONFLITOS_ENABLED") && statusAtual && atualizadoEm && <ResolverConflitoWebhook usuario={usuario} cliente={cliente} os={os} conflito={item.id} statusRemoto={item.status_remoto} statusAtual={statusAtual} taskId={item.task_id} taskAtual={taskAtual ?? null} atualizadoEm={atualizadoEm} />}
       </li>)}</ul>}
       {consulta.hasNextPage && <button type="button" onClick={() => void consulta.fetchNextPage()}>Mais conflitos</button>}
     </>}

@@ -1,11 +1,21 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string };
 const item = z.object({ id: z.string().guid(), os_id: z.string().guid(), os_numero: z.string(), inicio_em: z.string(), fim_em: z.string(), mensagem: z.string() }).strict();
 export function CalendarioVisitasPortal(props: Props) {
-  if (import.meta.env.VITE_SSO_PORTAL_CALENDARIO_VISITAS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PORTAL_CALENDARIO_VISITAS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Portal calendario visitas"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PORTAL_CALENDARIO_VISITAS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
 }
 function Conteudo({ userId, clienteId }: Props) {

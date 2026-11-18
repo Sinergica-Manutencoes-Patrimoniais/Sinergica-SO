@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { CandidatasT24 } from "./CandidatasT24";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedido = z.object({ requestId: z.string().guid(), visitaId: z.string().guid(), osId: z.string().guid(), revisao: z.number().int().positive(), protocolo:z.enum(["produtor_preventivo","produtor_corretivo"]).optional() }).strict();
 type Pedido = z.infer<typeof pedido>;
@@ -18,7 +19,7 @@ export function IntencaoLocalEnvio({ userId, clienteId, visitaId, osId, revisao,
   const [aviso, setAviso] = useState(""); const enviando = useRef(false);
   async function conferirSessao(signal?: AbortSignal) { const {data,error}=await supabase.auth.getUser(); if(error || data.user?.id!==userId || signal?.aborted)throw new Error("Sessão alterada."); }
   const bloqueios = useQuery({ queryKey: ["bloqueios-intencao-local", userId, clienteId, visitaId, osId, revisao],
-    enabled: import.meta.env.VITE_SSO_BLOQUEIOS_INTENCAO_LOCAL_ENABLED === "true" && !bloqueado,
+    enabled: flagLigada("VITE_SSO_BLOQUEIOS_INTENCAO_LOCAL_ENABLED") && !bloqueado,
     gcTime: 0, staleTime: 0, retry: false, refetchOnWindowFocus: true, queryFn: async ({ signal }) => {
       await conferirSessao(signal);const { data, error } = await supabase.schema("pcm").rpc("sso_bloqueios_intencao_local", { p_cliente_id: clienteId, p_visita_id: visitaId, p_os_id: osId }).abortSignal(signal);
       if (error) throw error;
@@ -68,13 +69,13 @@ export function IntencaoLocalEnvio({ userId, clienteId, visitaId, osId, revisao,
     setPendente(null);setAviso("Recibo da candidata localizado. Este registro não enviou nem criou tarefa externa.");
   },onError:()=>setAviso("Recibo indisponível. Preserve o pedido; isso não comprova ausência de tarefa externa.")});
   function enviar(p: Pedido) { if (bloqueado || enviando.current || recuperar.isPending || recuperarProdutor.isPending) return; try { if (sessionStorage.getItem(chave) !== JSON.stringify(p)) throw new Error("Pedido divergente."); } catch { setAviso("Pedido local alterado ou indisponível. Consulte suporte antes de repetir."); return; } enviando.current = true; setAviso(""); comando.mutate(p); }
-  function iniciar(protocolo?: "produtor_preventivo"|"produtor_corretivo") { if (bloqueado || pendente || enviando.current || (protocolo==="produtor_preventivo"&&import.meta.env.VITE_SSO_PRODUTOR_T24_PREVENTIVO_ENABLED!=="true") || (protocolo==="produtor_corretivo"&&import.meta.env.VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED!=="true")) return; try {
+  function iniciar(protocolo?: "produtor_preventivo"|"produtor_corretivo") { if (bloqueado || pendente || enviando.current || (protocolo==="produtor_preventivo"&&!flagLigada("VITE_SSO_PRODUTOR_T24_PREVENTIVO_ENABLED")) || (protocolo==="produtor_corretivo"&&!flagLigada("VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED"))) return; try {
     const p = pedido.parse({ requestId: crypto.randomUUID(), visitaId, osId, revisao, ...(protocolo?{protocolo}:{}) });
     if (sessionStorage.getItem(chave) !== null) throw new Error("Pedido existente"); sessionStorage.setItem(chave, JSON.stringify(p)); setPendente(p); enviar(p);
   } catch { setAviso("Não foi possível guardar o pedido; nada foi enviado."); } }
   return <section><p>Registro local bloqueado: não aciona Auvo nem agenda execução.</p>
     {!bloqueado && <CandidatasT24 userId={userId} clienteId={clienteId} visitaId={visitaId} osId={osId}/>}
-    {import.meta.env.VITE_SSO_BLOQUEIOS_INTENCAO_LOCAL_ENABLED === "true" && <>
+    {flagLigada("VITE_SSO_BLOQUEIOS_INTENCAO_LOCAL_ENABLED") && <>
       {bloqueios.isFetching && <p>Consultando bloqueios…</p>}
       {bloqueios.isError && <p role="alert">Bloqueios indisponíveis. <button type="button" onClick={() => void bloqueios.refetch()}>Tentar novamente</button></p>}
       {!bloqueios.isFetching && !bloqueios.isError && bloqueios.data && <div>
@@ -86,11 +87,11 @@ export function IntencaoLocalEnvio({ userId, clienteId, visitaId, osId, revisao,
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Consulte suporte.</p>}
     {pendente && pendente !== "invalido" ? <><button type="button" disabled={bloqueado || comando.isPending || recuperar.isPending || recuperarProdutor.isPending} onClick={() => enviar(pendente)}>Repetir pedido</button>
       {pendente.protocolo && <button type="button" disabled={bloqueado || comando.isPending || recuperar.isPending || recuperarProdutor.isPending} onClick={() => {if(!enviando.current)recuperarProdutor.mutate(pendente);}}>Consultar recibo da candidata</button>}
-      {!pendente.protocolo && import.meta.env.VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED === "true" && <button type="button" disabled={bloqueado || comando.isPending || recuperar.isPending || recuperarProdutor.isPending} onClick={() => recuperar.mutate(pendente)}>Consultar pedido registrado</button>}</> :
+      {!pendente.protocolo && flagLigada("VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED") && <button type="button" disabled={bloqueado || comando.isPending || recuperar.isPending || recuperarProdutor.isPending} onClick={() => recuperar.mutate(pendente)}>Consultar pedido registrado</button>}</> :
       !pendente && <><button type="button" disabled={bloqueado || comando.isPending} onClick={() => iniciar()}>Registrar intenção local bloqueada</button>
-        {import.meta.env.VITE_SSO_PRODUTOR_T24_PREVENTIVO_ENABLED === "true" && <button type="button" disabled={bloqueado || comando.isPending} onClick={() => iniciar("produtor_preventivo")}>Preparar candidata preventiva</button>}
-        {import.meta.env.VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED === "true" && <button type="button" disabled={bloqueado || comando.isPending} onClick={() => iniciar("produtor_corretivo")}>{import.meta.env.VITE_SSO_PRODUTOR_T24_EMERGENCIAL_ENABLED === "true" ? "Preparar candidata corretiva ou emergencial" : "Preparar candidata corretiva"}</button>}
-        {import.meta.env.VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED === "true" && import.meta.env.VITE_SSO_PRODUTOR_T24_EMERGENCIAL_ENABLED === "true" && <p>Para emergencial, o servidor exige autorização e gate próprios. A janela T−24 e o contrato de envio ainda precisam de validação operacional.</p>}</>}
+        {flagLigada("VITE_SSO_PRODUTOR_T24_PREVENTIVO_ENABLED") && <button type="button" disabled={bloqueado || comando.isPending} onClick={() => iniciar("produtor_preventivo")}>Preparar candidata preventiva</button>}
+        {flagLigada("VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED") && <button type="button" disabled={bloqueado || comando.isPending} onClick={() => iniciar("produtor_corretivo")}>{flagLigada("VITE_SSO_PRODUTOR_T24_EMERGENCIAL_ENABLED") ? "Preparar candidata corretiva ou emergencial" : "Preparar candidata corretiva"}</button>}
+        {flagLigada("VITE_SSO_PRODUTOR_T24_CORRETIVO_ENABLED") && flagLigada("VITE_SSO_PRODUTOR_T24_EMERGENCIAL_ENABLED") && <p>Para emergencial, o servidor exige autorização e gate próprios. A janela T−24 e o contrato de envio ainda precisam de validação operacional.</p>}</>}
     {aviso && <p role="status">{aviso}</p>}
   </section>;
 }

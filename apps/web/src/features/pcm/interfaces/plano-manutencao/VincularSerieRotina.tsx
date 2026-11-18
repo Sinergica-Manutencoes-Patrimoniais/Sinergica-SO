@@ -7,6 +7,7 @@ import { PreviaOcorrenciasVisita } from "./PreviaOcorrenciasVisita";
 import { CiclosUniformes } from "./CiclosUniformes";
 import { GerarVisitaContratual } from "./GerarVisitaContratual";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Pedido={requestId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;serieId:string;revision:number;tentativaIncerta?:boolean};
 type Props = {userId:string;clienteId:string;planoId:string;versaoId:string;rotinaId:string;revision:number};
@@ -41,10 +42,10 @@ function Conteudo({userId,clienteId,planoId,versaoId,rotinaId,revision}: Props) 
     {regras.isFetching&&<output>Carregando séries…</output>}{regras.isError&&<p role="alert">Séries indisponíveis. <button type="button" onClick={() => void regras.refetch()}>Tentar novamente</button></p>}
     {vinculos.isFetching&&<output>Carregando vínculos…</output>}{vinculos.isError&&<p role="alert">Vínculos indisponíveis. <button type="button" onClick={() => void vinculos.refetch()}>Tentar novamente</button></p>}
     {!vinculos.isFetching&&!vinculos.isError&&<ul>{vinculos.data?.pages.flat().map((v) => <li key={v.serie_id}>Série {v.serie_id} · criada {v.criado_em}
-      {import.meta.env.VITE_SSO_VIGENCIA_ROTINA_SERIE_ENABLED === "true" && <VigenciaSerieRotina userId={userId} clienteId={clienteId} planoId={planoId} rotinaId={rotinaId} serieId={v.serie_id} />}
-      {import.meta.env.VITE_SSO_PREVIA_OCORRENCIA_VISITA_ENABLED === "true" && <PreviaOcorrenciasVisita userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} serieId={v.serie_id} revision={revision} />}
-      {import.meta.env.VITE_SSO_CICLOS_UNIFORMES_ENABLED === "true" && <CiclosUniformes userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} serieId={v.serie_id} />}
-      {import.meta.env.VITE_SSO_GERAR_VISITA_CONTRATUAL_ENABLED === "true" && <GerarVisitaContratual userId={userId} clienteId={clienteId} serieId={v.serie_id} />}
+      {flagLigada("VITE_SSO_VIGENCIA_ROTINA_SERIE_ENABLED") && <VigenciaSerieRotina userId={userId} clienteId={clienteId} planoId={planoId} rotinaId={rotinaId} serieId={v.serie_id} />}
+      {flagLigada("VITE_SSO_PREVIA_OCORRENCIA_VISITA_ENABLED") && <PreviaOcorrenciasVisita userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} serieId={v.serie_id} revision={revision} />}
+      {flagLigada("VITE_SSO_CICLOS_UNIFORMES_ENABLED") && <CiclosUniformes userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} rotinaId={rotinaId} serieId={v.serie_id} />}
+      {flagLigada("VITE_SSO_GERAR_VISITA_CONTRATUAL_ENABLED") && <GerarVisitaContratual userId={userId} clienteId={clienteId} serieId={v.serie_id} />}
     </li>)}</ul>}
     {vinculos.hasNextPage&&<button type="button" onClick={() => void vinculos.fetchNextPage()}>Mais vínculos</button>}
     <form onSubmit={(event) => {event.preventDefault();if(pedido||!selecionada||regras.isFetching||regras.isError||vinculos.isFetching||vinculos.isError)return;

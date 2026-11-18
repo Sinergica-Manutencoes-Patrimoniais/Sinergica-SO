@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../../../lib/supabase-client";
 import { pedidoDecisaoOndaSchema, registrarDecisaoOnda, type PedidoDecisaoOnda } from "../../application/decisao-onda";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const verificacoes: Record<number, readonly [string, string][]> = {
   1: [["arvore_busca", "Árvore e busca sem duplicidade"], ["validacao_cadastral", "Validação cadastral"]],
@@ -14,7 +16,15 @@ const verificacoes: Record<number, readonly [string, string][]> = {
 
 type Props = { userId: string; clienteId: string; onda: number; revision: number };
 export function DecisaoOnda(props: Props) {
-  if (import.meta.env.VITE_SSO_DECISAO_ONDA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DECISAO_ONDA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Decisao onda"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DECISAO_ONDA_ENABLED"]}
+      />
+    );
+  }
   return <Formulario key={`${props.userId}:${props.clienteId}:${props.onda}`} {...props} />;
 }
 function Formulario({ userId, clienteId, onda, revision }: Props) {
@@ -94,7 +104,7 @@ function Formulario({ userId, clienteId, onda, revision }: Props) {
       <ul>{Object.entries(pendente.referencias).map(([nome, valor]) => <li key={nome}>{nome}: {valor}</li>)}</ul>
       {pendente.ressalva && <p>Ressalva: {pendente.ressalva}</p>}
       <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesma tentativa</button>
-      {import.meta.env.VITE_SSO_CANCELAR_TENTATIVA_DECISAO_ONDA_ENABLED === "true" && <button type="button" disabled={ocupado} onClick={() => void cancelarTentativa(pendente)}>Cancelar tentativa</button>}
+      {flagLigada("VITE_SSO_CANCELAR_TENTATIVA_DECISAO_ONDA_ENABLED") && <button type="button" disabled={ocupado} onClick={() => void cancelarTentativa(pendente)}>Cancelar tentativa</button>}
     </div> : !pendente && <form onSubmit={(evento) => { evento.preventDefault(); iniciar(); }}>
       <p>Fotografia de evidências: revisão {revision}.</p>
       <label>Versão <input required maxLength={120} value={versao} onChange={(e) => { setVersao(e.target.value); setConfirmado(null); }} /></label>

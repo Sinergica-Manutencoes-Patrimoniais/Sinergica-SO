@@ -18,6 +18,8 @@ export type { ModalProps } from "./Modal";
 export { NumeroTabular } from "./NumeroTabular";
 export { Popover } from "./Popover";
 export type { PopoverProps } from "./Popover";
+export { RecursoNaoAtivado } from "./RecursoNaoAtivado";
+export type { RecursoNaoAtivadoProps } from "./RecursoNaoAtivado";
 export { Skeleton } from "./Skeleton";
 export { useCargaVisivel } from "./use-carga-visivel";
 export { ToastProvider, useToast } from "./Toast";

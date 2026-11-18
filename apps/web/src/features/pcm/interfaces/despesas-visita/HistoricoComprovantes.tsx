@@ -2,12 +2,22 @@ import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { useLayoutEffect, useRef } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesaId: string };
 const linha = z.object({ revisao: z.number().int().positive(), valor_centavos: z.number().int().nonnegative().safe(),
   ator_id: z.string().guid(), registrado_em: z.string(), tipo: z.enum(["realizacao", "correcao"]) }).strict();
 export function HistoricoComprovantes(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_COMPROVANTES_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_COMPROVANTES_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico comprovantes"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_COMPROVANTES_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesaId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, visitaId, despesaId }: Props) {
@@ -18,7 +28,7 @@ function Conteudo({ userId, clienteId, visitaId, despesaId }: Props) {
     initialPageParam: 0, gcTime: 0, staleTime: 0, refetchOnWindowFocus: true, retry: false,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const requisicao=import.meta.env.VITE_SSO_HISTORICO_COMPROVANTES_MEDIADO_ENABLED==="true"
+      const requisicao=flagLigada("VITE_SSO_HISTORICO_COMPROVANTES_MEDIADO_ENABLED")
         ? supabase.schema("pcm").rpc("sso_historico_realizacao_despesa_mediado",{p_ator_id:userId,p_cliente_id:clienteId,p_visita_id:visitaId,p_despesa_id:despesaId,p_apos:pageParam})
         : supabase.schema("pcm").rpc("sso_historico_realizacao_despesa",{p_despesa_id:despesaId,p_apos:pageParam});
       const { data, error } = await requisicao.abortSignal(signal);
@@ -28,7 +38,7 @@ function Conteudo({ userId, clienteId, visitaId, despesaId }: Props) {
     }, getNextPageParam: (pagina) => pagina.length === 20 ? pagina.at(-1)?.revisao : undefined });
   const baixar = useMutation({ mutationFn: async (revisao: number) => {
     await conferirSessao();
-    const unificado = import.meta.env.VITE_SSO_HISTORICO_COMPROVANTES_UNIFICADO_ENABLED === "true";
+    const unificado = flagLigada("VITE_SSO_HISTORICO_COMPROVANTES_UNIFICADO_ENABLED");
     const { data, error } = unificado
       ? await supabase.functions.invoke<Blob>("despesa-visita-comprovante-historico-unificado", { body: {}, headers: { "x-despesa-id": despesaId, "x-revisao": String(revisao) } })
       : await supabase.functions.invoke<Blob>("despesa-visita-comprovante-historico", { body: { despesaId, revisao } });

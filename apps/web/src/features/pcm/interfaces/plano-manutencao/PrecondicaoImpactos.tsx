@@ -2,12 +2,13 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
 import { z } from "zod";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; planoId: string; revisao: number; vigencia: string };
 
 type Props = { userId: string; clienteId: string; planoId: string; revisao: number; vigencia: string };
 const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), revisao: z.number().int().positive().safe(), vigencia: z.string().date() }).strict();
 export function PrecondicaoImpactos(props: Props) {
-  if (import.meta.env.VITE_SSO_PRECONDICAO_IMPACTO_MEDIADA_ENABLED !== "true") return <p>Fotografia de pré-condições indisponível.</p>;
+  if (!flagLigada("VITE_SSO_PRECONDICAO_IMPACTO_MEDIADA_ENABLED")) return <p>Fotografia de pré-condições indisponível.</p>;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, planoId, revisao, vigencia }: Props) {

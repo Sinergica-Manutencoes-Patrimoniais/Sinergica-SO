@@ -2,6 +2,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Linha = { chave: string; tipo: string; atributos: Record<string, unknown> };
 type Props = { userId: string; clienteId: string; loteId: string; revisao: number; linhas: Linha[]; carregando: boolean };
@@ -10,7 +12,15 @@ const pedidoSchema = z.object({ loteId: z.string().guid(), revision: z.number().
 type Pedido = z.infer<typeof pedidoSchema>;
 type Selecionada = { chave: string; tipo: string; atributos: Record<string, unknown>; revision: number };
 export function ConferirSelecao(props: Props) {
-  if (import.meta.env.VITE_SSO_CONFERENCIA_LEVANTAMENTOS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CONFERENCIA_LEVANTAMENTOS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Conferencia levantamentos"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONFERENCIA_LEVANTAMENTOS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId])} {...props}/>;
 }
 function Conteudo({ userId, clienteId, loteId, revisao, linhas, carregando }: Props) {

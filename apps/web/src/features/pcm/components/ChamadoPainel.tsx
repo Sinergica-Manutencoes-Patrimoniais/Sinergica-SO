@@ -9,6 +9,7 @@ import { Button, Modal, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
+import { flagLigada } from "../../../config/flags-sso";
 import { supabase } from "../../../lib/supabase-client";
 import {
   cancelarChamado,
@@ -22,20 +23,23 @@ import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { type Chamado, ORIGEM_CHAMADO_LABEL, STATUS_CHAMADO_LABEL } from "../domain/chamados";
 import { type StatusOrdemServico, auvoTaskDeepLink } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
-import { supabaseChamadosOsLeituraAdapter } from "../infrastructure/supabase-chamados-os-leitura-adapter";
 import { supabaseChamadosOsComandoAdapter } from "../infrastructure/supabase-chamados-os-comando-adapter";
-import { converterChamadoIntegral, listarComponentesConversao } from "../infrastructure/supabase-conversao-integral-adapter";
+import { supabaseChamadosOsLeituraAdapter } from "../infrastructure/supabase-chamados-os-leitura-adapter";
+import {
+  converterChamadoIntegral,
+  listarComponentesConversao,
+} from "../infrastructure/supabase-conversao-integral-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
-import { EntradaOrdensChamado } from "../interfaces/chamados-os/OrdensDoChamado";
-import { CriarOsChamado } from "../interfaces/chamados-os/CriarOsChamado";
+import { AvaliacaoEscopo } from "../interfaces/chamados-os/AvaliacaoEscopo";
 import { CanonicalizarVinculoLegado } from "../interfaces/chamados-os/CanonicalizarVinculoLegado";
 import { ConversaoIntegral } from "../interfaces/chamados-os/ConversaoIntegral";
-import { AvaliacaoEscopo } from "../interfaces/chamados-os/AvaliacaoEscopo";
+import { CriarOsChamado } from "../interfaces/chamados-os/CriarOsChamado";
 import { GestaoEscopo } from "../interfaces/chamados-os/GestaoEscopo";
+import { EntradaOrdensChamado } from "../interfaces/chamados-os/OrdensDoChamado";
 import { AnotacoesChamado } from "./AnotacoesChamado";
-import { HistoricoAtendimentoChamado } from "./HistoricoAtendimentoChamado";
 import { GerarOsModal } from "./GerarOsModal";
+import { HistoricoAtendimentoChamado } from "./HistoricoAtendimentoChamado";
 
 type SubModal =
   | {
@@ -71,29 +75,45 @@ export function ChamadoPainel({
   onAbrirOsVinculada?: (clienteId: string, osId: string) => void;
 }) {
   const { user } = useAuth();
+  // E00-S28 AC-5/AC-6 — mesmo critério de `podeGerenciarConfig` (HomePage.tsx): decide quanto
+  // detalhe `RecursoNaoAtivado` mostra quando uma flag/gate deste painel está desligada.
+  const podeAdministrar = user?.papel === "superadmin" || user?.papel === "supervisor";
   const [subModal, setSubModal] = useState<SubModal>(null);
   const consulta = useQuery({
-    queryKey: ["chamado-painel", user?.id, chamadoId], enabled: !!user?.id, gcTime: 0,
+    queryKey: ["chamado-painel", user?.id, chamadoId],
+    enabled: !!user?.id,
+    gcTime: 0,
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== user?.id || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== user?.id || signal.aborted)
+        throw new Error("Sessão alterada.");
       const resultado = await obterChamado(supabaseChamadosAdapter, chamadoId);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== user?.id || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== user?.id || signal.aborted)
+        throw new Error("Sessão alterada.");
       if (resultado && resultado.id !== chamadoId) throw new Error("Chamado divergente.");
       return resultado;
     },
   });
-  const chamado = !consulta.isFetching && !consulta.isError ? consulta.data ?? null : null;
+  const chamado = !consulta.isFetching && !consulta.isError ? (consulta.data ?? null) : null;
   const erro = consulta.isError ? "Não foi possível carregar o Chamado." : null;
-  const carregarChamado = async () => { await consulta.refetch(); };
+  const carregarChamado = async () => {
+    await consulta.refetch();
+  };
 
   useEffect(() => {
     setSubModal(null);
   }, [user?.id, chamadoId]);
 
   useEffect(() => {
-    if (import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED === "true" || !destinoConversao || !dadosOs || !temEscrita || chamado?.status !== "aberto") return;
+    if (
+      flagLigada("VITE_SSO_CONVERSAO_INTEGRAL_ENABLED") ||
+      !destinoConversao ||
+      !dadosOs ||
+      !temEscrita ||
+      chamado?.status !== "aberto"
+    )
+      return;
     setSubModal({
       modo: "gerar-os",
       destino: destinoConversao === "backlog" ? "backlog" : "convertido_os",
@@ -183,7 +203,12 @@ export function ChamadoPainel({
     return (
       <div className="px-4 py-3 text-caption text-ink-3">
         {erro ?? (user ? "Chamado vinculado não encontrado." : "Sessão indisponível.")}
-        {erro && <button type="button" onClick={() => void carregarChamado()}> Tentar novamente</button>}
+        {erro && (
+          <button type="button" onClick={() => void carregarChamado()}>
+            {" "}
+            Tentar novamente
+          </button>
+        )}
       </div>
     );
   }
@@ -230,34 +255,82 @@ export function ChamadoPainel({
 
       {user && (
         <EntradaOrdensChamado
-          habilitado={import.meta.env.VITE_SSO_ORDENS_CHAMADO_ENABLED}
           usuario={user.id}
           cliente={chamado.clienteId}
           chamado={chamado.id}
           chamadoEsperado={chamadoId}
+          podeAdministrar={podeAdministrar}
           leitura={supabaseChamadosOsLeituraAdapter}
-          onAbrirOs={onAbrirOsVinculada ? (osId) => onAbrirOsVinculada(chamado.clienteId, osId) : undefined}
+          onAbrirOs={
+            onAbrirOsVinculada ? (osId) => onAbrirOsVinculada(chamado.clienteId, osId) : undefined
+          }
         />
       )}
 
       {user && temEscrita && (
-        <CriarOsChamado habilitado={import.meta.env.VITE_SSO_CRIAR_OS_CHAMADO_ENABLED}
-          usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id}
-          chamadoEsperado={chamadoId} gateway={supabaseChamadosOsComandoAdapter}
-          aoConcluir={() => { void carregarChamado(); onMutou(); }} />
+        <CriarOsChamado
+          usuario={user.id}
+          cliente={chamado.clienteId}
+          chamado={chamado.id}
+          chamadoEsperado={chamadoId}
+          podeAdministrar={podeAdministrar}
+          gateway={supabaseChamadosOsComandoAdapter}
+          aoConcluir={() => {
+            void carregarChamado();
+            onMutou();
+          }}
+        />
       )}
-      {user && temEscrita && chamado.id === chamadoId && <CanonicalizarVinculoLegado
-        usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} />}
-      {user && temEscrita && <ConversaoIntegral habilitado={import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED}
-        usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} chamadoEsperado={chamadoId}
-        chamadoCompleto={chamado} dadosOs={dadosOs} statusHubInicial={destinoConversao}
-        listarEquipamentos={listarComponentesConversao}
-        consultarRevisao={supabaseChamadosOsComandoAdapter.consultarRevisao} criar={converterChamadoIntegral}
-        aoConcluir={(pedido) => { if (pedido.statusHub === "planejamento") onOsPlanejada?.(pedido.osId); void carregarChamado(); onMutou(); onConversaoFinalizada?.(); }} />}
-      {destinoConversao && import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED === "true" && <p>Confirme o movimento no formulário de conversão integral acima.</p>}
-      {user && <AvaliacaoEscopo habilitado={import.meta.env.VITE_SSO_ESCOPO_CHAMADO_ENABLED}
-        usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} chamadoEsperado={chamadoId} />}
-      {user && <GestaoEscopo usuario={user.id} cliente={chamado.clienteId} chamado={chamado.id} chamadoEsperado={chamadoId} />}
+      {user && temEscrita && chamado.id === chamadoId && (
+        <CanonicalizarVinculoLegado
+          usuario={user.id}
+          cliente={chamado.clienteId}
+          chamado={chamado.id}
+          podeAdministrar={podeAdministrar}
+        />
+      )}
+      {user && temEscrita && (
+        <ConversaoIntegral
+          usuario={user.id}
+          cliente={chamado.clienteId}
+          chamado={chamado.id}
+          chamadoEsperado={chamadoId}
+          chamadoCompleto={chamado}
+          dadosOs={dadosOs}
+          statusHubInicial={destinoConversao}
+          podeAdministrar={podeAdministrar}
+          listarEquipamentos={listarComponentesConversao}
+          consultarRevisao={supabaseChamadosOsComandoAdapter.consultarRevisao}
+          criar={converterChamadoIntegral}
+          aoConcluir={(pedido) => {
+            if (pedido.statusHub === "planejamento") onOsPlanejada?.(pedido.osId);
+            void carregarChamado();
+            onMutou();
+            onConversaoFinalizada?.();
+          }}
+        />
+      )}
+      {destinoConversao && flagLigada("VITE_SSO_CONVERSAO_INTEGRAL_ENABLED") && (
+        <p>Confirme o movimento no formulário de conversão integral acima.</p>
+      )}
+      {user && (
+        <AvaliacaoEscopo
+          usuario={user.id}
+          cliente={chamado.clienteId}
+          chamado={chamado.id}
+          chamadoEsperado={chamadoId}
+          podeAdministrar={podeAdministrar}
+        />
+      )}
+      {user && (
+        <GestaoEscopo
+          usuario={user.id}
+          cliente={chamado.clienteId}
+          chamado={chamado.id}
+          chamadoEsperado={chamadoId}
+          podeAdministrar={podeAdministrar}
+        />
+      )}
 
       <div className="border-t border-line-soft px-4 py-3">
         <HistoricoAtendimentoChamado gateway={supabaseChamadosAdapter} chamadoId={chamado.id} />
@@ -273,20 +346,24 @@ export function ChamadoPainel({
 
       {podeAgir && (
         <div className="flex flex-wrap gap-2 border-t border-line-soft px-4 py-3">
-          {import.meta.env.VITE_SSO_CONVERSAO_INTEGRAL_ENABLED !== "true" && <><Button
-            variant="primary"
-            size="sm"
-            onClick={() => setSubModal({ modo: "gerar-os", destino: "convertido_os" })}
-          >
-            Gerar OS
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setSubModal({ modo: "gerar-os", destino: "backlog" })}
-          >
-            Enviar ao backlog
-          </Button></>}
+          {!flagLigada("VITE_SSO_CONVERSAO_INTEGRAL_ENABLED") && (
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setSubModal({ modo: "gerar-os", destino: "convertido_os" })}
+              >
+                Gerar OS
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setSubModal({ modo: "gerar-os", destino: "backlog" })}
+              >
+                Enviar ao backlog
+              </Button>
+            </>
+          )}
           <Button variant="danger" size="sm" onClick={() => setSubModal({ modo: "cancelar" })}>
             Cancelar Chamado
           </Button>
@@ -450,7 +527,6 @@ function DetalheChamado({
     </div>
   );
 }
-
 
 function CancelarChamadoModal({
   chamado,

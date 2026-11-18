@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 export function RevisaoCondicaoResolvida({userId,clienteId,pendenciaId,revisao}:{userId:string;clienteId:string;pendenciaId:string;revisao:number}){
-  const ativo=import.meta.env.VITE_SSO_REVISAO_CONDICAO_RESOLVIDA_ENABLED==="true";
+  const ativo=flagLigada("VITE_SSO_REVISAO_CONDICAO_RESOLVIDA_ENABLED");
   const q=useQuery({queryKey:["pendencias-tecnicas",userId,clienteId,pendenciaId,"revisao-condicao-resolvida",revisao],enabled:ativo,gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_revisao_condicao_resolvida",{p_pendencia_id:pendenciaId}).abortSignal(signal);if(error)throw error;const r=z.object({pendenciaId:z.string().guid(),revision:z.number().int().positive(),estado:z.enum(["nao_resolvida","indeterminada","condicao_alterada","sem_alteracao"])}).strict().parse(data);if(r.pendenciaId!==pendenciaId || r.revision!==revisao)throw new Error("Revisão divergente");return r;}});
   if(!ativo)return null;
   if(q.isPending)return <p>Conferindo condição da resolução…</p>;

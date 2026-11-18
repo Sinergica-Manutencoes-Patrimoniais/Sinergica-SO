@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 const pedidoSchema = z.object({ atorId: z.string().guid(), requestId: z.string().guid(), revisao: z.number().int().positive(), habilitado: z.boolean(), intervalo: z.number().int().min(5).max(10080), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
@@ -49,7 +50,7 @@ export function ConfigurarExecutorFila({ userId }: { userId: string }) {
     {consulta.isFetching && <output>Consultando configuração…</output>}{consulta.isError && <p role="alert">Configuração indisponível. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
     {consulta.data && !consulta.isFetching && !consulta.isError && <p>Atual: {consulta.data.habilitado ? "habilitado" : "desabilitado"} · {consulta.data.intervaloMinutos} min · revisão {consulta.data.revisao}.</p>}
     {pendente === "invalido" ? <p role="alert">Tentativa local ilegível. Consulte suporte.</p> : pendente ? <><button type="button" disabled={envio.isPending || recibo.isPending} onClick={() => enviar(pendente, true)}>Repetir tentativa</button>
-      {import.meta.env.VITE_SSO_RECIBO_CONFIG_EXECUTOR_ENABLED === "true" && <button type="button" disabled={envio.isPending || recibo.isPending} onClick={() => { if (trava.current) return; trava.current = true; recibo.mutate(pendente); }}>Consultar confirmação</button>}</> : <form onSubmit={(e) => { e.preventDefault(); if (!consulta.data || consulta.isFetching || consulta.isError || confirmado !== foto) return;
+      {flagLigada("VITE_SSO_RECIBO_CONFIG_EXECUTOR_ENABLED") && <button type="button" disabled={envio.isPending || recibo.isPending} onClick={() => { if (trava.current) return; trava.current = true; recibo.mutate(pendente); }}>Consultar confirmação</button>}</> : <form onSubmit={(e) => { e.preventDefault(); if (!consulta.data || consulta.isFetching || consulta.isError || confirmado !== foto) return;
       const p = pedidoSchema.safeParse({ atorId: userId, requestId: crypto.randomUUID(), revisao: consulta.data.revisao, habilitado, intervalo: Number(intervalo), motivo }); if (p.success) enviar(p.data, false); else setAviso("Confira intervalo e motivo."); }}>
       <label><input type="checkbox" checked={habilitado} onChange={(e) => { setHabilitado(e.target.checked); setConfirmado(null); }} /> Habilitar executor</label>
       <label>Intervalo em minutos <input type="number" min="5" max="10080" required value={intervalo} onChange={(e) => { setIntervalo(e.target.value); setConfirmado(null); }} /></label>
@@ -57,7 +58,7 @@ export function ConfigurarExecutorFila({ userId }: { userId: string }) {
       <label><input type="checkbox" checked={confirmado === foto} disabled={!consulta.data || consulta.isFetching || consulta.isError} onChange={(e) => setConfirmado(e.target.checked ? foto : null)} /> Conferi a configuração e seus efeitos.</label>
       <button type="submit" disabled={!consulta.data || consulta.isFetching || consulta.isError || envio.isPending || confirmado !== foto}>Salvar configuração</button>
     </form>}{aviso && <p role="status">{aviso}</p>}
-    {import.meta.env.VITE_SSO_HISTORICO_CONFIG_EXECUTOR_ENABLED === "true" && <HistoricoExecutor userId={userId} />}
+    {flagLigada("VITE_SSO_HISTORICO_CONFIG_EXECUTOR_ENABLED") && <HistoricoExecutor userId={userId} />}
   </section>;
 }
 

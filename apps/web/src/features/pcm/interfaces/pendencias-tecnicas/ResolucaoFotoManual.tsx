@@ -2,11 +2,21 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 type Props = { userId: string; clienteId: string; pendenciaId: string; revisao: number; aberta: boolean; criadaEm: string };
 const pedido = z.object({ requestId: z.string().guid(), pendenciaId: z.string().guid(), revision: z.number().int().positive(), contextoRevision: z.number().int().positive(), evidenciaId: z.string().guid(), atestacao: z.string().min(1).max(2000), motivo: z.string().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedido>;
 export function ResolucaoFotoManual(props: Props) {
-  if (import.meta.env.VITE_SSO_RESOLUCAO_MANUAL_FOTO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RESOLUCAO_MANUAL_FOTO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Resolucao manual foto"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RESOLUCAO_MANUAL_FOTO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.pendenciaId])} {...props}/>;
 }
 function Conteudo({ userId, clienteId, pendenciaId, revisao, aberta, criadaEm }: Props) {

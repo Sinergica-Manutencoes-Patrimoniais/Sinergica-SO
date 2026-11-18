@@ -4,6 +4,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { haSobreposicaoIntervalos } from "../../domain/sobreposicao-intervalos";
 import { converterHorarioLocal } from "../visitas/horario-local";
 import { VinculoIntervalo } from "./VinculoIntervalo";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Pedido = {
   requestId: string;
@@ -189,7 +190,7 @@ export function IntervalosDeclarados({
           {lista.data?.pages.flat().map((i) => (
             <li key={i.id}>
               {i.tipo} · {i.inicio} a {i.fim} · {i.fuso} · fonte declarada {i.referencia}
-              {import.meta.env.VITE_SSO_VINCULO_INTERVALO_ENABLED === "true" && (
+              {flagLigada("VITE_SSO_VINCULO_INTERVALO_ENABLED") && (
                 <VinculoIntervalo
                   userId={userId}
                   clienteId={clienteId}

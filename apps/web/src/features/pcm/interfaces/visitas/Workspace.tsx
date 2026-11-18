@@ -21,6 +21,7 @@ import { RetificarOsRotina } from "./RetificarOsRotina";
 import { ConferirComposicao } from "./ConferirComposicao";
 import { DiagnosticoSincronizacao } from "./DiagnosticoSincronizacao";
 import { TriagemSyncEquipe } from "./TriagemSyncEquipe";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const limite = 20;
 type Props = { userId: string; clienteId: string; clienteNome: string };
@@ -162,10 +163,10 @@ function Conteudo({ userId, clienteId, clienteNome }: Props) {
         </Button>
       </form>
       {erroPeriodo && <p role="alert">{erroPeriodo}</p>}
-      {import.meta.env.VITE_SSO_TRANSFERENCIA_VISITA_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_TRANSFERENCIA_VISITA_ENABLED") && (
         <TransferirOs userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />
       )}
-      {import.meta.env.VITE_SSO_INTENCAO_OS_ENVIADA_ENABLED === "true" && <IntencaoOsEnviada userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />}
+      {flagLigada("VITE_SSO_INTENCAO_OS_ENVIADA_ENABLED") && <IntencaoOsEnviada userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />}
       {(visitas.isPending || visitas.isFetching) && <output>Carregando Visitas…</output>}
       {visitas.isError && (
         <p role="alert">
@@ -330,16 +331,16 @@ function Detalhe({
             bloqueado={bloqueado || detalhe.isFetching || detalhe.isError}
           />
         )}
-        {detalhe.data && import.meta.env.VITE_SSO_COMPOSICAO_VISITA_ENABLED === "true" && (
+        {detalhe.data && flagLigada("VITE_SSO_COMPOSICAO_VISITA_ENABLED") && (
           <ConferirComposicao userId={userId} clienteId={clienteId} visitaId={visitaId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError} />
         )}
-        {detalhe.data && !bloqueado && import.meta.env.VITE_SSO_DIAGNOSTICO_SYNC_VISITA_ENABLED === "true" && (
+        {detalhe.data && !bloqueado && flagLigada("VITE_SSO_DIAGNOSTICO_SYNC_VISITA_ENABLED") && (
           <DiagnosticoSincronizacao userId={userId} clienteId={clienteId} visitaId={visitaId} />
         )}
-        {detalhe.data && !bloqueado && import.meta.env.VITE_SSO_TRIAGEM_SYNC_EQUIPE_ENABLED === "true" && (
+        {detalhe.data && !bloqueado && flagLigada("VITE_SSO_TRIAGEM_SYNC_EQUIPE_ENABLED") && (
           <TriagemSyncEquipe userId={userId} clienteId={clienteId} visitaId={visitaId} revisaoVisita={detalhe.data.revisao} />
         )}
-        {detalhe.data && import.meta.env.VITE_SSO_TRANSICAO_VISITA_ENABLED === "true" && (
+        {detalhe.data && flagLigada("VITE_SSO_TRANSICAO_VISITA_ENABLED") && (
           <TransicaoVisita key={detalhe.data.id} userId={userId} clienteId={clienteId} visita={detalhe.data}
             bloqueado={bloqueado || detalhe.isFetching || detalhe.isError} />
         )}
@@ -348,7 +349,7 @@ function Detalhe({
             userId={userId}
             clienteId={clienteId}
             visitaId={visitaId}
-            habilitado={import.meta.env.VITE_SSO_DESPESAS_VISITA_ENABLED === "true"}
+            habilitado={flagLigada("VITE_SSO_DESPESAS_VISITA_ENABLED")}
           />
         )}
         {(ciencia.isPending || ciencia.isFetching) && <output>Conferindo ciência…</output>}
@@ -363,8 +364,8 @@ function Detalhe({
         {ciencia.data && !ciencia.isFetching && !ciencia.isError && (
           <p>{situacoes[ciencia.data.situacao]} (registro de ciência; não substitui confirmação explícita nem autoriza envio).</p>
         )}
-        {detalhe.data && import.meta.env.VITE_SSO_CONFERIR_CONFIRMACAO_CLIENTE_ENABLED === "true" && <ConferenciaConfirmacaoCliente userId={userId} clienteId={clienteId} visitaId={visitaId} revisao={detalhe.data.revisao} />}
-        {import.meta.env.VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED === "true" && <HistoricoIntencaoLocal userId={userId} clienteId={clienteId} visitaId={visitaId} />}
+        {detalhe.data && flagLigada("VITE_SSO_CONFERIR_CONFIRMACAO_CLIENTE_ENABLED") && <ConferenciaConfirmacaoCliente userId={userId} clienteId={clienteId} visitaId={visitaId} revisao={detalhe.data.revisao} />}
+        {flagLigada("VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED") && <HistoricoIntencaoLocal userId={userId} clienteId={clienteId} visitaId={visitaId} />}
         <HistoricoAlertasReprogramacao userId={userId} clienteId={clienteId} visitaId={visitaId} />
         <Button
           variant="secondary"
@@ -403,18 +404,18 @@ function Detalhe({
                         : " — vigente")}
                     {!o.encerradoEm && !bloqueado && !detalhe.isFetching && !detalhe.isError && <MateriaisDaOrdem
                       usuario={userId} cliente={clienteId} ordem={o.osId} numero={o.numero} />}
-                    {import.meta.env.VITE_SSO_PORTAL_VISITAS_PUBLICACAO_ENABLED === "true" && !o.encerradoEm && detalhe.data &&
+                    {flagLigada("VITE_SSO_PORTAL_VISITAS_PUBLICACAO_ENABLED") && !o.encerradoEm && detalhe.data &&
                       ["planejada", "confirmada", "enviada", "em_execucao", "parcial"].includes(detalhe.data.estado) &&
                       <PublicarVisitaPortal key={`${o.id}:${detalhe.data.revisao}`} userId={userId} clienteId={clienteId} visitaId={visitaId} osId={o.osId}
                         revisao={detalhe.data.revisao} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {import.meta.env.VITE_SSO_INTENCAO_LOCAL_ENVIO_ENABLED === "true" && !o.encerradoEm && detalhe.data?.estado === "confirmada" &&
+                    {flagLigada("VITE_SSO_INTENCAO_LOCAL_ENVIO_ENABLED") && !o.encerradoEm && detalhe.data?.estado === "confirmada" &&
                       <IntencaoLocalEnvio key={`${o.id}:${detalhe.data.revisao}`} userId={userId} clienteId={clienteId} visitaId={visitaId} osId={o.osId}
                         revisao={detalhe.data.revisao} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {import.meta.env.VITE_SSO_CONTEUDO_BASICO_OS_ENABLED === "true" && !o.encerradoEm && detalhe.data?.estado === "planejada" &&
+                    {flagLigada("VITE_SSO_CONTEUDO_BASICO_OS_ENABLED") && !o.encerradoEm && detalhe.data?.estado === "planejada" &&
                       <ConferirConteudoOs key={`${o.id}:${detalhe.data.revisao}`} userId={userId} clienteId={clienteId} visitaId={visitaId} osId={o.osId}
                         revisao={detalhe.data.revisao} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {import.meta.env.VITE_SSO_VINCULO_OS_ROTINA_ENABLED === "true" && !o.encerradoEm && <VincularOsRotina userId={userId} clienteId={clienteId} osId={o.osId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {import.meta.env.VITE_SSO_RETIFICAR_OS_ROTINA_ENABLED === "true" && !o.encerradoEm && <RetificarOsRotina userId={userId} clienteId={clienteId} osId={o.osId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
+                    {flagLigada("VITE_SSO_VINCULO_OS_ROTINA_ENABLED") && !o.encerradoEm && <VincularOsRotina userId={userId} clienteId={clienteId} osId={o.osId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
+                    {flagLigada("VITE_SSO_RETIFICAR_OS_ROTINA_ENABLED") && !o.encerradoEm && <RetificarOsRotina userId={userId} clienteId={clienteId} osId={o.osId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
                   </li>
                 ))}
               </ol>

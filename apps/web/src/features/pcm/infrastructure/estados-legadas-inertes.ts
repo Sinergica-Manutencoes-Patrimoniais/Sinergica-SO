@@ -1,10 +1,11 @@
 import { supabase } from "../../../lib/supabase-client";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Estado = "normal" | "substituida";
 /** Consulta completa por Cliente; resposta parcial ou fora do lote bloqueia a leitura. */
 export async function consultarEstadosLegadas(clienteId: string, ids: readonly string[]): Promise<Map<string, Estado>> {
  const estados = new Map<string, Estado>();
- if (import.meta.env.VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED !== "true") return estados;
+ if (!flagLigada("VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED")) return estados;
  for (let i=0;i<ids.length;i+=100) {
   const lote=ids.slice(i,i+100); const esperados=new Set(lote);
   if (esperados.size!==lote.length) throw new Error("Ocorrências duplicadas na consulta de reconciliação.");

@@ -4,6 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import type { DespesaVisitaListada } from "../../infrastructure/supabase-despesas-visita-adapter";
 import { HistoricoTecnicoDespesa } from "./HistoricoTecnicoDespesa";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 export const esquemaAtribuicaoTecnico = z.object({ requestId: z.string().guid(), despesaId: z.string().guid(), visitaId: z.string().guid(),
   expectedRevision: z.number().int().positive(), participacaoId: z.string().guid().nullable(), motivo: z.string().trim().min(1).max(2000) }).strict();
@@ -11,7 +13,7 @@ const esquema = esquemaAtribuicaoTecnico;
 type Pedido = z.infer<typeof esquema>;
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function AtribuirTecnico(props: Props) {
-  if (import.meta.env.VITE_SSO_ATRIBUIR_TECNICO_DESPESA_ENABLED !== "true" || props.despesa.status !== "ativa") return null;
+  if (props.despesa.status !== "ativa") return null; if (!flagLigada("VITE_SSO_ATRIBUIR_TECNICO_DESPESA_ENABLED")) return <RecursoNaoAtivado recurso="Atribuir técnico à despesa" podeAdministrar={false} faltando={["VITE_SSO_ATRIBUIR_TECNICO_DESPESA_ENABLED"]} />;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])} {...props} />;
 }
 function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
@@ -19,7 +21,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
   const [participacao, setParticipacao] = useState(""); const [motivo, setMotivo] = useState(""); const [mensagem, setMensagem] = useState("");
   const [consultandoRecibo,setConsultandoRecibo]=useState(false);
   const [confirmado, setConfirmado] = useState<string | null>(null); const trava=useRef(false);
-  const mediado=import.meta.env.VITE_SSO_ATRIBUICAO_TECNICO_DESPESA_MEDIADA_ENABLED==="true";
+  const mediado=flagLigada("VITE_SSO_ATRIBUICAO_TECNICO_DESPESA_MEDIADA_ENABLED");
   async function conferirSessao(signal?:AbortSignal){const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||signal?.aborted)throw new Error("Sessão alterada.");}
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => {
     try { const salvo = sessionStorage.getItem(chave); if (!salvo) return null;
@@ -66,7 +68,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
       expectedRevision: despesa.revisao, participacaoId: participacao || null, motivo }),true); }
     catch { setMensagem("Confira técnico e motivo."); }
   }}><h5>Atribuição para relatório</h5><p>Não confirma execução nem pagamento. Selecione apenas o responsável quando conhecido.</p>
-    {import.meta.env.VITE_SSO_HISTORICO_TECNICO_DESPESA_ENABLED === "true" && <HistoricoTecnicoDespesa userId={userId} clienteId={clienteId} visitaId={visitaId} despesaId={despesa.id} revisao={despesa.revisao} />}
+    {flagLigada("VITE_SSO_HISTORICO_TECNICO_DESPESA_ENABLED") && <HistoricoTecnicoDespesa userId={userId} clienteId={clienteId} visitaId={visitaId} despesaId={despesa.id} revisao={despesa.revisao} />}
     {(equipe.isError || atual.isError) && <p role="alert">Não foi possível consultar equipe ou atribuição atual.</p>}
     {!atual.isPending && !atual.isError && <p>Atribuição atual: {atual.data?.tecnico_nome ?? "sem atribuição"}{atual.data?.vigente === false ? " (vínculo encerrado)" : ""}.</p>}
     <fieldset disabled={!!pendente || enviar.isPending || equipe.isFetching || equipe.isError || atual.isFetching || atual.isError}>
@@ -78,7 +80,7 @@ function Conteudo({ userId, clienteId, visitaId, despesa }: Props) {
       <button type="submit" disabled={confirmado!==fotografia}>Registrar atribuição</button>
     </fieldset>
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível. Contate suporte.</p>}
-    {pendente && pendente !== "invalido" && <>{import.meta.env.VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED==="true"&&<button type="button" disabled={enviar.isPending||consultandoRecibo} onClick={()=>void consultarRecibo(pendente)}>Consultar recibo</button>}<button type="button" disabled={enviar.isPending||consultandoRecibo} onClick={() => registrar(pendente,false)}>Repetir tentativa</button></>}
+    {pendente && pendente !== "invalido" && <>{flagLigada("VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED")&&<button type="button" disabled={enviar.isPending||consultandoRecibo} onClick={()=>void consultarRecibo(pendente)}>Consultar recibo</button>}<button type="button" disabled={enviar.isPending||consultandoRecibo} onClick={() => registrar(pendente,false)}>Repetir tentativa</button></>}
     {mensagem && <p role="status">{mensagem}</p>}
   </form>;
 }

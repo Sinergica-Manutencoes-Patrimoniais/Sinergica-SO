@@ -4,13 +4,23 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
 import { comparacaoImpactoArmazenadaSchema, type ComparacaoImpacto } from "./ComparacaoImpactoSelecionado";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; planoId: string; rascunhoId: string; preparadaId: string; planoRevision: number; decisaoRevision: number; comparacao: ComparacaoImpacto };
 const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string(), planoId: z.string(), rascunhoId: z.string().guid(), preparadaId: z.string().guid(), planoRevision: z.number().int().positive(), decisaoRevision: z.number().int().nonnegative(), indice: z.number().int().min(0).max(3660000), data: z.string().date(), motivo: z.string().trim().min(1).max(2000), comparacao: comparacaoImpactoArmazenadaSchema }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 const candidatoSchema = z.object({ indice: z.number().int().min(0).max(3660000), vencimento: z.string().date() }).strict();
 export function EscolherNovaDataCalendario(props: Props) {
- if (import.meta.env.VITE_SSO_NOVA_DATA_CICLO_ENABLED !== "true") return null;
+ if (!flagLigada("VITE_SSO_NOVA_DATA_CICLO_ENABLED")) {
+   return (
+     <RecursoNaoAtivado
+       recurso="Nova data ciclo"
+       podeAdministrar={false}
+       faltando={["VITE_SSO_NOVA_DATA_CICLO_ENABLED"]}
+     />
+   );
+ }
  return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.rascunhoId,props.preparadaId,props.decisaoRevision])} {...props} />;
 }
 function Conteudo({userId,clienteId,planoId,rascunhoId,preparadaId,planoRevision,decisaoRevision,comparacao}: Props) {

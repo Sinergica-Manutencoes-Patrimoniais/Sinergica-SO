@@ -1,5 +1,7 @@
+import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { supabase } from "../../../../lib/supabase-client";
 import {
@@ -11,7 +13,15 @@ import {
 
 type Props = { userId: string; clienteId: string; visitaId: string; despesa: DespesaVisitaListada };
 export function EditarPrevisao(props: Props) {
-  if (import.meta.env.VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Editar despesas visita"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_EDITAR_DESPESAS_VISITA_ENABLED"]}
+      />
+    );
+  }
   return (
     <Conteudo
       key={JSON.stringify([props.userId, props.clienteId, props.visitaId, props.despesa.id])}

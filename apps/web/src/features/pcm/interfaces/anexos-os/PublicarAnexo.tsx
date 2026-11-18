@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const esquema = z.discriminatedUnion("acao", [
   z.object({ acao: z.literal("publicar"), requestId: z.string().guid(), publicacaoId: z.string().guid(), notaId: z.string().guid(), titulo: z.string().trim().min(1).max(300) }).strict(),
@@ -10,7 +12,15 @@ const esquema = z.discriminatedUnion("acao", [
 type Pedido = z.infer<typeof esquema>;
 type Props = { usuario: string; cliente: string; ordemServico: string };
 export function PublicarAnexo(props: Props) {
-  if (import.meta.env.VITE_SSO_PUBLICAR_ANEXO_OS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PUBLICAR_ANEXO_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Publicar anexo os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PUBLICAR_ANEXO_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />;
 }
 function Conteudo({ usuario, cliente, ordemServico }: Props) {

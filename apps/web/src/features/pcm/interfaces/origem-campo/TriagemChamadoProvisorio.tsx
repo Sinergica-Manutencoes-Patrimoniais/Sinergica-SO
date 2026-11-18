@@ -4,6 +4,8 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { UnirChamadoCampo } from "./UnirChamadoCampo";
 import { CancelarChamadoCampo } from "./CancelarChamadoCampo";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 export const pedidoTriagemChamadoCampoSchema = z.object({ requestId: uuid, clienteId: uuid, osId: uuid, chamadoId: uuid,
@@ -17,7 +19,15 @@ const contextoSchema = z.object({ clienteId: uuid, chamadoId: uuid, osId: uuid, 
   osAlterada: z.literal(false), validacaoPcmComprovada: z.literal(false) }).strict();
 
 export function TriagemChamadoProvisorio({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {
-  if (import.meta.env.VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Triagem chamado campo"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={`${userId}:${clienteId}:${osId}`} userId={userId} clienteId={clienteId} osId={osId} />;
 }
 function Conteudo({ userId, clienteId, osId }: { userId: string; clienteId: string; osId: string }) {

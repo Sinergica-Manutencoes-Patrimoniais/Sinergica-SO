@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha = z
   .object({
@@ -26,8 +27,8 @@ type Props = {
 /** A fonte existente pesquisa literalmente; a comparação exata impede misturar alvos. */
 export function PendenciasDoAlvo(props: Props) {
   if (
-    import.meta.env.VITE_SSO_PENDENCIAS_TECNICAS_ENABLED !== "true" ||
-    import.meta.env.VITE_SSO_PENDENCIAS_FILTRO_ATIVO_ENABLED !== "true"
+    !flagLigada("VITE_SSO_PENDENCIAS_TECNICAS_ENABLED") ||
+    !flagLigada("VITE_SSO_PENDENCIAS_FILTRO_ATIVO_ENABLED")
   )
     return null;
   return (

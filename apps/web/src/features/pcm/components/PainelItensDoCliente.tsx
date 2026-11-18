@@ -27,6 +27,7 @@ import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-id
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { EquipamentoModal } from "./EquipamentoModal";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Modal = { modo: "novo" } | { modo: "editar"; item: EquipamentoItem } | null;
 
@@ -61,7 +62,7 @@ export function PainelItensDoCliente({
     supabaseIdentificadorAtivoAdapter,
   );
   const desativar = useDesativarComponente(supabaseEquipamentosAdapter, clienteId);
-  const capacidadeHabilitada = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const capacidadeHabilitada = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
   async function conferirCapacidade() {
     const antes = await supabase.auth.getUser();
     if (antes.error || antes.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");

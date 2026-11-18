@@ -13,6 +13,7 @@ import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseRelatorioClienteAdapter } from "../infrastructure/supabase-relatorio-cliente-adapter";
 import { RelatorioClienteDespesas } from "../interfaces/despesas-visita/RelatorioClienteDespesas";
+import { flagLigada } from "../../../config/flags-sso";
 
 function hoje(): string {
   return new Date().toISOString().slice(0, 10);
@@ -240,7 +241,7 @@ export function RelatorioClientePage() {
           </section>
         </article>
       ) : null}
-      {import.meta.env.VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED === "true" && relatorio && relatorio.clienteId === clienteId && user?.id && (
+      {flagLigada("VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED") && relatorio && relatorio.clienteId === clienteId && user?.id && (
         <aside className="rounded-lg border border-line bg-card p-6" aria-label="Dados financeiros internos">
           <RelatorioClienteDespesas userId={user.id} clienteId={relatorio.clienteId}
             periodoInicial={{ inicio: relatorio.inicio, fim: relatorio.fim }} />

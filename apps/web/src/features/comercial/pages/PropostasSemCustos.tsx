@@ -2,6 +2,7 @@ import { Button, Card } from "@sinergica/ui";
 import { usePropostasSemCustos } from "../application/propostas-sem-custos-queries";
 import { supabasePropostasSemCustosAdapter } from "../infrastructure/supabase-propostas-sem-custos-adapter";
 import { CustosProposta } from "../../pcm/interfaces/reconciliacao/CustosProposta";
+import { flagLigada } from "../../../config/flags-sso";
 
 export function PropostasSemCustos({
   userId,
@@ -45,7 +46,7 @@ export function PropostasSemCustos({
                 currency: "BRL",
               })}
             </p>
-            {import.meta.env.VITE_SSO_CUSTOS_PROPOSTA_ESCOPADOS_ENABLED === "true" && <CustosProposta key={`${userId}:${clienteId}:${proposta.id}`} userId={userId} clienteId={clienteId} propostaId={proposta.id} />}
+            {flagLigada("VITE_SSO_CUSTOS_PROPOSTA_ESCOPADOS_ENABLED") && <CustosProposta key={`${userId}:${clienteId}:${proposta.id}`} userId={userId} clienteId={clienteId} propostaId={proposta.id} />}
           </Card>
         ))}
     </section>

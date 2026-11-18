@@ -5,6 +5,7 @@ import { supabase } from "../../../../lib/supabase-client";
 import { CondicaoEstrutural } from "./CondicaoEstrutural";
 import { CondicaoEvidencia } from "./CondicaoEvidencia";
 import { AprovarRetornoPcm } from "./AprovarRetornoPcm";
+import { flagLigada } from "../../../../config/flags-sso";
 type Pedido = { requestId: string; clienteId: string; retornoId: string; conferenciaId: string; evidencias: number; decisao: number; justificativa: string };
 
 export function ReatestarCobertura(props: Parameters<typeof Conteudo>[0]) { return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.retornoId, props.conferenciaId])} {...props} />; }
@@ -33,9 +34,9 @@ function Conteudo({ userId, clienteId, retornoId, conferenciaId }: { userId: str
     </form>
     {historico.isError && <p role="alert">Histórico indisponível. <button type="button" onClick={() => void historico.refetch()}>Tentar novamente</button></p>}
     {historico.data && <ul>{historico.data.pages.flat().map((r) => <li key={r.id}>Nova conferência {r.conferencia_nova_id} · evidências {r.revisao_evidencias} · decisões {r.revisao_decisao} · {r.justificativa} · {r.ator_id} · {r.criado_em}</li>)}</ul>}{historico.hasNextPage && <button type="button" onClick={() => void historico.fetchNextPage()}>Mais histórico</button>}
-    {import.meta.env.VITE_SSO_CONDICAO_ESTRUTURAL_RETORNO_ENABLED === "true" && diagnostico.data && !diagnostico.isFetching && !diagnostico.isError && <CondicaoEstrutural userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={diagnostico.data.revisaoEvidenciasAtual} decisao={diagnostico.data.revisaoValidacao} historicoCompleto={diagnostico.data.historicoVersionadoCompleto} />}
-    {import.meta.env.VITE_SSO_CONDICAO_EVIDENCIA_RETORNO_ENABLED === "true" && diagnostico.data && !diagnostico.isFetching && !diagnostico.isError && <CondicaoEvidencia userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={diagnostico.data.revisaoEvidenciasAtual} decisao={diagnostico.data.revisaoValidacao} historicoCompleto={diagnostico.data.historicoVersionadoCompleto} />}
-    {import.meta.env.VITE_SSO_APROVAR_RETORNO_PCM_ENABLED === "true" && diagnostico.data && !diagnostico.isFetching && !diagnostico.isError && <AprovarRetornoPcm userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={diagnostico.data.revisaoEvidenciasAtual} decisao={diagnostico.data.revisaoValidacao} historicoCompleto={diagnostico.data.historicoVersionadoCompleto} />}
+    {flagLigada("VITE_SSO_CONDICAO_ESTRUTURAL_RETORNO_ENABLED") && diagnostico.data && !diagnostico.isFetching && !diagnostico.isError && <CondicaoEstrutural userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={diagnostico.data.revisaoEvidenciasAtual} decisao={diagnostico.data.revisaoValidacao} historicoCompleto={diagnostico.data.historicoVersionadoCompleto} />}
+    {flagLigada("VITE_SSO_CONDICAO_EVIDENCIA_RETORNO_ENABLED") && diagnostico.data && !diagnostico.isFetching && !diagnostico.isError && <CondicaoEvidencia userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={diagnostico.data.revisaoEvidenciasAtual} decisao={diagnostico.data.revisaoValidacao} historicoCompleto={diagnostico.data.historicoVersionadoCompleto} />}
+    {flagLigada("VITE_SSO_APROVAR_RETORNO_PCM_ENABLED") && diagnostico.data && !diagnostico.isFetching && !diagnostico.isError && <AprovarRetornoPcm userId={userId} clienteId={clienteId} retornoId={retornoId} conferenciaId={conferenciaId} evidencias={diagnostico.data.revisaoEvidenciasAtual} decisao={diagnostico.data.revisaoValidacao} historicoCompleto={diagnostico.data.historicoVersionadoCompleto} />}
     {pendente === "invalido" && <p role="alert">Tentativa local ilegível; procure suporte.</p>}{pendente && pendente !== "invalido" && <button type="button" disabled={envio.isPending} onClick={() => enviar(pendente)}>Repetir tentativa pendente</button>}{aviso && <p role="status">{aviso}</p>}
   </section>;
 }

@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { consolidarEsforcoContinuacoes } from "../../domain/consolidar-esforco-continuacoes";
 import { consolidarEsforcoVisitas } from "../../domain/consolidar-esforco-visitas";
@@ -41,11 +42,10 @@ export function FontesDemanda({
   const [escopoEditado, setEscopoEditado] = useState<string | null>(null);
   const [visitaDeslocamento, setVisitaDeslocamento] = useState<string | null>(null);
   const [visitaTrechos, setVisitaTrechos] = useState<string | null>(null);
-  const mostrarResumo = import.meta.env.VITE_SSO_RESUMO_ESFORCO_ENABLED === "true";
-  const mostrarContinuacoes =
-    mostrarResumo && import.meta.env.VITE_SSO_ESFORCO_CONTINUACAO_ENABLED === "true";
+  const mostrarResumo = flagLigada("VITE_SSO_RESUMO_ESFORCO_ENABLED");
+  const mostrarContinuacoes = mostrarResumo && flagLigada("VITE_SSO_ESFORCO_CONTINUACAO_ENABLED");
   const confirmarRestante =
-    mostrarContinuacoes && import.meta.env.VITE_SSO_ESFORCO_RESTANTE_CONTINUACAO_ENABLED === "true";
+    mostrarContinuacoes && flagLigada("VITE_SSO_ESFORCO_RESTANTE_CONTINUACAO_ENABLED");
   const fontes = useInfiniteQuery({
     queryKey: [
       "capacidade-fontes-demanda",
@@ -239,7 +239,7 @@ export function FontesDemanda({
   return (
     <section aria-label="Fontes de demanda da semana">
       <h3>Fontes de demanda da semana</h3>
-      {import.meta.env.VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_DESLOCAMENTOS_SEMANA_ENABLED") && (
         <DeslocamentosSemana
           key={JSON.stringify([userId, clienteId, semana])}
           userId={userId}
@@ -379,7 +379,7 @@ export function FontesDemanda({
                   usar.
                 </span>
               )}
-              {import.meta.env.VITE_SSO_DESLOCAMENTO_DECLARADO_ENABLED === "true" && (
+              {flagLigada("VITE_SSO_DESLOCAMENTO_DECLARADO_ENABLED") && (
                 <>
                   <button
                     type="button"
@@ -401,7 +401,7 @@ export function FontesDemanda({
                   )}
                 </>
               )}
-              {import.meta.env.VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED === "true" && (
+              {flagLigada("VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED") && (
                 <>
                   <button
                     type="button"
@@ -448,7 +448,7 @@ export function FontesDemanda({
                         jaConfirmado={f.esforco_restante_confirmado === true}
                       />
                     )}
-                    {import.meta.env.VITE_SSO_ESFORCO_DECLARADO_ENABLED === "true" && (
+                    {flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") && (
                       <button
                         type="button"
                         onClick={() =>
@@ -459,7 +459,7 @@ export function FontesDemanda({
                       </button>
                     )}
                     {osEditada === f.vinculo_id &&
-                      import.meta.env.VITE_SSO_ESFORCO_DECLARADO_ENABLED === "true" && (
+                      flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") && (
                         <EsforcoDeclarado
                           key={f.vinculo_id}
                           userId={userId}
@@ -467,7 +467,7 @@ export function FontesDemanda({
                           osId={f.os_id}
                         />
                       )}
-                    {import.meta.env.VITE_SSO_ESCOPO_ORIGEM_ENABLED === "true" && (
+                    {flagLigada("VITE_SSO_ESCOPO_ORIGEM_ENABLED") && (
                       <button
                         type="button"
                         onClick={() =>
@@ -478,7 +478,7 @@ export function FontesDemanda({
                       </button>
                     )}
                     {escopoEditado === f.vinculo_id &&
-                      import.meta.env.VITE_SSO_ESCOPO_ORIGEM_ENABLED === "true" && (
+                      flagLigada("VITE_SSO_ESCOPO_ORIGEM_ENABLED") && (
                         <EscopoDeclarado
                           key={f.vinculo_id}
                           userId={userId}

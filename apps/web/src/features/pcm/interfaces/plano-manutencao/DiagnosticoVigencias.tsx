@@ -2,12 +2,13 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const contagem = z.number().int().nonnegative().safe();
 const versao = z.object({ versao_id: z.string().guid(), numero: z.number().int().positive().safe(), estado: z.string().min(1).max(100),
   vigencia_inicio: z.string().date().nullable(), vigencia_fim: z.string().date().nullable(), aprovada_em: z.string().datetime({ offset: true }).nullable() }).strict();
 export function DiagnosticoVigencias({ userId, clienteId, planoId, revisao }: { userId: string; clienteId: string; planoId: string; revisao: number }) {
-  const habilitado = import.meta.env.VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED");
   const resumo = useQuery({ queryKey: ["diagnostico-vigencias", userId, clienteId, planoId, revisao], enabled: habilitado, gcTime: 0, retry: false,
     queryFn: async ({ signal }) => {
       await conferirSessaoDiagnostico(userId, signal);

@@ -2,12 +2,13 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const schema=z.object({requestId:z.string().guid(),decisaoId:z.string().guid(),planoId:z.string().guid(),clienteId:z.string().guid(),revision:z.number().int().positive().safe(),versaoId:z.string().guid(),rotinaId:z.string().guid(),ciclo:z.number().int().nonnegative().safe(),vencimento:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),decisao:z.enum(["avaliar","tratar_manualmente"]),motivo:z.string().trim().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;planoId:string;revision:number;versaoId:string;rotinaId:string;ciclo:number;vencimento:string};
 export function DecidirVencimento(props:Props) {
-  if(import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED!=="true")return <p>Decisão mediada indisponível; pedidos pendentes permanecem guardados.</p>;
+  if(!flagLigada("VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED"))return <p>Decisão mediada indisponível; pedidos pendentes permanecem guardados.</p>;
   return <Abrir key={JSON.stringify([props.userId,props.clienteId,props.planoId,props.versaoId,props.rotinaId,props.ciclo,props.vencimento])} {...props}/>;
 }
 function Abrir(props:Props) {
@@ -24,7 +25,7 @@ function Conteudo({userId,clienteId,planoId,revision,versaoId,rotinaId,ciclo,ven
     initialPageParam:null as {data:string;id:string}|null,
     queryFn:async ({pageParam,signal}) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");const parametros={
       p_plano_id:planoId,p_versao_id:versaoId,p_rotina_id:rotinaId,p_ciclo:ciclo,p_vencimento:vencimento,
-      p_apos:pageParam?.data??null,p_apos_id:pageParam?.id??null,p_limite:30};if(import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED!=="true")throw new Error("Consulta mediada indisponível.");const {data,error}=await supabase.schema("pcm").rpc("sso_historico_vencimento_mediado",{...parametros,p_ator_id:userId,p_cliente_id:clienteId}).abortSignal(signal);
+      p_apos:pageParam?.data??null,p_apos_id:pageParam?.id??null,p_limite:30};if(!flagLigada("VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED"))throw new Error("Consulta mediada indisponível.");const {data,error}=await supabase.schema("pcm").rpc("sso_historico_vencimento_mediado",{...parametros,p_ator_id:userId,p_cliente_id:clienteId}).abortSignal(signal);
       if(error)throw error;const pagina=z.array(z.object({id:z.string().guid(),decisao:z.enum(["avaliar","tratar_manualmente"]),motivo:z.string(),ator_id:z.string().guid(),criado_em:z.string()}).strict()).max(30).parse(data);
       const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;},
     getNextPageParam:(pagina) => {const ultima=pagina.at(-1);return pagina.length===30&&ultima ? {data:ultima.criado_em,id:ultima.id} : undefined;}});
@@ -33,7 +34,7 @@ function Conteudo({userId,clienteId,planoId,revision,versaoId,rotinaId,ciclo,ven
       typeof p.requestId==="string"&&typeof p.decisaoId==="string"&&Number.isSafeInteger(p.revision)&&typeof p.motivo==="string"&&["avaliar","tratar_manualmente"].includes(p.decisao) ? p : "invalido";}catch{return "invalido";}});
   const envio=useMutation({mutationFn:async(p:Pedido) => {const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");const parametros={
     p_request_id:p.requestId,p_decisao_id:p.decisaoId,p_plano_id:p.planoId,p_expected_revision:p.revision,p_versao_id:p.versaoId,
-    p_rotina_id:p.rotinaId,p_ciclo:p.ciclo,p_vencimento:p.vencimento,p_decisao:p.decisao,p_motivo:p.motivo};if(import.meta.env.VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED!=="true")throw new Error("Decisão mediada indisponível.");const {data,error}=await supabase.schema("pcm").rpc("sso_decisao_vencimento_mediada",{...parametros,p_ator_id:userId,p_cliente_id:clienteId});
+    p_rotina_id:p.rotinaId,p_ciclo:p.ciclo,p_vencimento:p.vencimento,p_decisao:p.decisao,p_motivo:p.motivo};if(!flagLigada("VITE_SSO_DECISAO_VENCIMENTO_MEDIADA_ENABLED"))throw new Error("Decisão mediada indisponível.");const {data,error}=await supabase.schema("pcm").rpc("sso_decisao_vencimento_mediada",{...parametros,p_ator_id:userId,p_cliente_id:clienteId});
     if(error)throw error;if(!data||data.requestId!==p.requestId||data.decisaoId!==p.decisaoId||data.efeitoOperacional!==false)throw new Error("Resposta inválida.");const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId)throw new Error("Sessão alterada.");},
     onSuccess:async(_r,p) => {try{await cache.invalidateQueries({queryKey:["plano-vencimento-decisoes",userId,clienteId,planoId,versaoId,rotinaId,ciclo,vencimento]});const atual=await supabase.auth.getUser();if(atual.error||atual.data.user?.id!==userId||sessionStorage.getItem(chave)!==JSON.stringify(p))throw new Error("Sessão ou tentativa alterada.");sessionStorage.removeItem(chave);}catch{setMensagem("Decisão registrada, mas tentativa não foi removida. Procure suporte.");return;}
       setPedido(null);setConfirmado(null);setMensagem("Decisão preliminar registrada; obrigação não foi criada, cancelada nem concluída.");},

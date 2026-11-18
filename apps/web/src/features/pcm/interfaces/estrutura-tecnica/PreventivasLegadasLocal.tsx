@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z
   .object({
@@ -15,7 +17,15 @@ const linha = z
   .strict();
 type Props = { userId: string; clienteId: string; localId: string; itemId: string };
 export function PreventivasLegadasLocal(props: Props) {
-  if (import.meta.env.VITE_SSO_PREVENTIVAS_LEGADAS_LOCAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_PREVENTIVAS_LEGADAS_LOCAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Preventivas legadas local"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_PREVENTIVAS_LEGADAS_LOCAL_ENABLED"]}
+      />
+    );
+  }
   return (
     <Abrir
       key={JSON.stringify([props.userId, props.clienteId, props.localId, props.itemId])}

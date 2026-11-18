@@ -2,12 +2,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const itemSchema=z.object({chave:z.string().min(1).max(200),tipo:z.enum(["area","local","sublocal"]),atributos:z.record(z.string(), z.unknown()),requestId:z.string().guid()}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),itens:z.array(itemSchema).min(1).max(50)}).strict();
 type Item=z.infer<typeof itemSchema>;type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;linhas:{chave:string;tipo:string;atributos:Record<string,unknown>}[]};
-export function CriacaoLocalizacoesLote(props:Props){if(import.meta.env.VITE_SSO_CRIACAO_LOCALIZACOES_LOTE_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
+export function CriacaoLocalizacoesLote(props:Props){if(!flagLigada("VITE_SSO_CRIACAO_LOCALIZACOES_LOTE_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.loteId])} {...props}/>;}
 function Conteudo({userId,clienteId,loteId,revisao,linhas}:Props){
  const storage=`sso-criar-localizacoes-lote:${JSON.stringify([userId,clienteId,loteId])}`;const client=useQueryClient();const trava=useRef(false);
  const [itens,setItens]=useState<Item[]>([]);const [revisaoSelecao,setRevisaoSelecao]=useState<number|null>(null);const [fotoConfirmada,setFotoConfirmada]=useState<string|null>(null);const [aviso,setAviso]=useState("");

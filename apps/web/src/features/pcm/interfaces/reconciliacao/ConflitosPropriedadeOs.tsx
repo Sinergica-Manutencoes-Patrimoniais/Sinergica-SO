@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ConfirmarRetornoPropriedadeOs } from "./ConfirmarRetornoPropriedadeOs";
 import { IniciarObservacaoNovoCliente } from "./IniciarObservacaoNovoCliente";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const itemSchema = z.object({ os_id: z.string().guid(), numero: z.string(), revisao: z.number().int().positive(),
   situacao: z.enum(["retorno_observado_conferir", "retorno_confirmado", "divergencia_observada", "observacao_atual_iniciada"]),
@@ -14,7 +15,7 @@ export function ConflitosPropriedadeOs({ userId, clienteId, onAbrirOs }: {
     queryKey: ["reconciliacao-conflitos-propriedade-os", userId, clienteId], initialPageParam: null as string | null, gcTime: 0, retry: false,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada");
-      const { data, error } = await supabase.schema("pcm").rpc(import.meta.env.VITE_SSO_OBSERVACAO_NOVO_CLIENTE_ENABLED === "true" ? "sso_listar_conflitos_propriedade_v2_mediada" : "sso_listar_conflitos_propriedade_mediada", {
+      const { data, error } = await supabase.schema("pcm").rpc(flagLigada("VITE_SSO_OBSERVACAO_NOVO_CLIENTE_ENABLED") ? "sso_listar_conflitos_propriedade_v2_mediada" : "sso_listar_conflitos_propriedade_mediada", {
         p_ator_id: userId, p_cliente_id: clienteId, p_apos: pageParam, p_limite: 50,
       }).abortSignal(signal);
       if (error) throw error;
@@ -35,9 +36,9 @@ export function ConflitosPropriedadeOs({ userId, clienteId, onAbrirOs }: {
       <ul>{itens.map((item) => <li key={item.os_id}>OS {item.numero} · revisão {item.revisao} ·
         {item.situacao === "divergencia_observada" ? " divergência de propriedade" : item.situacao === "retorno_confirmado" ? " retorno confirmado" : item.situacao === "observacao_atual_iniciada" ? " observação iniciada no Cliente atual" : " retorno observado, conferir"} · última observação {item.observado_em}
         {onAbrirOs && <button type="button" onClick={() => onAbrirOs(item.os_id)}>Abrir OS</button>}
-        {import.meta.env.VITE_SSO_CONFIRMAR_RETORNO_PROPRIEDADE_OS_ENABLED === "true" &&
+        {flagLigada("VITE_SSO_CONFIRMAR_RETORNO_PROPRIEDADE_OS_ENABLED") &&
           <ConfirmarRetornoPropriedadeOs userId={userId} clienteId={clienteId} osId={item.os_id} revisao={item.revisao} permitido={item.situacao === "retorno_observado_conferir"} />}
-        {import.meta.env.VITE_SSO_OBSERVACAO_NOVO_CLIENTE_ENABLED === "true" &&
+        {flagLigada("VITE_SSO_OBSERVACAO_NOVO_CLIENTE_ENABLED") &&
           <IniciarObservacaoNovoCliente key={JSON.stringify([userId, clienteId, item.os_id])} userId={userId} clienteId={clienteId} osId={item.os_id}
             conflitoRevision={item.revisao} observacaoRevision={item.situacao === "divergencia_observada" ? item.observacao_revisao ?? null : null} />}
       </li>)}</ul>)}

@@ -5,9 +5,10 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { SelecionarAtualizacaoLote } from "./AtualizacaoLote";
 import { useAprovacaoParcialLinha } from "./useAprovacaoParcialLinha";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; sistemaId: string; atributos: Record<string, unknown> };
 const schema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string(), revision: z.number().int().positive(), sistemaId: z.string().guid(), snapshot: z.record(z.string(), z.unknown()), motivo: z.string().min(1).max(2000) }).strict(); type Pedido = z.infer<typeof schema>;
-export function AplicarCamposSistema(props: Props) { if (import.meta.env.VITE_SSO_APLICAR_CAMPOS_SISTEMA_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave, props.sistemaId])} {...props}/>; }
+export function AplicarCamposSistema(props: Props) { if (!flagLigada("VITE_SSO_APLICAR_CAMPOS_SISTEMA_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave, props.sistemaId])} {...props}/>; }
 function Conteudo({ userId, clienteId, loteId, chave, revisao, sistemaId, atributos }: Props) {
   const parcial=useAprovacaoParcialLinha(userId,clienteId,loteId,chave,revisao);
   const key = `sso-aplicar-campos-sistema:${JSON.stringify([userId, clienteId, loteId, chave, sistemaId])}`; const client = useQueryClient(); const trava = useRef(false);

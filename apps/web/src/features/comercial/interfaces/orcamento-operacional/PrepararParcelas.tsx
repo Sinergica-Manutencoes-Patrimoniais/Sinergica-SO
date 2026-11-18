@@ -7,6 +7,7 @@ import { consolidarFontesCusto, type FonteCustoOperacional } from "../../domain/
 import { FontesAquisicao } from "./FontesAquisicao";
 import { PrepararMisto } from "./PrepararMisto";
 import { centavosParaEntradaReais, valorReaisParaCentavos } from "../../domain/valor-em-reais";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { usuario: string; cliente: string; propostaId: string; propostaRevisao: number; listaId: string; listaRevisao: number; permitirEdicao: boolean; aoSalvar: () => void };
 type Grupo = "aquisicao" | "operacional";
@@ -33,7 +34,7 @@ function Conteudo({ usuario, cliente, propostaId, propostaRevisao, listaId, list
     try { return sessionStorage.getItem(`sso-composicao-mista:${JSON.stringify([usuario, cliente, propostaId])}`) !== null; }
     catch { return true; }
   });
-  const mistoAtivo = import.meta.env.VITE_SSO_COMPOSICAO_MISTA_ENABLED === "true" || mistoGuardado;
+  const mistoAtivo = flagLigada("VITE_SSO_COMPOSICAO_MISTA_ENABLED") || mistoGuardado;
   const q = useInfiniteQuery({ queryKey: ["orcamento-parcelas", usuario, cliente, listaId], enabled: permitirEdicao, gcTime: 0,
     initialPageParam: null as { despesaId: string; vinculoId: string } | null,
     queryFn: ({ pageParam, signal }) => listarParcelasOrcamento(usuario, cliente, listaId, pageParam, signal),
@@ -94,7 +95,7 @@ function Conteudo({ usuario, cliente, propostaId, propostaRevisao, listaId, list
   }
   if (!permitirEdicao && !pendente) return null;
   return <section aria-label="Preparar orçamento com parcelas"><h3>Composição por parcelas de despesa</h3>
-    {import.meta.env.VITE_SSO_FONTES_AQUISICAO_ENABLED === "true" && <FontesAquisicao usuario={usuario} cliente={cliente} listaId={listaId} listaRevisao={listaRevisao} permitirEdicao={permitirEdicao} />}
+    {flagLigada("VITE_SSO_FONTES_AQUISICAO_ENABLED") && <FontesAquisicao usuario={usuario} cliente={cliente} listaId={listaId} listaRevisao={listaRevisao} permitirEdicao={permitirEdicao} />}
     {mistoAtivo && <PrepararMisto key={JSON.stringify([usuario,cliente,propostaId,listaId])} usuario={usuario} cliente={cliente} propostaId={propostaId} propostaRevisao={propostaRevisao}
       listaId={listaId} listaRevisao={listaRevisao} permitirEdicao={permitirEdicao && !pendente} aoSalvar={aoSalvar} />}
     <HistoricoFontes usuario={usuario} cliente={cliente} propostaId={propostaId} versao={propostaRevisao} />

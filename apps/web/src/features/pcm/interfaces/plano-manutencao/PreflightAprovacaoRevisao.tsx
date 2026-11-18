@@ -7,6 +7,7 @@ import { InventarioPmocRevisao } from "./InventarioPmocRevisao";
 import { PrecondicaoImpactos } from "./PrecondicaoImpactos";
 import { ReciboReconciliacaoRevisao, type EstadoReciboReconciliacao } from "./ReciboReconciliacaoRevisao";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function PreflightAprovacaoRevisao({
   userId,
@@ -16,7 +17,7 @@ export function PreflightAprovacaoRevisao({
   vigencia,
   onEstadoReciboChange,
 }: { userId: string; clienteId: string; planoId: string; revisao: number; vigencia: string; onEstadoReciboChange?: (estado: EstadoReciboReconciliacao) => void }) {
-  const habilitado = import.meta.env.VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_DIAGNOSTICOS_REVISAO_MEDIADOS_ENABLED");
   const consulta = useQuery({
     queryKey: ["preflight-aprovacao-revisao", userId, clienteId, planoId, revisao, vigencia],
     enabled: !!vigencia && habilitado,
@@ -65,7 +66,7 @@ export function PreflightAprovacaoRevisao({
     enabled:
       !!vigencia &&
       habilitado &&
-      import.meta.env.VITE_SSO_CONFERENCIA_FUSO_SERIES_ENABLED === "true",
+      flagLigada("VITE_SSO_CONFERENCIA_FUSO_SERIES_ENABLED"),
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }) => {
@@ -187,7 +188,7 @@ export function PreflightAprovacaoRevisao({
         revisao={revisao}
         vigencia={vigencia}
       />
-      {import.meta.env.VITE_SSO_AVALIACAO_IMPACTO_REVISAO_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_AVALIACAO_IMPACTO_REVISAO_ENABLED") && (
         <AvaliacaoImpactoRevisao
           userId={userId}
           clienteId={clienteId}
@@ -195,7 +196,7 @@ export function PreflightAprovacaoRevisao({
           revisao={revisao}
         />
       )}
-      {import.meta.env.VITE_SSO_PRECONDICAO_IMPACTOS_ENABLED === "true" && (
+      {flagLigada("VITE_SSO_PRECONDICAO_IMPACTOS_ENABLED") && (
         <PrecondicaoImpactos
           userId={userId}
           clienteId={clienteId}

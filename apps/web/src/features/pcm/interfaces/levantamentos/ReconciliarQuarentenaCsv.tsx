@@ -2,10 +2,11 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; quarentenaId: string; onRecebido?: (loteId: string) => void };
 const linha = z.object({ numero: z.number().int().min(2), erros: z.array(z.string()), revisao_quarentena: z.number().int().nonnegative() }).strict();
 const pedido = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), quarentenaId: z.string().guid(), revision: z.number().int().nonnegative() }).strict(); type Pedido = z.infer<typeof pedido>;
-export function ReconciliarQuarentenaCsv(props: Props) { if (import.meta.env.VITE_SSO_RECONCILIAR_QUARENTENA_CSV_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.quarentenaId])} {...props}/>; }
+export function ReconciliarQuarentenaCsv(props: Props) { if (!flagLigada("VITE_SSO_RECONCILIAR_QUARENTENA_CSV_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.quarentenaId])} {...props}/>; }
 function Conteudo({ userId, clienteId, quarentenaId, onRecebido }: Props) {
   const key = `sso-reconciliar-quarentena:${JSON.stringify([userId, clienteId, quarentenaId])}`; const client = useQueryClient(); const trava = useRef(false);
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.clienteId === clienteId && p.quarentenaId === quarentenaId ? p : "invalido"; } catch { return "invalido"; } }); const [fotoConfirmada, setFotoConfirmada] = useState<string | null>(null); const [aviso, setAviso] = useState("");

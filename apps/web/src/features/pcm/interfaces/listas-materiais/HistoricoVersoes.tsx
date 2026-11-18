@@ -3,10 +3,20 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseListasMateriaisAdapter } from "../../infrastructure/supabase-listas-materiais-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const versaoSchema=z.object({revisao:z.number().int().positive(),criado_por:z.string().guid(),criado_em:z.string().datetime({offset:true})}).strict();
 export function HistoricoVersoes(props:{usuario:string;cliente:string;ordemServico:string;listaId:string;revisao:number}){
-  if(import.meta.env.VITE_SSO_HISTORICO_MATERIAIS_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_MATERIAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico materiais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_MATERIAIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario,props.cliente,props.ordemServico,props.listaId])} {...props}/>;
 }
 function Conteudo({usuario,cliente,ordemServico,listaId,revisao}:{usuario:string;cliente:string;ordemServico:string;listaId:string;revisao:number}){

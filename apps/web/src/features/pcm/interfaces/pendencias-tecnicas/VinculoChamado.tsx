@@ -8,13 +8,14 @@ import { SuspensaoChamado } from "./SuspensaoChamado";
 import { HistoricoSuspensao } from "./HistoricoSuspensao";
 import { PendenciasSemParcela } from "./PendenciasSemParcela";
 import { RetirarPendenciaComposicao } from "./RetirarPendenciaComposicao";
+import { flagLigada } from "../../../../config/flags-sso";
 const contextoSchema=z.discriminatedUnion("vinculado",[z.object({vinculado:z.literal(false),composicaoRevision:z.number().int().positive()}).strict(),
   z.object({vinculado:z.literal(true),composicaoRevision:z.number().int().positive(),chamadoId:z.string().guid(),chamadoNumero:z.string(),chamadoRevision:z.number().int().positive(),escopoRevision:z.number().int().positive().nullable()}).strict()]);
 const pedidoSchema=z.discriminatedUnion("tipo",[
   z.object({tipo:z.literal("chamado"),requestId:z.string().guid(),composicaoId:z.string().guid(),composicaoRevision:z.number().int().positive(),chamadoId:z.string().guid(),chamadoRevision:z.number().int().positive()}).strict(),
   z.object({tipo:z.literal("parcela"),requestId:z.string().guid(),composicaoId:z.string().guid(),composicaoRevision:z.number().int().positive(),chamadoRevision:z.number().int().positive(),escopoRevision:z.number().int().positive(),pendenciaId:z.string().guid(),parcelaId:z.string().guid()}).strict(),
 ]);type Pedido=z.infer<typeof pedidoSchema>;
-export function VinculoChamado(props:{userId:string;clienteId:string;composicaoId:string}){if(import.meta.env.VITE_SSO_VINCULAR_BACKLOG_CHAMADO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.composicaoId])} {...props}/>;}
+export function VinculoChamado(props:{userId:string;clienteId:string;composicaoId:string}){if(!flagLigada("VITE_SSO_VINCULAR_BACKLOG_CHAMADO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.composicaoId])} {...props}/>;}
 function Conteudo({userId,clienteId,composicaoId}:{userId:string;clienteId:string;composicaoId:string}){
   const chave=`sso-vinculo-backlog:${JSON.stringify([userId,clienteId,composicaoId])}`;
   const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=pedidoSchema.parse(JSON.parse(v));return p.composicaoId===composicaoId ? p : "invalido";}catch{return "invalido";}});

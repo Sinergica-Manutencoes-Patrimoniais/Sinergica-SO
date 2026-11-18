@@ -7,6 +7,7 @@ import type { PlanoResumo, RotinaDetalhe } from "../../application/plano-manuten
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const id = z.string().guid();
 const pedidoSchema = z.object({
@@ -196,7 +197,7 @@ function Conteudo({ userId, clienteId, plano, versaoId, rotina }: {
     {recuperacao.invalido ? <p role="alert">Tentativa local inválida. Procure suporte antes de criar outra cópia.</p> : pendente ? <>
       <p>Pedido pendente para Cliente {pendente.destinoClienteId}, Plano {pendente.destinoPlanoId} e alvo {pendente.alvoId}.</p>
       <Button variant="secondary" disabled={ocupado} onClick={() => void enviar(pendente)}>Repetir mesmo pedido</Button>
-      {import.meta.env.VITE_SSO_RECIBO_COPIA_ROTINA_ENABLED === "true" && <Button variant="secondary" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar confirmação</Button>}
+      {flagLigada("VITE_SSO_RECIBO_COPIA_ROTINA_ENABLED") && <Button variant="secondary" disabled={ocupado} onClick={() => void consultarRecibo(pendente)}>Consultar confirmação</Button>}
     </> : <>
       <label>Cliente de destino <select className="input" value={destinoCliente} disabled={clientes.isFetching || clientes.isError || ocupado} onChange={(e) => { setDestinoCliente(e.target.value); setDestinoPlano(""); setAlvo(""); setConfirmacao(null); }}>
         <option value={clienteId}>Cliente atual</option>
@@ -213,7 +214,7 @@ function Conteudo({ userId, clienteId, plano, versaoId, rotina }: {
         <label>Alvo de destino ({rotina.alvoTipo}) <select className="input" value={alvo} disabled={alvos.isFetching || alvos.isError || ocupado} onChange={(e) => { setAlvo(e.target.value); setConfirmacao(null); }}><option value="">Selecione</option>{alvosVisiveis.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select></label>
         {alvos.hasNextPage && <Button variant="secondary" disabled={alvos.isFetching} onClick={() => void alvos.fetchNextPage()}>Mais alvos</Button>}{alvos.isError && <p role="alert">Alvos indisponíveis.</p>}
         <p>Confira questionário, data-base, tolerâncias e exigências legais no destino; estes dados não são automaticamente validados.</p>
-        {import.meta.env.VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED === "true" && rotina.alvoTipo === "componente" &&
+        {flagLigada("VITE_SSO_NATUREZA_ALVO_ROTINA_ENABLED") && rotina.alvoTipo === "componente" &&
           <p>Confira também se o alvo é Equipamento ou Componente no destino. A natureza só pode ser herdada quando o Cliente e o cadastro do alvo forem os mesmos e houver declaração na versão aprovada.</p>}
         {confirmacao && confirmacao !== fotografia && <p role="alert">Origem ou destino mudou. Confira e confirme novamente.</p>}
         <label><input type="checkbox" checked={fotografia !== null && confirmacao === fotografia} disabled={ocupado || !fotografia} onChange={(e) => setConfirmacao(e.target.checked ? fotografia : null)} /> Confirmo a cópia para o alvo e Plano selecionados.</label>

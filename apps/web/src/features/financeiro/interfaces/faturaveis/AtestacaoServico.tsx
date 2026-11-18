@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const uuid = z.string().guid();
 const pedidoSchema = z.object({ requestId: uuid, cliente: uuid, fato: uuid, revisao: z.number().int().nonnegative().safe(),
@@ -16,7 +18,15 @@ async function sessao(usuario: string, signal?: AbortSignal) {
 }
 
 export function AtestacaoServico(props: { usuario: string; cliente: string; declaracao: string }) {
-  if (import.meta.env.VITE_SSO_ATESTACAO_SERVICO_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_ATESTACAO_SERVICO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Atestacao servico"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ATESTACAO_SERVICO_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.declaracao])} {...props} />;
 }
 function Conteudo({ usuario, cliente, declaracao }: { usuario: string; cliente: string; declaracao: string }) {

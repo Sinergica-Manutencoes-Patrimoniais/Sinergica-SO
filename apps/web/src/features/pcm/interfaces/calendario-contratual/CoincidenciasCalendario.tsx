@@ -3,17 +3,35 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { TriagemCicloAtrasado } from "../plano-manutencao/TriagemCicloAtrasado";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha=z.object({ocorrencia_id:z.string().guid(),plano_id:z.string().guid(),rotina_id:z.string().guid(),vencimento_original:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),escopo:z.enum(["declaracao_geral","verificar_contrato"])}).strict();
 type Props={userId:string;clienteId:string;feriadoId:string;data:string};
 function TriagemDaRotina({userId,clienteId,planoId,rotinaId,ocorrenciaId}:{userId:string;clienteId:string;planoId:string;rotinaId:string;ocorrenciaId:string}){
   const [aberta,setAberta]=useState(false);
-  if(import.meta.env.VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Triagem ciclo atrasado"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_TRIAGEM_CICLO_ATRASADO_ENABLED"]}
+      />
+    );
+  }
   return <><button type="button" aria-expanded={aberta} onClick={()=>setAberta(v=>!v)}>{aberta?"Ocultar triagem da Rotina":"Abrir triagem da Rotina"}</button>{aberta&&<><p>A triagem apresenta candidatos conforme data de referência e tolerância; esta coincidência pode não aparecer se ainda não atender aos critérios.</p><TriagemCicloAtrasado userId={userId} clienteId={clienteId} planoId={planoId} rotinaId={rotinaId} ocorrenciaEmConferencia={ocorrenciaId}/></>}</>;
 }
 export function CoincidenciasCalendario(props:Props){
   const [aberto,setAberto]=useState(false);
-  if(import.meta.env.VITE_SSO_COINCIDENCIAS_CALENDARIO_FERIADO_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_COINCIDENCIAS_CALENDARIO_FERIADO_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Coincidencias calendario feriado"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_COINCIDENCIAS_CALENDARIO_FERIADO_ENABLED"]}
+      />
+    );
+  }
   return <><button type="button" aria-expanded={aberto} onClick={()=>setAberto(v=>!v)}>{aberto?"Ocultar vencimentos":"Consultar vencimentos por calendário"}</button>{aberto&&<Conteudo key={JSON.stringify([props.userId,props.clienteId,props.feriadoId,props.data])} {...props}/>}</>;
 }
 function Conteudo({userId,clienteId,feriadoId,data}:Props){

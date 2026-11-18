@@ -1,6 +1,8 @@
+import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
+import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { supabase } from "../../../../lib/supabase-client";
 
@@ -16,7 +18,15 @@ const pedidoSchema = z
 type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { usuario: string; cliente: string; ordemServico: string; listaInicialId?: string };
 export function CriarOrcamento(props: Props) {
-  if (import.meta.env.VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Criar orcamento operacional"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CRIAR_ORCAMENTO_OPERACIONAL_ENABLED"]}
+      />
+    );
+  }
   return (
     <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />
   );
@@ -221,7 +231,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
           return;
         const semOportunidade =
           oportunidadeId === "sem-oportunidade" &&
-          import.meta.env.VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED === "true";
+          flagLigada("VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED");
         if (
           !semOportunidade &&
           !oportunidades.data?.pages.flat().some((opcao) => opcao.id === oportunidadeId)
@@ -278,7 +288,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
             onChange={(e) => setOportunidadeId(e.target.value)}
           >
             <option value="">Selecione</option>
-            {import.meta.env.VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED === "true" && (
+            {flagLigada("VITE_SSO_ORCAMENTO_SEM_OPORTUNIDADE_ENABLED") && (
               <option value="sem-oportunidade">Origem operacional, sem oportunidade</option>
             )}
             {oportunidades.data?.pages.flat().map((o) => (

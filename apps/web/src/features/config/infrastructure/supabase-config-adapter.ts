@@ -1,3 +1,4 @@
+import { flagLigada } from "../../../config/flags-sso";
 // Implementa ConfigGateway usando @supabase/supabase-js (único ponto da feature config que
 // conhece o SDK do Supabase — ver docs/ARCHITECTURE.md, regra de dependência da infrastructure/).
 import { supabase } from "../../../lib/supabase-client";
@@ -67,7 +68,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
   },
 
   async criarGrupo(nome, descricao, permissoes, atorEsperado): Promise<Grupo> {
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED")) {
       const identidade = await supabase.auth.getUser();
       if (identidade.error || !identidade.data.user?.id || identidade.data.user.id !== atorEsperado)
         throw new Error("Sessão alterada. Nenhum grupo foi enviado.");
@@ -167,7 +168,7 @@ export const supabaseConfigAdapter: ConfigGateway = {
     if (patch.descricao !== undefined) campos.descricao = patch.descricao;
     if (patch.ativo !== undefined) campos.ativo = patch.ativo;
 
-    if (import.meta.env.VITE_SSO_GRUPO_ATOMICO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_GRUPO_ATOMICO_ENABLED")) {
       if (!patch.estadoEsperado || patch.estadoEsperado.id !== id || !patch.atorEsperado)
         throw new Error(
           "Estado anterior ou sessão do grupo indisponível; recarregue antes de editar.",

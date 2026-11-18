@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 export function BreadcrumbGrupo({
   userId,
   clienteId,
   grupoId,
 }: { userId: string; clienteId: string; grupoId: string }) {
-  const ativo = import.meta.env.VITE_SSO_BREADCRUMB_GRUPO_ENABLED === "true";
+  const ativo = flagLigada("VITE_SSO_BREADCRUMB_GRUPO_ENABLED");
   const q = useQuery({
     queryKey: ["estrutura-tecnica", userId, clienteId, "breadcrumb-grupo", grupoId],
     enabled: ativo,

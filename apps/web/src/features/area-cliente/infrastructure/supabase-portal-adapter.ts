@@ -20,6 +20,7 @@ import type {
 } from "../application/portal-gateway";
 import { statusConformidade } from "../domain/conformidade";
 import { projetarItensOrcamentoPublico } from "../domain/itens-orcamento-publico";
+import { flagLigada } from "../../../config/flags-sso";
 
 function falha(error: { message?: string } | null, contexto: string) {
   if (error) throw new Error(`${contexto}: ${error.message ?? "erro desconhecido"}`);
@@ -494,7 +495,7 @@ export const supabasePortalAdapter: PortalGateway = {
 
   async urlAssinada(bucket, path) {
     // Defesa de interface: a política do Storage é a fronteira de segurança.
-    if (bucket === "os-anexos" && import.meta.env.VITE_SSO_BLOQUEAR_URL_OS_ANEXOS_ENABLED === "true") {
+    if (bucket === "os-anexos" && flagLigada("VITE_SSO_BLOQUEAR_URL_OS_ANEXOS_ENABLED")) {
       throw new Error("Anexos de OS exigem acesso mediado.");
     }
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);

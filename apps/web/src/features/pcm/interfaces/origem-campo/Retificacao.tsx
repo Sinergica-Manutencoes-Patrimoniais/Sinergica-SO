@@ -3,12 +3,22 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ResolucaoOs } from "./ResolucaoOs";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const itemSchema=z.object({envelope_id:z.string().guid(),cliente_id:z.string().guid(),revisao:z.number().int().positive(),motivo:z.string(),criado_em:z.string().datetime({offset:true})}).strict();
 const pedidoSchema=z.object({requestId:z.string().guid(),envelopeId:z.string().guid(),revision:z.number().int().positive(),clienteId:z.string().guid(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof pedidoSchema>;
 async function conferirSessao(userId:string,signal?:AbortSignal){const {data,error}=await supabase.auth.getUser();if(error||data.user?.id!==userId||signal?.aborted)throw new Error("Sessão alterada");}
 export function RetificacaoTriagem({userId,clientes,clientesDisponiveis}:{userId:string;clientes:{id:string;nome:string}[];clientesDisponiveis:boolean}){
-  if(import.meta.env.VITE_SSO_RETIFICAR_TRIAGEM_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_RETIFICAR_TRIAGEM_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Retificar triagem"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RETIFICAR_TRIAGEM_ENABLED"]}
+      />
+    );
+  }
   return <Lista key={userId} userId={userId} clientes={clientes} clientesDisponiveis={clientesDisponiveis}/>;
 }
 function Lista({userId,clientes,clientesDisponiveis}:{userId:string;clientes:{id:string;nome:string}[];clientesDisponiveis:boolean}){
@@ -83,7 +93,7 @@ function Alterar({userId,item,clientes,disponivel}:{userId:string;item:z.infer<t
   const chave=`sso-retificar-triagem:${JSON.stringify([userId,item.envelope_id])}`;
   const [pendente,setPendente]=useState<Pedido | "invalido" | null>(()=>{try{const v=sessionStorage.getItem(chave);if(!v)return null;const p=pedidoSchema.parse(JSON.parse(v));return p.envelopeId===item.envelope_id ? p : "invalido";}catch{return "invalido";}});
   const [clienteId,setClienteId]=useState("");const [motivo,setMotivo]=useState("");const [confirmacao,setConfirmacao]=useState<string|null>(null);const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
-  const diagnosticoHabilitado=import.meta.env.VITE_SSO_DIAGNOSTICO_RETIFICACAO_CAMPO_ENABLED==="true";
+  const diagnosticoHabilitado=flagLigada("VITE_SSO_DIAGNOSTICO_RETIFICACAO_CAMPO_ENABLED");
   const diagnostico=useQuery({queryKey:["triagem-origem",userId,item.envelope_id,"diagnostico",item.cliente_id,item.revisao],enabled:diagnosticoHabilitado,gcTime:0,retry:false,queryFn:async({signal})=>{await conferirSessao(userId,signal);const {data,error}=await supabase.schema("pcm").rpc("sso_diagnosticar_retificacao_campo",{p_cliente_id:item.cliente_id,p_envelope_id:item.envelope_id,p_expected_revision:item.revisao}).abortSignal(signal);if(error)throw error;const r=z.object({envelopeId:z.string().guid(),clienteId:z.string().guid(),revision:z.number().int().positive(),recepcaoConhecida:z.boolean(),processamentoConhecido:z.boolean(),coberturaCompleta:z.literal(false)}).strict().parse(data);if(r.envelopeId!==item.envelope_id||r.clienteId!==item.cliente_id||r.revision!==item.revisao)throw new Error("Diagnóstico divergente");await conferirSessao(userId,signal);return r;}});
   const diagnosticoDisponivel=!diagnosticoHabilitado||!!diagnostico.data&&!diagnostico.isFetching&&!diagnostico.isError&&!diagnostico.data.recepcaoConhecida&&!diagnostico.data.processamentoConhecido;
   const fotografia=JSON.stringify([userId,item,clientes.find((c)=>c.id===clienteId)??null,motivo.trim()]);const confirmado=confirmacao===fotografia;

@@ -11,6 +11,7 @@ import { ComparacaoQuestionario } from "./ComparacaoQuestionario";
 import { DiagnosticoVigencias } from "./DiagnosticoVigencias";
 import { DecisaoImpactoOcorrencia } from "./DecisaoImpactoOcorrencia";
 import { DecisaoImpactoVisita } from "./DecisaoImpactoVisita";
+import { flagLigada } from "../../../../config/flags-sso";
 
 function Campos({ titulo, dados }: { titulo: string; dados: CamposComparacaoRotina | null }) {
   if (!dados)
@@ -103,11 +104,11 @@ function Conteudo({
         Comparação informativa de conteúdo. Impactos em Ocorrências e OS não foram calculados; a
         aprovação exige verificações adicionais no servidor.
       </p>
-      {import.meta.env.VITE_SSO_IMPACTO_REVISAO_OS_ENABLED === "true" && <DiagnosticoOsRevisao userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED === "true" && <IndiciosRevisaoRotina userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED === "true" && <DiagnosticoVigencias userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
-      {import.meta.env.VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED === "true" && <DecisaoImpactoOcorrencia userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
-      {import.meta.env.VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED === "true" && <DecisaoImpactoVisita userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
+      {flagLigada("VITE_SSO_IMPACTO_REVISAO_OS_ENABLED") && <DiagnosticoOsRevisao userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
+      {flagLigada("VITE_SSO_INDICIOS_REVISAO_ROTINA_ENABLED") && <IndiciosRevisaoRotina userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_VIGENCIAS_ENABLED") && <DiagnosticoVigencias userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} />}
+      {flagLigada("VITE_SSO_DECISAO_IMPACTO_OCORRENCIA_ENABLED") && <DecisaoImpactoOcorrencia userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
+      {flagLigada("VITE_SSO_DECISAO_IMPACTO_VISITA_ENABLED") && <DecisaoImpactoVisita userId={userId} clienteId={clienteId} planoId={planoId} revision={revisao} />}
       {consulta.isFetching && <output>Carregando comparação…</output>}
       {consulta.isError && (
         <p role="alert">
@@ -158,7 +159,7 @@ function Conteudo({
                       )}
                       <Campos titulo="Versão aprovada" dados={item.anterior} />
                       <Campos titulo="Rascunho" dados={item.rascunho} />
-                      {import.meta.env.VITE_SSO_COMPARACAO_QUESTIONARIO_ENABLED === "true" && <ComparacaoQuestionario userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} rotinaId={item.rotinaLogicaId} />}
+                      {flagLigada("VITE_SSO_COMPARACAO_QUESTIONARIO_ENABLED") && <ComparacaoQuestionario userId={userId} clienteId={clienteId} planoId={planoId} revisao={revisao} rotinaId={item.rotinaLogicaId} />}
                     </div>
                   )}
                 </li>

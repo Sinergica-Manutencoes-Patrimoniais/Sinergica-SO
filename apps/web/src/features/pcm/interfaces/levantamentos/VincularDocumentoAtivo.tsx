@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 const schema=z.object({requestId:z.string().guid(),documentoId:z.string().guid(),tipo:z.enum(["grupo_quantitativo","sistema","componente"]),entidadeId:z.string().guid(),revision:z.number().int().positive()}).strict();type Pedido=z.infer<typeof schema>;
 type Props={userId:string;clienteId:string;documentoId:string};
-export function VincularDocumentoAtivo(props:Props){if(import.meta.env.VITE_SSO_VINCULAR_DOCUMENTO_ATIVO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.documentoId])} {...props}/>;}
+export function VincularDocumentoAtivo(props:Props){if(!flagLigada("VITE_SSO_VINCULAR_DOCUMENTO_ATIVO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.documentoId])} {...props}/>;}
 function Conteudo({userId,clienteId,documentoId}:Props){
   const key=`sso-vincular-documento-ativo:${JSON.stringify([userId,clienteId,documentoId])}`;const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=schema.parse(JSON.parse(raw));return p.documentoId===documentoId ? p : "invalido";}catch{return "invalido";}});const [confirmado,setConfirmado]=useState(false);const [aviso,setAviso]=useState("");const trava=useRef(false);const client=useQueryClient();
   const consulta=useQuery({queryKey:["levantamentos",userId,clienteId,"documento-destino-ativo",documentoId],gcTime:0,queryFn:async({signal})=>{const {data,error}=await supabase.schema("pcm").rpc("sso_consultar_destino_documento_ativo",{p_documento_id:documentoId}).abortSignal(signal);if(error)throw error;const r=z.object({documentoId:z.string().guid(),tipo:z.enum(["grupo_quantitativo","sistema","componente"]).nullable(),entidadeId:z.string().guid().nullable(),decisao:z.enum(["aceito","rejeitado"]).nullable(),revision:z.number().int().nonnegative(),vinculado:z.boolean()}).strict().parse(data);if(r.documentoId!==documentoId || ((r.tipo===null)!==(r.entidadeId===null)))throw new Error("Destino divergente");return r;}});

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 export function BreadcrumbAtivo({
   userId,
@@ -8,7 +9,7 @@ export function BreadcrumbAtivo({
   ativoId,
   localId,
 }: { userId: string; clienteId: string; ativoId: string; localId: string | null }) {
-  const habilitado = import.meta.env.VITE_SSO_BREADCRUMB_ATIVO_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_BREADCRUMB_ATIVO_ENABLED");
   const consulta = useQuery({
     queryKey: ["estrutura-tecnica", userId, clienteId, ativoId, localId, "breadcrumb-ativo"],
     enabled: habilitado,

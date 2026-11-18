@@ -2,20 +2,21 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const linha=z.object({supressao_id:z.string().guid(),serie_id:z.string().guid(),regra_id:z.string().guid(),semana_origem:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),data_contratual:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),feriado_ativo:z.boolean(),revogada:z.boolean(),criado_em:z.string().datetime({offset:true}),visita_suprimida_id:z.string().guid().nullable().optional()}).strict();
 const pedido=z.object({requestId:z.string().guid(),supressaoId:z.string().guid(),motivo:z.string().trim().min(1).max(2000)}).strict();
 type Pedido=z.infer<typeof pedido>;
 type Props={userId:string;clienteId:string;feriadoId:string};
 export function SupressoesFeriado(props:Props){
-  const [aberto,setAberto]=useState(false);if(import.meta.env.VITE_SSO_SUPRESSOES_FERIADO_ENABLED!=="true")return null;
+  const [aberto,setAberto]=useState(false);if(!flagLigada("VITE_SSO_SUPRESSOES_FERIADO_ENABLED"))return null;
   return <><button type="button" aria-expanded={aberto} onClick={()=>setAberto(v=>!v)}>{aberto?"Ocultar supressões":"Consultar semanas suprimidas"}</button>{aberto&&<Lista key={JSON.stringify([props.userId,props.clienteId,props.feriadoId])} {...props}/>}</>;
 }
 function Lista({userId,clienteId,feriadoId}:Props){
   const chave=["supressoes-feriado",userId,clienteId,feriadoId];
   const q=useInfiniteQuery({queryKey:chave,gcTime:0,initialPageParam:null as string|null,queryFn:async({pageParam,signal})=>{
     const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
-    const {data,error}=await supabase.schema("pcm").rpc(import.meta.env.VITE_SSO_HISTORICO_VISITA_SUPRIMIDA_ENABLED === "true" ? "sso_listar_supressoes_feriado_v2" : "sso_listar_supressoes_feriado",{p_ator_id:userId,p_cliente_id:clienteId,p_feriado_id:feriadoId,p_apos:pageParam,p_limite:30}).abortSignal(signal);
+    const {data,error}=await supabase.schema("pcm").rpc(flagLigada("VITE_SSO_HISTORICO_VISITA_SUPRIMIDA_ENABLED") ? "sso_listar_supressoes_feriado_v2" : "sso_listar_supressoes_feriado",{p_ator_id:userId,p_cliente_id:clienteId,p_feriado_id:feriadoId,p_apos:pageParam,p_limite:30}).abortSignal(signal);
     if(error)throw error;const pagina=z.array(linha).max(30).parse(data);let anterior=pageParam?.toLowerCase()??null;
     for(const item of pagina){const id=item.supressao_id.toLowerCase();if(anterior!==null&&id<=anterior)throw new Error("Página inconsistente.");anterior=id;}
     const depois=await supabase.auth.getUser();if(depois.error||depois.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");return pagina;

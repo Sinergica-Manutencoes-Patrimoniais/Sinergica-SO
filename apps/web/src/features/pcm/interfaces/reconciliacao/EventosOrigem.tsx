@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const comercial = z.object({ versao: z.number().int(), sequencia: z.number().int(), acao: z.enum(["retirar", "republicar"]), criado_em: z.string() }).strict();
 const financeiro = z.object({ revisao: z.number().int(), tipo: z.enum(["conferido", "cancelado"]), ocorrido_em: z.string() }).strict();
@@ -10,7 +11,7 @@ export function EventosOrigem({ userId, clienteId, tipo, id }: { userId: string;
     initialPageParam: null as Evento["cursor"] | null,
     queryFn: async ({ pageParam, signal }) => {
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
-      const mediada=import.meta.env.VITE_SSO_EVENTOS_ORIGENS_MEDIADOS_ENABLED === "true";
+      const mediada=flagLigada("VITE_SSO_EVENTOS_ORIGENS_MEDIADOS_ENABLED");
       if (tipo === "comercial") {
         const cursor = typeof pageParam === "object" ? pageParam : null;
         const { data, error } = await supabase.schema("pcm").rpc(mediada ? "sso_eventos_comercial_mediados" : "sso_eventos_reconciliacao_comercial", { p_cliente_id: clienteId, p_proposta_id: id, p_versao: cursor?.versao ?? null, p_sequencia: cursor?.sequencia ?? null, p_limite: 50, ...(mediada?{p_ator_id:userId}:{}) }).abortSignal(signal);

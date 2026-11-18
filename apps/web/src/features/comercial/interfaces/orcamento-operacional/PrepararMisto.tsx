@@ -6,6 +6,7 @@ import { listarParcelasOrcamento, prepararMistoSchema, prepararOrcamentoMisto, t
 import { HistoricoComposicaoMista } from "./HistoricoComposicaoMista";
 import { CorrelacionarGasto } from "./CorrelacionarGasto";
 import { centavosParaEntradaReais, valorReaisParaCentavos } from "../../domain/valor-em-reais";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const aquisicaoSchema = z.object({ id: uuid, lista_revisao: z.number().int().positive(), tipo: z.enum(["material", "retirada_exclusiva"]),
@@ -71,7 +72,7 @@ export function PrepararMisto({ usuario, cliente, propostaId, propostaRevisao, l
   })();
   const sugestaoDesatualizada = basePrecoSugerido !== null && basePrecoSugerido !== baseSugestao;
   const precoCentavos = valorReaisParaCentavos(preco);
-  const correlacoesProntas = import.meta.env.VITE_SSO_CORRELACAO_GASTO_ENABLED !== "true" || correlacoesCarregadas !== null;
+  const correlacoesProntas = !flagLigada("VITE_SSO_CORRELACAO_GASTO_ENABLED") || correlacoesCarregadas !== null;
   const conflitoAtual = aquisicoes.some((a) => parcelas.some((p) =>
     correlacoesCarregadas?.includes(JSON.stringify([a.id.toLowerCase(),p.despesa_id.toLowerCase(),p.vinculo_id.toLowerCase()]))));
   const fotografia = JSON.stringify({ usuario, cliente, propostaId, propostaRevisao, listaId, listaRevisao, aquisicoes, parcelas, descricao, fator, preco });
@@ -104,8 +105,8 @@ export function PrepararMisto({ usuario, cliente, propostaId, propostaRevisao, l
   }
   return <section aria-label="Composição mista de orçamento">
     <h3>Composição de aquisição e despesas operacionais</h3>
-    {import.meta.env.VITE_SSO_HISTORICO_COMPOSICAO_MISTA_ENABLED === "true" && <HistoricoComposicaoMista usuario={usuario} cliente={cliente} propostaId={propostaId} versao={propostaRevisao} />}
-    {import.meta.env.VITE_SSO_CORRELACAO_GASTO_ENABLED === "true" && <CorrelacionarGasto usuario={usuario} cliente={cliente} listaId={listaId}
+    {flagLigada("VITE_SSO_HISTORICO_COMPOSICAO_MISTA_ENABLED") && <HistoricoComposicaoMista usuario={usuario} cliente={cliente} propostaId={propostaId} versao={propostaRevisao} />}
+    {flagLigada("VITE_SSO_CORRELACAO_GASTO_ENABLED") && <CorrelacionarGasto usuario={usuario} cliente={cliente} listaId={listaId}
       fonte={aquisicoes.length === 1 ? aquisicoes[0]! : null} parcela={parcelas.length === 1 ? parcelas[0]! : null}
       disponivel={permitirEdicao && pronta && atual && !ocupado && !pendente} aoDetectarConflito={registrarConflitos} />}
     <p>Confirme as fontes e possíveis duplicidades físicas. A seleção não prova que registros distintos sejam gastos diferentes.</p>

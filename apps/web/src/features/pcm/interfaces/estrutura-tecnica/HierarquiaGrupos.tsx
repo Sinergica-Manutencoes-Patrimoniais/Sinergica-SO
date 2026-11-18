@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { BreadcrumbGrupo } from "./BreadcrumbGrupo";
+import { flagLigada } from "../../../../config/flags-sso";
 const linha = z
   .object({
     grupo_id: z.string().guid(),
@@ -15,7 +16,7 @@ const linha = z
   })
   .strict();
 export function HierarquiaGrupos({ userId, clienteId }: { userId: string; clienteId: string }) {
-  const ativo = import.meta.env.VITE_SSO_HIERARQUIA_GRUPOS_ENABLED === "true";
+  const ativo = flagLigada("VITE_SSO_HIERARQUIA_GRUPOS_ENABLED");
   const q = useInfiniteQuery({
     queryKey: ["estrutura-tecnica", userId, clienteId, "hierarquia-grupos"],
     enabled: ativo,

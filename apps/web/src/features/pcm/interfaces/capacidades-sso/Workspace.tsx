@@ -1,6 +1,7 @@
 import { Button, Card } from "@sinergica/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { concessaoSchema, perfilSchema, vinculoSchema } from "../../application/capacidades-sso";
 import type { PaginaCapacidade } from "../../application/capacidades-sso-gateway";
@@ -500,7 +501,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
           <Button disabled={ocupado} onClick={() => void recuperar()}>
             Repetir alteração pendente
           </Button>
-          {import.meta.env.VITE_SSO_RECIBO_CAPACIDADES_ENABLED === "true" && (
+          {flagLigada("VITE_SSO_RECIBO_CAPACIDADES_ENABLED") && (
             <Button disabled={ocupado || consultandoRecibo} onClick={() => void consultarRecibo()}>
               Consultar confirmação
             </Button>

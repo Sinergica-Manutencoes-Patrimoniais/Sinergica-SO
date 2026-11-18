@@ -6,10 +6,20 @@ import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { supabase } from "../../../lib/supabase-client";
 import { conferirSessaoProposta, obterVersaoOperacional } from "../infrastructure/supabase-portal-propostas-os-adapter";
 import { obterItensHistoricos, formatarItensHistoricos } from "../infrastructure/itens-publicos-proposta";
+import { flagLigada } from "../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; osId: string; propostaId: string; clienteNome: string };
 export function HistoricoPropostaOs(props: Props) {
-  if (import.meta.env.VITE_SSO_HISTORICO_PROPOSTA_OS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_HISTORICO_PROPOSTA_OS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Historico proposta os"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_HISTORICO_PROPOSTA_OS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.osId, props.propostaId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, osId, propostaId, clienteNome }: Props) {
@@ -22,7 +32,7 @@ function Conteudo({ userId, clienteId, osId, propostaId, clienteNome }: Props) {
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessaoProposta(userId, signal);
       const parametros={p_cliente_id:clienteId,p_os_id:osId,p_proposta_id:propostaId,p_apos:pageParam};
-      const requisicao=import.meta.env.VITE_SSO_HISTORICO_PROPOSTA_MEDIADO_ENABLED==="true"?supabase.schema("comercial").rpc("sso_portal_historico_operacional_mediado",{...parametros,p_ator_id:userId}):supabase.schema("comercial").rpc("sso_portal_historico_operacional",parametros);
+      const requisicao=flagLigada("VITE_SSO_HISTORICO_PROPOSTA_MEDIADO_ENABLED")?supabase.schema("comercial").rpc("sso_portal_historico_operacional_mediado",{...parametros,p_ator_id:userId}):supabase.schema("comercial").rpc("sso_portal_historico_operacional",parametros);
       const { data, error } = await requisicao.abortSignal(signal);
       if (error) throw error;
       const pagina = z.array(z.object({ versao: z.number().int().positive().safe(), publicado_em: z.string().datetime({ offset: true }) }).strict()).max(20).parse(data);
@@ -36,7 +46,7 @@ function Conteudo({ userId, clienteId, osId, propostaId, clienteNome }: Props) {
   const detalhe = useQuery({ queryKey: ["portal-versao-proposta", userId, clienteId, osId, propostaId, versao],
     enabled: versaoVisivel, gcTime: 0, retry: false, staleTime: 0, refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => { if (versao === null) throw new Error("Versão ausente."); await conferirSessaoProposta(userId, signal); const resultado = await obterVersaoOperacional(clienteId, osId, propostaId, versao, userId); await conferirSessaoProposta(userId, signal); return resultado; } });
-  const exigeItens = import.meta.env.VITE_SSO_PROPOSTA_ITENS_PUBLICOS_ENABLED === "true";
+  const exigeItens = flagLigada("VITE_SSO_PROPOSTA_ITENS_PUBLICOS_ENABLED");
   const itens = useQuery({ queryKey: ["portal-itens-historicos", userId, clienteId, osId, propostaId, versao],
     enabled: exigeItens && versaoVisivel, gcTime: 0, retry: false, staleTime: 0, refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => { if (versao === null) throw new Error("Versão ausente."); await conferirSessaoProposta(userId, signal); const resultado = await obterItensHistoricos(clienteId, osId, propostaId, versao, userId); await conferirSessaoProposta(userId, signal); return resultado; } });

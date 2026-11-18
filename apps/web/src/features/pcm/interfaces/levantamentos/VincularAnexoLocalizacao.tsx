@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 type Props = { userId: string; clienteId: string; tipo: "foto" | "documento"; anexoId: string };
 const pedido = z.object({ requestId: z.string().guid(), tipo: z.enum(["foto", "documento"]), anexoId: z.string().guid(), revision: z.number().int().positive() }).strict(); type Pedido = z.infer<typeof pedido>;
-export function VincularAnexoLocalizacao(props: Props) { if (import.meta.env.VITE_SSO_ANEXO_LOCALIZACAO_ATUALIZADA_ENABLED !== "true") return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.anexoId])} {...props}/>; }
+export function VincularAnexoLocalizacao(props: Props) { if (!flagLigada("VITE_SSO_ANEXO_LOCALIZACAO_ATUALIZADA_ENABLED")) return null; return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.tipo, props.anexoId])} {...props}/>; }
 function Conteudo({ userId, clienteId, tipo, anexoId }: Props) {
   const key = `sso-anexo-localizacao:${JSON.stringify([userId, clienteId, tipo, anexoId])}`; const client = useQueryClient(); const trava = useRef(false);
   const [pendente, setPendente] = useState<Pedido | "invalido" | null>(() => { try { const raw = sessionStorage.getItem(key); if (!raw) return null; const p = pedido.parse(JSON.parse(raw)); return p.tipo === tipo && p.anexoId === anexoId ? p : "invalido"; } catch { return "invalido"; } }); const [confirma, setConfirma] = useState(false); const [aviso, setAviso] = useState("");

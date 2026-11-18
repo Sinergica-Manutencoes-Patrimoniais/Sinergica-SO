@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { ExcecaoVisita } from "./ExcecaoVisita";
 import { AlterarDiaComVisitasV2 } from "./AlterarDiaComVisitasV2";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const uuid = z.string().guid();
 const dataCivil = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -67,8 +68,8 @@ type Props = {
 };
 
 export function AlterarDiaComVisitas(props: Props) {
-  const v2Ui = import.meta.env.VITE_SSO_MUDANCA_DIA_V2_UI_ENABLED === "true";
-  const v2Operacional = import.meta.env.VITE_SSO_MUDANCA_DIA_V2_ENABLED === "true";
+  const v2Ui = flagLigada("VITE_SSO_MUDANCA_DIA_V2_UI_ENABLED");
+  const v2Operacional = flagLigada("VITE_SSO_MUDANCA_DIA_V2_ENABLED");
   if (v2Ui || v2Operacional) {
     return <AlterarDiaComVisitasV2 {...props} operacionalHabilitado={v2Operacional} />;
   }
@@ -110,7 +111,7 @@ function AlterarDiaComVisitasV1({
     };
   }, []);
   const cache = useQueryClient();
-  const conferirImpactos = import.meta.env.VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED === "true";
+  const conferirImpactos = flagLigada("VITE_SSO_PREVIA_IMPEDIMENTOS_DIA_ENABLED");
   async function conferirAtor() {
     const r = await supabase.auth.getUser();
     if (r.error || r.data.user?.id !== userId || !montado.current)
@@ -342,7 +343,7 @@ function AlterarDiaComVisitasV1({
                     {v.data_proposta} · {v.classificacao}
                     {v.feriado_declarado && " · feriado: pode ser suprimida"}
                     {v.ocorrencia_preparada && " · ocorrência preparada"}
-                    {import.meta.env.VITE_SSO_EXCECAO_VISITA_ENABLED === "true" && (
+                    {flagLigada("VITE_SSO_EXCECAO_VISITA_ENABLED") && (
                       <button
                         type="button"
                         disabled={ocupado || bloqueado}

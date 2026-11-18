@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { conferirSessaoDiagnostico } from "./diagnostico-revisao-sessao";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; planoId: string };
 const pedidoSchema = z.object({ requestId: z.string().guid(), clienteId: z.string().guid(), planoId: z.string().guid(), revisao: z.number().int().nonnegative().safe(), fuso: z.string().trim().min(1).max(100), fonte: z.string().trim().min(1).max(500), motivo: z.string().trim().min(1).max(2000) }).strict();
 type Pedido = z.infer<typeof pedidoSchema>;
 const linhaHistorico = z.object({ request_id: z.string().guid(), revisao: z.number().int().positive().safe(), fuso: z.string().min(1).max(100), fonte: z.string().min(1).max(500), motivo: z.string().min(1).max(2000), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }), contrato_referencia_id: z.string().guid().nullable() }).strict();
 export function FusoPlanoDeclarado(props: Props) {
-  if (import.meta.env.VITE_SSO_FUSO_PLANO_MEDIADO_ENABLED !== "true") return <p>Declaração de fuso indisponível.</p>;
+  if (!flagLigada("VITE_SSO_FUSO_PLANO_MEDIADO_ENABLED")) return <p>Declaração de fuso indisponível.</p>;
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.planoId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, planoId }: Props) {

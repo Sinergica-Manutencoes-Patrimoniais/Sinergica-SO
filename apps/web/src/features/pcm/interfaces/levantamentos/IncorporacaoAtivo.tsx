@@ -11,11 +11,21 @@ import { pedidoAtivoSchema, type PedidoAtivo, supabaseLevantamentosAdapter } fro
 import { supabaseSistemasAdapter } from "../../infrastructure/supabase-sistemas-adapter";
 import { SelecionarCriacaoAtivo } from "./CriacaoAtivosLote";
 import { SelecionarCriacaoGrupo } from "./CriacaoGruposLote";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { userId: string; clienteId: string; loteId: string; chave: string; revisao: number; tipo: string; atributos: Record<string, unknown> };
 export function IncorporacaoAtivo(props: Props) {
-  if (import.meta.env.VITE_SSO_INCORPORACAO_ATIVOS_ENABLED !== "true" ||
-    !["sistema", "equipamento", "componente", "grupo_quantitativo"].includes(props.tipo)) return null;
+  if (!["sistema", "equipamento", "componente", "grupo_quantitativo"].includes(props.tipo)) return null;
+  if (!flagLigada("VITE_SSO_INCORPORACAO_ATIVOS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Incorporação de ativos"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_INCORPORACAO_ATIVOS_ENABLED"]}
+      />
+    );
+  }
   return <ComPermissao key={JSON.stringify([props.userId, props.clienteId, props.loteId, props.chave])} {...props} />;
 }
 
@@ -65,7 +75,7 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo, atributos }
   // code even when the original imported row no longer contains that value.
   const grupoComCodigo = tipo === "grupo_quantitativo" &&
     (Boolean(codigoStaging.data?.codigo?.trim()) || (atributos.codigoInformado != null && String(atributos.codigoInformado).trim() !== ""));
-  const grupoCodigoHabilitado = import.meta.env.VITE_SSO_INCORPORAR_GRUPO_CODIGO_ENABLED === "true";
+  const grupoCodigoHabilitado = flagLigada("VITE_SSO_INCORPORAR_GRUPO_CODIGO_ENABLED");
   const envio = useMutation({ mutationFn: async (pedido: PedidoAtivo) => {
       const antes=await supabase.auth.getUser();
       if(antes.error||antes.data.user?.id!==userId||sessionStorage.getItem(chaveLocal)!==JSON.stringify(pedido))throw new Error("Sessão ou tentativa alterada.");

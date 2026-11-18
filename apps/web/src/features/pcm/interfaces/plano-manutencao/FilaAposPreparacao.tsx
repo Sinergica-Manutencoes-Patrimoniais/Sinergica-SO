@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FilaPreventivaPcm } from "./FilaPreventivaPcm";
+import { flagLigada } from "../../../../config/flags-sso";
 
 type Props = { userId: string; clienteId: string; planoId: string; preparadaId: string; tipo?: "calendario" | "visita" };
 export function FilaAposPreparacao(props: Props) {
@@ -7,7 +8,7 @@ export function FilaAposPreparacao(props: Props) {
 }
 function Conteudo(props: Props) {
   const [aberta, setAberta] = useState(false);
-  const habilitada = props.tipo === "visita" ? import.meta.env.VITE_SSO_FILA_VISITA_ENABLED === "true" : import.meta.env.VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED === "true";
+  const habilitada = props.tipo === "visita" ? flagLigada("VITE_SSO_FILA_VISITA_ENABLED") : flagLigada("VITE_SSO_FILA_PREVENTIVA_PCM_ENABLED");
   if (!habilitada) return null;
   return <><button type="button" aria-expanded={aberta} onClick={() => setAberta((anterior) => !anterior)}>{aberta ? "Ocultar fila" : "Conferir fila"}</button>{aberta && <FilaPreventivaPcm {...props} />}</>;
 }

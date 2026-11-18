@@ -2,6 +2,8 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const estadoSchema = z.object({ clienteId: z.string().guid(), componenteId: z.string().guid(), textoAtual: z.string().nullable(), categoriaId: z.string().guid().nullable(), revision: z.number().int().nonnegative(), atual: z.boolean() }).strict();
 const categoriaSchema = z.object({ id: z.string().guid(), nome: z.string().min(1) }).strict();
@@ -11,7 +13,15 @@ type Pedido = z.infer<typeof pedidoSchema>;
 type Props = { userId: string; clienteId: string; componenteId: string };
 
 export function CategoriaComponente(props: Props) {
-  if (import.meta.env.VITE_SSO_CATEGORIA_COMPONENTE_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CATEGORIA_COMPONENTE_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Categoria componente"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CATEGORIA_COMPONENTE_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.componenteId])} {...props} />;
 }
 function Conteudo({ userId, clienteId, componenteId }: Props) {

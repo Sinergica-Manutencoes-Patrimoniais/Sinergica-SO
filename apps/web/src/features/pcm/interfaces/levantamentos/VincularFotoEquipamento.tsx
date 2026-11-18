@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const pedido=z.object({requestId:z.string().guid(),fotoId:z.string().guid(),entidadeId:z.string().guid(),revision:z.number().int().positive()}).strict();
 type Pedido=z.infer<typeof pedido>;
 type Props={userId:string;clienteId:string;fotoId:string};
-export function VincularFotoEquipamento(props:Props){if(import.meta.env.VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED!=="true")return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
+export function VincularFotoEquipamento(props:Props){if(!flagLigada("VITE_SSO_FOTOS_EQUIPAMENTO_ENABLED"))return null;return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.fotoId])} {...props}/>;}
 function Conteudo({userId,clienteId,fotoId}:Props){
   const key=`sso-vincular-foto-equipamento:${JSON.stringify([userId,clienteId,fotoId])}`;
   const [pendente,setPendente]=useState<Pedido|"invalido"|null>(()=>{try{const raw=sessionStorage.getItem(key);if(!raw)return null;const p=pedido.parse(JSON.parse(raw));return p.fotoId===fotoId ? p : "invalido";}catch{return "invalido";}});

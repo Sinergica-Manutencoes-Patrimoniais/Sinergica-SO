@@ -4,13 +4,14 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { ReabrirConferencia } from "./ReabrirConferencia";
+import { flagLigada } from "../../../../config/flags-sso";
 const scalar=z.union([z.string(),z.number(),z.boolean(),z.null()]);
 const pedidoSchema=z.discriminatedUnion("tipo",[
   z.object({tipo:z.literal("linha"),requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),chave:z.string().min(1).max(200),atributos:z.record(z.string(), scalar)}).strict(),
   z.object({tipo:z.literal("lote"),requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive()}).strict(),
 ]);type Pedido=z.infer<typeof pedidoSchema>;
 type Props={userId:string;clienteId:string;loteId:string;revisao:number;linha?:{chave:string;atributos:Record<string,unknown>}};
-export function ConsolidarLote(props:Props){if(import.meta.env.VITE_SSO_CONFERENCIA_LOTE_ENABLED!=="true")return null;return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.linha?.chave ?? "lote"])} {...props}/>;}
+export function ConsolidarLote(props:Props){if(!flagLigada("VITE_SSO_CONFERENCIA_LOTE_ENABLED"))return null;return <Permissao key={JSON.stringify([props.userId,props.clienteId,props.loteId,props.linha?.chave ?? "lote"])} {...props}/>;}
 function Permissao(props:Props){const p=useQuery({queryKey:["levantamentos",props.userId,props.clienteId,"incorporacao-permissao"],queryFn:()=>supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.aprovar",props.clienteId),gcTime:0,refetchOnWindowFocus:true});
   if(p.isPending || p.isFetching)return <output>Verificando permissão de conferência…</output>;if(p.isError)return <p role="alert">Não foi possível verificar permissão. <button type="button" onClick={()=>void p.refetch()}>Tentar novamente</button></p>;return p.data===true ? <Conteudo {...props}/> : null;}
 function Conteudo({userId,clienteId,loteId,revisao,linha}:Props){

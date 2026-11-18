@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const inteiro = z.number().int().nonnegative().safe();
 const linha = z.object({ tecnico_id: z.string().guid().nullable(), tecnico_nome: z.string().nullable(), quantidade: inteiro,
@@ -9,7 +11,15 @@ const linha = z.object({ tecnico_id: z.string().guid().nullable(), tecnico_nome:
 const moeda = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v / 100);
 type Props = { userId: string; clienteId: string; periodoInicial?: { inicio: string; fim: string } };
 export function RelatorioClienteDespesas(props: Props) {
-  if (import.meta.env.VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Relatorio despesas cliente"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId, props.periodoInicial])} {...props} />;
 }
 function Conteudo({ userId, clienteId, periodoInicial }: Props) {
@@ -20,7 +30,7 @@ function Conteudo({ userId, clienteId, periodoInicial }: Props) {
       if (!periodo) throw new Error("Período ausente.");
       const antes=await supabase.auth.getUser();if(antes.error||antes.data.user?.id!==userId||signal.aborted)throw new Error("Sessão alterada.");
       const parametros={p_cliente_id:clienteId,p_inicio:periodo.inicio,p_fim:periodo.fim};
-      const requisicao=import.meta.env.VITE_SSO_RELATORIO_DESPESAS_CLIENTE_MEDIADO_ENABLED==="true"
+      const requisicao=flagLigada("VITE_SSO_RELATORIO_DESPESAS_CLIENTE_MEDIADO_ENABLED")
         ? supabase.schema("pcm").rpc("sso_relatorio_despesas_cliente_mediado",{...parametros,p_ator_id:userId})
         : supabase.schema("pcm").rpc("sso_relatorio_despesas_cliente",parametros);
       const { data, error } = await requisicao.abortSignal(signal);

@@ -7,6 +7,8 @@ import { supabaseListasMateriaisAdapter } from "../../infrastructure/supabase-li
 import { WorkspaceListasMateriais } from "./Workspace";
 import { ExcecoesOs } from "./ExcecoesOs";
 import { OrcamentosDaOs } from "../../../comercial/interfaces/orcamento-operacional/OrcamentosDaOs";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 type Props = { usuario: string; cliente: string; onAbrirOs?: (osId: string) => void };
 type Responsavel = "cliente" | "sinergica" | "todos";
@@ -27,13 +29,29 @@ async function consultarPermissaoMaterial(usuario:string,cliente:string) {
 }
 
 export function CentralMateriais(props: Props) {
-  if (import.meta.env.VITE_SSO_CENTRAL_MATERIAIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CENTRAL_MATERIAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Central materiais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CENTRAL_MATERIAIS_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 
 /** Entrada na operação global, sempre limitada ao Cliente selecionado. */
 export function CentralMateriaisGlobal(props: Props) {
-  if (import.meta.env.VITE_SSO_CENTRAL_MATERIAIS_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_CENTRAL_MATERIAIS_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Central materiais"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CENTRAL_MATERIAIS_ENABLED"]}
+      />
+    );
+  }
   return <CentralGlobalConteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 
@@ -64,7 +82,7 @@ function Conteudo({ usuario, cliente, onAbrirOs, permissaoMonitorada = false }: 
   const [aberta, setAberta] = useState<string | null>(null);
   const [orcamentoOs, setOrcamentoOs] = useState<string | null>(null);
   const [erro, setErro] = useState("");
-  const filtroServidor = import.meta.env.VITE_SSO_CENTRAL_MATERIAIS_SITUACAO_ENABLED === "true";
+  const filtroServidor = flagLigada("VITE_SSO_CENTRAL_MATERIAIS_SITUACAO_ENABLED");
   const permissao = useQuery({
     queryKey: ["listas-materiais-central", usuario, cliente, "permissao"],
     queryFn: () => consultarPermissaoMaterial(usuario,cliente),
@@ -93,7 +111,7 @@ function Conteudo({ usuario, cliente, onAbrirOs, permissaoMonitorada = false }: 
   const visiveis = estado === "todos" ? carregadas : carregadas.filter((lista) => lista.estado === estado);
   return <section aria-label="Central de materiais">
     <h2>Central de materiais</h2>
-    {import.meta.env.VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED === "true" && <SelecionarOs usuario={usuario} cliente={cliente} onSelecionar={(id) => {
+    {flagLigada("VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED") && <SelecionarOs usuario={usuario} cliente={cliente} onSelecionar={(id) => {
       setOsDigitada(id); setOs(id); setAberta(null); setOrcamentoOs(null); setErro("");
     }} />}
     <form onSubmit={(evento) => {
@@ -121,12 +139,12 @@ function Conteudo({ usuario, cliente, onAbrirOs, permissaoMonitorada = false }: 
     {carregadas.length > 0 && visiveis.length === 0 && <p>Nenhuma lista carregada corresponde à situação selecionada.</p>}
     <ul>{visiveis.map((lista) => <li key={lista.id}>
       <p>OS {lista.ordem_servico_id} · {lista.responsavel === "cliente" ? "Cliente" : "Sinérgica"} · {estadosLista[lista.estado] ?? lista.estado} · revisão {lista.revisao}</p>
-      <button type="button" onClick={() => { setOsDigitada(lista.ordem_servico_id); setOs(lista.ordem_servico_id); setAberta(null); setOrcamentoOs(null); setErro(""); }}>{import.meta.env.VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED === "true" ? "Filtrar esta OS e consultar exceções" : "Filtrar esta OS"}</button>
+      <button type="button" onClick={() => { setOsDigitada(lista.ordem_servico_id); setOs(lista.ordem_servico_id); setAberta(null); setOrcamentoOs(null); setErro(""); }}>{flagLigada("VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED") ? "Filtrar esta OS e consultar exceções" : "Filtrar esta OS"}</button>
       {onAbrirOs && <button type="button" onClick={() => onAbrirOs(lista.ordem_servico_id)}>Abrir contexto da OS</button>}
       <pre>{lista.texto_original}</pre>
-      {import.meta.env.VITE_SSO_LISTAS_MATERIAIS_ENABLED === "true" && <button type="button" onClick={() => { if (aberta === lista.id) { setAberta(null); void listas.refetch(); } else setAberta(lista.id); }}>{aberta === lista.id ? "Fechar materiais da OS" : "Abrir materiais da OS"}</button>}
+      {flagLigada("VITE_SSO_LISTAS_MATERIAIS_ENABLED") && <button type="button" onClick={() => { if (aberta === lista.id) { setAberta(null); void listas.refetch(); } else setAberta(lista.id); }}>{aberta === lista.id ? "Fechar materiais da OS" : "Abrir materiais da OS"}</button>}
       {aberta === lista.id && <WorkspaceListasMateriais usuario={usuario} cliente={cliente} ordemServico={lista.ordem_servico_id} />}
-      {lista.responsavel === "sinergica" && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true" && <>
+      {lista.responsavel === "sinergica" && flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED") && <>
         <button type="button" onClick={() => setOrcamentoOs(orcamentoOs === lista.id ? null : lista.id)}>{orcamentoOs === lista.id ? "Fechar orçamentos da OS" : "Consultar orçamentos da OS"}</button>
         {orcamentoOs === lista.id && <><p>O orçamento é da OS; confira a lista de materiais e sua revisão na criação. Não gera despesa de Visita ou cobrança automaticamente.</p><OrcamentosDaOs key={lista.id} usuario={usuario} cliente={cliente} ordemServico={lista.ordem_servico_id} listaInicialId={lista.id}/></>}
       </>}

@@ -24,6 +24,7 @@ import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipame
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
 import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
+import { flagLigada } from "../../../config/flags-sso";
 
 type Estado =
   | { fase: "carregando" }
@@ -53,7 +54,7 @@ async function conferirCadastro(userId: string, clientes: string[]) {
 }
 
 function CapacidadeSistema({ userId, clienteId, temEscrita, children }: { userId: string; clienteId: string; temEscrita: boolean; children: (permitido: boolean) => ReactNode }) {
-  const habilitado = import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true";
+  const habilitado = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
   const consulta = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
     enabled: habilitado && temEscrita && !!userId && !!clienteId, refetchOnWindowFocus: true,
     queryFn: async () => { await conferirCadastro(userId, [clienteId]); return true; } });
@@ -98,7 +99,7 @@ export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void
   async function salvar(dados: SistemaFormData) {
     if (!user) return;
     setErroAcao(null);
-    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") {
+    if (flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED")) {
       await conferirCadastro(user.id, modal?.modo === "editar" ? [modal.sistema.clienteId, dados.clienteId] : [dados.clienteId]);
     }
     if (modal?.modo === "editar") {
@@ -125,7 +126,7 @@ export function SistemasPage({ onAbrirOs }: { onAbrirOs?: (osId: string) => void
   async function desativar() {
     if (!user || !sistemaParaDesativar) return;
     setErroAcao(null);
-    if (import.meta.env.VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED === "true") await conferirCadastro(user.id, [sistemaParaDesativar.clienteId]);
+    if (flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED")) await conferirCadastro(user.id, [sistemaParaDesativar.clienteId]);
     await desativarSistema(supabaseSistemasAdapter, sistemaParaDesativar.id, user.id);
     await carregar();
   }

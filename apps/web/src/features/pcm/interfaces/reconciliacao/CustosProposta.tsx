@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
 import { HistoricoCustosProposta } from "./HistoricoCustosProposta";
 import { EditarComposicaoEscopada } from "./EditarComposicaoEscopada";
+import { flagLigada } from "../../../../config/flags-sso";
 
 const valor = z.number().int().nonnegative().safe();
 const resposta = z.object({ clienteId: z.string().guid(), propostaId: z.string().guid(), versao: z.number().int().positive(), atualizadaEm: z.string().datetime({ offset: true }), custoTotalCentavos: valor, pisoCentavos: valor, precoSugeridoCentavos: valor, precoCentavos: valor }).strict();
@@ -34,9 +35,9 @@ export function CustosProposta({ userId, clienteId, propostaId }: { userId: stri
   return <section aria-label="Custos atuais da proposta"><button type="button" aria-expanded={aberto} onClick={() => { setAberto((v) => !v); setItensAbertos(false); }}>{aberto ? "Ocultar custos" : "Consultar custos"}</button>
     {aberto && <>{consulta.isFetching && <output>Consultando custos…</output>}{consulta.isError && <p role="alert">Custos indisponíveis ou acesso não autorizado. <button type="button" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>}
       {!consulta.isFetching && !consulta.isError && consulta.data && <><p>Versão atual {consulta.data.versao} · custo {dinheiro(consulta.data.custoTotalCentavos)} · piso {dinheiro(consulta.data.pisoCentavos)} · sugerido {dinheiro(consulta.data.precoSugeridoCentavos)} · venda {dinheiro(consulta.data.precoCentavos)}. Dados atuais, não fotografia histórica.</p>
-        {import.meta.env.VITE_SSO_EDITAR_COMPOSICAO_ESCOPADA_ENABLED === "true" && <EditarComposicaoEscopada userId={userId} clienteId={clienteId} propostaId={propostaId} />}
-        {import.meta.env.VITE_SSO_HISTORICO_CUSTOS_PROPOSTA_ENABLED === "true" && <HistoricoCustosProposta userId={userId} clienteId={clienteId} propostaId={propostaId} />}
-        {import.meta.env.VITE_SSO_ITENS_CUSTO_PROPOSTA_ENABLED === "true" && <><button type="button" aria-expanded={itensAbertos} onClick={() => setItensAbertos((v) => !v)}>{itensAbertos ? "Ocultar composição" : "Consultar composição"}</button>
+        {flagLigada("VITE_SSO_EDITAR_COMPOSICAO_ESCOPADA_ENABLED") && <EditarComposicaoEscopada userId={userId} clienteId={clienteId} propostaId={propostaId} />}
+        {flagLigada("VITE_SSO_HISTORICO_CUSTOS_PROPOSTA_ENABLED") && <HistoricoCustosProposta userId={userId} clienteId={clienteId} propostaId={propostaId} />}
+        {flagLigada("VITE_SSO_ITENS_CUSTO_PROPOSTA_ENABLED") && <><button type="button" aria-expanded={itensAbertos} onClick={() => setItensAbertos((v) => !v)}>{itensAbertos ? "Ocultar composição" : "Consultar composição"}</button>
           {itensAbertos && <><p>Itens atuais; páginas podem mudar durante a consulta.</p>{itens.isFetching && <output>Consultando itens…</output>}{(itens.isError || !consistentes) && <p role="alert">Composição indisponível ou divergente. <button type="button" onClick={() => void itens.refetch()}>Tentar novamente</button></p>}
             {!itens.isFetching && !itens.isError && consistentes && itens.data && <><ul>{linhas.map((linha) => <li key={linha.id}>{linha.tipo} · {linha.descricao} · quantidade {linha.quantidade} · unitário {dinheiro(linha.custo_unitario_centavos)} · total {dinheiro(linha.total_centavos)}</li>)}</ul>{linhas.length === 0 && <p>Nenhum item na composição atual.</p>}</>}
             {itens.hasNextPage && !itens.isError && consistentes && <button type="button" disabled={itens.isFetching} onClick={() => void itens.fetchNextPage()}>Mais itens</button>}</>}</>}

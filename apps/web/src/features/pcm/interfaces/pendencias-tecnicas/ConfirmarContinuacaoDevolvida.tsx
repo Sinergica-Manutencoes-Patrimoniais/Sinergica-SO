@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const id = z.string().guid();
 const contexto = z.object({ clienteId:id, retornoId:id, chamadoId:id, propostaId:id, revision:z.number().int().safe().positive(),
@@ -11,7 +13,15 @@ const pedido = z.object({ requestId:id, clienteId:id, retornoId:id, chamadoId:id
 type Pedido=z.infer<typeof pedido>;
 type Props={userId:string;clienteId:string;retornoId:string;chamadoId:string;propostaId:string};
 export function ConfirmarContinuacaoDevolvida(props:Props){
-  if(import.meta.env.VITE_SSO_CONTINUACAO_DEVOLVIDA_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_CONTINUACAO_DEVOLVIDA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Continuacao devolvida"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_CONTINUACAO_DEVOLVIDA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId,props.clienteId,props.retornoId])} {...props}/>;
 }
 function Conteudo({userId,clienteId,retornoId,chamadoId,propostaId}:Props){

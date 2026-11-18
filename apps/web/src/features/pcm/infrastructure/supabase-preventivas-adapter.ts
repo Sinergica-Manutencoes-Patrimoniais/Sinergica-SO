@@ -8,6 +8,7 @@ import type {
   PlanoPreventivo,
   ResultadoPreventivas,
 } from "../application/preventivas-gateway";
+import { flagLigada } from "../../../config/flags-sso";
 
 export type ContextoPreventivas = { clienteId?: string };
 
@@ -232,7 +233,7 @@ export async function listarPreventivas(
   }
   const clientesPorPlano = new Map(planos.map((plano) => [plano.id, plano.cliente_id]));
   const lotesPorCliente = new Map<string, string[]>();
-  if (import.meta.env.VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED === "true") for (const ocorrencia of ocorrencias) {
+  if (flagLigada("VITE_SSO_RECONCILIAR_LEGADA_INERTE_ENABLED")) for (const ocorrencia of ocorrencias) {
     const cliente = clientesPorPlano.get(ocorrencia.plano_id);
     if (!cliente) throw new Error("Cliente da ocorrência indisponível.");
     const lote = lotesPorCliente.get(cliente) ?? []; lote.push(ocorrencia.id); lotesPorCliente.set(cliente, lote);

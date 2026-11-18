@@ -2,12 +2,22 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 
 const linha = z.object({ composicao_id: z.string().guid(), chamado_id: z.string().guid(), revisao: z.number().int().positive(), retiradas_registradas: z.number().int().nonnegative(), parcelas_vinculadas: z.number().int().nonnegative() }).strict();
 const evento = z.object({ id: z.string().guid(), pendencia_id: z.string().guid(), revisao_origem: z.number().int().positive(), revisao_composicao: z.number().int().positive(), motivo: z.string(), ator_id: z.string().guid(), criado_em: z.string().datetime({ offset: true }), decisao_excepcional: z.boolean() }).strict();
 type Props = { userId: string; clienteId: string };
 export function DiagnosticoComposicoesVazias(props: Props) {
-  if (import.meta.env.VITE_SSO_DIAGNOSTICO_COMPOSICAO_VAZIA_ENABLED !== "true") return null;
+  if (!flagLigada("VITE_SSO_DIAGNOSTICO_COMPOSICAO_VAZIA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Diagnostico composicao vazia"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_DIAGNOSTICO_COMPOSICAO_VAZIA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([props.userId, props.clienteId])} {...props} />;
 }
 function Conteudo({ userId, clienteId }: Props) {

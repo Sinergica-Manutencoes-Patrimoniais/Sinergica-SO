@@ -2,9 +2,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "../../../../lib/supabase-client";
+import { flagLigada } from "../../../../config/flags-sso";
+import { RecursoNaoAtivado } from "@sinergica/ui";
 const schema=z.object({requestId:z.string().guid(),loteId:z.string().guid(),revision:z.number().int().positive(),motivo:z.string().min(1).max(2000)}).strict();type Pedido=z.infer<typeof schema>;
 export function ReabrirConferencia({userId,clienteId,loteId,revisao}:{userId:string;clienteId:string;loteId:string;revisao:number}){
-  if(import.meta.env.VITE_SSO_REABRIR_CONFERENCIA_ENABLED!=="true")return null;
+  if (!flagLigada("VITE_SSO_REABRIR_CONFERENCIA_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Reabrir conferencia"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_REABRIR_CONFERENCIA_ENABLED"]}
+      />
+    );
+  }
   return <Conteudo key={JSON.stringify([userId,clienteId,loteId])} userId={userId} clienteId={clienteId} loteId={loteId} revisao={revisao}/>;
 }
 function Conteudo({userId,clienteId,loteId,revisao}:{userId:string;clienteId:string;loteId:string;revisao:number}){

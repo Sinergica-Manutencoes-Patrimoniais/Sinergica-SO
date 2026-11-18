@@ -8,6 +8,7 @@ import { supabaseCalendarioContratualAdapter } from "../../infrastructure/supaba
 import { z } from "zod";
 import { SelecionarAlvoCronograma } from "./SelecionarAlvoCronograma";
 import { consultarCapacidadeCronograma } from "../../infrastructure/capacidade-cronograma";
+import { flagLigada } from "../../../../config/flags-sso";
 
 /** Integração experimental desligada; gates dependem de revisão e testes oficiais. */
 export function ExportarCronogramaFotografia({ userId, clienteId, planoId, versaoId }: { userId: string; clienteId: string; planoId: string; versaoId: string }) {
@@ -32,7 +33,7 @@ export function ExportarCronogramaFotografia({ userId, clienteId, planoId, versa
   contextoAtual.current = chave;
   const ativo = useRef<AbortController | null>(null);
   const contratos = useInfiniteQuery({
-    queryKey: ["cronograma-contratos", userId, clienteId], enabled: usarDeclarados && import.meta.env.VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED === "true",
+    queryKey: ["cronograma-contratos", userId, clienteId], enabled: usarDeclarados && flagLigada("VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED"),
     initialPageParam: null as string | null, gcTime: 0, staleTime: 0, retry: false,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
@@ -123,12 +124,12 @@ export function ExportarCronogramaFotografia({ userId, clienteId, planoId, versa
     <label>Tipo de alvo <select value={alvoTipo} onChange={(e) => { setFotografiaAlvo(null); setAlvoId(""); setAlvoTipo(e.target.value as typeof alvoTipo); }}><option value="">Todos</option><option value="sistema">Sistema</option><option value="componente">Componente</option><option value="grupo">Grupo Quantitativo</option></select></label>
     <label>Identificador do alvo, opcional <input value={alvoId} onChange={(e) => { setFotografiaAlvo(null); setAlvoId(e.target.value); }} /></label>
     <p>O identificador filtra a fotografia aprovada; deixe em branco para incluir todos os alvos do tipo selecionado.</p>
-    {import.meta.env.VITE_SSO_ALVOS_CRONOGRAMA_ENABLED === "true" && <>
+    {flagLigada("VITE_SSO_ALVOS_CRONOGRAMA_ENABLED") && <>
       <button type="button" aria-expanded={seletorAberto} onClick={() => setSeletorAberto((atual) => !atual)}>{seletorAberto ? "Ocultar alvos" : "Selecionar alvo por nome"}</button>
       {seletorAberto && <SelecionarAlvoCronograma userId={userId} clienteId={clienteId} planoId={planoId} versaoId={versaoId} onSelecionar={(tipo, id, hash) => { setAlvoTipo(tipo); setAlvoId(id); setFotografiaAlvo(hash); setSeletorAberto(false); }} />}
     </>}
     <label>Modo da Rotina <select value={modo} onChange={(e) => setModo(e.target.value as typeof modo)}><option value="">Todos</option><option value="calendario">Por calendário</option><option value="visita">Por Visita</option></select></label>
-    {import.meta.env.VITE_SSO_CAPACIDADE_CRONOGRAMA_ENABLED === "true" && <><label><input type="checkbox" checked={incluirCapacidade} onChange={(e) => setIncluirCapacidade(e.target.checked)} /> Incluir capacidade declarada parcial por semana</label>
+    {flagLigada("VITE_SSO_CAPACIDADE_CRONOGRAMA_ENABLED") && <><label><input type="checkbox" checked={incluirCapacidade} onChange={(e) => setIncluirCapacidade(e.target.checked)} /> Incluir capacidade declarada parcial por semana</label>
       <p>Somente totais informados de tempo destinado, reservas e ausências. Não calcula saldo, não verifica sobreposição de intervalos nem comprova cobertura. A consulta pode demorar em períodos longos.</p>
       {incluirCapacidade && <><button type="button" disabled={!periodoValido || capacidade.isFetching} onClick={() => {
         if (capacidadeAtual) void capacidade.refetch(); else setPeriodoCapacidade({ inicio, fim });
@@ -139,7 +140,7 @@ export function ExportarCronogramaFotografia({ userId, clienteId, planoId, versa
           <ul>{capacidade.data.map((semana) => <li key={semana.semana}>Semana {semana.semana}: {semana.registros} registro(s), {semana.destinados} min destinados, {semana.reservas} min de reservas, {semana.ausencias} min de ausências{semana.limiteAtingido ? " · limite de registros atingido" : ""}.</li>)}</ul></>}
       </>}</>}
     <p>Datas informadas aqui servem somente para esta exportação; não registram feriados nem comprovam cobertura.</p>
-    {import.meta.env.VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED === "true" && <>
+    {flagLigada("VITE_SSO_CRONOGRAMA_FERIADOS_DECLARADOS_ENABLED") && <>
       <label><input type="checkbox" checked={usarDeclarados} onChange={(e) => setUsarDeclarados(e.target.checked)} /> Consultar também declarações cadastradas para este Cliente</label>
       {usarDeclarados && <><label>Escopo de contrato <select value={contratoDeclarado} disabled={contratos.isFetching || contratos.isError || contratosDivergentes} onChange={(e) => setContratoDeclarado(e.target.value)}>
         <option value="">Somente geral do Cliente</option>
