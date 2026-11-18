@@ -103,6 +103,23 @@ revisão). Alarga o caminho de `1357`–`1359` de forma **aditiva**; migration a
 - Depende do cadastro de técnicos e clientes.
 - Sem integração externa obrigatória nesta etapa.
 
+## Alcance no front — obrigatório nesta story
+
+Regra transversal criada em 17/11/2026. Medição que a motiva:
+`docs/Apontamentos/alcance-no-front-2026-11-17.md` — **694** flags `VITE_SSO_*` usadas e nunca
+declaradas, **227** `return null` silenciosos, **583** gates `default false` contra **1** migration
+que já abriu algum. O efeito medido: regra fechada em produção (Chamado 1:N, `1842`) e **nenhum
+botão** na tela.
+
+**Esta story não está concluída quando o pgTAP passa. Está concluída quando o operador alcança a
+ação na tela.** Os critérios abaixo valem como AC e entram no Definition of Done do PR:
+
+- **AC-F1:** Toda capacidade entregue tem UI alcançável por um perfil real, com o **caminho de navegação nomeado** (menu → tela → ação) no `plan.md`.
+- **AC-F2:** Toda flag `VITE_SSO_*` introduzida ou usada é **declarada no mesmo PR** em `.env.example` e `netlify.toml`, com valor explícito — `false` quando a decisão é continuar desligada.
+- **AC-F3:** Recurso desligado por flag ou gate mostra o estado **"disponível, não ativado"**; `return null` silencioso é recusado no review (padrão definido em `E00-S28`).
+- **AC-F4:** Todo gate de banco novo nasce com **procedimento de abertura e de retorno** escritos no `plan.md`, antes de existir.
+- **AC-F5:** O PR declara em **uma linha** o que falta para a jornada ficar utilizável em produção (flag, gate, grant) — ou afirma que já está utilizável.
+
 ## Fora de escopo
 
 - Cálculo de rota, distância ou GPS (existe `pcm-auvo-gps-pull`, mas não é fonte de enquadramento aqui).
