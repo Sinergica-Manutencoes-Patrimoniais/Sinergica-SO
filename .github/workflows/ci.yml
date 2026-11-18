@@ -48,6 +48,9 @@ jobs:
       - name: Consistência de Edge Functions (função órfã / invoke sem função)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm run check:edge-functions
+      - name: Revogação imediata — policy nova sem releitura ao vivo (E00-S27)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: node scripts/check-revogacao-coberta.mjs
       - name: Tipos das Edge Functions
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: deno check --node-modules-dir=auto supabase/functions/*/index.ts
