@@ -13,6 +13,7 @@ alwaysApply: false
 
 | Período | Arquivo | O que tem |
 |---------|---------|-----------|
+| 2026-11-10 a 2026-11-11 | [2026-11-10-a-2026-11-11.md](2026-11-10-a-2026-11-11.md) | E01-S184 (proteção de custos no Portal) essencialmente fechada, PR #73; E01-S187 aberta (concorrência/idempotência proposta); E01-S167 US1 pronta, AC-5/AC-6 avançados; correção de achado errado sobre S185 (não era 0% implementada); 15 auditorias paralelas somente-leitura encontrando `tasks.md`/ROADMAP catastroficamente desatualizados em quase todas as stories do programa. |
 | 2026-11-09 | [2026-11-09.md](2026-11-09.md) | Retomada do lote S165/S166/S170/S176; migrations aplicadas em produção (backup lógico, CLI pinada 2.114.0, 1801/1801 registradas); E2E repetidos no HEAD final; PR #72 mergeada na `main` (merge commit `90b66da4`). |
 | 2026-10-24 a 2026-11-05 | [2026-10-24-a-2026-11-05.md](2026-10-24-a-2026-11-05.md) | Especificação do programa SSO Terra (22 stories E01-S165–S186, Caderno Técnico v1); implementação/validação do lote S165/S166/S170/S176 (preventivas v2, calendário de ocorrências, governança, estrutura técnica); ensaios remotos isolados de fotos/documentos/Edge; caminho até a PR #72 (CI, E2E, migrations). |
 | 2026-09-29 a 2026-10-01 | [2026-09-29-a-2026-10-01.md](2026-09-29-a-2026-10-01.md) | Cadastro de ativos v2, ondas S154–S161 e handoff histórico de Preventivas na 360; pendências de ambiente retratam a época e precisam ser revalidadas. |
