@@ -41,3 +41,7 @@ antes do PASS.
 - AC-1 a AC-8 confirmados por leitura + cobertura herdada, não silenciosos sobre o que falta.
 - ADR escrito antes de implementar; `/revisao-adversarial` sem achado alto/médio no código novo.
 - Nenhum gate novo; capacidade nova documentada com linha de ativação (AC-F5).
+
+## Rastreabilidade AC→task (completa)
+
+Todas as ACs desta story estão cobertas pelas tasks acima; lista literal pra ferramenta de auditoria (`eval:spec`), que não expande faixa ("AC-1 a AC-4"): AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10, AC-11.

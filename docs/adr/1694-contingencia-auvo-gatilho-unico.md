@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1694-contingencia-auvo-gatilho-unico-md"
+description: "Documento Sinérgica SO: ADR-1694 — Criação manual de tarefa Auvo vira contingência auditada (E01-S196)"
+alwaysApply: false
+---
+
 # ADR-1694 — Criação manual de tarefa Auvo vira contingência auditada (E01-S196)
 
 **Status:** aceita · **Data:** 2026-11-18 · **Story:** E01-S196 · **Tier:** arquitetural (integração externa)
