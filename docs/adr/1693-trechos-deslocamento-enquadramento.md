@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1693-trechos-deslocamento-enquadramento-md"
+description: "Documento Sinérgica SO: ADR-1693 — Trecho de deslocamento como entidade aditiva (E01-S195)"
+alwaysApply: false
+---
+
 # ADR-1693 — Trecho de deslocamento como entidade aditiva (E01-S195)
 
 **Status:** aceita · **Data:** 2026-11-18 · **Story:** E01-S195
