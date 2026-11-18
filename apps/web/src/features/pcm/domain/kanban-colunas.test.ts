@@ -62,10 +62,40 @@ describe("kanban-colunas", () => {
   it("labelColunaKanban — status real usa STATUS_OS, virtual usa rótulo próprio", () => {
     expect(labelColunaKanban("planejamento")).toBe("Planejamento");
     expect(labelColunaKanban("preventiva")).toBe("Preventiva");
-    expect(labelColunaKanban("backlog")).toBe("Backlog");
+    expect(labelColunaKanban("demanda")).toBe("Demanda");
+    expect(labelColunaKanban("validacao_pcm")).toBe("Validação PCM");
   });
 
-  it("COLUNAS_KANBAN_PADRAO inclui a coluna backlog (E01-S117)", () => {
-    expect(COLUNAS_KANBAN_PADRAO.some((c) => c.id === "backlog")).toBe(true);
+  it("E01-S194 AC-1: COLUNAS_KANBAN_PADRAO é exatamente o quadro aprovado, nessa ordem", () => {
+    expect(COLUNAS_KANBAN_PADRAO.map((c) => c.id)).toEqual([
+      "solicitacao",
+      "preventiva",
+      "demanda",
+      "planejamento",
+      "em_execucao",
+      "validacao_pcm",
+      "finalizado",
+    ]);
+  });
+
+  it("E01-S194 AC-2/AC-3: backlog (painel lateral) e cancelado (filtro/histórico) não são coluna cotidiana", () => {
+    expect(COLUNAS_KANBAN_PADRAO.some((c) => c.id === "backlog")).toBe(false);
+    expect(COLUNAS_KANBAN_PADRAO.some((c) => c.id === "cancelado")).toBe(false);
+    expect(COLUNAS_KANBAN_PADRAO.some((c) => c.id === "corretiva")).toBe(false);
+  });
+
+  it("E01-S194: preferência salva antes desta story (com corretiva/backlog/cancelado) não ressuscita a coluna extinta", () => {
+    const salvasAntigas = [
+      { id: "solicitacao" as const, visivel: true },
+      { id: "corretiva" as const, visivel: true },
+      { id: "backlog" as const, visivel: true },
+      { id: "cancelado" as const, visivel: true },
+    ];
+    const resultado = normalizarColunasKanban(salvasAntigas);
+    expect(resultado.some((c) => c.id === "corretiva")).toBe(false);
+    expect(resultado.some((c) => c.id === "backlog")).toBe(false);
+    expect(resultado.some((c) => c.id === "cancelado")).toBe(false);
+    expect(resultado.some((c) => c.id === "demanda")).toBe(true);
+    expect(resultado.some((c) => c.id === "validacao_pcm")).toBe(true);
   });
 });

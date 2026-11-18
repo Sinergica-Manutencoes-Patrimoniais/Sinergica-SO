@@ -1,6 +1,9 @@
 // E01-S125 — abertura de task Auvo sob demanda. O preview nunca chama o Auvo nem grava no banco.
 // A confirmação delega ao handler interno legado, que preserva idempotência por externalId e o
-// registro de falha em `auvo_sync_status`; esta borda só autoriza usuário PCM com escrita.
+// registro de falha em `auvo_sync_status`; o preview só exige módulo 'pcm' escrita, mas a
+// CRIAÇÃO de verdade (E01-S196 AC-9/AC-10) é contingência: exige a capacidade própria
+// `execucao.contingencia_auvo` e um motivo, auditados via `pcm.sso_registrar_contingencia_auvo`
+// — módulo genérico nunca bastou pra isso, achado desta story.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,7 +14,14 @@ import { resolveAuvoTaskTypeId } from "../_shared/auvo/task-type-map.ts";
 import { envioLegadoBloqueado } from "../_shared/auvo/trava-envio-legado.ts";
 
 const FN = "pcm-auvo-open-task";
-const InputSchema = z.object({ osId: z.string().uuid(), dryRun: z.boolean() });
+const InputSchema = z.object({
+  osId: z.string().uuid(),
+  dryRun: z.boolean(),
+  // E01-S196: obrigatório só pra confirmar de verdade (dryRun=false) — a validação condicional
+  // fica no handler, não aqui, porque dryRun nunca grava e não deveria exigir motivo pra só olhar.
+  requestId: z.string().uuid().optional(),
+  motivo: z.string().trim().min(1).max(2000).optional(),
+});
 
 function claimsFrom(req: Request): { user_role?: string; user_modulos?: Record<string, string> } {
   const payload = (req.headers.get("Authorization")?.replace("Bearer ", "") ?? "").split(".")[1];
@@ -39,6 +49,11 @@ serve(async (req) => {
     const url = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceKey = getSupabaseServiceKey();
     if (!url) throw new HttpError(500, "Ambiente Supabase incompleto");
+    // Client no contexto do USUÁRIO (não service_role) — é o que faz `auth.uid()` dentro da RPC
+    // de contingência ser o ator real, não o sistema. Nunca usado pra ler/gravar OS/Auvo.
+    const dbUsuario = createClient(url, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+    });
     // biome-ignore lint/suspicious/noExplicitAny: schemas Supabase não têm tipos gerados no repo.
     const db: any = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: os, error: osError } = await db
@@ -94,6 +109,35 @@ serve(async (req) => {
     };
     if (input.dryRun || os.auvo_task_id != null || pendencias.length > 0) {
       return json(200, { ok: os.auvo_task_id != null || pendencias.length === 0, ...preview }, cors);
+    }
+
+    // E01-S196 AC-9/AC-10: só a partir daqui é "uso" de verdade do caminho manual (preview
+    // acima nunca grava nem chama o Auvo). Exige capacidade própria + motivo + request_id
+    // idempotente; o servidor re-checa (`sso_registrar_contingencia_auvo` chama
+    // `sso_autorizar_acao` de novo), não confia no preview nem no front.
+    if (!input.motivo || !input.requestId) {
+      throw new HttpError(422, "Motivo e requestId são obrigatórios para confirmar a abertura.");
+    }
+    const { error: contingenciaError } = await dbUsuario.schema("pcm").rpc("sso_registrar_contingencia_auvo", {
+      p_request_id: input.requestId,
+      p_cliente_id: os.client_id,
+      p_os_id: os.id,
+      p_motivo: input.motivo,
+    });
+    if (contingenciaError) {
+      if (contingenciaError.message?.includes("sem_acesso")) {
+        throw new HttpError(403, "Sem capacidade de contingência Auvo para este Cliente.");
+      }
+      if (contingenciaError.message?.includes("contingencia_invalida")) {
+        throw new HttpError(422, "Dados da contingência inválidos.");
+      }
+      if (contingenciaError.message?.includes("os_indisponivel")) {
+        throw new HttpError(404, "OS não encontrada para registrar a contingência.");
+      }
+      if (contingenciaError.message?.includes("request_conflitante")) {
+        throw new HttpError(409, "Tentativa anterior com dados diferentes — recarregue e repita.");
+      }
+      throw contingenciaError;
     }
 
     // Reserva atômica antes da chamada remota: evita dois operadores criarem a mesma task entre

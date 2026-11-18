@@ -49,6 +49,7 @@ const base = {
   detalhes: null,
   tipoOs: null,
   pmocScheduleId: null,
+  ocorrenciaPreventivaId: null,
   chamadoId: null,
   localDescricao: null,
   solicitante: null,

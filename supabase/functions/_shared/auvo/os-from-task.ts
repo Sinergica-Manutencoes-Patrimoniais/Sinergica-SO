@@ -8,7 +8,7 @@
 
 import type { UntypedSupabaseClient } from "../supabase.ts";
 
-export type OsStatus = "solicitacao" | "em_execucao" | "finalizado" | "cancelado";
+export type OsStatus = "solicitacao" | "em_execucao" | "validacao_pcm" | "finalizado" | "cancelado";
 
 export interface CriarOsDaTarefaInput {
   taskId: number;

@@ -1,6 +1,7 @@
 ---
 name: confronto-pacote-consolidado-2026-11-13
 description: Confronto item a item entre o Pacote Consolidado do Fabrício (v1.0, 13/11/2026) e o estado real do código.
+alwaysApply: false
 ---
 
 # Confronto — Pacote Consolidado SSO v1.0 (13/11/2026) × código real

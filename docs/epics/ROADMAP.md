@@ -29,9 +29,7 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S28_
-
-| ID | Título | Owner | Status | Spec |
+_15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
 | E00-S25 | Workflow enxuto — ROADMAP compacto, Spec Kit, gates só nos afetados | Claude (sessão Lucas) | Em andamento | [spec](../../specs/E00-S25-workflow-enxuto/spec.md) |
 | E00-S09 | Grupos e permissões por módulo — fundação: schema, resolver, hook JWT, Edge Function de g… | Claude (sessão Lucas) | PR #9 aberto — db-tests (pgTAP) achou e… | [spec](../../specs/E00-S09-grupos-permissao-modulo/spec.md) |
@@ -167,6 +165,7 @@ _75 concluídas no histórico · maior ID usado: E01-S198_
 | E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 | E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
 | E01-S189 | Alcance dos sete escritores sem gate (orçamento, despesas, cobrança, grupos) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S189-alcance-escritores-sem-gate/spec.md) |
+
 | E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | Claude (sessão Lucas) | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
 | E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
 | E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
@@ -252,7 +251,7 @@ _0 concluídas no histórico · maior ID usado: E07-S00_
 ### E08 — Gestão · Cockpit
 _0 concluídas no histórico · maior ID usado: E08-S00_
 
-### E09 — Área do Cliente (Portal do Cliente / Portal do Síndico)
+### E09 — Área do Cliente (Portal do Cliente / Portal do Síndico) |
 _10 concluídas no histórico · maior ID usado: E09-S11_
 
 | ID | Título | Owner | Status | Spec |

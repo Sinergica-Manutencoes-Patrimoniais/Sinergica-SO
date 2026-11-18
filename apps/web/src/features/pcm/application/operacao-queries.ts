@@ -32,6 +32,9 @@ export const operacaoQueryKeys = {
     ["operacao", "kpis", input] as const,
   detalhe: (id: string) => ["operacao", "detalhe", id] as const,
   catalogos: () => ["operacao", "catalogos"] as const,
+  /** E01-S192 AC-9: nome do Plano legado de origem, resolvido lazy quando o drawer abre. */
+  planoOrigemOs: (clienteId: string, ocorrenciaPreventivaId: string) =>
+    ["operacao", "plano-origem-os", clienteId, ocorrenciaPreventivaId] as const,
 };
 
 export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacional {
@@ -63,6 +66,7 @@ export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacion
     detalhes: item.orientacao ? { orientacao: item.orientacao } : null,
     tipoOs: item.tipoOs as TipoOsHub | null,
     pmocScheduleId: item.pmocScheduleId,
+    ocorrenciaPreventivaId: item.ocorrenciaPreventivaId,
     chamadoId: item.chamadoId,
     localDescricao: null,
     solicitante: null,

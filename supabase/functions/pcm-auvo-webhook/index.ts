@@ -49,7 +49,16 @@ const AUVO_ACTION_EXCLUSAO = 3;
 const AUVO_TASK_STATUS_FINALIZADA = 5;
 const AUVO_TASK_STATUS_EM_ANDAMENTO = new Set([2, 3, 4]); // deslocamento/check-in/check-out
 
-type OsStatus = "em_execucao" | "finalizado" | "cancelado";
+type OsStatus = "em_execucao" | "validacao_pcm" | "finalizado" | "cancelado";
+
+/** E01-S194 AC-8: a tarefa terminar no campo não é mais o mesmo evento que o PCM encerrar a OS —
+ * `validacao_pcm` é a parada intermediária obrigatória. Side-effects de captura de campo
+ * (checklist/questionário/visita PMOC) disparam aqui também, porque descrevem o que aconteceu NO
+ * CAMPO, não a decisão do PCM; só a transição `validacao_pcm → finalizado` (gate de capacidade
+ * `execucao.validar`, ver migration do Kanban aprovado) fecha o ciclo. */
+function chegouAoCampo(status: OsStatus): boolean {
+  return status === "finalizado" || status === "validacao_pcm";
+}
 type JsonObject = Record<string, unknown>;
 
 // Schema deliberadamente leniente: só exige `entity`/`action` numéricos (coagidos, o Auvo pode
@@ -330,7 +339,7 @@ serve(async (req) => {
     // E01-S53: o webhook de conclusão busca a tarefa final porque seu payload não é contrato de
     // questionário. Só altera o resumo com data de origem, então uma reentrega tardia não regride
     // a ocorrência; o import periódico continua cobrindo eventos perdidos.
-    const resultadoPreventiva = targetStatus === "finalizado" && os.ocorrencia_preventiva_id
+    const resultadoPreventiva = chegouAoCampo(targetStatus) && os.ocorrencia_preventiva_id
       ? await sincronizarResultadoPreventivaDoWebhook(db, os.ocorrencia_preventiva_id, taskId)
       : null;
 
@@ -339,7 +348,7 @@ serve(async (req) => {
     // reclassifica pelo mesmo caminho da IA e atualiza as mesmas linhas — assim IDs/destinos das
     // derivações já feitas continuam válidos. Uma falha é propagada: o Auvo pode reentregar o
     // webhook e não deixa o assessment silenciosamente desatualizado.
-    const assessmentResync = targetStatus === "finalizado"
+    const assessmentResync = chegouAoCampo(targetStatus)
       ? await ressincronizarAssessmentsProvisorios(db, taskId, logBase)
       : { encontrados: 0, atualizados: 0, criados: 0 };
 
@@ -370,7 +379,7 @@ serve(async (req) => {
     // (checklist/materials_used/nonconformities) ficam vazios — a visita registrada é o fato
     // "aconteceu, nesta data, este técnico"; enriquecimento de checklist é gap conhecido, sinalizado
     // (não é regressão: não existia registro NENHUM antes desta story).
-    if (targetStatus === "finalizado" && os.pmoc_schedule_id) {
+    if (chegouAoCampo(targetStatus) && os.pmoc_schedule_id) {
       const { data: schedule, error: scheduleError } = await db
         .schema("pcm")
         .from("pmoc_schedules")
@@ -568,7 +577,7 @@ async function upsertTaskSnapshot(
         visualizada_em: timeline.visualizada_em ?? null,
         checkin_em: timeline.checkin_em ?? null,
         checkout_em: timeline.checkout_em ?? null,
-        concluida_em: timeline.concluida_em ?? (targetStatus === "finalizado" ? now : null),
+        concluida_em: timeline.concluida_em ?? (chegouAoCampo(targetStatus) ? now : null),
         last_webhook_received_at: now,
         updated_at: now,
       },
@@ -850,12 +859,15 @@ function firstNumber(values: unknown[]): number | null {
 }
 
 /**
- * Máquina de transição Auvo → `pcm.ordens_servico.status` (AC-2, AC-3, AC-4).
+ * Máquina de transição Auvo → `pcm.ordens_servico.status` (AC-2, AC-3, AC-4 originais +
+ * E01-S194 AC-8).
  * SPEC_DEVIATION (ver tasks.md): o taskStatus documentado do Auvo (§2.14) não tem valor
  * "Cancelada" — só 1=Aberta, 2=Em Deslocamento, 3=Check-in Realizado, 4=Check-out Realizado,
  * 5=Finalizada, 6=Pausada. Mapeamento adotado, a confirmar contra um webhook real antes de
  * produção:
- *   - action=2 (Alteração) + taskStatus=5 (Finalizada)      → 'finalizado' (AC-2)
+ *   - action=2 (Alteração) + taskStatus=5 (Finalizada)      → 'validacao_pcm' (E01-S194 AC-8;
+ *     era 'finalizado' até esta story — o Auvo finalizar a tarefa no campo não é mais o mesmo
+ *     evento que o PCM encerrar a OS, ver `chegouAoCampo`)
  *   - action=2 (Alteração) + taskStatus em {2,3,4}           → 'em_execucao' (AC-3)
  *   - action=3 (Exclusão) da task                            → 'cancelado' (AC-4, inferido)
  */
@@ -870,7 +882,7 @@ function resolveTargetStatus(
 
   if (evento.action === AUVO_ACTION_ALTERACAO) {
     const taskStatus = extractTaskStatus(evento);
-    if (taskStatus === AUVO_TASK_STATUS_FINALIZADA) return "finalizado";
+    if (taskStatus === AUVO_TASK_STATUS_FINALIZADA) return "validacao_pcm";
     if (taskStatus != null && AUVO_TASK_STATUS_EM_ANDAMENTO.has(taskStatus)) return "em_execucao";
     console.log(
       JSON.stringify({ ...logBase, nivel: "info", msg: "Alteração de Task sem taskStatus mapeado — ignorado", taskId, taskStatus }),

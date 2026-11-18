@@ -33,6 +33,9 @@ export function AbrirOsAuvoModal({
   const [preview, setPreview] = useState<PreviewAuvo | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  // E01-S196 AC-9: abrir manualmente é contingência, não o fluxo normal (confirmação PCM + T-24)
+  // — exige motivo registrado e auditado, nunca só um clique.
+  const [motivo, setMotivo] = useState("");
 
   useEffect(() => {
     let ativo = true;
@@ -54,11 +57,15 @@ export function AbrirOsAuvoModal({
   }, [osId]);
 
   async function confirmar() {
+    if (!motivo.trim()) {
+      setErro("Informe o motivo da abertura manual — vira contingência auditada.");
+      return;
+    }
     setSalvando(true);
     setErro(null);
     try {
       const { data, error } = await supabase.functions.invoke("pcm-auvo-open-task", {
-        body: { osId, dryRun: false },
+        body: { osId, dryRun: false, requestId: crypto.randomUUID(), motivo: motivo.trim() },
       });
       if (error) throw await erroDetalhado(error);
       const resultado = data as { ok?: boolean; taskId?: number; detail?: string };
@@ -137,6 +144,20 @@ export function AbrirOsAuvoModal({
                 </p>
               </>
             )}
+          </div>
+        )}
+        {preview && !preview.jaAberta && preview.podeAbrir && (
+          <div>
+            <label htmlFor="auvo-motivo-contingencia" className="text-caption text-ink-3">
+              Motivo da abertura manual (contingência auditada)
+            </label>
+            <textarea
+              id="auvo-motivo-contingencia"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              className="mt-1 w-full rounded-md border border-line-soft p-2 text-body"
+              rows={2}
+            />
           </div>
         )}
         {erro && <p className="text-body text-danger">{erro}</p>}
