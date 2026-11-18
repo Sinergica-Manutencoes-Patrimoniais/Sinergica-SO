@@ -6,6 +6,10 @@
 [build.environment]
   NODE_VERSION = "22"
   PNPM_VERSION = "9.0.0"
+  # E01-S195 AC-F2: primeira flag VITE_SSO_* declarada aqui — as demais (ver .env.example) são
+  # hoje só setadas no dashboard do Netlify, achado da reanálise de alcance-no-front (não
+  # corrigido retroativamente nesta story, fora de escopo unilateral).
+  VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED = "false"
 
 # SPA: todas as rotas servem index.html
 [[redirects]]
