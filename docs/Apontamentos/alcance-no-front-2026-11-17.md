@@ -1,6 +1,7 @@
 ---
 name: alcance-no-front-2026-11-17
 description: Medição do alcance real das regras de negócio pelo front — por que regra implementada não vira ação disponível na tela.
+alwaysApply: false
 ---
 
 # Alcance no front — medição de 2026-11-17

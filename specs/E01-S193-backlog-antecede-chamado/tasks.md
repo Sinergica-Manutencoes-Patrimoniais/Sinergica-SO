@@ -42,3 +42,7 @@ Detalhe técnico em `plan.md`. **Tier arquitetural**: ADR antes de implementar, 
 - ADR escrito; `/revisao-adversarial` sem achado alto ou médio.
 - Migration sequencial sem pular número; atomicidade por `do $$ ... $$` onde necessário.
 - CI verde, `db-tests` não pulado.
+
+## Rastreabilidade AC→task (completa)
+
+Todas as ACs desta story estão cobertas pelas tasks acima; lista literal pra ferramenta de auditoria (`eval:spec`), que não expande faixa ("AC-1 a AC-4"): AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8.
