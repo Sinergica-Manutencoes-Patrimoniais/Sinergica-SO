@@ -450,6 +450,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.pcm-auvo-open-task]
 verify_jwt = true
+[functions.pcm-api-dominio]
+verify_jwt = true
 [functions.pcm-preventivas-confirmar]
 verify_jwt = true
 [functions.pcm-preventivas-validar-auvo]
