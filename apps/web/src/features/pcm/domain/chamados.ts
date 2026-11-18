@@ -3,7 +3,10 @@
 // sem metadata de ticket.
 
 export type OrigemChamado = "manual" | "cliente_portal" | "whatsapp" | "inspecao" | "auvo_sync";
-export type StatusChamado = "aberto" | "convertido_os" | "backlog" | "cancelado";
+// E01-S193: "demanda" é o Chamado que nasce da liberação de um item do Backlog aprovado
+// (`pcm.sso_liberar_escopo_backlog`, ADR-1689) — dead-end por construção até uma transição
+// própria de E01-S194 (`validarTransicaoParaOs` abaixo já recusa por checar `!== "aberto"`).
+export type StatusChamado = "aberto" | "convertido_os" | "backlog" | "cancelado" | "demanda";
 
 export interface Chamado {
   id: string;
@@ -49,6 +52,7 @@ export const STATUS_CHAMADO_LABEL: Record<StatusChamado, string> = {
   convertido_os: "Convertido em OS",
   backlog: "Enviado ao backlog",
   cancelado: "Cancelado",
+  demanda: "Em triagem (Backlog aprovado)",
 };
 
 export const ORIGEM_CHAMADO_LABEL: Record<OrigemChamado, string> = {
