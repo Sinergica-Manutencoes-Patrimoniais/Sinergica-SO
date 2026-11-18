@@ -10,6 +10,7 @@ import type {
 import type { CanalConversa, ConversaItem, StatusConversa } from "../domain/conversas";
 import type { CustoIaMensagem, MensagemItem } from "../domain/mensagens";
 import type { MensagemRicaInput } from "../domain/mensagens";
+import type { AutorDaCitacao } from "../domain/mensagens";
 
 interface ConversaRow {
   id: string;
@@ -46,12 +47,19 @@ interface MensagemRow {
   midia_mime: string | null;
   payload: Record<string, unknown>;
   origem_envio: MensagemItem["origemEnvio"];
+  legenda: string | null;
+  conteudo_recebido: MensagemItem["conteudoRecebido"];
+  anexo_estado: MensagemItem["anexoEstado"];
+  citada_mensagem_id: string | null;
+  citada_trecho: string | null;
+  citada_autor: AutorDaCitacao | null;
+  reacoes_mensagem: Array<{ emoji: string }> | { emoji: string } | null;
 }
 
 const CONVERSA_COLS =
   "id,client_id,contato_nome,canal,status,modo,atribuido_a,handoff_motivo,handoff_em,nao_lidas,ultima_mensagem_preview,ultima_mensagem_em,ordem_servico_id,tags,instance_id,remote_jid" as const;
 const MENSAGEM_COLS =
-  "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at,tipo_conteudo,midia_url,midia_nome,midia_mime,payload,origem_envio" as const;
+  "id,conversa_id,direcao,remetente_tipo,remetente_id,conteudo,status_entrega,erro_detalhe,created_at,tipo_conteudo,midia_url,midia_nome,midia_mime,payload,origem_envio,legenda,conteudo_recebido,anexo_estado,citada_mensagem_id,citada_trecho,citada_autor,reacoes_mensagem(emoji)" as const;
 
 function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): ConversaItem {
   return {
@@ -74,6 +82,9 @@ function mapConversa(row: ConversaRow, clientesMap: Map<string, string>): Conver
 }
 
 function mapMensagem(row: MensagemRow, custoIa: CustoIaMensagem | null = null): MensagemItem {
+  const reacaoRow = Array.isArray(row.reacoes_mensagem)
+    ? (row.reacoes_mensagem[0] ?? null)
+    : row.reacoes_mensagem;
   return {
     id: row.id,
     conversaId: row.conversa_id,
@@ -91,6 +102,14 @@ function mapMensagem(row: MensagemRow, custoIa: CustoIaMensagem | null = null): 
     payload: row.payload ?? {},
     origemEnvio: row.origem_envio,
     custoIa,
+    legenda: row.legenda,
+    conteudoRecebido: row.conteudo_recebido,
+    anexoEstado: row.anexo_estado,
+    citacao:
+      row.citada_autor !== null
+        ? { mensagemId: row.citada_mensagem_id, trecho: row.citada_trecho, autor: row.citada_autor }
+        : null,
+    reacao: reacaoRow?.emoji ?? null,
   };
 }
 

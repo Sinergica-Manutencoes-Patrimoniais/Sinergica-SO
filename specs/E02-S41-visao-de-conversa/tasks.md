@@ -6,6 +6,18 @@ alwaysApply: false
 
 # Tasks — E02-S41 · Visão de conversa nova
 
+> **Nota de progresso (2026-11-13):** a tela nova (workspace 3 colunas, `interfaces/`, TanStack
+> Query) **não foi construída** — é o escopo mais caro desta story e ficou de fora por tempo.
+> O que foi feito, FORA desta lista de tasks (sobre os componentes EXISTENTES, não os novos):
+> `domain/mensagens.ts` ganhou os tipos de E02-S37/S38 (`ConteudoRecebido`, `AnexoEstado`,
+> `CitacaoDaMensagem`, `reacao`); o adapter (`supabase-atendimento-adapter.ts`) passou a selecionar
+> e mapear essas colunas, incluindo o embed de `reacoes_mensagem`; `MensagemBubble.tsx` (já
+> restilizado antes, PR #77) agora renderiza aviso (ícone + texto fixo), bloco de citação
+> (clicável quando a mensagem existe, "mensagem anterior" quando não) e o emoji de reação
+> ancorado na bolha — com 8 testes de componente novos. Isso torna o trabalho de S37/S38
+> **visível** na tela atual, sem esperar a reconstrução completa. As 13 tasks abaixo continuam
+> todas `todo`.
+
 ## Plano
 
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |

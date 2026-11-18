@@ -434,6 +434,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.evolution-configurar]
 verify_jwt = true
+[functions.atendimento-evolution-webhook]
+verify_jwt = false
 [functions.atendimento-whatsapp-envio]
 verify_jwt = true
 [functions.importar-relatorio-pdf]

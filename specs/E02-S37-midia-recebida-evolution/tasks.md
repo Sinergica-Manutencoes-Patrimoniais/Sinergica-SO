@@ -10,21 +10,38 @@ alwaysApply: false
 
 | #  | Task | Cobre AC | Depende de | Gate (comando) | Status |
 |----|------|----------|------------|----------------|--------|
-| 1  | `_shared/evolution-midia.ts` — porte direto (mimes, limites, saneamento, textos) | AC-2, AC-4, AC-10 | — | `deno test supabase/functions/_shared/evolution-midia.test.ts` | todo |
-| 2  | Migration `1833` — colunas, CHECKs, índice de derivada, buckets privados | AC-14 | — | `pnpm run db:test -- midia_recebida` | todo |
-| 3  | `fn_pode_ler_conversa` + RPC de ingestão de mídia/aviso (reserva + mensagem + texto do agente) | AC-7, AC-11 | 2 | `pnpm run db:test -- ingerir_midia` | todo |
-| 4  | Migration `1834` — transcrição na mesma mensagem | AC-8, AC-9 | 2 | `pnpm run db:test -- transcricao_unica` | todo |
-| 5  | `ingerir-midia.ts` — pipeline de conferência (matriz de decisão completa) | AC-2, AC-3, AC-5, AC-12 | 1, 3 | `deno test supabase/functions/atendimento-evolution-webhook/ingerir-midia.test.ts` | todo |
-| 6  | Webhook despacha `midia` e `aviso` para a RPC | AC-1, AC-11 | 5 | `deno test supabase/functions/atendimento-evolution-webhook/handler.test.ts` | todo |
-| 7  | `atendimento-anexo` — proxy autenticado (404 indistinguível, cabeçalhos) | AC-6 | 3 | `deno test supabase/functions/atendimento-anexo/index.test.ts` | todo |
-| 8  | `domain/mensagens.ts` — conteúdo tipado, anexo, aviso `[P]` | AC-1 | 2 | `pnpm vitest run apps/web/src/features/atendimento/domain/mensagens.test.ts` | todo |
-| 9  | `MensagemBubble.tsx` — imagem com lightbox, vídeo, documento, figurinha, aviso, transcrição | AC-1, AC-8, AC-9 | 7, 8 | `pnpm vitest run apps/web/src/features/atendimento/components/MensagemBubble.test.tsx` | todo |
-| 10 | Pipeline do Zé lê `texto_para_agente`; mídia sem legenda pausa a conversa | AC-10 | 3 | `deno test supabase/functions/pcm-ze-agent/midia.test.ts` | todo |
-| 11 | Auditoria de log: nenhum campo proibido `[P]` | AC-13 | 6 | `deno test ... --filter "log sem conteudo"` | todo |
-| 12 | Regressão de texto, emoji e áudio `[P]` | AC-15 | 9 | `pnpm vitest run apps/web/src/features/atendimento` | todo |
+| 1  | `_shared/evolution-midia.ts` — porte direto (mimes, limites, saneamento, textos) | AC-2, AC-4, AC-10 | — | `deno test .../evolution-midia.test.ts` (15 testes) | done |
+| 2  | Migration `1852` (renumerada de `1833`) — colunas, CHECKs, buckets | AC-14 | — | `supabase test db` — `midia_recebida.test.sql` | done — **SPEC_DEVIATION** |
+| 3  | RPC de ingestão de mídia/aviso (reserva + mensagem + texto do agente) | AC-7, AC-11 | 2 | idem, 6 asserts | done (sem `fn_pode_ler_conversa` — não há proxy novo, ver SPEC_DEVIATION) |
+| 4  | Migration de transcrição na mesma mensagem | AC-8, AC-9 | 2 | — | **não se aplica** — não existe transcrição de áudio hoje na Sinérgica, nada a corrigir |
+| 5  | `ingerir-midia.ts` — pipeline de conferência | AC-2, AC-3, AC-5, AC-12 | 1, 3 | `deno test .../handler.test.ts` (4 testes novos cobrindo a matriz) | done |
+| 6  | Webhook despacha `midia` e `aviso` para a RPC | AC-1, AC-11 | 5 | idem | done |
+| 7  | `atendimento-anexo` — proxy autenticado | AC-6 | 3 | — | **não construído — SPEC_DEVIATION** |
+| 8  | `domain/mensagens.ts` — conteúdo tipado, anexo, aviso `[P]` | AC-1 | 2 | — | todo |
+| 9  | `MensagemBubble.tsx` — imagem com lightbox, vídeo, documento, figurinha, aviso, transcrição | AC-1, AC-8, AC-9 | 7, 8 | — | todo |
+| 10 | Pipeline do Zé lê `texto_para_agente`; mídia sem legenda pausa a conversa | AC-10 | 3 | — | todo (texto já é gravado corretamente; a pausa automática da conversa não foi ligada ao agendador do Zé) |
+| 11 | Auditoria de log: nenhum campo proibido `[P]` | AC-13 | 6 | leitura do código — `ingerir-midia.ts` nunca loga nome/legenda/conteúdo | done (sem teste automatizado) |
+| 12 | Regressão de texto, emoji e áudio `[P]` | AC-15 | 9 | suíte completa de `supabase/functions` (421 testes, 0 falhas) | done |
 | 13 | Débito em `docs/SECURITY_DEBT.md`: exclusão a pedido precisa apagar mídia guardada | — | 2 | revisão humana | todo |
-| 14 | Glossário: anexo, estado do anexo, aviso recebido, texto para o agente | — | — | `grep` em `docs/glossary.md` | todo |
+| 14 | Glossário: anexo, estado do anexo, aviso recebido, texto para o agente | — | — | — | todo |
 | 15 | `/revisao-adversarial` (tier arquitetural) | todos | 12 | achado reproduzido vira teste | todo |
+
+## SPEC_DEVIATION registrada
+
+`plan.md` previa colunas `anexo_bucket`/`anexo_path`/`anexo_nome`/`anexo_mime`/
+`anexo_tamanho_bytes`, bucket novo `atendimento-midias` com `allowed_mime_types` e proxy
+`atendimento-anexo` com RLS por `service_role`. **A Sinérgica já tinha**, desde a migration
+`0063_E02-S21` (antes deste porte começar): bucket `atendimento-midias` (sem restrição de mime,
+20MB) e colunas `mensagens.midia_url/midia_nome/midia_mime`, com RLS **por sessão** no
+`storage.objects` (mesma granularidade de `conversas_select`: `authenticated` + módulo
+`atendimento`), e o adapter do app já gera signed URL a partir de `midia_url`. Reaproveitar é menos
+código e mais consistente com o resto do inbox. Resolução: `plan.md` fica desatualizado nesse
+ponto (apontado aqui, não reescrito); a migration `1852` eleva só o `file_size_limit` do bucket
+existente (20→25MB), sem mexer em RLS. **Consequência real:** AC-6 ("mesma resposta 404 pra quem
+não pode ler") não tem o mesmo nível de garantia por mensagem que um proxy teria — a granularidade
+é por módulo, igual ao resto do sistema, não por conversa individual. Isso é uma divergência
+aceitável SE a app não tiver ACL por conversa em nenhum outro lugar (parece ser o caso), mas não
+foi verificado a fundo — fica registrado aqui para revisão humana.
 
 ## Plano de teste
 

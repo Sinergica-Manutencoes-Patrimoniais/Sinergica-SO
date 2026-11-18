@@ -52,6 +52,22 @@ export const MATRIZ_DE_COMPATIBILIDADE: readonly EntradaDaMatriz[] = [
       "deliveryStatus",
     ],
   },
+  {
+    // Provada pelo fluxo LEGADO (`atendimento-evolution`) já em produção contra este mesmo
+    // servidor: cria instância, QR, estado de conexão, webhook com headers e eventos
+    // (MESSAGES_UPSERT/MESSAGES_UPDATE já chegam por aqui hoje), envio de texto e status de
+    // entrega — as 7 capacidades, achado ao migrar o canal real pra E02-S36 (não smoke isolado).
+    versao: "2.3.7",
+    capacidades: [
+      "instanceCreate",
+      "qr",
+      "connectionState",
+      "webhookHeaders",
+      "webhookEvents",
+      "sendText",
+      "deliveryStatus",
+    ],
+  },
 ];
 
 export function avaliarCompatibilidade(
