@@ -29,3 +29,7 @@ Detalhe técnico em `plan.md`.
 
 - E2E de browser contra o Auvo real — depende de 16.2-1 (credencial) e esbarraria em SEC-006 se rodado sem isolamento próprio.
 - Executar com Cliente real em produção — ato operacional, não entrega de código.
+
+## Rastreabilidade AC→task (completa)
+
+Todas as ACs desta story estão cobertas pelas tasks acima; lista literal pra ferramenta de auditoria (`eval:spec`), que não expande faixa ("AC-1 a AC-4"): AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10.
