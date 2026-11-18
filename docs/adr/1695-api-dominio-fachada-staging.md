@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1695-api-dominio-fachada-staging-md"
+description: "Documento Sinérgica SO: ADR-1695 — API de domínio como fachada versionada sobre o staging existente (E01-S198)"
+alwaysApply: false
+---
+
 # ADR-1695 — API de domínio como fachada versionada sobre o staging existente (E01-S198)
 
 **Status:** aceita · **Data:** 2026-11-18 · **Story:** E01-S198 · **Tier:** arquitetural (integração externa) · **P2**
