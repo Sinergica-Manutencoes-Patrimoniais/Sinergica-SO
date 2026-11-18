@@ -4,7 +4,7 @@
 // genérico e o usuário tenta de novo algo que nunca vai funcionar sozinho.
 //
 // `55000` é o errcode que os mediadores de E01-S189 usam quando o gate está fechado (ver
-// `supabase/migrations/1851_E01-S189_gates_escritores_sem_grant.sql`); `42501` é quem o núcleo já
+// `supabase/migrations/1857_E01-S189_gates_escritores_sem_grant.sql`); `42501` é quem o núcleo já
 // usava para "sem permissão/autorização", antes desta story.
 export function mensagemFalhaAtivacao(erro: unknown): "indisponivel" | "sem_permissao" | null {
   const codigo = (erro as { code?: unknown } | null)?.code;
