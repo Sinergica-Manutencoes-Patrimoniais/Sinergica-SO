@@ -18,7 +18,6 @@ import { supabase } from "../../../lib/supabase-client";
 import { useDebouncedValue } from "../../../lib/use-debounced-value";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { criarChamado } from "../application/chamados";
-import { carregarResumosChamados } from "../application/resumos-chamados-lote";
 import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../application/kanban-colunas";
 import type { ConsultaOperacao } from "../application/operacao-gateway";
 import {
@@ -42,6 +41,7 @@ import {
 import type { DadosAberturaOs } from "../application/ordem-servico-gateway";
 import { listarProximasPreventivas } from "../application/pmoc";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
+import { carregarResumosChamados } from "../application/resumos-chamados-lote";
 import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { AjudaPcm } from "../components/AjudaPcm";
 import { ChamadoPainel } from "../components/ChamadoPainel";
@@ -50,10 +50,7 @@ import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { NovoChamadoModal } from "../components/NovoChamadoModal";
 import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
-import { QuadroGerencial } from "../interfaces/chamados-os/QuadroGerencial";
-import { CentralMateriaisGlobal } from "../interfaces/listas-materiais/Central";
 import { OsTimelineView } from "../components/OsTimelineView";
-import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
 import type { ChamadoFormData } from "../domain/chamados";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
@@ -88,9 +85,16 @@ import {
 } from "../domain/ordens-servico";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
-import { obterResumoOsDoCliente, supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
+import {
+  obterResumoOsDoCliente,
+  resolverPlanoOrigemOs,
+  supabaseOperacaoAdapter,
+} from "../infrastructure/supabase-operacao-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
+import { QuadroGerencial } from "../interfaces/chamados-os/QuadroGerencial";
+import { CentralMateriaisGlobal } from "../interfaces/listas-materiais/Central";
+import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { BacklogGutPage } from "./BacklogGutPage";
 
 type Visao = "lista" | "kanban" | "timeline" | "calendario" | "backlog";
@@ -224,11 +228,25 @@ export function OrdensServicoPage({
   const mutacaoStatus = useAlterarStatusOperacao(supabaseOperacaoAdapter);
   const paginasFeed = visao === "kanban" ? feedsKanban.pages : feed.data?.pages;
   const ordensCarregadas = useMemo(() => dadosFeedParaOrdens(paginasFeed), [paginasFeed]);
-  const chamadosParaResumo = useMemo(() => [...new Set((paginasFeed ?? []).flatMap((pagina) => pagina.itens.map((item) => item.chamadoId).filter((id): id is string => !!id)))].sort(), [paginasFeed]);
+  const chamadosParaResumo = useMemo(
+    () =>
+      [
+        ...new Set(
+          (paginasFeed ?? []).flatMap((pagina) =>
+            pagina.itens.map((item) => item.chamadoId).filter((id): id is string => !!id),
+          ),
+        ),
+      ].sort(),
+    [paginasFeed],
+  );
   const resumoChamados = useQuery({
     queryKey: ["s167-resumo-chamados", user?.id, chamadosParaResumo],
     queryFn: ({ signal }) => carregarResumosChamados(chamadosParaResumo, signal),
-    enabled: consultasAtivas && visao === "kanban" && import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length > 0,
+    enabled:
+      consultasAtivas &&
+      visao === "kanban" &&
+      import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" &&
+      chamadosParaResumo.length > 0,
     staleTime: 0,
     refetchInterval: 30000,
   });
@@ -250,9 +268,18 @@ export function OrdensServicoPage({
     await Promise.all([
       visao === "kanban" ? feedsKanban.refetch() : feed.refetch(),
       queryKpis.refetch(),
-      ...(import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length ? [resumoChamados.refetch()] : []),
+      ...(import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length
+        ? [resumoChamados.refetch()]
+        : []),
     ]);
-  }, [visao, feedsKanban.refetch, feed.refetch, queryKpis.refetch, chamadosParaResumo.length, resumoChamados.refetch]);
+  }, [
+    visao,
+    feedsKanban.refetch,
+    feed.refetch,
+    queryKpis.refetch,
+    chamadosParaResumo.length,
+    resumoChamados.refetch,
+  ]);
   const primeiraPinturaMarcada = useRef(false);
   useEffect(() => {
     if (!paginasFeed || primeiraPinturaMarcada.current) return;
@@ -283,7 +310,10 @@ export function OrdensServicoPage({
   // independente do filtro ativo (`selecionada` busca no array completo, não no filtrado).
   useEffect(() => {
     const osId = osIdInicialToken?.split("::")[0];
-    if (osId) { setOrigemCentral(null); setSelecionadaId(osId); }
+    if (osId) {
+      setOrigemCentral(null);
+      setSelecionadaId(osId);
+    }
   }, [osIdInicialToken]);
 
   // E01-S84 AC-1/AC-2: preferência de colunas do Kanban é por usuário — carrega só quando a visão
@@ -344,23 +374,50 @@ export function OrdensServicoPage({
     queryKey: ["operacao", "resumo-central", user?.id, origemCentral?.cliente, origemCentral?.os],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || !user?.id || antes.data.user?.id !== user.id || signal.aborted) throw new Error("Sessão alterada.");
-      const resumo = await obterResumoOsDoCliente(origemCentral?.cliente ?? "", origemCentral?.os ?? "", signal);
+      if (antes.error || !user?.id || antes.data.user?.id !== user.id || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const resumo = await obterResumoOsDoCliente(
+        origemCentral?.cliente ?? "",
+        origemCentral?.os ?? "",
+        signal,
+      );
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== user.id || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== user.id || signal.aborted)
+        throw new Error("Sessão alterada.");
       return resumo;
     },
-    enabled: Boolean(user?.id && consultasAtivas && origemCentral && origemCentral.cliente === filtros.clienteId && origemCentral.os === selecionadaId),
+    enabled: Boolean(
+      user?.id &&
+        consultasAtivas &&
+        origemCentral &&
+        origemCentral.cliente === filtros.clienteId &&
+        origemCentral.os === selecionadaId,
+    ),
     gcTime: 0,
     retry: false,
   });
   const selecionada = useMemo(() => {
-    if (origemCentral && (origemCentral.cliente !== filtros.clienteId || origemCentral.os !== selecionadaId)) return null;
+    if (
+      origemCentral &&
+      (origemCentral.cliente !== filtros.clienteId || origemCentral.os !== selecionadaId)
+    )
+      return null;
     const resumo = origemCentral
-      ? (!resumoCentral.isFetching && !resumoCentral.isError && resumoCentral.data ? resumoParaOrdem(resumoCentral.data) : null)
+      ? !resumoCentral.isFetching && !resumoCentral.isError && resumoCentral.data
+        ? resumoParaOrdem(resumoCentral.data)
+        : null
       : (ordensCarregadas.find((ordem) => ordem.id === selecionadaId) ?? null);
     return resumo ? mesclarDetalhe(resumo, detalhe.data) : null;
-  }, [ordensCarregadas, selecionadaId, detalhe.data, origemCentral, filtros.clienteId, resumoCentral.data, resumoCentral.isFetching, resumoCentral.isError]);
+  }, [
+    ordensCarregadas,
+    selecionadaId,
+    detalhe.data,
+    origemCentral,
+    filtros.clienteId,
+    resumoCentral.data,
+    resumoCentral.isFetching,
+    resumoCentral.isError,
+  ]);
 
   const kpis = queryKpis.data ?? OPERACAO_KPI_VAZIO;
   const totalFiltrado = visao === "kanban" ? feedsKanban.total : (feed.data?.pages[0]?.total ?? 0);
@@ -424,7 +481,8 @@ export function OrdensServicoPage({
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível aplicar em lote.");
     } finally {
-      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length) await resumoChamados.refetch();
+      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length)
+        await resumoChamados.refetch();
       setSalvando(false);
     }
   }
@@ -446,13 +504,16 @@ export function OrdensServicoPage({
       if (!resultado?.sucesso) throw new Error(resultado?.erro ?? "Status não atualizado.");
       // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
       // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
-      const atual = ordensCarregadas.find((ordem) => ordem.id === id) ?? (selecionada?.id === id ? selecionada : null);
+      const atual =
+        ordensCarregadas.find((ordem) => ordem.id === id) ??
+        (selecionada?.id === id ? selecionada : null);
       if (origemCentral?.os === id) await resumoCentral.refetch();
       if (status === "planejamento" && atual && atual.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível alterar status.");
     } finally {
-      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length) await resumoChamados.refetch();
+      if (import.meta.env.VITE_SSO_RESUMO_CHAMADOS_ENABLED === "true" && chamadosParaResumo.length)
+        await resumoChamados.refetch();
       setSalvando(false);
     }
   }
@@ -724,11 +785,15 @@ export function OrdensServicoPage({
           </div>
 
           {user && filtros.clienteId !== "todos" && (
-            <CentralMateriaisGlobal usuario={user.id} cliente={filtros.clienteId} onAbrirOs={(os) => {
-              setOrigemCentral({ cliente: filtros.clienteId, os });
-              setSelecionadaId(os);
-              setVisao("lista");
-            }} />
+            <CentralMateriaisGlobal
+              usuario={user.id}
+              cliente={filtros.clienteId}
+              onAbrirOs={(os) => {
+                setOrigemCentral({ cliente: filtros.clienteId, os });
+                setSelecionadaId(os);
+                setVisao("lista");
+              }}
+            />
           )}
 
           {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
@@ -764,9 +829,37 @@ export function OrdensServicoPage({
 
           {visao !== "lista" && (
             <div className="bg-card rounded-xl border border-line p-4">
-              {visao === "kanban" && user && filtros.clienteId !== "todos" && import.meta.env.VITE_SSO_QUADRO_CHAMADOS_ENABLED === "true" && <QuadroGerencial key={`${user.id}:${filtros.clienteId}`} usuario={user.id} cliente={filtros.clienteId} onAbrirOs={(id) => { setOrigemCentral({ cliente: filtros.clienteId, os: id }); setSelecionadaId(id); setVisao("lista"); }} />}
-              {visao === "kanban" && user && filtros.clienteId !== "todos" && import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && <PainelLateralBacklog key={`${user.id}:${filtros.clienteId}`} userId={user.id} clienteId={filtros.clienteId} />}
-              {visao === "kanban" && user && filtros.clienteId === "todos" && import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && <p>Selecione um Cliente para consultar seu backlog de escopo.</p>}
+              {visao === "kanban" &&
+                user &&
+                filtros.clienteId !== "todos" &&
+                import.meta.env.VITE_SSO_QUADRO_CHAMADOS_ENABLED === "true" && (
+                  <QuadroGerencial
+                    key={`${user.id}:${filtros.clienteId}`}
+                    usuario={user.id}
+                    cliente={filtros.clienteId}
+                    onAbrirOs={(id) => {
+                      setOrigemCentral({ cliente: filtros.clienteId, os: id });
+                      setSelecionadaId(id);
+                      setVisao("lista");
+                    }}
+                  />
+                )}
+              {visao === "kanban" &&
+                user &&
+                filtros.clienteId !== "todos" &&
+                import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && (
+                  <PainelLateralBacklog
+                    key={`${user.id}:${filtros.clienteId}`}
+                    userId={user.id}
+                    clienteId={filtros.clienteId}
+                  />
+                )}
+              {visao === "kanban" &&
+                user &&
+                filtros.clienteId === "todos" &&
+                import.meta.env.VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED === "true" && (
+                  <p>Selecione um Cliente para consultar seu backlog de escopo.</p>
+                )}
               {visao === "kanban" && (
                 <OsKanbanView
                   ordens={ordensFiltradas}
@@ -780,7 +873,14 @@ export function OrdensServicoPage({
                   onMoverColuna={onMoverColunaKanban}
                   onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
                   preventivas={preventivas}
-                  resumosChamados={!salvando && !feedBuscando && !resumoChamados.isFetching && !resumoChamados.isError ? resumoChamados.data : undefined}
+                  resumosChamados={
+                    !salvando &&
+                    !feedBuscando &&
+                    !resumoChamados.isFetching &&
+                    !resumoChamados.isError
+                      ? resumoChamados.data
+                      : undefined
+                  }
                 />
               )}
               {visao === "timeline" && (
@@ -801,6 +901,7 @@ export function OrdensServicoPage({
               <DetalheOs
                 key={selecionada.id}
                 selecionada={selecionada}
+                clienteId={filtros.clienteId !== "todos" ? filtros.clienteId : null}
                 temEscrita={temEscrita}
                 salvando={salvando}
                 onAlterarStatus={onAlterarStatus}
@@ -809,7 +910,9 @@ export function OrdensServicoPage({
                 onRecarregar={carregar}
                 onAbrirOsVinculada={(cliente, os) => {
                   setFiltros((atual) => ({ ...atual, clienteId: cliente }));
-                  setOrigemCentral({ cliente, os }); setSelecionadaId(os); setVisao("lista");
+                  setOrigemCentral({ cliente, os });
+                  setSelecionadaId(os);
+                  setVisao("lista");
                 }}
                 onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
                 painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
@@ -878,7 +981,10 @@ export function OrdensServicoPage({
                           // biome-ignore lint/a11y/useKeyWithClickEvents: mesmo padrão de linha clicável do BacklogGutPage — checkbox interno já é acessível via teclado.
                           <tr
                             key={ordem.id}
-                            onClick={() => { setOrigemCentral(null); setSelecionadaId(ordem.id); }}
+                            onClick={() => {
+                              setOrigemCentral(null);
+                              setSelecionadaId(ordem.id);
+                            }}
                             aria-selected={ordem.id === selecionadaId}
                             className={`cursor-pointer border-l-2 ${
                               ordem.id === selecionadaId
@@ -947,15 +1053,21 @@ export function OrdensServicoPage({
                   <DetalheOs
                     key={selecionada.id}
                     selecionada={selecionada}
+                    clienteId={filtros.clienteId !== "todos" ? filtros.clienteId : null}
                     temEscrita={temEscrita}
                     salvando={salvando}
                     onAlterarStatus={onAlterarStatus}
                     onEditar={() => setEditando(true)}
                     dadosOs={dadosOs}
-                    onRecarregar={async () => { await carregar(); if (origemCentral) await resumoCentral.refetch(); }}
+                    onRecarregar={async () => {
+                      await carregar();
+                      if (origemCentral) await resumoCentral.refetch();
+                    }}
                     onAbrirOsVinculada={(cliente, os) => {
                       setFiltros((atual) => ({ ...atual, clienteId: cliente }));
-                      setOrigemCentral({ cliente, os }); setSelecionadaId(os); setVisao("lista");
+                      setOrigemCentral({ cliente, os });
+                      setSelecionadaId(os);
+                      setVisao("lista");
                     }}
                     onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
                     painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
@@ -967,7 +1079,13 @@ export function OrdensServicoPage({
                     onConversaoFinalizada={() => setConversaoPendente(null)}
                   />
                 ) : (
-                  <div className="p-8 text-body text-ink-3">{origemCentral && resumoCentral.isFetching ? "Carregando OS…" : origemCentral && (resumoCentral.isError || resumoCentral.data === null) ? "OS indisponível neste Cliente." : "Selecione uma OS."}</div>
+                  <div className="p-8 text-body text-ink-3">
+                    {origemCentral && resumoCentral.isFetching
+                      ? "Carregando OS…"
+                      : origemCentral && (resumoCentral.isError || resumoCentral.data === null)
+                        ? "OS indisponível neste Cliente."
+                        : "Selecione uma OS."}
+                  </div>
                 )}
               </section>
             </div>
@@ -1070,6 +1188,7 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
 
 function DetalheOs({
   selecionada,
+  clienteId = null,
   temEscrita,
   salvando,
   onAlterarStatus,
@@ -1084,6 +1203,9 @@ function DetalheOs({
   painelOrcamento,
 }: {
   selecionada: OrdemServicoOperacional;
+  /** E01-S192 AC-9: só presente quando um Cliente específico está filtrado (não "todos") — a
+   * mesma condição que já gate outros painéis contextuais nesta tela. */
+  clienteId?: string | null;
   temEscrita: boolean;
   salvando: boolean;
   onAlterarStatus: (status: StatusOrdemServico) => void;
@@ -1123,6 +1245,22 @@ function DetalheOs({
   // E01-S118 T7: card sintético de Chamado ainda sem OS — não faz sentido mostrar
   // status/GUT/Auvo/técnico (nada disso existe ainda); só o painel do Chamado (abaixo) importa.
   const ehChamadoSemOs = ehCardChamadoAberto(selecionada.id);
+
+  // E01-S192 AC-9: link de volta pro Plano (legado) que originou esta OS preventiva — lazy, só
+  // dispara quando o card tem `ocorrenciaPreventivaId` e um Cliente específico está filtrado.
+  const planoOrigem = useQuery({
+    queryKey: operacaoQueryKeys.planoOrigemOs(
+      clienteId ?? "",
+      selecionada.ocorrenciaPreventivaId ?? "",
+    ),
+    queryFn: ({ signal }) =>
+      resolverPlanoOrigemOs(
+        clienteId as string,
+        selecionada.ocorrenciaPreventivaId as string,
+        signal,
+      ),
+    enabled: Boolean(clienteId && selecionada.ocorrenciaPreventivaId),
+  });
 
   const corpo = (
     <>
@@ -1175,6 +1313,20 @@ function DetalheOs({
               <Info
                 label="Agendada"
                 value={new Date(selecionada.dataAgendada).toLocaleString("pt-BR")}
+              />
+            )}
+            {selecionada.ocorrenciaPreventivaId && (
+              <Info
+                label="Plano de origem"
+                value={
+                  !clienteId
+                    ? "Selecione um Cliente pra ver o Plano"
+                    : planoOrigem.isFetching
+                      ? "Carregando…"
+                      : planoOrigem.isError
+                        ? "Não foi possível carregar"
+                        : (planoOrigem.data ?? "Sem Plano correspondente (legado)")
+                }
               />
             )}
             {selecionada.checkInAt && (
@@ -1328,7 +1480,10 @@ function DetalheOs({
         </p>
       </div>
 
-      <div className="space-y-3 p-4">{corpo}{!expandido && !ehChamadoSemOs && painelOrcamento}</div>
+      <div className="space-y-3 p-4">
+        {corpo}
+        {!expandido && !ehChamadoSemOs && painelOrcamento}
+      </div>
 
       {expandido && (
         <Modal

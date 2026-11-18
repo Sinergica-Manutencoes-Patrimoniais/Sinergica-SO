@@ -51,6 +51,7 @@ export interface ItemOperacaoResumo {
   tipoOs: string | null;
   pmocScheduleId: string | null;
   orientacao: string | null;
+  ocorrenciaPreventivaId: string | null;
 }
 
 export interface OperacaoDetalhe {
