@@ -8,6 +8,9 @@ export type StatusOrdemServico =
   | "backlog"
   | "planejamento"
   | "em_execucao"
+  /** E01-S194 AC-8: parada obrigatória entre em_execucao e finalizado — o Auvo finalizar a
+   * tarefa no campo não finaliza mais a OS direto; o PCM decide. */
+  | "validacao_pcm"
   | "finalizado"
   | "cancelado";
 
@@ -134,6 +137,7 @@ export const STATUS_OS: Array<{ value: StatusOrdemServico; label: string }> = [
   { value: "backlog", label: "Backlog" },
   { value: "planejamento", label: "Planejamento" },
   { value: "em_execucao", label: "Em execução" },
+  { value: "validacao_pcm", label: "Validação PCM" },
   { value: "finalizado", label: "Finalizado" },
   { value: "cancelado", label: "Cancelado" },
 ];

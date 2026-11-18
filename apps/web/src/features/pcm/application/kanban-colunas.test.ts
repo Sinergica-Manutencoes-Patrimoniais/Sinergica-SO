@@ -14,7 +14,7 @@ describe("kanban-colunas (use case)", () => {
 
   it("obterPreferenciaColunas — repassa preferência salva já normalizada", async () => {
     const salvas = [
-      { id: "corretiva" as const, visivel: false },
+      { id: "planejamento" as const, visivel: false },
       { id: "solicitacao" as const, visivel: true },
     ];
     const gateway: KanbanColunasGateway = {
@@ -22,7 +22,7 @@ describe("kanban-colunas (use case)", () => {
       salvarPreferencia: vi.fn(),
     };
     const resultado = await obterPreferenciaColunas(gateway, "user-1");
-    expect(resultado[0]).toEqual({ id: "corretiva", visivel: false });
+    expect(resultado[0]).toEqual({ id: "planejamento", visivel: false });
     expect(resultado.length).toBe(COLUNAS_KANBAN_PADRAO.length);
   });
 
