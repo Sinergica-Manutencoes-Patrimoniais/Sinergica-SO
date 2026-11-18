@@ -8,6 +8,9 @@ export type StatusOrdemServico =
   | "backlog"
   | "planejamento"
   | "em_execucao"
+  /** E01-S194 AC-8: parada obrigatória entre em_execucao e finalizado — o Auvo finalizar a
+   * tarefa no campo não finaliza mais a OS direto; o PCM decide. */
+  | "validacao_pcm"
   | "finalizado"
   | "cancelado";
 
@@ -47,6 +50,9 @@ export interface OrdemServicoOperacional {
   /** E01-S07: tipo do Hub (C1/C2/P1/P2/IN), gravado — `null` = fora do Hub (melhoria/outro). */
   tipoOs: TipoOsHub | null;
   pmocScheduleId: string | null;
+  /** E01-S192 AC-9: origem preventiva (ocorrência) da OS — link de volta pro Plano legado que a
+   * gerou; `null` em OS corretiva/manual. */
+  ocorrenciaPreventivaId: string | null;
   /** E01-S116: Chamado de origem — desde E01-S99, é a mesma entidade em fase distinta; `null`
    * defensivamente (não deveria existir depois de E01-S99), usado pra navegar Kanban→Chamado. */
   chamadoId: string | null;
@@ -107,6 +113,7 @@ export function chamadoAbertoParaCard(
     detalhes: null,
     tipoOs: null,
     pmocScheduleId: null,
+    ocorrenciaPreventivaId: null,
     chamadoId: chamado.id,
     localDescricao: null,
     solicitante: null,
@@ -130,6 +137,7 @@ export const STATUS_OS: Array<{ value: StatusOrdemServico; label: string }> = [
   { value: "backlog", label: "Backlog" },
   { value: "planejamento", label: "Planejamento" },
   { value: "em_execucao", label: "Em execução" },
+  { value: "validacao_pcm", label: "Validação PCM" },
   { value: "finalizado", label: "Finalizado" },
   { value: "cancelado", label: "Cancelado" },
 ];

@@ -35,7 +35,8 @@ Deno.test("calcularJanelaRolante — inclui tarefa de hoje mesmo com preventiva 
 });
 
 Deno.test("mapTaskStatusToOsStatus — mapeia taskStatus Auvo pro status inicial da OS", () => {
-  assertEquals(mapTaskStatusToOsStatus(5), "finalizado");
+  // E01-S194 AC-8: tarefa finalizada no Auvo cai em validacao_pcm, não finalizado direto.
+  assertEquals(mapTaskStatusToOsStatus(5), "validacao_pcm");
   assertEquals(mapTaskStatusToOsStatus(2), "em_execucao");
   assertEquals(mapTaskStatusToOsStatus(3), "em_execucao");
   assertEquals(mapTaskStatusToOsStatus(4), "em_execucao");
@@ -228,6 +229,20 @@ Deno.test("montarAtualizacaoResultadoPreventiva — só conclui com marcador exp
     {
       ocorrenciaId: "ocorrencia-1",
       resultado: "pendente",
+      atualizadoEm: "2026-10-01T15:00:00.000Z",
+    },
+  );
+  // E01-S194 AC-8: validacao_pcm é o status real hoje (tarefa finalizada no Auvo não cai mais
+  // direto em finalizado) — osConcluida continua true, o resultado de campo não espera o PCM.
+  assertEquals(
+    montarAtualizacaoResultadoPreventiva("ocorrencia-1", {
+      status: "validacao_pcm",
+      checkOutAt: "2026-10-01T15:00:00.000Z",
+      questionarios: [{ answers: [{ reply: "OK", replyDate: "2026-10-01T14:30:00Z" }] }],
+    }),
+    {
+      ocorrenciaId: "ocorrencia-1",
+      resultado: "ok",
       atualizadoEm: "2026-10-01T15:00:00.000Z",
     },
   );

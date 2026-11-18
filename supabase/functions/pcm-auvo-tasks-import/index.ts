@@ -524,7 +524,9 @@ export function montarAtualizacaoResultadoPreventiva(
   return {
     ocorrenciaId,
     resultado: consolidarResultadoPreventiva({
-      osConcluida: tarefa.status === "finalizado",
+      // E01-S194 AC-8: "concluída no campo" inclui validacao_pcm — é o mesmo evento de campo
+      // que antes caía direto em finalizado; a decisão do PCM é outro passo.
+      osConcluida: tarefa.status === "finalizado" || tarefa.status === "validacao_pcm",
       questionarioRecebido: Array.isArray(tarefa.questionarios) && tarefa.questionarios.length > 0,
       respostas: respostas.map((resposta) => ({ valor: resposta.reply })),
     }),
@@ -661,9 +663,11 @@ export function extractTaskId(tarefa: AuvoTask): number | null {
 
 /** Mesmo espírito da máquina de transição de `pcm-auvo-webhook` (§2.14), simplificada porque o
  * import não tem `action` — só o `taskStatus` atual da tarefa. Sem status reconhecido (1=Aberta,
- * 6=Pausada, ou ausente), a OS nasce em `solicitacao` (AUTO-DECISION — estado inicial seguro). */
+ * 6=Pausada, ou ausente), a OS nasce em `solicitacao` (AUTO-DECISION — estado inicial seguro).
+ * E01-S194 AC-8: tarefa finalizada no Auvo cai em `validacao_pcm`, não `finalizado` direto — mesma
+ * mudança do webhook, pelo mesmo motivo (o PCM ainda precisa decidir). */
 export function mapTaskStatusToOsStatus(taskStatus: number | undefined): OsStatus {
-  if (taskStatus === AUVO_TASK_STATUS_FINALIZADA) return "finalizado";
+  if (taskStatus === AUVO_TASK_STATUS_FINALIZADA) return "validacao_pcm";
   if (taskStatus != null && AUVO_TASK_STATUS_EM_ANDAMENTO.has(taskStatus)) return "em_execucao";
   return "solicitacao";
 }

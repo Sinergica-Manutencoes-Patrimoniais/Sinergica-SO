@@ -145,6 +145,15 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const [acao, setAcao] = useState<AcaoSso>("plano.gerir");
   const [escopo, setEscopo] = useState("");
   const [confirmarGlobal, setConfirmarGlobal] = useState(false);
+  // E00-S27: revogar/reativar usuário — não entra no dispatcher genérico acima (validar/
+  // validarRecibo) porque sso_revogar_usuario/sso_reativar_usuario devolvem um contrato próprio
+  // ({usuarioId, acao, requestId}), diferente do recibo {aggregateId, revision, state, created,
+  // linkedIds, warnings} de perfil/vínculo/concessão — forçar o mesmo formato exigiria mudar a
+  // migration só pra caber na UI, ao contrário da ordem certa.
+  const [usuarioRevogacaoId, setUsuarioRevogacaoId] = useState("");
+  const [motivoRevogacao, setMotivoRevogacao] = useState("");
+  const [avisoRevogacao, setAvisoRevogacao] = useState("");
+  const emEnvioRevogacao = useRef(false);
   const usuarios =
     api.usuarios.isError || api.usuarios.isFetching ? [] : (api.usuarios.data?.pages.flat() ?? []);
   const perfis =
@@ -406,6 +415,66 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     await executar("nova-concessao", dados, (requestId) =>
       api.concessao.mutateAsync({ ...dados, requestId }),
     );
+  }
+
+  async function revogarOuReativar(usuario: { userId: string; ativo: boolean }) {
+    if (emEnvioRevogacao.current) return;
+    const chave = `sso-revogacao:${JSON.stringify([userId, usuario.userId])}`;
+    const acao = usuario.ativo ? "revogar" : "reativar";
+    const motivoAtual = motivoRevogacao.trim();
+    if (!motivoAtual) {
+      setAvisoRevogacao("Informe o motivo antes de confirmar.");
+      return;
+    }
+    emEnvioRevogacao.current = true;
+    try {
+      await conferirSessao();
+      const pedido = {
+        requestId: crypto.randomUUID(),
+        usuarioId: usuario.userId,
+        motivo: motivoAtual,
+      };
+      try {
+        window.sessionStorage.setItem(chave, JSON.stringify(pedido));
+      } catch {
+        setAvisoRevogacao("Sessão local indisponível. Nada foi enviado.");
+        return;
+      }
+      const { data, error } = await supabase
+        .schema("config")
+        .rpc(acao === "revogar" ? "sso_revogar_usuario" : "sso_reativar_usuario", {
+          p_request_id: pedido.requestId,
+          p_usuario_id: pedido.usuarioId,
+          p_motivo: pedido.motivo,
+        });
+      if (error) throw error;
+      const resposta = z
+        .object({
+          usuarioId: z.string().guid(),
+          acao: z.enum(["revogar", "reativar"]),
+          requestId: z.string().guid(),
+        })
+        .strict()
+        .parse(data);
+      if (resposta.requestId !== pedido.requestId || resposta.usuarioId !== pedido.usuarioId) {
+        throw new Error("Resposta divergente.");
+      }
+      await conferirSessao();
+      window.sessionStorage.removeItem(chave);
+      setMotivoRevogacao("");
+      setAvisoRevogacao(
+        acao === "revogar"
+          ? "Usuário revogado — efeito imediato, sem precisar de novo login dele."
+          : "Usuário reativado.",
+      );
+    } catch {
+      setAvisoRevogacao("Resultado não confirmado. Confira e tente novamente.");
+    } finally {
+      emEnvioRevogacao.current = false;
+    }
+    // Fora do try: a revogação em si já é definitiva nesse ponto — uma falha ao atualizar a
+    // lista não pode sobrescrever a mensagem de sucesso que acabamos de mostrar.
+    void api.usuarios.refetch();
   }
 
   return (
@@ -737,6 +806,53 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
           )
         }
       </SecaoDados>
+      <Card className="space-y-3 p-4">
+        <h2 className="font-semibold">Revogar ou reativar usuário</h2>
+        <p>
+          Efeito imediato na próxima ação dele, sem precisar de novo login — não depende do token
+          expirar (E00-S27).
+        </p>
+        <label htmlFor="sso-usuario-revogacao" className="block">
+          Usuário a revogar ou reativar
+        </label>
+        <select
+          id="sso-usuario-revogacao"
+          value={usuarioRevogacaoId}
+          onChange={(e) => setUsuarioRevogacaoId(e.target.value)}
+          className="w-full rounded border border-line bg-card p-2"
+        >
+          <option value="">Selecione um usuário</option>
+          {usuarios
+            .filter((u) => u.userId !== userId)
+            .map((u) => (
+              <option key={u.userId} value={u.userId}>
+                {u.nome} · {u.ativo ? "ativo" : "revogado"}
+              </option>
+            ))}
+        </select>
+        <label htmlFor="sso-motivo-revogacao" className="block">
+          Motivo da revogação ou reativação
+        </label>
+        <textarea
+          id="sso-motivo-revogacao"
+          value={motivoRevogacao}
+          onChange={(e) => setMotivoRevogacao(e.target.value)}
+          className="w-full rounded border border-line bg-card p-2"
+          maxLength={1000}
+        />
+        {(() => {
+          const alvo = usuarios.find((u) => u.userId === usuarioRevogacaoId);
+          return (
+            <Button
+              disabled={!alvo || !motivoRevogacao.trim()}
+              onClick={() => alvo && void revogarOuReativar(alvo)}
+            >
+              {alvo?.ativo === false ? "Reativar usuário" : "Revogar usuário"}
+            </Button>
+          );
+        })()}
+        {avisoRevogacao && <output>{avisoRevogacao}</output>}
+      </Card>
     </div>
   );
 }

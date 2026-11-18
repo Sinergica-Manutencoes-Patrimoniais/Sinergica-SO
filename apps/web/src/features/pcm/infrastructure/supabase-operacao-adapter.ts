@@ -1,5 +1,5 @@
-import { supabase } from "../../../lib/supabase-client";
 import { z } from "zod";
+import { supabase } from "../../../lib/supabase-client";
 import type {
   ConsultaOperacao,
   CursorOperacao,
@@ -40,6 +40,7 @@ interface OperacaoRow {
   tipo_os: string | null;
   pmoc_schedule_id: string | null;
   orientacao: string | null;
+  ocorrencia_preventiva_id: string | null;
 }
 
 interface KpiRow {
@@ -52,24 +53,60 @@ interface KpiRow {
 }
 
 const COLUNAS_RESUMO =
-  "item_id,item_tipo,ordem_servico_id,chamado_id,cliente_id,cliente_nome,numero,titulo,categoria,origem,status,prioridade,gravidade,urgencia,tendencia,dor_cliente,score_pcm,origem_inspecao_item_id,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,tecnico_funcionario_id,tecnico_nome,data_agendada,check_in_at,check_out_at,tipo_os,pmoc_schedule_id,orientacao" as const;
+  "item_id,item_tipo,ordem_servico_id,chamado_id,cliente_id,cliente_nome,numero,titulo,categoria,origem,status,prioridade,gravidade,urgencia,tendencia,dor_cliente,score_pcm,origem_inspecao_item_id,auvo_task_id,auvo_sync_status,auvo_sync_error,created_at,tecnico_funcionario_id,tecnico_nome,data_agendada,check_in_at,check_out_at,tipo_os,pmoc_schedule_id,orientacao,ocorrencia_preventiva_id" as const;
 
 const PREFIXO_CHAMADO = "chamado-aberto:";
 
 /** Resumo pontual limitado por Cliente; RLS da view permanece a autoridade. */
-export async function obterResumoOsDoCliente(clienteId: string, osId: string, signal?: AbortSignal): Promise<ItemOperacaoResumo | null> {
+export async function obterResumoOsDoCliente(
+  clienteId: string,
+  osId: string,
+  signal?: AbortSignal,
+): Promise<ItemOperacaoResumo | null> {
   if (!z.string().guid().safeParse(clienteId).success || !z.string().guid().safeParse(osId).success)
     throw new Error("Contexto inválido.");
-  let consulta = supabase.schema("pcm").from("operacao_itens").select(COLUNAS_RESUMO)
-    .eq("item_tipo", "ordem_servico").eq("cliente_id", clienteId).eq("ordem_servico_id", osId);
+  let consulta = supabase
+    .schema("pcm")
+    .from("operacao_itens")
+    .select(COLUNAS_RESUMO)
+    .eq("item_tipo", "ordem_servico")
+    .eq("cliente_id", clienteId)
+    .eq("ordem_servico_id", osId);
   if (signal) consulta = consulta.abortSignal(signal);
   const { data, error } = await consulta.maybeSingle();
   if (error) throw error;
   if (!data) return null;
   const row = data as unknown as OperacaoRow;
-  if (row.cliente_id !== clienteId || row.ordem_servico_id !== osId || row.item_id !== osId || row.item_tipo !== "ordem_servico")
+  if (
+    row.cliente_id !== clienteId ||
+    row.ordem_servico_id !== osId ||
+    row.item_id !== osId ||
+    row.item_tipo !== "ordem_servico"
+  )
     throw new Error("Resumo de OS incompatível com o contexto.");
   return mapearResumo(row);
+}
+
+/** E01-S192 AC-9: resolve lazy o nome do Plano legado que originou a ocorrência preventiva da OS
+ * — só chamada quando o drawer abre uma OS com `ocorrenciaPreventivaId` preenchido. */
+export async function resolverPlanoOrigemOs(
+  clienteId: string,
+  ocorrenciaPreventivaId: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  if (
+    !z.string().guid().safeParse(clienteId).success ||
+    !z.string().guid().safeParse(ocorrenciaPreventivaId).success
+  )
+    throw new Error("Contexto inválido.");
+  let chamada = supabase.schema("pcm").rpc("sso_resolver_plano_origem_os", {
+    p_cliente_id: clienteId,
+    p_ocorrencia_preventiva_id: ocorrenciaPreventivaId,
+  });
+  if (signal) chamada = chamada.abortSignal(signal);
+  const { data, error } = await chamada;
+  if (error) throw error;
+  return data as string | null;
 }
 
 function mapearResumo(row: OperacaoRow): ItemOperacaoResumo {
@@ -104,6 +141,7 @@ function mapearResumo(row: OperacaoRow): ItemOperacaoResumo {
     tipoOs: row.tipo_os,
     pmocScheduleId: row.pmoc_schedule_id,
     orientacao: row.orientacao,
+    ocorrenciaPreventivaId: row.ocorrencia_preventiva_id,
   };
 }
 

@@ -2,32 +2,41 @@ import type { StatusOrdemServico } from "./ordens-servico";
 import { STATUS_OS } from "./ordens-servico";
 
 /** E01-S84: "preventiva" é uma coluna virtual (não é um `StatusOrdemServico` real) — mostra visitas
- * PMOC planejadas ainda sem OS (`PmocPreventivaResumo`), posicionável/ocultável como as demais. */
-export type ColunaKanbanId = StatusOrdemServico | "preventiva";
+ * PMOC planejadas ainda sem OS (`PmocPreventivaResumo`), posicionável/ocultável como as demais.
+ * E01-S194 AC-1: "demanda" também é virtual do ponto de vista da OS — é status de Chamado
+ * (E01-S193), mostrado como card sintético (`pcm.operacao_itens`) enquanto não existe OS. */
+export type ColunaKanbanId = StatusOrdemServico | "preventiva" | "demanda";
 
 export interface ColunaKanbanPreferencia {
   id: ColunaKanbanId;
   visivel: boolean;
 }
 
-/** E01-S84 AC-3: "preventiva" entre corretiva e planejamento.
- * E01-S117 AC-5: "backlog" (status real, não virtual) entre corretiva e preventiva — reflete o
- * fluxo Solicitação → Corretiva/Backlog → Planejamento → Execução. */
+/** E01-S194 AC-1/AC-2/AC-3 — "Kanban operacional aprovado": Solicitações · Preventivas ·
+ * Demanda · Planejamento · Em execução · Validação PCM · Finalizado, nessa ordem. "Backlog" sai
+ * de coluna (painel lateral priorizado, `PainelLateralBacklog.tsx`, já existente — mostrar aqui
+ * também duplicaria o cartão, o que AC-3 proíbe); "Cancelado" sai de coluna cotidiana (consultável
+ * via filtro de status, que já existe). "Corretiva" nunca foi escrito como status real de OS
+ * nesta base (confirmado por grep — é a `categoria`, campo diferente) — remover a coluna não
+ * perde dado algum.
+ * SPEC_DEVIATION (ver plan.md): "Campo a conciliar" (AC-5) não entrou como coluna nesta story — a
+ * fonte real (`pcm.sso_origem_campo_processamentos.provisorio`, E01-S175) não foi mapeada a
+ * tempo; uma coluna sempre vazia seria pior que a ausência documentada. Fica pra continuação. */
 export const COLUNAS_KANBAN_PADRAO: ColunaKanbanPreferencia[] = [
   { id: "solicitacao", visivel: true },
-  { id: "corretiva", visivel: true },
-  { id: "backlog", visivel: true },
   { id: "preventiva", visivel: true },
+  { id: "demanda", visivel: true },
   { id: "planejamento", visivel: true },
   { id: "em_execucao", visivel: true },
+  { id: "validacao_pcm", visivel: true },
   { id: "finalizado", visivel: true },
-  { id: "cancelado", visivel: true },
 ];
 
 const IDS_VALIDOS = new Set(COLUNAS_KANBAN_PADRAO.map((coluna) => coluna.id));
 
 export function labelColunaKanban(id: ColunaKanbanId): string {
   if (id === "preventiva") return "Preventiva";
+  if (id === "demanda") return "Demanda";
   return STATUS_OS.find((status) => status.value === id)?.label ?? id;
 }
 
