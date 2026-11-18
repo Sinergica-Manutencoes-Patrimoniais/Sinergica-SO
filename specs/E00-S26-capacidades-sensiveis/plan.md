@@ -17,7 +17,7 @@ Ver `docs/adr/1690-capacidades-sensiveis-reaproveita-e01-s170.md` para a decisã
 
 ## Migration
 
-`1854_E00-S26_capacidades_sensiveis.sql` — `update config.sso_acoes set exige_concessao_individual=true` em 4 códigos: `cadastro.aprovar`, `chamado.encerrar`, `custo.ler`, `visita.cancelar`. `execucao.validar` fica de fora (SPEC_DEVIATION documentado na ADR). Sem tabela nova, sem RPC nova.
+`1857_E00-S26_capacidades_sensiveis.sql` — `update config.sso_acoes set exige_concessao_individual=true` em 4 códigos: `cadastro.aprovar`, `chamado.encerrar`, `custo.ler`, `visita.cancelar`. `execucao.validar` fica de fora (SPEC_DEVIATION documentado na ADR). Sem tabela nova, sem RPC nova.
 
 ## pgTAP
 

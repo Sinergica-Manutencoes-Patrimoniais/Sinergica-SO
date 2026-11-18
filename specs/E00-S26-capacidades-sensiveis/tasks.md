@@ -14,7 +14,7 @@ Detalhe técnico em `plan.md`. **Tier arquitetural**: ADR antes de implementar, 
 |---|------|----------|----------------|--------|
 | 1 | Inventário da fundação E01-S170 (schema, RPCs, UI, o que falta de verdade) | — | relatório na ADR | **done** — ADR-1690: fundação completa, gap é só flag frouxa |
 | 2 | ADR do mapeamento das 7 capacidades sobre a taxonomia existente | — | revisão humana | **done** — `docs/adr/1690-capacidades-sensiveis-reaproveita-e01-s170.md` |
-| 3 | Migration: `exige_concessao_individual=true` em `cadastro.aprovar`/`chamado.encerrar`/`custo.ler`/`visita.cancelar` | AC-1, AC-2, AC-3 | `npx supabase@2.114.0 test db supabase/tests/E00-S26_*.test.sql` | **done** — `1854_E00-S26_capacidades_sensiveis.sql` |
+| 3 | Migration: `exige_concessao_individual=true` em `cadastro.aprovar`/`chamado.encerrar`/`custo.ler`/`visita.cancelar` | AC-1, AC-2, AC-3 | `npx supabase@2.114.0 test db supabase/tests/E00-S26_*.test.sql` | **done** — `1857_E00-S26_capacidades_sensiveis.sql` |
 | 4 | pgTAP: matriz positiva e negativa AC-1 a AC-8 | AC-1→AC-8 | idem | **done** — 15 assertions, suíte completa 268/268, 3386/3386, zero regressão |
 | 5 | Confirmar `execucao.validar` fica de fora (SPEC_DEVIATION) sem quebrar teste pré-existente | — | `npx supabase@2.114.0 test db supabase/tests/E01-S170_*.test.sql` | **done** — removido do flip após achar `E01-S170_perfis_acumulaveis.test.sql` provando herança intencional |
 | 6 | Alcance no front — confirmar `CapacidadesWorkspace` já é o caminho utilizável | AC-F1→AC-F5 | revisão humana | **done** — já montada, superadmin, sem flag nova |
