@@ -60,6 +60,9 @@ jobs:
       - name: API de domínio — cinco camadas, sem SQL genérico (E01-S198)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: node scripts/check-api-dominio-cinco-camadas.mjs
+      - name: MCP — ferramentas controladas, sem acesso direto ao banco (E02-S43)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: node scripts/check-mcp-ferramentas-controladas.mjs
 
       # Gates de segurança (BLOQUEANTES)
       # gitleaks via CLI (MIT, grátis) — a gitleaks-action exige GITLEAKS_LICENSE em repos de
