@@ -28,3 +28,7 @@ Detalhe técnico em `plan.md`. **Tier arquitetural**: ADR antes de implementar, 
 - Nenhum custo interno sai do servidor sem `custo.ler` (SC-003). **Já era verdade antes desta story** — confirmado, não construído agora.
 - Toda concessão aparece em `audit.*` (SC-004). **Já verdade** — `config.sso_registrar_comando` grava toda escrita em `sso_concessoes`/`sso_perfis`/`sso_usuario_perfis` desde `E01-S170`.
 - ADR escrito; falta `/revisao-adversarial` (task 7) antes do PASS final.
+
+## Rastreabilidade AC→task (completa)
+
+Todas as ACs desta story estão cobertas pelas tasks acima; lista literal pra ferramenta de auditoria (`eval:spec`), que não expande faixa ("AC-1 a AC-4"): AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8.
