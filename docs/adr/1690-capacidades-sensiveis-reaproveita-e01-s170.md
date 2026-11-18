@@ -31,7 +31,7 @@ capacidade granular só funciona via concessão individual, criada pela UI que j
 
 1. **Nenhuma tabela, RPC ou UI nova.** O gap real não é "construir capacidades" — é "apertar o
    parafuso frouxo": das ações que correspondem às sete capacidades nomeadas, só `plano.gerir`
-   nasceu com `exige_concessao_individual=true`. Migration `1854_E00-S26_capacidades_sensiveis.sql`
+   nasceu com `exige_concessao_individual=true`. Migration `1857_E00-S26_capacidades_sensiveis.sql`
    flipa pra `true`: `cadastro.aprovar` (aprovar), `chamado.encerrar` (cancelar), `custo.ler`
    (visualizar valores internos), `visita.cancelar` (cancelar).
 2. **`execucao.validar` (validar) fica de fora, por decisão consciente — SPEC_DEVIATION.**

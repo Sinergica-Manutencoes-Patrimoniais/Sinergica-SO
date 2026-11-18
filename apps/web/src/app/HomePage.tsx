@@ -66,6 +66,7 @@ import { ContratosPage as ComercialContratosPage } from "../features/comercial/p
 import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
+import { AtivacaoJornadasPage } from "../features/config/pages/AtivacaoJornadasPage";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
 import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
@@ -251,7 +252,8 @@ const CONFIG_NAV: Array<{
     | "ia"
     | "gasto-ia"
     | "priorizacao"
-    | "localizacao-auvo";
+    | "localizacao-auvo"
+    | "ativacao";
   label: string;
   icon: LucideIcon;
 }> = [
@@ -263,6 +265,8 @@ const CONFIG_NAV: Array<{
   { id: "gasto-ia", label: "Gasto de IA", icon: DollarSign },
   { id: "priorizacao", label: "Priorização", icon: SlidersHorizontal },
   { id: "localizacao-auvo", label: "Localização Auvo", icon: MapPin },
+  // E01-S188: diagnóstico/abertura de gates. Superadmin + flag (filtro aplicado onde o nav renderiza).
+  { id: "ativacao", label: "Ativação de jornadas", icon: LockKeyhole },
 ];
 
 const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
@@ -438,6 +442,7 @@ export function HomePage() {
     | "gasto-ia"
     | "priorizacao"
     | "localizacao-auvo"
+    | "ativacao"
   >("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -668,29 +673,36 @@ export function HomePage() {
               )}
               {CONFIG_NAV.filter(
                 (item) => item.id !== "capacidades" || user?.papel === "superadmin",
-              ).map((item) => {
-                const Icon = item.icon;
-                const isActive = item.id === configTab;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    title={item.label}
-                    onClick={() => {
-                      setConfigTab(item.id);
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
-                      isActive
-                        ? "border-orange bg-card/[0.07] text-white font-medium"
-                        : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                    {!sidebarCompacta && <span className="truncate">{item.label}</span>}
-                  </button>
-                );
-              })}
+              )
+                .filter(
+                  (item) =>
+                    item.id !== "ativacao" ||
+                    (user?.papel === "superadmin" &&
+                      import.meta.env.VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED === "true"),
+                )
+                .map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.id === configTab;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      title={item.label}
+                      onClick={() => {
+                        setConfigTab(item.id);
+                        setMobileSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                        isActive
+                          ? "border-orange bg-card/[0.07] text-white font-medium"
+                          : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                      {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
             </div>
           ) : activeModulo === "pcm" ? (
             PCM_NAV.map((group) => (
@@ -1056,7 +1068,11 @@ export function HomePage() {
                     painelOrcamentoOs={
                       user?.id && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
                         ? (ordemServicoId) => (
-                            <OrcamentosDaOs usuario={user?.id ?? ""} cliente={clienteSelecionado} ordemServico={ordemServicoId} />
+                            <OrcamentosDaOs
+                              usuario={user?.id ?? ""}
+                              cliente={clienteSelecionado}
+                              ordemServico={ordemServicoId}
+                            />
                           )
                         : undefined
                     }
@@ -1147,11 +1163,20 @@ export function HomePage() {
                   osIdInicialToken={
                     osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
                   }
-                  painelOrcamentoOs={user?.id && osDeepLink?.origemClienteId && import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
-                    ? (ordemServicoId) => ordemServicoId === osDeepLink?.osId
-                      ? <OrcamentosDaOs usuario={user?.id ?? ""} cliente={osDeepLink?.origemClienteId ?? ""} ordemServico={ordemServicoId} />
-                      : null
-                    : undefined}
+                  painelOrcamentoOs={
+                    user?.id &&
+                    osDeepLink?.origemClienteId &&
+                    import.meta.env.VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED === "true"
+                      ? (ordemServicoId) =>
+                          ordemServicoId === osDeepLink?.osId ? (
+                            <OrcamentosDaOs
+                              usuario={user?.id ?? ""}
+                              cliente={osDeepLink?.origemClienteId ?? ""}
+                              ordemServico={ordemServicoId}
+                            />
+                          ) : null
+                      : undefined
+                  }
                   filtrosIniciais={
                     ordensFiltrosPreset
                       ? {
@@ -1202,6 +1227,10 @@ export function HomePage() {
               <ConfigPriorizacaoPage />
             ) : configTab === "localizacao-auvo" ? (
               <ConfigLocalizacaoAuvoPage />
+            ) : configTab === "ativacao" &&
+              user?.papel === "superadmin" &&
+              import.meta.env.VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED === "true" ? (
+              <AtivacaoJornadasPage userId={user.id} />
             ) : (
               <IntegracoesPage />
             )

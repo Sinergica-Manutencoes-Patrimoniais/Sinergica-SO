@@ -32,9 +32,25 @@ jobs:
       - name: Instalar psql
         run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
 
+      # Runner do GitHub não tem rota IPv6 — o host direto `db.<ref>.supabase.co` resolve só IPv6
+      # hoje e falha com "Network is unreachable" (achado real, rodado em 18/11/2026). O Pooler
+      # (Supavisor) tem endpoint IPv4; a região faz parte do hostname do pooler, então é preciso
+      # descobri-la pela Management API antes de montar a URL — nunca hardcoded, projetos
+      # diferentes ficam em regiões diferentes.
+      - name: Descobrir região do projeto (pro endpoint IPv4 do Pooler)
+        id: regiao
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          regiao=$(curl -sf -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_ID" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).region')
+          test -n "$regiao" || { echo "::error::região do projeto não encontrada"; exit 1; }
+          echo "regiao=$regiao" >> "$GITHUB_OUTPUT"
+
       - name: Rodar inventário (só leitura)
         env:
-          SUPABASE_DB_URL: postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co:5432/postgres
+          SUPABASE_DB_URL: postgresql://postgres.${{ secrets.SUPABASE_PROJECT_ID }}:${{ secrets.SUPABASE_DB_PASSWORD }}@aws-0-${{ steps.regiao.outputs.regiao }}.pooler.supabase.com:5432/postgres
         run: node scripts/inventariar-backlog-legado.mjs > /tmp/relatorio-backlog-legado.json
 
       - name: Publicar resultado no Step Summary
