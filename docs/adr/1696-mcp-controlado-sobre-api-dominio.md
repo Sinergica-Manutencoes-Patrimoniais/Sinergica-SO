@@ -1,3 +1,9 @@
+---
+name: "docs-adr-1696-mcp-controlado-sobre-api-dominio-md"
+description: "Documento Sinérgica SO: ADR-1696 — MCP controlado, catálogo fechado sobre a API de domínio (E02-S43)"
+alwaysApply: false
+---
+
 # ADR-1696 — MCP controlado, catálogo fechado sobre a API de domínio (E02-S43)
 
 **Status:** aceita · **Data:** 2026-11-18 · **Story:** E02-S43 · **Tier:** arquitetural · **P2**
