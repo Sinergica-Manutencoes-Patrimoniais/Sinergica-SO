@@ -57,7 +57,7 @@ dado em produção — decisão arquitetural, ADR antes de codar, fora do escopo
 
 ## AC-9 — Kanban com link de volta ao Plano
 
-Migration `1854_E01-S192_ocorrencia_preventiva_operacao_itens.sql`:
+Migration `1858_E01-S192_ocorrencia_preventiva_operacao_itens.sql`:
 - `pcm.operacao_itens` (view) ganha `ocorrencia_preventiva_id` nos dois ramos do `UNION ALL`
   (aditivo, mesma posição/tipo nos dois `SELECT`s).
 - `pcm.sso_resolver_plano_origem_os(p_cliente_id, p_ocorrencia_preventiva_id)` — RPC lazy
