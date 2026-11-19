@@ -87,6 +87,7 @@ import {
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
 import {
+  listarCampoAConciliar,
   obterResumoOsDoCliente,
   resolverPlanoOrigemOs,
   supabaseOperacaoAdapter,
@@ -251,6 +252,48 @@ export function OrdensServicoPage({
     staleTime: 0,
     refetchInterval: 30000,
   });
+  const clienteSelecionadoId = filtros.clienteId !== "todos" ? filtros.clienteId : null;
+
+  // E01-S199 — fila "Campo a conciliar" (BL 007 AC-5): terceira fila de ENTRADA do Kanban, com
+  // as OS que chegaram do Auvo sem ID de Chamado e ainda não foram conciliadas pelo PCM. Só faz
+  // sentido com um Cliente específico filtrado (a RPC é por Cliente, como a triagem). `retry:
+  // false` porque gate fechado e falta de capacidade são erros permanentes: repetir só atrasaria
+  // a mensagem certa.
+  const campoAConciliar = useQuery({
+    queryKey: operacaoQueryKeys.campoAConciliar(clienteSelecionadoId ?? ""),
+    queryFn: ({ signal }) =>
+      listarCampoAConciliar(user?.id as string, clienteSelecionadoId as string, signal),
+    enabled: Boolean(
+      consultasAtivas &&
+        visao === "kanban" &&
+        user?.id &&
+        clienteSelecionadoId &&
+        flagLigada("VITE_SSO_CAMPO_A_CONCILIAR_ENABLED"),
+    ),
+    retry: false,
+    staleTime: 0,
+  });
+
+  // E00-S28 AC-F3: recurso desligado se anuncia. A RPC devolve erro NOMEADO para cada caso, e
+  // cada um pede uma frase diferente — `return null` silencioso aqui seria indistinguível de
+  // "não há nada a conciliar", que é justamente o engano que a regra de alcance proíbe.
+  const avisoCampoAConciliar = ((): string | null => {
+    if (!flagLigada("VITE_SSO_CAMPO_A_CONCILIAR_ENABLED"))
+      return "Campo a conciliar: recurso disponível, ainda não ativado.";
+    if (!clienteSelecionadoId)
+      return "Selecione um Cliente para consultar a fila de conciliação do campo.";
+    if (!campoAConciliar.isError) return null;
+    const mensagem =
+      campoAConciliar.error && typeof campoAConciliar.error === "object"
+        ? String((campoAConciliar.error as { message?: unknown }).message ?? "")
+        : "";
+    if (mensagem.includes("consulta_desabilitada"))
+      return "Campo a conciliar: recurso disponível, ainda não ativado para este Cliente.";
+    if (mensagem.includes("sem_acesso"))
+      return "Campo a conciliar: você não tem a capacidade de validação neste Cliente.";
+    return "Não foi possível consultar a fila de conciliação do campo.";
+  })();
+
   const detalhe = useDetalheOperacao(
     supabaseOperacaoAdapter,
     selecionadaId,
@@ -874,6 +917,12 @@ export function OrdensServicoPage({
                   onMoverColuna={onMoverColunaKanban}
                   onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
                   preventivas={preventivas}
+                  camposAConciliar={
+                    campoAConciliar.isFetching || campoAConciliar.isError
+                      ? undefined
+                      : campoAConciliar.data
+                  }
+                  avisoCampoAConciliar={avisoCampoAConciliar}
                   resumosChamados={
                     !salvando &&
                     !feedBuscando &&

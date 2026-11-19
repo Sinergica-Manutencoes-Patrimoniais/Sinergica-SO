@@ -8,6 +8,7 @@ import type {
   OperacaoGateway,
   PaginaOperacao,
 } from "../application/operacao-gateway";
+import type { ItemCampoAConciliar } from "../domain/campo-a-conciliar";
 
 interface OperacaoRow {
   item_id: string;
@@ -108,6 +109,57 @@ export async function resolverPlanoOrigemOs(
   if (error) throw error;
   return data as string | null;
 }
+
+/** E01-S199 — fila "Campo a conciliar" do Kanban: OS que chegou do Auvo sem ID de Chamado e que
+ * o PCM ainda não conciliou (migration 1866). A RPC já recusa com erro nomeado quando o gate
+ * `pcm.sso_consulta_estado_campo_gate` está fechado ou falta a capacidade `execucao.validar` —
+ * a página distingue esses dois casos de "fila vazia", nunca mostra tela em branco. */
+export async function listarCampoAConciliar(
+  atorId: string,
+  clienteId: string,
+  signal?: AbortSignal,
+): Promise<ItemCampoAConciliar[]> {
+  if (
+    !z.string().guid().safeParse(atorId).success ||
+    !z.string().guid().safeParse(clienteId).success
+  )
+    throw new Error("Contexto inválido.");
+  let chamada = supabase.schema("pcm").rpc("sso_listar_campo_a_conciliar", {
+    p_ator_id: atorId,
+    p_cliente_id: clienteId,
+    p_limite: 50,
+  });
+  if (signal) chamada = chamada.abortSignal(signal);
+  const { data, error } = await chamada;
+  if (error) throw error;
+  const linhas = linhaCampoAConciliarSchema.array().safeParse(data ?? []);
+  if (!linhas.success) throw new Error("Fila de conciliação em formato inesperado.");
+  return linhas.data.map((linha) => ({
+    osId: linha.os_id,
+    chamadoId: linha.chamado_id,
+    osNumero: linha.os_numero,
+    chamadoNumero: linha.chamado_numero,
+    titulo: linha.titulo,
+    motivo: linha.motivo,
+    taskId: linha.task_id,
+    statusOs: linha.status_os,
+    criadoEm: linha.criado_em,
+  }));
+}
+
+const linhaCampoAConciliarSchema = z
+  .object({
+    os_id: z.string().guid(),
+    chamado_id: z.string().guid(),
+    os_numero: z.string(),
+    chamado_numero: z.string(),
+    titulo: z.string(),
+    motivo: z.string(),
+    task_id: z.number().int().nullable(),
+    status_os: z.string(),
+    criado_em: z.string(),
+  })
+  .strict();
 
 function mapearResumo(row: OperacaoRow): ItemOperacaoResumo {
   return {

@@ -66,16 +66,36 @@ describe("kanban-colunas", () => {
     expect(labelColunaKanban("validacao_pcm")).toBe("Validação PCM");
   });
 
-  it("E01-S194 AC-1: COLUNAS_KANBAN_PADRAO é exatamente o quadro aprovado, nessa ordem", () => {
+  it("E01-S199 AC-1: COLUNAS_KANBAN_PADRAO é exatamente o quadro aprovado, nessa ordem", () => {
+    // Ordem literal do Pacote Consolidado (13/11/2026), agora completa:
+    // "Solicitações | Preventivas | Campo a conciliar | Demanda | Planejamento | Em execução |
+    //  Validação PCM | Finalizado".
     expect(COLUNAS_KANBAN_PADRAO.map((c) => c.id)).toEqual([
       "solicitacao",
       "preventiva",
+      "campo_a_conciliar",
       "demanda",
       "planejamento",
       "em_execucao",
       "validacao_pcm",
       "finalizado",
     ]);
+  });
+
+  it("E01-S199: as três filas de ENTRADA vêm antes de toda etapa de tratamento", () => {
+    // O pacote separa as duas naturezas: "Solicitação, Preventiva e Campo a conciliar são filas
+    // de entrada; Demanda, Planejamento, Em execução, Validação e Finalizado são etapas do
+    // tratamento". Uma entrada depois de uma etapa inverteria a leitura do quadro.
+    const ids = COLUNAS_KANBAN_PADRAO.map((c) => c.id);
+    const entradas = ["solicitacao", "preventiva", "campo_a_conciliar"];
+    const ultimaEntrada = Math.max(...entradas.map((id) => ids.indexOf(id)));
+    const primeiraEtapa = ids.indexOf("demanda");
+    expect(entradas.every((id) => ids.includes(id))).toBe(true);
+    expect(ultimaEntrada).toBeLessThan(primeiraEtapa);
+  });
+
+  it("E01-S199: 'Campo a conciliar' tem rótulo próprio — não é status de OS", () => {
+    expect(labelColunaKanban("campo_a_conciliar")).toBe("Campo a conciliar");
   });
 
   it("E01-S194 AC-2/AC-3: backlog (painel lateral) e cancelado (filtro/histórico) não são coluna cotidiana", () => {
