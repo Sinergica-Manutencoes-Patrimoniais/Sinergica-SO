@@ -1,6 +1,7 @@
 ---
 name: inventario-flags-sso
 description: Flag × jornada × gate × primeiro arquivo que lê — registro vivo gerado por scripts/check-flags-declaradas.mjs --inventario.
+alwaysApply: false
 ---
 
 # Inventário de ativação — flags `VITE_SSO_*`
