@@ -6,6 +6,9 @@
 [build.environment]
   NODE_VERSION = "22"
   PNPM_VERSION = "9.0.0"
+  # E01-S199: fila "Campo a conciliar" do Kanban. Desligada até o gate de banco
+  # pcm.sso_consulta_estado_campo_gate ser aberto (decisão operacional separada).
+  VITE_SSO_CAMPO_A_CONCILIAR_ENABLED = "false"
   # E01-S195 AC-F2: primeira flag VITE_SSO_* declarada aqui — as demais (ver .env.example) são
   # hoje só setadas no dashboard do Netlify, achado da reanálise de alcance-no-front (não
   # corrigido retroativamente nesta story, fora de escopo unilateral).

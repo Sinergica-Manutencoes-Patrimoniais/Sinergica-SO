@@ -2,6 +2,7 @@ import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { type DragEvent, useState } from "react";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
+import { type ItemCampoAConciliar, rotuloMotivoCampo } from "../domain/campo-a-conciliar";
 import {
   type ColunaKanbanId,
   type ColunaKanbanPreferencia,
@@ -39,7 +40,10 @@ function orientacaoDoCard(detalhes: Record<string, unknown> | null): string | nu
  * biblioteca nova) reaproveitando o mesmo `onAlterarStatus` do seletor — o `<select>` continua
  * disponível como alternativa acessível (teclado, leitor de tela, mobile sem drag por toque).
  * E01-S84 adiciona colunas customizáveis (ordem/visibilidade, `colunas`) e a coluna virtual
- * "Preventiva" (`preventivas`, sem drag — não são OS de verdade até "Criar OS"). */
+ * "Preventiva" (`preventivas`, sem drag — não são OS de verdade até "Criar OS").
+ * E01-S199 adiciona "Campo a conciliar" (`camposAConciliar`), também sem drag: é fila de ENTRADA,
+ * e sair dela é decisão de triagem (`sso_consultar_triagem_chamado_campo`, E01-S175), não
+ * mudança de status — arrastar daqui fingiria um caminho que não existe. */
 export function OsKanbanView({
   ordens,
   temEscrita,
@@ -52,6 +56,8 @@ export function OsKanbanView({
   onMoverColuna,
   onAlternarVisibilidadeColuna,
   preventivas,
+  camposAConciliar,
+  avisoCampoAConciliar,
   resumosChamados,
 }: {
   ordens: OrdemServicoOperacional[];
@@ -65,6 +71,8 @@ export function OsKanbanView({
   onMoverColuna: (id: ColunaKanbanId, direcao: "cima" | "baixo") => void;
   onAlternarVisibilidadeColuna: (id: ColunaKanbanId) => void;
   preventivas: PmocPreventivaResumo[];
+  camposAConciliar?: ItemCampoAConciliar[];
+  avisoCampoAConciliar?: string | null;
   resumosChamados?: Record<string, ResumoChamadoCard>;
 }) {
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
@@ -147,6 +155,57 @@ export function OsKanbanView({
               );
             }
 
+            if (coluna.id === "campo_a_conciliar") {
+              const itens = camposAConciliar ?? [];
+              return (
+                <div
+                  key="campo_a_conciliar"
+                  className="flex w-72 shrink-0 flex-col rounded-lg border border-line bg-paper"
+                >
+                  <ColunaHeader
+                    label="Campo a conciliar"
+                    total={itens.length}
+                    podeSubir={indice > 0}
+                    podeDescer={indice < visiveis.length - 1}
+                    onSubir={() => onMoverColuna("campo_a_conciliar", "cima")}
+                    onDescer={() => onMoverColuna("campo_a_conciliar", "baixo")}
+                    onOcultar={() => onAlternarVisibilidadeColuna("campo_a_conciliar")}
+                  />
+                  <div className="flex max-h-[600px] flex-col gap-2 overflow-y-auto p-2">
+                    {avisoCampoAConciliar ? (
+                      <output className="block px-2 py-4 text-center text-caption text-ink-3">
+                        {avisoCampoAConciliar}
+                      </output>
+                    ) : itens.length === 0 ? (
+                      <p className="px-2 py-4 text-center text-caption text-ink-3">
+                        Nada a conciliar
+                      </p>
+                    ) : (
+                      itens.map((item) => (
+                        <button
+                          key={item.osId}
+                          type="button"
+                          onClick={() => onSelecionar(item.osId)}
+                          className="w-full rounded-md border border-line bg-card p-3 text-left hover:border-orange"
+                        >
+                          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
+                            {rotuloMotivoCampo(item.motivo)}
+                          </span>
+                          <p className="mt-1.5 text-body font-semibold text-ink">{item.titulo}</p>
+                          <p className="mt-1 text-caption text-ink-3">
+                            {item.osNumero} · {item.chamadoNumero}
+                          </p>
+                          {item.taskId !== null && (
+                            <p className="mt-1 text-micro text-ink-3">Tarefa Auvo {item.taskId}</p>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
             const ordensDaColuna = ordens.filter((ordem) => ordem.status === coluna.id);
             return (
               <div
@@ -218,7 +277,13 @@ export function OsKanbanView({
                               {ordem.titulo}
                             </p>
                             <p className="mt-1 text-caption text-ink-3">{ordem.clienteNome}</p>
-                            <ProgressoChamadoCard resumo={ordem.chamadoId ? resumosChamados?.[ordem.chamadoId] ?? null : null} />
+                            <ProgressoChamadoCard
+                              resumo={
+                                ordem.chamadoId
+                                  ? (resumosChamados?.[ordem.chamadoId] ?? null)
+                                  : null
+                              }
+                            />
                             {ordem.tecnicoNome && (
                               <p className="mt-1 text-micro text-ink-3">
                                 Técnico: {ordem.tecnicoNome}

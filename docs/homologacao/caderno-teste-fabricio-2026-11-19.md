@@ -98,6 +98,7 @@ Ligar no Netlify e republicar. Cada uma pode ser ligada isoladamente:
 | `VITE_SSO_PENDENCIAS_FILTRO_ATIVO_ENABLED` | Filtro por ativo dentro das pendências | 8 |
 | `VITE_SSO_BACKLOG_COMPOSICAO_ENABLED` | Botão "Compor Backlog" | 3, 8 |
 | `VITE_SSO_PROMOVER_BACKLOG_CHAMADO_ENABLED` | Botão "Liberar escopo" (Backlog → Chamado) | 3 |
+| `VITE_SSO_CAMPO_A_CONCILIAR_ENABLED` | Coluna "Campo a conciliar" no Kanban | 4b |
 | `VITE_SSO_CAPACIDADE_AGENDA_ENABLED` | Aba de capacidade/agenda dentro do cliente | 6, 9 |
 | `VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED` | Trechos de deslocamento com enquadramento | 9 |
 
@@ -110,6 +111,7 @@ autorização**:
 |---|---|---|
 | `pcm.sso_backlog_composicao_gate`, `sso_promocao_backlog_gate`, `sso_backlog_chamado_gate`, `sso_backlog_parcela_gate`, `sso_divisao_backlog_gate` | Caminho Pendência → Backlog → Chamado em Demanda | 3 |
 | `pcm.sso_trechos_deslocamento_gate` | Registro de trechos de deslocamento | 9 |
+| `pcm.sso_consulta_estado_campo_gate` | Fila "Campo a conciliar" (e a tela "Estado de campo", que compartilha o gate) | 4b |
 
 ### 0.6 — Capacidades a conceder
 
@@ -149,7 +151,7 @@ junto; aparecerem duas tarefas Auvo para a mesma OS.
 | # | O que fazer | Resultado esperado | OK? |
 |---|---|---|---|
 | 2.1 | Abrir **PCM → Ordens de Serviço → Kanban**, escolher um cliente | O Backlog aparece como **painel lateral**, nunca como coluna | |
-| 2.2 | Conferir as colunas | Exatamente: Solicitações, Preventivas, Demanda, Planejamento, Em execução, Validação PCM, Finalizado | |
+| 2.2 | Conferir as colunas | Exatamente, nesta ordem: Solicitações, Preventivas, **Campo a conciliar**, Demanda, Planejamento, Em execução, Validação PCM, Finalizado | |
 | 2.3 | Procurar um item que esteja no painel lateral, nas colunas | O mesmo item **não** aparece nos dois lugares (sem cartão duplicado) | |
 | 2.4 | Procurar por uma OS cancelada usando o **filtro de situação** | A OS cancelada é encontrada e consultável | |
 
@@ -186,6 +188,29 @@ ou mudar de situação.
 | 4.2 | Criar OS a partir de um Chamado em Demanda | A OS nasce direto em **Planejamento** (já passou da triagem), não em Solicitação | |
 | 4.3 | Procurar um cadastro/menu separado chamado "Demanda" | **Não existe** — Demanda é só a etapa do Chamado | |
 | 4.4 | Pegar um Chamado já em Planejamento e adiá-lo | Volta para **Demanda**, sem perder histórico | |
+
+### Teste 4b — Campo a conciliar 🔒 (BL 007 AC-5)
+
+> **Sua regra:** *"Solicitação, Preventiva e Campo a conciliar são filas de entrada"* e *"OS aberta
+> no Auvo sem ID de Chamado cria OS e Chamado provisórios no SSO e entra em conciliação do PCM"*.
+
+Exige: gate `pcm.sso_consulta_estado_campo_gate` aberto, flag
+`VITE_SSO_CAMPO_A_CONCILIAR_ENABLED` ligada, capacidade `execucao.validar` concedida, e **um
+Cliente selecionado** no filtro do Kanban.
+
+| # | O que fazer | Resultado esperado | OK? |
+|---|---|---|---|
+| 4b.1 | Abrir uma tarefa no Auvo **sem** informar o Chamado e deixar o sync rodar | No SSO aparece OS + Chamado provisórios, e a OS entra na coluna **Campo a conciliar** | |
+| 4b.2 | Olhar o cartão da fila | Mostra o **motivo** ("Sem referência de Chamado") e o **número da tarefa Auvo** — dá pra decidir sem abrir a OS | |
+| 4b.3 | Clicar no cartão | Abre a OS correspondente | |
+| 4b.4 | Conciliar essa OS (confirmar ou corrigir na triagem) | A OS **sai** da fila; a coluna esvazia | |
+| 4b.5 | Abrir uma tarefa no Auvo **com** o Chamado informado | **Não** entra na fila | |
+| 4b.6 | Tentar arrastar um cartão da fila para outra coluna | Não é arrastável — sair da fila é decisão de triagem, não mudança de status | |
+| 4b.7 | Olhar a fila de **outro** Cliente | Mostra só os itens daquele Cliente | |
+| 4b.8 | Com a flag desligada (ou gate fechado), olhar a coluna | Diz **"disponível, ainda não ativado"** — nunca "Nada a conciliar" | |
+
+**O que invalida:** a coluna dizer "Nada a conciliar" quando na verdade está desligada; item
+conciliado continuar na fila; item de outro Cliente aparecer.
 
 ---
 
@@ -398,7 +423,6 @@ Não há o que testar. Estão aqui para você confirmar a priorização da próx
 | **Assessment → Inspeção "Diagnóstico Inicial do Cliente"** | Assessment deixa de existir como módulo | **Não iniciado** (faz parte de BL 013) |
 | **PMOC → modalidade do Plano de Manutenção** | Visão filtrada, sem módulo nem cadastro próprios | **Não iniciado** (faz parte de BL 013) |
 | **Área única "Materiais e Aquisições" no menu** | Agrupar a jornada de material | **Não iniciado** (depende de BL 013) |
-| **Kanban — coluna "Campo a conciliar"** | Terceira fila de entrada: OS aberta no Auvo sem Chamado | **Não entregue.** Decisão documentada: a ligação com a triagem de origem Auvo não foi concluída a tempo, e uma coluna sempre vazia enganaria mais do que a ausência |
 | **Agenda do Técnico mostrando as OS vinculadas** | Agenda é projeção da Visita, não cadastro paralelo | **Não entregue.** O diagnóstico foi feito e a causa está nomeada: a Agenda é tabela própria e ninguém escreve nela a partir da Visita. Exige decidir quem passa a escrever |
 | **Monitor consolidado de exceções do Auvo** | Visita não confirmada, falha de envio, tarefa órfã | **Não existe** em lugar nenhum do sistema (achado novo desta rodada) |
 | **Matriz completa de transições do Kanban** | "Arrastar respeita transições permitidas" | Só a entrada em Finalizado tem guarda; as demais transições seguem livres |

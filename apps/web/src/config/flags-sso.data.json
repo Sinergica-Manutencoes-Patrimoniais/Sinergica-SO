@@ -342,6 +342,13 @@
     "descricao": "Campos sistema staging"
   },
   {
+    "nome": "VITE_SSO_CAMPO_A_CONCILIAR_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "gate": "pcm.sso_consulta_estado_campo_gate",
+    "descricao": "Coluna 'Campo a conciliar' no Kanban: OS vinda do Auvo sem Chamado, ainda nao conciliada (E01-S199)"
+  },
+  {
     "nome": "VITE_SSO_CANCELAMENTO_CHAMADO_CAMPO_ENABLED",
     "padrao": false,
     "jornada": "chamado-1n",

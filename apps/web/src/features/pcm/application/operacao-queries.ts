@@ -35,6 +35,8 @@ export const operacaoQueryKeys = {
   /** E01-S192 AC-9: nome do Plano legado de origem, resolvido lazy quando o drawer abre. */
   planoOrigemOs: (clienteId: string, ocorrenciaPreventivaId: string) =>
     ["operacao", "plano-origem-os", clienteId, ocorrenciaPreventivaId] as const,
+  /** E01-S199: fila "Campo a conciliar" do Kanban, por Cliente. */
+  campoAConciliar: (clienteId: string) => ["operacao", "campo-a-conciliar", clienteId] as const,
 };
 
 export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacional {

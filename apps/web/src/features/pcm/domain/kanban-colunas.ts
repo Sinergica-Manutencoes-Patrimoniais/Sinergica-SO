@@ -4,8 +4,12 @@ import { STATUS_OS } from "./ordens-servico";
 /** E01-S84: "preventiva" é uma coluna virtual (não é um `StatusOrdemServico` real) — mostra visitas
  * PMOC planejadas ainda sem OS (`PmocPreventivaResumo`), posicionável/ocultável como as demais.
  * E01-S194 AC-1: "demanda" também é virtual do ponto de vista da OS — é status de Chamado
- * (E01-S193), mostrado como card sintético (`pcm.operacao_itens`) enquanto não existe OS. */
-export type ColunaKanbanId = StatusOrdemServico | "preventiva" | "demanda";
+ * (E01-S193), mostrado como card sintético (`pcm.operacao_itens`) enquanto não existe OS.
+ * E01-S199: "campo_a_conciliar" é a terceira coluna virtual — não é status nenhum, é uma
+ * CONDIÇÃO da OS (veio do Auvo sem Chamado e o PCM ainda não conciliou). A OS que está nessa
+ * fila tem status próprio (`em_execucao`, `finalizado`…) e continua com ele; a fila é de
+ * entrada, não etapa de tratamento, exatamente como o pacote define. */
+export type ColunaKanbanId = StatusOrdemServico | "preventiva" | "demanda" | "campo_a_conciliar";
 
 export interface ColunaKanbanPreferencia {
   id: ColunaKanbanId;
@@ -19,12 +23,12 @@ export interface ColunaKanbanPreferencia {
  * via filtro de status, que já existe). "Corretiva" nunca foi escrito como status real de OS
  * nesta base (confirmado por grep — é a `categoria`, campo diferente) — remover a coluna não
  * perde dado algum.
- * SPEC_DEVIATION (ver plan.md): "Campo a conciliar" (AC-5) não entrou como coluna nesta story — a
- * fonte real (`pcm.sso_origem_campo_processamentos.provisorio`, E01-S175) não foi mapeada a
- * tempo; uma coluna sempre vazia seria pior que a ausência documentada. Fica pra continuação. */
+ * E01-S199 fecha o AC-5 que faltava: "Campo a conciliar" entra como terceira fila de ENTRADA,
+ * entre Preventivas e Demanda, na ordem literal do pacote. */
 export const COLUNAS_KANBAN_PADRAO: ColunaKanbanPreferencia[] = [
   { id: "solicitacao", visivel: true },
   { id: "preventiva", visivel: true },
+  { id: "campo_a_conciliar", visivel: true },
   { id: "demanda", visivel: true },
   { id: "planejamento", visivel: true },
   { id: "em_execucao", visivel: true },
@@ -37,6 +41,7 @@ const IDS_VALIDOS = new Set(COLUNAS_KANBAN_PADRAO.map((coluna) => coluna.id));
 export function labelColunaKanban(id: ColunaKanbanId): string {
   if (id === "preventiva") return "Preventiva";
   if (id === "demanda") return "Demanda";
+  if (id === "campo_a_conciliar") return "Campo a conciliar";
   return STATUS_OS.find((status) => status.value === id)?.label ?? id;
 }
 
