@@ -263,7 +263,10 @@ select
   o.auvo_sync_status, o.auvo_sync_error, o.created_at,
   o.tecnico_funcionario_id, f.nome as tecnico_nome, o.data_agendada,
   o.check_in_at, o.check_out_at, o.tipo_os, o.pmoc_schedule_id,
-  o.auvo_detalhes ->> 'orientacao' as orientacao
+  o.auvo_detalhes ->> 'orientacao' as orientacao,
+  -- Coluna introduzida por 1858 (E01-S192). `create or replace view` NÃO pode remover coluna
+  -- existente (42P16) — omiti-la aqui fazia esta migration falhar inteira no deploy.
+  o.ocorrencia_preventiva_id
 from pcm.ordens_servico o
 join pcm.clientes c on c.id = o.client_id
 left join pcm.funcionarios f on f.id = o.tecnico_funcionario_id
@@ -281,7 +284,8 @@ select
   null::text as auvo_sync_error, ch.created_at, null::uuid as tecnico_funcionario_id,
   null::text as tecnico_nome, null::timestamptz as data_agendada,
   null::timestamptz as check_in_at, null::timestamptz as check_out_at,
-  null::text as tipo_os, null::uuid as pmoc_schedule_id, null::text as orientacao
+  null::text as tipo_os, null::uuid as pmoc_schedule_id, null::text as orientacao,
+  null::uuid as ocorrencia_preventiva_id
 from pcm.chamados ch
 join pcm.clientes c on c.id = ch.cliente_id
 where ch.deleted_at is null

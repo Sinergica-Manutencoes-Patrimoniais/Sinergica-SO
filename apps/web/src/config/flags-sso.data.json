@@ -1304,6 +1304,12 @@
     "descricao": "Diagnostico aptidao chamado"
   },
   {
+    "nome": "VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "Aba Ativacao de jornadas em Configuracoes - diagnostico de flag/gate/grant (E01-S188)"
+  },
+  {
     "nome": "VITE_SSO_DIAGNOSTICO_CANDIDATAS_T24_ENABLED",
     "padrao": false,
     "jornada": "visita",
@@ -4248,6 +4254,13 @@
     "padrao": false,
     "jornada": "visita",
     "descricao": "Transicao visita"
+  },
+  {
+    "nome": "VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "gate": "pcm.sso_trechos_deslocamento_gate",
+    "descricao": "Trechos de deslocamento com enquadramento residencial x operacional (E01-S195)"
   },
   {
     "nome": "VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED",

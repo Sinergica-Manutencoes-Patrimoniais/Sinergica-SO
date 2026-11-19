@@ -679,7 +679,7 @@ export function HomePage() {
                   (item) =>
                     item.id !== "ativacao" ||
                     (user?.papel === "superadmin" &&
-                      import.meta.env.VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED === "true"),
+                      flagLigada("VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED")),
                 )
                 .map((item) => {
                   const Icon = item.icon;
@@ -1230,7 +1230,7 @@ export function HomePage() {
               <ConfigLocalizacaoAuvoPage />
             ) : configTab === "ativacao" &&
               user?.papel === "superadmin" &&
-              import.meta.env.VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED === "true" ? (
+              flagLigada("VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED") ? (
               <AtivacaoJornadasPage userId={user.id} />
             ) : (
               <IntegracoesPage />
