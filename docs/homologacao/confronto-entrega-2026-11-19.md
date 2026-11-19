@@ -26,13 +26,15 @@ implementados.
 | Afirmação | Verdadeiro? |
 |---|---|
 | O código das regras aprovadas está escrito, testado e em `main` | **Sim** |
-| Migrations aplicam do zero sem conflito e a suíte pgTAP passa | **Sim** |
+| Migrations aplicam do zero sem conflito e a suíte pgTAP passa | **Sim**, depois da correção de 19/11 |
 | O Fabrício consegue validar tudo na tela hoje | **Não** — ver §3 |
 | Alguma regra aprovada foi implementada diferente do pacote | **Não**, mas 7 itens ficaram parciais e estão nomeados em §4 |
 | A entrega estava pronta para ir ao ar como mesclada em 18/11 | **Não** — uma migration não aplicava; corrigido em 19/11 (§6) |
 | Algum item "Em validação" foi implementado sem autorização | **Não** |
 
-**A lacuna principal não é de código: é de ativação.** O projeto usa três camadas de trava —
+**Duas lacunas, em ordem de urgência.** A primeira é técnica e já corrigida: uma migration não
+aplicava e travaria o deploy (§6) — é preciso conferir em que ponto o banco de produção parou. A
+segunda é de processo: **nada está ligado.** O projeto usa três camadas de trava —
 *gate* de banco, *flag* de build e *grant* de permissão — e todas nascem **fechadas por desenho**.
 Nenhuma foi aberta nesta rodada, porque abrir é decisão operacional com sign-off humano, não
 commit de desenvolvedor. O caderno de teste (`caderno-teste-fabricio-2026-11-19.md`) lista, item a
@@ -164,8 +166,17 @@ nunca aplicou com sucesso em ambiente nenhum (ela erra sempre), então corrigi-l
 "nunca edite migration aplicada" — e uma migration nova não resolveria, porque a cadeia para em
 `1861`.
 
-**Confirmado após a correção:** as 12 migrations da rodada (`1854`–`1865`) aplicam do zero, em
-sequência, sem erro.
+**Confirmado após a correção, em 19/11, contra `main` com a correção aplicada:**
+
+| Verificação | Resultado |
+|---|---|
+| `supabase db reset` — as 12 migrations da rodada (`1854`–`1865`) aplicam do zero, em sequência | ✅ sem erro |
+| Suíte pgTAP completa | ✅ **283 arquivos, zero falha** |
+| Suíte de front (`vitest`) | ✅ **2.900 testes passando, zero falha**, 20 pulados |
+| Colunas da view `pcm.operacao_itens` | ✅ preserva `ocorrencia_preventiva_id` (E01-S192) e carrega o cartão de Demanda (E01-S194) |
+
+Antes da correção, a mesma suíte reprovava **5 arquivos** de E01-S189 — não por defeito deles, mas
+porque os gates que a `1864` cria nunca chegavam a existir, já que a cadeia parava na `1861`.
 
 **Ação necessária:** conferir em qual migration o banco de produção parou. Se o deploy automático
 rodou depois do merge de 18/11, ele falhou em `1861` e produção está em `1860`.

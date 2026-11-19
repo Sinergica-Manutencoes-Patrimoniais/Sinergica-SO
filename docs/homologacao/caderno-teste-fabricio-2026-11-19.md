@@ -210,6 +210,12 @@ ou mudar de situação.
 **O que invalida:** contingência sem motivo; registro atribuído ao "sistema" em vez da pessoa;
 reprogramação gerando tarefa duplicada.
 
+> **Caveat honesto sobre 5.1 a 5.4:** o despacho T−24 roda numa função de borda, e as travas dela
+> (segredos, impressão digital do contrato Auvo) vivem fora do banco — por isso essa jornada **não
+> aparece** na tela de Ativação de jornadas: representá-la como gate/flag/grant seria um encaixe
+> que o diagnóstico não consegue verificar de verdade. A validação de 5.1 a 5.4 precisa ser
+> acompanhada pela equipe, olhando o registro de execução junto com você.
+
 ### Teste 6 — Retorno do campo cai em Validação PCM 🔎 (BL 004, BL 007)
 
 > **Sua regra:** *"Retorno do Auvo atualiza a OS e a envia para Validação PCM; não encerra
