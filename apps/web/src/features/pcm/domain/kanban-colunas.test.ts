@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COLUNAS_KANBAN_PADRAO,
+  type ColunaKanbanId,
   alternarVisibilidadeColuna,
   labelColunaKanban,
   moverColuna,
@@ -87,7 +88,7 @@ describe("kanban-colunas", () => {
     // de entrada; Demanda, Planejamento, Em execução, Validação e Finalizado são etapas do
     // tratamento". Uma entrada depois de uma etapa inverteria a leitura do quadro.
     const ids = COLUNAS_KANBAN_PADRAO.map((c) => c.id);
-    const entradas = ["solicitacao", "preventiva", "campo_a_conciliar"];
+    const entradas: ColunaKanbanId[] = ["solicitacao", "preventiva", "campo_a_conciliar"];
     const ultimaEntrada = Math.max(...entradas.map((id) => ids.indexOf(id)));
     const primeiraEtapa = ids.indexOf("demanda");
     expect(entradas.every((id) => ids.includes(id))).toBe(true);
