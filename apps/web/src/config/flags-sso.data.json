@@ -30,6 +30,13 @@
     "descricao": "Admin contrato origem"
   },
   {
+    "nome": "VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "gate": "pcm.capacidade_agenda_tecnico_gate",
+    "descricao": "Agenda do Tecnico como projecao da Visita (E01-S202), no lugar do cadastro manual"
+  },
+  {
     "nome": "VITE_SSO_AGENDA_TECNICO_CAPACIDADE_ENABLED",
     "padrao": false,
     "jornada": "visita",
@@ -142,6 +149,12 @@
     "padrao": false,
     "jornada": "outra",
     "descricao": "Aprovar revisao"
+  },
+  {
+    "nome": "VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "Assessment sai do menu e passa a ser a Inspecao do tipo Diagnostico Inicial do Cliente (E01-S190 task 9, ADR-1697, migrations 1868/1869) — desligada ate homologacao; com ela desligada o item Assessment continua no menu."
   },
   {
     "nome": "VITE_SSO_ATENDER_PARCELA_REVISADA_ENABLED",

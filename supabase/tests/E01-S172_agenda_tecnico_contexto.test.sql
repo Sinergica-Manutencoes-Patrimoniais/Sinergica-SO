@@ -14,10 +14,16 @@ insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_
 insert into config.usuarios(user_id,papel,nome,ativo) values ('17255000-0000-4000-8000-000000000001','superadmin','Teste',true);
 insert into pcm.clientes(id,nome,ativo,created_by) values ('17255000-0000-4000-8000-000000000002','A',true,'17255000-0000-4000-8000-000000000001'),('17255000-0000-4000-8000-000000000003','B',true,'17255000-0000-4000-8000-000000000001');
 insert into pcm.funcionarios(id,nome) values ('17255000-0000-4000-8000-000000000004','Técnico teste');
+-- E01-S202: `pcm.agenda_tecnico` ficou somente-leitura (trigger `sso_agenda_tecnico_obsoleta`,
+-- migration 1867) — a Agenda do Técnico passou a ser projeção da Visita. Esta prova continua
+-- válida: ela cobre a LEITURA do histórico manual, que segue existindo. A fixture entra com a
+-- guarda desligada por ser exatamente o dado pré-existente que a decisão mandou preservar.
+alter table pcm.agenda_tecnico disable trigger sso_agenda_tecnico_obsoleta;
 insert into pcm.agenda_tecnico(id,funcionario_id,cliente_id,data,hora_inicio,hora_fim,created_by) values
  ('17255000-0000-4000-8000-000000000005','17255000-0000-4000-8000-000000000004','17255000-0000-4000-8000-000000000002','2026-10-27','08:00','09:00','17255000-0000-4000-8000-000000000001'),
  ('17255000-0000-4000-8000-000000000006','17255000-0000-4000-8000-000000000004','17255000-0000-4000-8000-000000000003','2026-10-27','10:00','11:00','17255000-0000-4000-8000-000000000001'),
  ('17255000-0000-4000-8000-000000000007','17255000-0000-4000-8000-000000000004','17255000-0000-4000-8000-000000000002','2026-11-02','08:00','09:00','17255000-0000-4000-8000-000000000001');
+alter table pcm.agenda_tecnico enable trigger sso_agenda_tecnico_obsoleta;
 insert into config.sso_concessoes(usuario_id,acao,cliente_id) values ('17255000-0000-4000-8000-000000000001','capacidade.gerir','17255000-0000-4000-8000-000000000002');
 update pcm.capacidade_agenda_tecnico_gate set habilitado=true where id;
 set local request.jwt.claims='{"sub":"17255000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';

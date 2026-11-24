@@ -3,9 +3,11 @@ import type { EntradaNav, PcmView } from "./navegacao-sso";
 import {
   NAVEGACAO_SSO,
   PCM_NAV,
+  VIEWS_CONSOLIDADAS,
   bloqueioDeAdministracao,
   navegacaoAgrupada,
   navegacaoVisivel,
+  pcmNavConsolidado,
 } from "./navegacao-sso";
 
 const SEM_CAPACIDADES: ReadonlySet<string> = new Set<string>();
@@ -166,5 +168,55 @@ describe("E01-S190 task 4 — reorganização não perde alcance (AC-7)", () => 
   it("nenhum id de entrada se repete", () => {
     const ids = NAVEGACAO_SSO.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("E01-S190 task 9 — Assessment deixa de ser módulo (ADR-1697)", () => {
+  it("Assessment não é mais entrada própria na árvore nova", () => {
+    expect(NAVEGACAO_SSO.some((e) => e.view === "assessment")).toBe(false);
+    expect(NAVEGACAO_SSO.some((e) => e.id === "trabalho.assessment")).toBe(false);
+  });
+
+  it("Inspeções declara que absorveu Assessment — é o que mantém a rota viva", () => {
+    const inspecoes = NAVEGACAO_SSO.find((e) => e.view === "inspecoes");
+    expect(inspecoes?.absorveu).toContain("assessment");
+  });
+
+  it("PMOC CONTINUA no menu, e isso é decisão registrada, não esquecimento", () => {
+    // Os Contratos PMOC de produção (`pcm.pmoc_contracts`) não são Planos de Manutenção: não há
+    // FK entre eles. A migration 1869 criou a modalidade e a visão filtrada, mas converter o
+    // contrato existente em Plano seria CRIAR registro — pergunta de produto aberta na ADR-1697
+    // §3. Enquanto isso, tirar PMOC do menu deixaria imóveis, ARTs e laudos sem porta de entrada.
+    expect(NAVEGACAO_SSO.some((e) => e.view === "pmoc")).toBe(true);
+    expect(VIEWS_CONSOLIDADAS).not.toContain("pmoc");
+  });
+
+  it("a árvore vigente só perde Assessment quando a flag de consolidação está ligada", () => {
+    // `PCM_NAV` é o menu publicado. O literal continua verbatim (o teste da task 2 prova isso);
+    // a remoção é derivada, porque mudar o menu publicado sem flag quebraria a promessa da story.
+    const vigentes = PCM_NAV.flatMap((g) => g.items).flatMap((i) => (i.view ? [i.view] : []));
+    expect(vigentes).toContain("assessment");
+
+    const consolidado = pcmNavConsolidado();
+    const depois = consolidado.flatMap((g) => g.items).flatMap((i) => (i.view ? [i.view] : []));
+    expect(depois).not.toContain("assessment");
+    expect(depois).toContain("pmoc");
+    // Exatamente uma entrada a menos: a consolidação não pode levar nada junto por tabela.
+    expect(vigentes.length - depois.length).toBe(1);
+  });
+
+  it("a consolidação não deixa grupo vazio nem mexe nos títulos dos que restam", () => {
+    const consolidado = pcmNavConsolidado();
+    expect(consolidado.every((g) => g.items.length > 0)).toBe(true);
+    expect(consolidado.map((g) => g.titulo)).toEqual(PCM_NAV.map((g) => g.titulo));
+  });
+
+  it("toda view consolidada continua alcançável por alguma entrada da árvore nova", () => {
+    const alcancaveis = new Set<string>();
+    for (const entrada of NAVEGACAO_SSO) {
+      if (entrada.view) alcancaveis.add(entrada.view);
+      for (const absorvida of entrada.absorveu ?? []) alcancaveis.add(absorvida);
+    }
+    for (const view of VIEWS_CONSOLIDADAS) expect(alcancaveis.has(view)).toBe(true);
   });
 });

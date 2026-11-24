@@ -8,11 +8,10 @@
 // vazia. Um mapa literal é o que permite TESTAR isso por tabela: o teste varre `VIEWS_LEGADAS`
 // inteira e falha no dia em que alguém tirar uma view da árvore sem dizer para onde ela foi.
 //
-// ESTADO HONESTO DESTA FATIA: quase todo destino é a própria view. É o esperado — nesta fatia
-// nenhuma tela saiu do ar; o que mudou foi agrupamento e rótulo. O valor do arquivo é ser a
-// trava que impede a PRÓXIMA fatia (migrations de Assessment/PMOC, tasks 6–8) de matar uma rota
-// em silêncio: quando `trabalho.assessment` sair de `NAVEGACAO_SSO`, este mapa tem que apontar
-// `assessment` para `inspecoes` ou o teste quebra.
+// ESTADO: a trava funcionou exatamente como foi escrita. Quando `trabalho.assessment` saiu de
+// `NAVEGACAO_SSO` (task 9, depois das migrations `1868`/`1869`), o teste de tabela só voltou a
+// passar com `assessment -> inspecoes` declarado aqui. Os demais destinos continuam sendo a
+// própria view, o que é o esperado: nenhuma outra tela saiu do ar.
 import type { PcmView } from "./navegacao-sso";
 import { NAVEGACAO_SSO } from "./navegacao-sso";
 
@@ -82,10 +81,16 @@ export const ROTAS_LEGADAS: Readonly<Record<PcmView, PcmView>> = {
   ordens: "ordens",
   backlog: "backlog",
   inspecoes: "inspecoes",
-  // Tasks 6–8 (migrations de classificação) trocam este destino por "inspecoes".
-  assessment: "assessment",
+  // Task 9, depois das migrations `1868`/`1869`: Assessment não é mais módulo. O favorito antigo
+  // cai na lista de Inspeções, que é onde o registro está — `listarInspecoes` nunca filtrou
+  // `e_assessment`, e agora cada um desses registros carrega o tipo "Diagnóstico Inicial do
+  // Cliente". A tela de importação do questionário Auvo continua alcançável DE DENTRO de
+  // Inspeções (`onAbrirDiagnosticoInicial`), para que a saída do menu não leve embora a ação.
+  assessment: "inspecoes",
   "cliente-marcacoes": "cliente-marcacoes",
-  // Tasks 6–8 trocam este destino pela visão filtrada do Plano de Manutenção.
+  // PMOC continua apontando para si: a migration `1869` criou a modalidade e a visão filtrada do
+  // Plano, mas os Contratos PMOC de produção não são Planos (ADR-1697 §3). Redirecionar agora
+  // levaria o favorito para uma tela que não tem o imóvel, a ART nem o laudo dele.
   pmoc: "pmoc",
   preventivas: "preventivas",
   "laudos-spda": "laudos-spda",

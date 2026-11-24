@@ -14,10 +14,15 @@
   # E01-S201: monitor consolidado das excecoes do Auvo em T-24. Desligada ate o gate de banco
   # pcm.sso_consulta_estado_campo_gate ser aberto (mesma decisao operacional de E01-S199).
   VITE_SSO_MONITOR_EXCECOES_AUVO_ENABLED = "false"
-
+  # E01-S202: Agenda do Tecnico como projecao da Visita. Desligada ate o gate de banco
+  # pcm.capacidade_agenda_tecnico_gate ser aberto (decisao operacional separada).
+  VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED = "false"
   # E01-S190: navegacao agrupada em Trabalho, Gestao e Administracao (BL 013). Desligada ate a
   # homologacao — com ela desligada o menu e exatamente o anterior.
   VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED = "false"
+  # E01-S190 task 9: Assessment vira Inspecao do tipo "Diagnostico Inicial do Cliente" e sai do
+  # menu (migrations 1868/1869, ADR-1697). Desligada ate a homologacao.
+  VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED = "false"
   # E01-S195 AC-F2: primeira flag VITE_SSO_* declarada aqui — as demais (ver .env.example) são
   # hoje só setadas no dashboard do Netlify, achado da reanálise de alcance-no-front (não
   # corrigido retroativamente nesta story, fora de escopo unilateral).
