@@ -60,6 +60,26 @@ export function normalizarColunasKanban(
 
 /** E01-S84 AC-1: troca a coluna de posição com a vizinha (cima = mais cedo na lista). No-op nas
  * bordas (não dá pra subir a primeira nem descer a última). */
+/** Status de OS que o quadro vigente NÃO tem coluna para mostrar.
+ *
+ * Achado em produção (24/11/2026): `E01-S194` removeu a coluna "Corretiva" do quadro apoiada num
+ * grep do código-fonte que concluiu "`corretiva` nunca foi escrito como status real". A conclusão
+ * estava errada — havia (e há) uma OS real nesse status. Sem coluna, o cartão simplesmente
+ * sumia do Kanban, porque o agrupamento é `ordem.status === coluna.id`.
+ *
+ * A lição é a mesma que motivou `E00-S28`: sumir em silêncio é pior que aparecer fora do lugar.
+ * Esta função existe para que nenhuma OS desapareça do quadro por ter um status que o fluxo
+ * aprovado não prevê — seja um status legado, seja um que venha a ser removido no futuro. */
+export function statusSemColuna(
+  statusDasOrdens: readonly string[],
+  colunas: readonly ColunaKanbanPreferencia[],
+): string[] {
+  const comColuna = new Set(colunas.filter((c) => c.visivel).map((c) => String(c.id)));
+  const fora = new Set<string>();
+  for (const status of statusDasOrdens) if (!comColuna.has(status)) fora.add(status);
+  return [...fora].sort();
+}
+
 export function moverColuna(
   colunas: ColunaKanbanPreferencia[],
   id: ColunaKanbanId,
