@@ -1,6 +1,7 @@
 import { Button } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { validarPlanoRascunho } from "../../application/plano-manutencao";
 import type { PlanoResumo, SalvarPlanoCommand } from "../../application/plano-manutencao-gateway";
@@ -8,9 +9,9 @@ import { usePlanosManutencao } from "../../application/plano-manutencao-queries"
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabasePlanoManutencaoAdapter } from "../../infrastructure/supabase-plano-manutencao-adapter";
 import { AcoesRevisaoPlano } from "./AcoesRevisaoPlano";
+import { ContratosPmocSemPlano } from "./ContratosPmocSemPlano";
 import { DetalhePlano } from "./DetalhePlano";
 import { TransicaoPlano } from "./TransicaoPlano";
-import { flagLigada } from "../../../../config/flags-sso";
 
 export function PlanoManutencaoWorkspace(props: {
   userId: string;
@@ -53,7 +54,12 @@ function ConteudoPlanoManutencao({
   const [pendente, setPendente] = useState(recuperacao.comando);
   const trava = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   const [aberto, setAberto] = useState(false);
   const [editando, setEditando] = useState<PlanoResumo | null>(null);
   const [planoAbertoId, setPlanoAbertoId] = useState<string | null>(null);
@@ -68,7 +74,10 @@ function ConteudoPlanoManutencao({
     queryKey: ["plano-manutencao-permissao", userId, clienteId],
     queryFn: async ({ signal }) => {
       await conferirSessao(signal);
-      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", clienteId);
+      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "plano.gerir",
+        clienteId,
+      );
       await conferirSessao(signal);
       return autorizada;
     },
@@ -104,15 +113,23 @@ function ConteudoPlanoManutencao({
     setErro("");
     try {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Tentativa divergente.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
+        throw new Error("Tentativa divergente.");
       const recibo = await salvar.mutateAsync(comando);
-      if (recibo.requestId !== comando.requestId || recibo.aggregateId !== comando.planoId ||
-        recibo.revision !== comando.expectedRevision + 1 || recibo.created !== (comando.expectedRevision === 0) ||
-        recibo.linkedIds.clienteId !== clienteId) throw new Error("Recibo de Plano divergente.");
+      if (
+        recibo.requestId !== comando.requestId ||
+        recibo.aggregateId !== comando.planoId ||
+        recibo.revision !== comando.expectedRevision + 1 ||
+        recibo.created !== (comando.expectedRevision === 0) ||
+        recibo.linkedIds.clienteId !== clienteId
+      )
+        throw new Error("Recibo de Plano divergente.");
       await conferirSessao();
       if (!montado.current) throw new Error("Tela desmontada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) {
-        setErro("Plano salvo, mas a tentativa local mudou. Reabra e reconcilie antes de continuar.");
+        setErro(
+          "Plano salvo, mas a tentativa local mudou. Reabra e reconcilie antes de continuar.",
+        );
         return;
       }
       sessionStorage.removeItem(chave);
@@ -244,12 +261,23 @@ function ConteudoPlanoManutencao({
               userId={userId}
               clienteId={clienteId}
               plano={plano}
-              bloqueado={aberto || Boolean(pendente) || edicaoRotinaId === plano.id || consultaBloqueada}
+              bloqueado={
+                aberto || Boolean(pendente) || edicaoRotinaId === plano.id || consultaBloqueada
+              }
             />
             {flagLigada("VITE_SSO_TRANSICAO_PLANO_ENABLED") && (
-              <TransicaoPlano userId={userId} clienteId={clienteId} plano={plano}
-                onAbrirRotinas={() => { setEdicaoRotinaId(null); setPlanoAbertoId(plano.id); }}
-                bloqueado={aberto || Boolean(pendente) || Boolean(edicaoRotinaId) || consultaBloqueada} />
+              <TransicaoPlano
+                userId={userId}
+                clienteId={clienteId}
+                plano={plano}
+                onAbrirRotinas={() => {
+                  setEdicaoRotinaId(null);
+                  setPlanoAbertoId(plano.id);
+                }}
+                bloqueado={
+                  aberto || Boolean(pendente) || Boolean(edicaoRotinaId) || consultaBloqueada
+                }
+              />
             )}
             <Button
               variant="ghost"
@@ -298,6 +326,10 @@ function ConteudoPlanoManutencao({
           Carregar mais Planos
         </Button>
       )}
+      {/* E01-S203 — conversão manual Contrato PMOC → Plano (ADR-1698, decisão (b)). Atrás da
+          própria flag, desligada: com ela desligada esta seção só explica que o recurso existe
+          e ainda não foi ativado, e a tela é exatamente a de antes. */}
+      <ContratosPmocSemPlano userId={userId} clienteId={clienteId} />
     </section>
   );
 }

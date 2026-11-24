@@ -3053,6 +3053,13 @@
     "descricao": "Planos por alvo"
   },
   {
+    "nome": "VITE_SSO_PLANO_PMOC_MANUAL_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "gate": "pcm.sso_pmoc_mediado_gate",
+    "descricao": "Criacao manual do Plano PMOC a partir de um Contrato PMOC existente (E01-S203, ADR-1698)"
+  },
+  {
     "nome": "VITE_SSO_PMOC_MEDIADO_ENABLED",
     "padrao": false,
     "jornada": "outra",
