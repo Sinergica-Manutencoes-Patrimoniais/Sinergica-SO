@@ -7,6 +7,7 @@ import {
   type ColunaKanbanId,
   type ColunaKanbanPreferencia,
   labelColunaKanban,
+  statusSemColuna,
 } from "../domain/kanban-colunas";
 import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/ordens-servico";
 import {
@@ -77,6 +78,16 @@ export function OsKanbanView({
 }) {
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
 
+  // Nenhuma OS pode sumir do quadro por ter um status sem coluna (ver `statusSemColuna`).
+  const statusOrfaos = statusSemColuna(
+    ordens.map((ordem) => ordem.status),
+    colunas,
+  );
+  const orfas = ordens.filter((ordem) => statusOrfaos.includes(ordem.status));
+  const rotuloStatusOrfaos = statusOrfaos
+    .map((status) => STATUS_OS.find((s) => s.value === status)?.label ?? status)
+    .join(", ");
+
   function onDropNaColuna(destino: StatusOrdemServico, event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setColunaAlvo(null);
@@ -105,6 +116,15 @@ export function OsKanbanView({
             </button>
           ))}
         </div>
+      )}
+
+      {orfas.length > 0 && (
+        <output className="block rounded-md border border-warning bg-warning-soft px-3 py-2 text-caption text-ink">
+          {orfas.length === 1
+            ? `1 OS está num status fora do fluxo aprovado (${rotuloStatusOrfaos}) e não tem coluna neste quadro. `
+            : `${orfas.length} OS estão em status fora do fluxo aprovado (${rotuloStatusOrfaos}) e não têm coluna neste quadro. `}
+          Elas aparecem na coluna "Fora do fluxo", à direita, para não sumirem da operação.
+        </output>
       )}
 
       <div className="flex gap-3 overflow-x-auto pb-2">
@@ -331,6 +351,33 @@ export function OsKanbanView({
               </div>
             );
           })}
+
+        {orfas.length > 0 && (
+          <div className="flex w-72 shrink-0 flex-col rounded-lg border border-warning bg-paper">
+            <div className="flex items-center justify-between border-b border-line px-3 py-2">
+              <span className="text-caption font-semibold text-ink">Fora do fluxo</span>
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
+                {orfas.length}
+              </span>
+            </div>
+            <div className="flex max-h-[600px] flex-col gap-2 overflow-y-auto p-2">
+              {orfas.map((ordem) => (
+                <button
+                  key={ordem.id}
+                  type="button"
+                  onClick={() => onSelecionar(ordem.id)}
+                  className="w-full rounded-md border border-line bg-card p-3 text-left hover:border-orange"
+                >
+                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
+                    {STATUS_OS.find((s) => s.value === ordem.status)?.label ?? ordem.status}
+                  </span>
+                  <p className="mt-1.5 text-body font-semibold text-ink">{ordem.titulo}</p>
+                  <p className="mt-1 text-caption text-ink-3">{rotuloNumeroOrdem(ordem)}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
