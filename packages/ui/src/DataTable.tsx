@@ -26,6 +26,9 @@ export interface DataTableProps<T> {
   carregando?: boolean;
   linhasCarregando?: number;
   vazio: ReactNode;
+  // Legenda só para leitor de tela (`<caption class="sr-only">`). Tabela cujo cabeçalho da página
+  // já não diz o que ela lista precisa dessa frase; quem enxerga não perde nada.
+  legenda?: ReactNode;
   onClickLinha?: (item: T) => void;
   ordenacao?: DataTableOrdenacao;
   onOrdenar?: (coluna: string) => void;
@@ -41,6 +44,7 @@ export function DataTable<T>({
   carregando,
   linhasCarregando = 5,
   vazio,
+  legenda,
   onClickLinha,
   ordenacao,
   onOrdenar,
@@ -51,6 +55,7 @@ export function DataTable<T>({
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-body">
+        {legenda ? <caption className="sr-only">{legenda}</caption> : null}
         <thead className="sticky top-0 z-10 bg-paper text-[11px] text-ink-3">
           <tr>
             {colunas.map((coluna) => (
