@@ -675,9 +675,14 @@ export const NAVEGACAO_SSO: readonly EntradaNav[] = [
  * (`pcm.pmoc_properties`/`pmoc_contracts`/`pmoc_schedules`, de `0023_E01-S03`) não tem nenhuma FK
  * para `pcm.planos_manutencao`. A migration `1869` deu ao Plano a modalidade `pmoc` e a visão
  * filtrada, mas transformar um Contrato PMOC existente — com imóvel, ART e 12 visitas emitidas —
- * num Plano seria CRIAR registro, não classificar. Enquanto a pergunta de produto da ADR-1697 §3
- * não for respondida, tirar PMOC do menu deixaria esses registros de produção sem porta de
- * entrada, que é exatamente a perda de alcance que o AC-7 proíbe.
+ * num Plano seria CRIAR registro, não classificar.
+ *
+ * E01-S203 (ADR-1698): a pergunta da ADR-1697 §3 FOI respondida em 24/11 — alternativa **(b)**,
+ * o Plano de cada Contrato PMOC é criado à mão pelo PCM, caso a caso. Isso **não** muda nada
+ * aqui, e a razão é a mesma: enquanto houver Contrato PMOC sem Plano, tirar PMOC do menu deixaria
+ * esses registros de produção sem porta de entrada — a perda de alcance que o AC-7 proíbe. O
+ * indicador de `pcm.sso_resumir_cobertura_plano_pmoc` (migration 1871) é o que dirá, um dia,
+ * quando a conversão chegou a zero e esta lista pode finalmente ganhar `pmoc`.
  */
 export const VIEWS_CONSOLIDADAS: readonly PcmView[] = ["assessment"];
 
