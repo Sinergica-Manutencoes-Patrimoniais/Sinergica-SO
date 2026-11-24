@@ -1,6 +1,7 @@
 import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { type DragEvent, useState } from "react";
+import { flagLigada } from "../../../config/flags-sso";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import { type ItemCampoAConciliar, rotuloMotivoCampo } from "../domain/campo-a-conciliar";
 import {
@@ -20,6 +21,7 @@ import {
 } from "../domain/ordens-servico";
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
 import type { ResumoChamadoCard } from "../domain/progresso-chamado";
+import { transicaoPermitida } from "../domain/transicoes-os";
 import { ProgressoChamadoCard } from "./ProgressoChamadoCard";
 
 const DRAG_MIME = "application/x-sinergica-os-id";
@@ -77,6 +79,8 @@ export function OsKanbanView({
   resumosChamados?: Record<string, ResumoChamadoCard>;
 }) {
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
+  const [recusa, setRecusa] = useState<string | null>(null);
+  const matrizLigada = flagLigada("VITE_SSO_MATRIZ_TRANSICOES_ENABLED");
 
   // Nenhuma OS pode sumir do quadro por ter um status sem coluna (ver `statusSemColuna`).
   const statusOrfaos = statusSemColuna(
@@ -94,6 +98,16 @@ export function OsKanbanView({
     const id = event.dataTransfer.getData(DRAG_MIME);
     const ordem = ordens.find((item) => item.id === id);
     if (!ordem || !deveAlterarStatusPorDrop(ordem.status, destino)) return;
+    // E01-S200 (BL 007 AC-7): arrastar respeita as transições do fluxo aprovado. A recusa aparece
+    // na tela — soltar o cartão e nada acontecer, sem explicação, é pior que não poder arrastar.
+    if (matrizLigada) {
+      const veredito = transicaoPermitida(ordem.status as StatusOrdemServico, destino);
+      if (!veredito.permitida) {
+        setRecusa(veredito.motivo);
+        return;
+      }
+    }
+    setRecusa(null);
     onAlterarStatus(id, destino);
   }
 
@@ -101,6 +115,12 @@ export function OsKanbanView({
 
   return (
     <div className="flex flex-col gap-2">
+      {recusa && (
+        <output className="block rounded-md border border-danger bg-danger-soft px-3 py-2 text-caption text-danger">
+          {recusa}
+        </output>
+      )}
+
       {colunasOcultas.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-caption text-ink-3">
           <span className="font-semibold">Colunas ocultas:</span>

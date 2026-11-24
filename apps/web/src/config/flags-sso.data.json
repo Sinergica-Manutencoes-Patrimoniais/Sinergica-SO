@@ -2751,6 +2751,12 @@
     "descricao": "Matriz homologacao"
   },
   {
+    "nome": "VITE_SSO_MATRIZ_TRANSICOES_ENABLED",
+    "padrao": false,
+    "jornada": "chamado-1n",
+    "descricao": "Matriz de movimentacoes permitidas da OS no Kanban - recusa transicao fora do fluxo aprovado (E01-S200)"
+  },
+  {
     "nome": "VITE_SSO_METADADOS_EXPORTACAO_ENABLED",
     "padrao": false,
     "jornada": "outra",
