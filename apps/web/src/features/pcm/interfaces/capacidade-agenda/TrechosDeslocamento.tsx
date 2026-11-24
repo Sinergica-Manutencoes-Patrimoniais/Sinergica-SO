@@ -40,7 +40,7 @@ const TRECHO_VAZIO: TrechoForm = {
   motivo: "",
 };
 
-/** Erro do Postgrest (supabase-js) é um objeto plano `{message,...}`, NÃO `instanceof Error` —
+/** Erro do Postgrest (supabase-js) é um objeto plano `{message, …}`, NÃO `instanceof Error` —
  * checar só por `instanceof Error` nunca reconhece o erro nomeado da RPC. */
 function mensagemDeErro(error: unknown): string {
   if (error instanceof Error) return error.message;
