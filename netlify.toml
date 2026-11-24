@@ -14,7 +14,9 @@
   # E01-S201: monitor consolidado das excecoes do Auvo em T-24. Desligada ate o gate de banco
   # pcm.sso_consulta_estado_campo_gate ser aberto (mesma decisao operacional de E01-S199).
   VITE_SSO_MONITOR_EXCECOES_AUVO_ENABLED = "false"
-
+  # E01-S202: Agenda do Tecnico como projecao da Visita. Desligada ate o gate de banco
+  # pcm.capacidade_agenda_tecnico_gate ser aberto (decisao operacional separada).
+  VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED = "false"
   # E01-S190: navegacao agrupada em Trabalho, Gestao e Administracao (BL 013). Desligada ate a
   # homologacao — com ela desligada o menu e exatamente o anterior.
   VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED = "false"

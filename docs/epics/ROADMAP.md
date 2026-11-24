@@ -48,6 +48,7 @@ _15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner 
 
 ### E01 — PCM · Operação
 _75 concluídas no histórico · maior ID usado: E01-S201_
+_75 concluídas no histórico · maior ID usado: E01-S202_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -178,6 +179,7 @@ _75 concluídas no histórico · maior ID usado: E01-S201_
 | E01-S199 | "Campo a conciliar" como fila de entrada do Kanban (fecha o AC-5 de BL 007) | Claude (sessão Lucas) | Implementada (2026-11-19) — migration 1866, 13 asserções pgTAP, coluna no Kanban. Aguarda abrir `sso_consulta_estado_campo_gate` + flag | [spec](../../specs/E01-S199-campo-a-conciliar-kanban/spec.md) |
 | E01-S200 | Matriz de movimentações permitidas no Kanban (fecha o AC-7 de BL 007) | Claude (sessão Lucas) | Implementada parcialmente (2026-11-24) — domínio + arrastar, atrás de flag desligada. Seletor/lote e enforcement no banco pendentes | [spec](../../specs/E01-S200-matriz-transicoes-kanban/spec.md) |
 | E01-S201 | Monitor consolidado de exceções do Auvo em T−24 (fecha o monitor de exceções de BL 004) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1867, 17 asserções pgTAP, tela em PCM → Operação. Só leitura; reprocessar fica para a fatia seguinte. Aguarda abrir `sso_consulta_estado_campo_gate` + flag | [spec](../../specs/E01-S201-monitor-excecoes-auvo/spec.md) |
+| E01-S202 | Agenda do Técnico como projeção da Visita (fecha o SPEC_DEVIATION AC-3 de E01-S192) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1870, 27 asserções pgTAP, cadastro manual aposentado sem DROP. Aguarda abrir `capacidade_agenda_tecnico_gate` + concessão `visita.confirmar` + flag | [spec](../../specs/E01-S202-agenda-projecao-visita/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S43_
