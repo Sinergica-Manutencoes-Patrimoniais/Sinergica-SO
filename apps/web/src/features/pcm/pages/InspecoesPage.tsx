@@ -147,11 +147,17 @@ function formatarData(data: string): string {
 
 export function InspecoesPage({
   inspecaoIdInicial,
+  onAbrirDiagnosticoInicial,
 }: {
   /** E03-S05, AC-7: deep-link vindo da aba Comercial da Visão 360 ("ver assessment completo") —
    * o shell (`HomePage`) já trocou a view para "inspecoes", isto só seleciona a inspeção certa
    * assim que a lista carregar (`inspecaoSelecionada` é derivado, então reage sozinho). */
   inspecaoIdInicial?: string | null;
+  /** E01-S190 task 9 (ADR-1697): quando Assessment sai do menu, a importação do questionário do
+   * Auvo precisa de uma porta de entrada aqui — senão a reorganização levaria embora a ação, que
+   * é a regressão de alcance que o AC-7 proíbe. Ausente = a entrada de menu antiga ainda existe
+   * e este botão seria um segundo caminho para a mesma coisa. */
+  onAbrirDiagnosticoInicial?: () => void;
 } = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -679,6 +685,17 @@ export function InspecoesPage({
               Nova
             </button>
           </div>
+        )}
+
+        {onAbrirDiagnosticoInicial && (
+          <button
+            type="button"
+            onClick={onAbrirDiagnosticoInicial}
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-caption font-semibold text-ink-2 hover:bg-line-soft"
+          >
+            <ClipboardCheck className="h-4 w-4" />
+            Diagnóstico Inicial do Cliente
+          </button>
         )}
 
         {semClientes && (
