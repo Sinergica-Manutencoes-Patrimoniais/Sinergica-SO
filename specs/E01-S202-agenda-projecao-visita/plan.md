@@ -66,7 +66,7 @@ feriado não aparece.
 
 ## 2. Decisões desta story
 
-### Migration `1867_E01-S202_agenda_projecao_visita.sql` (aditiva)
+### Migration `1870_E01-S202_agenda_projecao_visita.sql` (aditiva)
 
 **`pcm.sso_listar_agenda_tecnico_projetada(p_cliente_id uuid, p_semana_inicio date, p_limite integer)`**
 — só leitura, `security definer`, `search_path = ''`.
@@ -87,7 +87,7 @@ feriado não aparece.
 | Gate | `pcm.capacidade_agenda_tecnico_gate`, via `pcm.sso_exigir_agenda_tecnico_capacidade()` (`1054`/`1063`) | É literalmente o gate batizado de "agenda do técnico". A projeção é a mesma jornada vista da fonte certa; um segundo gate dobraria a superfície de ativação da mesma tela. Como brinde, a função já traz o `advisory lock` compartilhado `sso-autorizacao-confirmacao-visita` e a checagem de isolamento |
 | Capacidade | `config.sso_autorizar_acao('visita.confirmar', cliente)` | É a mesma que já governa toda leitura de `pcm.visitas`/`visita_equipes`/`visita_ordens_servico`. **Não** se reusou `capacidade.gerir` (de `1054`/`1200`): aquela autoriza ler o *cadastro manual*; usá-la entregaria dado de Visita a quem não pode ler Visita |
 
-### Aposentadoria do cadastro manual (ainda na `1867`, aditiva)
+### Aposentadoria do cadastro manual (ainda na `1870`, aditiva)
 
 - `comment on table pcm.agenda_tecnico` declarando a obsolescência **no próprio schema**.
 - Trigger `sso_agenda_tecnico_obsoleta` (`before insert or update or delete`) que levanta
@@ -135,7 +135,7 @@ traduzida para português por `mensagemDeErroDeAlocacaoManual`, nunca mostrada c
    where id;` (lembrando que isso também fecha as leituras de `1054`/`1200`).
 3. A guarda `sso_agenda_tecnico_obsoleta` **não** é revertida pelo retorno: a aposentadoria do
    cadastro é decisão de produto, não de ativação. Reverter exigiria o reverso escrito no cabeçalho
-   da `1867`, em migration nova.
+   da `1870`, em migration nova.
 
 ## 5. O que ficou para a próxima fatia
 
