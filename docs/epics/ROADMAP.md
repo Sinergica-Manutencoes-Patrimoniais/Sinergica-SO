@@ -47,7 +47,7 @@ _15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner 
 | E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | **Fechada (2026-11-17)** — 0 fuga/0 não-declarada/0 órfã no repositório inteiro, 737 flags; gate ligado em `ci.yml`; inventário em `docs/ativacao/flags.md`. Pendência documentada: `podeAdministrar` real só em ~20 componentes, resto nasce `false` (lado seguro) — ver tasks.md | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S200_
+_75 concluídas no histórico · maior ID usado: E01-S201_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -177,6 +177,7 @@ _75 concluídas no histórico · maior ID usado: E01-S200_
 | E01-S198 | API de domínio sobre o staging | — | Especificada (2026-11-17) — BL 014, P2. Tier arquitetural. Depende de E00-S26/S27 | [spec](../../specs/E01-S198-api-dominio-staging/spec.md) |
 | E01-S199 | "Campo a conciliar" como fila de entrada do Kanban (fecha o AC-5 de BL 007) | Claude (sessão Lucas) | Implementada (2026-11-19) — migration 1866, 13 asserções pgTAP, coluna no Kanban. Aguarda abrir `sso_consulta_estado_campo_gate` + flag | [spec](../../specs/E01-S199-campo-a-conciliar-kanban/spec.md) |
 | E01-S200 | Matriz de movimentações permitidas no Kanban (fecha o AC-7 de BL 007) | Claude (sessão Lucas) | Implementada parcialmente (2026-11-24) — domínio + arrastar, atrás de flag desligada. Seletor/lote e enforcement no banco pendentes | [spec](../../specs/E01-S200-matriz-transicoes-kanban/spec.md) |
+| E01-S201 | Monitor consolidado de exceções do Auvo em T−24 (fecha o monitor de exceções de BL 004) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1867, 17 asserções pgTAP, tela em PCM → Operação. Só leitura; reprocessar fica para a fatia seguinte. Aguarda abrir `sso_consulta_estado_campo_gate` + flag | [spec](../../specs/E01-S201-monitor-excecoes-auvo/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S43_

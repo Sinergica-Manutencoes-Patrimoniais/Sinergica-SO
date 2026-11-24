@@ -73,6 +73,7 @@ import { InspecoesPage } from "../features/pcm/pages/InspecoesPage";
 import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
 import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
 import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage";
+import { MonitorExcecoesAuvoPage } from "../features/pcm/pages/MonitorExcecoesAuvoPage";
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
@@ -923,6 +924,8 @@ export function HomePage() {
               <PmocPage />
             ) : pcmView === "preventivas" ? (
               <PreventivasPage />
+            ) : pcmView === "monitor-excecoes-auvo" ? (
+              <MonitorExcecoesAuvoPage />
             ) : pcmView === "ordens" || pcmView === "chamados" || pcmView === "backlog" ? (
               // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
               // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.

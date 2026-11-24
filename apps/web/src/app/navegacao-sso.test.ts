@@ -33,6 +33,10 @@ describe("E01-S190 task 2 — extração sem troca de rótulo", () => {
       "Agenda do Técnico",
       "PMOC",
       "Preventivas",
+      // E01-S201: entrada NOVA, não renomeação. O guard abaixo existe para pegar rótulo trocado
+      // ou item removido em silêncio — feature nova pode crescer a lista, desde que a adição
+      // seja explícita aqui.
+      "Monitor Auvo (T−24)",
       "Relatório",
       "Clientes",
       "Componentes",

@@ -37,6 +37,8 @@ export const operacaoQueryKeys = {
     ["operacao", "plano-origem-os", clienteId, ocorrenciaPreventivaId] as const,
   /** E01-S199: fila "Campo a conciliar" do Kanban, por Cliente. */
   campoAConciliar: (clienteId: string) => ["operacao", "campo-a-conciliar", clienteId] as const,
+  /** E01-S201: monitor consolidado de exceções do Auvo (T−24), por Cliente. */
+  excecoesAuvo: (clienteId: string) => ["operacao", "excecoes-auvo-t24", clienteId] as const,
 };
 
 export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacional {
