@@ -6,30 +6,38 @@
 [build.environment]
   NODE_VERSION = "22"
   PNPM_VERSION = "9.0.0"
-  # E01-S199: fila "Campo a conciliar" do Kanban. Desligada até o gate de banco
-  # pcm.sso_consulta_estado_campo_gate ser aberto (decisão operacional separada).
-  VITE_SSO_CAMPO_A_CONCILIAR_ENABLED = "false"
-  # E01-S200: matriz de movimentacoes do Kanban, desligada ate validacao em uso real.
-  VITE_SSO_MATRIZ_TRANSICOES_ENABLED = "false"
-  # E01-S201: monitor consolidado das excecoes do Auvo em T-24. Desligada ate o gate de banco
-  # pcm.sso_consulta_estado_campo_gate ser aberto (mesma decisao operacional de E01-S199).
-  VITE_SSO_MONITOR_EXCECOES_AUVO_ENABLED = "false"
-  # E01-S202: Agenda do Tecnico como projecao da Visita. Desligada ate o gate de banco
-  # pcm.capacidade_agenda_tecnico_gate ser aberto (decisao operacional separada).
-  VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED = "false"
+  # E01-S199: fila "Campo a conciliar" do Kanban. LIGADA em 24/11/2026 para a homologação —
+  # gate pcm.sso_consulta_estado_campo_gate aberto e capacidade concedida no mesmo dia.
+  # Só leitura: não escreve no SO nem no Auvo.
+  VITE_SSO_CAMPO_A_CONCILIAR_ENABLED = "true"
+  # E01-S200: matriz de movimentacoes do Kanban. LIGADA em 24/11/2026. Só RESTRINGE movimentação
+  # manual; a automação (retorno do Auvo, T-24, campo) continua livre por desenho.
+  VITE_SSO_MATRIZ_TRANSICOES_ENABLED = "true"
+  # E01-S201: monitor consolidado das excecoes do Auvo em T-24. LIGADA em 24/11/2026.
+  # Só leitura — lê a fila do Auvo com left join, nunca enfileira.
+  VITE_SSO_MONITOR_EXCECOES_AUVO_ENABLED = "true"
+  # E01-S202: Agenda do Tecnico como projecao da Visita. LIGADA em 24/11/2026 — gate
+  # pcm.capacidade_agenda_tecnico_gate aberto no mesmo dia. Só leitura.
+  VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED = "true"
   # E01-S203: criacao manual do Plano PMOC a partir de um Contrato PMOC (ADR-1698, decisao (b)).
-  # Desligada ate os gates pcm.sso_pmoc_mediado_gate e pcm.sso_diagnostico_pmoc_gate serem abertos.
+  # CONTINUA DESLIGADA, de propósito: depende de dois gates COMPARTILHADOS com E01-S166, que não
+  # foram abertos. Abri-los afeta outra jornada — merece decisão própria, não carona nesta.
   VITE_SSO_PLANO_PMOC_MANUAL_ENABLED = "false"
-  # E01-S190: navegacao agrupada em Trabalho, Gestao e Administracao (BL 013). Desligada ate a
-  # homologacao — com ela desligada o menu e exatamente o anterior.
-  VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED = "false"
+  # E01-S190: navegacao agrupada em Trabalho, Gestao e Administracao (BL 013). LIGADA em
+  # 24/11/2026 para a homologação. Desligar volta ao menu anterior, sem deploy de código.
+  VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED = "true"
   # E01-S190 task 9: Assessment vira Inspecao do tipo "Diagnostico Inicial do Cliente" e sai do
-  # menu (migrations 1868/1869, ADR-1697). Desligada ate a homologacao.
-  VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED = "false"
-  # E01-S195 AC-F2: primeira flag VITE_SSO_* declarada aqui — as demais (ver .env.example) são
-  # hoje só setadas no dashboard do Netlify, achado da reanálise de alcance-no-front (não
-  # corrigido retroativamente nesta story, fora de escopo unilateral).
-  VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED = "false"
+  # menu (migrations 1868/1869, ADR-1697). LIGADA em 24/11/2026. A classificação do dado já estava
+  # aplicada em produção; esta flag só tira o item do menu. PMOC segue no menu.
+  VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED = "true"
+  # E01-S195: trechos de deslocamento, enquadramento residencial x operacional. LIGADA em
+  # 24/11/2026 — gate pcm.sso_trechos_deslocamento_gate aberto no mesmo dia. Escreve só em
+  # tabela própria do SO.
+  VITE_SSO_TRECHOS_DESLOCAMENTO_ENABLED = "true"
+  # Contêiner da aba "Capacidade e Agenda" (Visão 360 → Estrutura), onde vivem os Trechos de
+  # deslocamento e as Fontes de Demanda. Declarada aqui pela primeira vez: sem ela, ligar os
+  # Trechos não traz a tela, porque o bloco inteiro não renderiza.
+  VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
 
 # SPA: todas as rotas servem index.html
 [[redirects]]
