@@ -2811,6 +2811,12 @@
     "descricao": "Natureza alvo rotina"
   },
   {
+    "nome": "VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "Navegacao do SSO agrupada em Trabalho, Gestao e Administracao (E01-S190, BL 013) — desligada ate homologacao; com ela desligada o menu e exatamente o anterior."
+  },
+  {
     "nome": "VITE_SSO_NOVA_DATA_CICLO_ENABLED",
     "padrao": false,
     "jornada": "outra",
