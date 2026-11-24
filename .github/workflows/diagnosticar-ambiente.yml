@@ -42,9 +42,24 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
-          regiao=$(curl -sf -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_ID" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).region')
-          test -n "$regiao" || { echo "::error::região do projeto não encontrada"; exit 1; }
+          # `curl -sf` engole o corpo e o código do erro: a falha chegava como "Unexpected end of
+          # JSON input", que não diz nada sobre a causa (token expirado? projeto errado?).
+          # Aqui o status HTTP é capturado e reportado, sem nunca imprimir o token.
+          http=$(curl -s -o /tmp/projeto.json -w '%{http_code}' \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_ID")
+          if [ "$http" != "200" ]; then
+            echo "::error::Management API respondeu HTTP $http ao consultar o projeto."
+            case "$http" in
+              401|403) echo "::error::SUPABASE_ACCESS_TOKEN inválido, expirado ou sem acesso a este projeto. Rotacione o PAT." ;;
+              404)     echo "::error::SUPABASE_PROJECT_ID não encontrado para este token." ;;
+              000)     echo "::error::sem resposta da API (rede do runner)." ;;
+            esac
+            exit 1
+          fi
+          regiao=$(node -pe 'JSON.parse(require("fs").readFileSync("/tmp/projeto.json","utf8")).region || ""')
+          test -n "$regiao" || { echo "::error::projeto respondido sem campo region"; exit 1; }
+          echo "Região do projeto: $regiao"
           echo "regiao=$regiao" >> "$GITHUB_OUTPUT"
 
       - name: Rodar diagnóstico (só leitura)
