@@ -28,30 +28,34 @@ describe("E01-S60 — contrato visual V1", () => {
   });
 
   it("não exibe relatórios PCM sem tela funcional", () => {
-    const home = fonte("./HomePage.tsx");
+    // E01-S190 task 2: a árvore de navegação saiu de HomePage.tsx para navegacao-sso.ts — os
+    // literais que este contrato observa moraram lá desde então. O contrato é o mesmo; só mudou
+    // o arquivo onde o dado vive.
+    const nav = fonte("./navegacao-sso.ts");
 
-    expect(home).not.toContain('label: "Relatório Diário"');
-    expect(home).not.toContain('label: "Relatório Mensal"');
+    expect(nav).not.toContain('label: "Relatório Diário"');
+    expect(nav).not.toContain('label: "Relatório Mensal"');
   });
 
   it("organiza PMOC e tipos de tarefa sem manter o grupo preventivo morto", () => {
     const home = fonte("./HomePage.tsx");
+    const nav = fonte("./navegacao-sso.ts");
 
-    expect(home).toMatch(
+    expect(nav).toMatch(
       /titulo: "OPERAÇÃO",[\s\S]{0,1200}label: "PMOC", icon: Snowflake, view: "pmoc"/,
     );
-    expect(home).toMatch(
+    expect(nav).toMatch(
       /titulo: "CONFIGURAÇÕES",[\s\S]{0,1800}label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa"/,
     );
     // Escopa ao corpo do array de CADASTROS (até o primeiro fechamento `],`) em vez de uma
     // distância fixa de caracteres — E01-S104 adicionou "Ferramentas" ao grupo e um limiar fixo
     // (800) vira falso positivo a cada item novo, sem checar se "Tipos de Tarefa" está de fato
     // dentro do array.
-    const cadastros = home.match(/titulo: "CADASTROS",[\s\S]*?\n\s*\],/)?.[0] ?? "";
+    const cadastros = nav.match(/titulo: "CADASTROS",[\s\S]*?\n\s*\],/)?.[0] ?? "";
     expect(cadastros).not.toContain('label: "Tipos de Tarefa"');
-    expect(home).not.toContain('titulo: "PREVENTIVO"');
-    expect(home).not.toContain('label: "Cronograma"');
-    expect(home).toContain('label: "Preventivas", icon: Calendar, view: "preventivas"');
+    expect(nav).not.toContain('titulo: "PREVENTIVO"');
+    expect(nav).not.toContain('label: "Cronograma"');
+    expect(nav).toContain('label: "Preventivas", icon: Calendar, view: "preventivas"');
     expect(home).toContain('pcmView === "tipos-tarefa" ?');
     expect(home).toContain('pcmView === "pmoc" ?');
     expect(home).toContain('pcmView === "preventivas" ?');

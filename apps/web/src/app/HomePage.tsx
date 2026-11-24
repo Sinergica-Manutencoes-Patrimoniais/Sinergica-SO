@@ -1,60 +1,16 @@
+import { RecursoNaoAtivado } from "@sinergica/ui";
 import {
-  AlertTriangle,
-  BarChart3,
-  BellRing,
   BookOpen,
-  Bot,
-  Briefcase,
-  Building2,
-  Calculator,
-  Calendar,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck,
-  ClipboardList,
-  Clock,
-  Columns3,
-  DollarSign,
-  FileBarChart,
-  FileSignature,
-  FileText,
-  Gauge,
-  HardHat,
-  Headset,
-  KeyRound,
-  Landmark,
-  LayoutDashboard,
-  LayoutGrid,
-  Link2,
-  LockKeyhole,
   LogOut,
-  MapPin,
-  Megaphone,
   Menu,
-  MessageCircle,
   Moon,
-  Package,
-  PieChart,
   Settings,
-  SlidersHorizontal,
-  Snowflake,
-  Sparkles,
   Sun,
-  Tag,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Upload,
-  UserCircle,
-  UserCog,
-  Users,
-  Wrench,
   X,
-  Zap,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { flagLigada } from "../config/flags-sso";
 import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
@@ -68,6 +24,7 @@ import { ContratosPage as ComercialContratosPage } from "../features/comercial/p
 import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
 import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
 import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
+import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
 import { AtivacaoJornadasPage } from "../features/config/pages/AtivacaoJornadasPage";
 import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
 import { GruposPage } from "../features/config/pages/GruposPage";
@@ -133,282 +90,22 @@ import { useAuth } from "./auth-context";
 import { MODULOS, isModuloNegocio } from "./modulos";
 import type { AreaAtiva, ModuloId, ModuloTab } from "./modulos";
 import { useNavGuard } from "./nav-guard-context";
+import {
+  ATENDIMENTO_NAV,
+  COMERCIAL_NAV,
+  CONFIG_NAV,
+  FINANCEIRO_NAV,
+  GUIA_NAV,
+  NAVEGACAO_SSO,
+  PCM_NAV,
+  bloqueioDeAdministracao,
+  navegacaoAgrupada,
+  navegacaoVisivel,
+} from "./navegacao-sso";
+import type { AtendimentoView, ComercialView, ConfigTab, PcmView } from "./navegacao-sso";
 import { usePermissoes } from "./permissoes-context";
+import { rotaInicialDaUrl } from "./rotas-legadas";
 import { useTheme } from "./theme-context";
-
-// ─── tipos ──────────────────────────────────────────────────────────────────
-
-// Sub-navegação interna do Atendimento (E02-S02/S03/S05) — mesmo padrão useState de abas, sem lib
-// de rotas.
-type AtendimentoView = "dashboard" | "inbox" | "config";
-
-// Sub-navegação interna do PCM (mesmo padrão useState de abas do resto do app — sem lib de rotas).
-// "dashboard" = tela mock atual; "clientes" = lista mínima → Visão 360 (Task 18/E01-S12).
-type PcmView =
-  | "dashboard"
-  | "clientes"
-  | "cliente-grupos"
-  | "equipamentos"
-  | "equipes"
-  | "agenda-tecnico"
-  | "relatorio-planejamento"
-  | "relatorio-diario"
-  | "relatorio-cliente"
-  | "ferramentas"
-  | "ferramentas-por-tecnico"
-  | "funcionarios"
-  | "tipos-tarefa"
-  | "segmentos"
-  | "palavras-chave"
-  | "equipamento-categorias"
-  | "chamados"
-  | "ordens"
-  | "backlog"
-  | "inspecoes"
-  | "assessment"
-  | "cliente-marcacoes"
-  | "pmoc"
-  | "preventivas"
-  | "monitor-excecoes-auvo"
-  | "laudos-spda"
-  | "apontamento-horas"
-  | "tipos-inspecao"
-  | "sistemas";
-
-interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  active?: boolean;
-  // Quando presente, o item navega (seta o PcmView). Itens sem `view` seguem decorativos (mock),
-  // como já eram antes desta story — não são o foco do escopo enxuto da Task 18.
-  view?: PcmView;
-  // E01-S80 AC-2: atalho pra fora do módulo PCM — "Grupos de Usuário" abre o hub global de
-  // Configurações na aba Grupos, reusando o mesmo `GruposPage` (nunca duplica o CRUD). `PCM_NAV` é
-  // módulo-scoped (fora do componente), então o clique de fato é resolvido no render (tem acesso a
-  // `navegarModulo`/`setConfigTab`); esta flag só marca a intenção nos dados estáticos.
-  atalhoConfigGrupos?: boolean;
-  // E01-S114: submenu simples (1 nível só) — item com `filhos` não navega por si (sem `view`
-  // próprio), só expande/colapsa; os filhos é que navegam.
-  filhos?: NavItem[];
-}
-
-interface NavGroup {
-  titulo: string;
-  items: NavItem[];
-}
-
-interface AtendimentoNavItem {
-  label: string;
-  icon: LucideIcon;
-  view: AtendimentoView;
-}
-
-interface AtendimentoNavGroup {
-  titulo: string;
-  items: AtendimentoNavItem[];
-}
-
-// Sub-navegação do Financeiro — E04-S01..S06 (specs/E04-S01-fundacao-financeiro/), protótipo
-// navegável com dados fictícios (features/financeiro/mock/). Mesmo padrão useState de abas.
-interface FinanceiroNavItem {
-  label: string;
-  icon: LucideIcon;
-  view: FinanceiroView;
-}
-
-interface FinanceiroNavGroup {
-  titulo: string;
-  items: FinanceiroNavItem[];
-}
-
-// Sub-navegação do Comercial — E03-S01 (specs/E03-S01-fundacao-comercial/). Mesmo padrão useState
-// de abas. Cresce com o épico: funil (S02), propostas (S04), contratos (S07), dashboard (S08).
-type ComercialView =
-  | "dashboard"
-  | "funil"
-  | "contas"
-  | "precificacao"
-  | "config-funil"
-  | "contratos";
-
-interface ComercialNavItem {
-  label: string;
-  icon: LucideIcon;
-  view: ComercialView;
-}
-
-// Sub-navegação do Guia do SO — documentação de onboarding (features/guia/), último item da
-// barra de módulos. Mesmo padrão useState de abas.
-interface GuiaNavItem {
-  label: string;
-  icon: LucideIcon;
-  view: GuiaView;
-}
-
-// ─── dados ───────────────────────────────────────────────────────────────────
-
-const CONFIG_NAV: Array<{
-  id:
-    | "grupos"
-    | "usuarios"
-    | "capacidades"
-    | "integracoes"
-    | "ia"
-    | "gasto-ia"
-    | "priorizacao"
-    | "localizacao-auvo"
-    | "ativacao";
-  label: string;
-  icon: LucideIcon;
-}> = [
-  { id: "grupos", label: "Grupos", icon: Users },
-  { id: "usuarios", label: "Usuários", icon: UserCog },
-  { id: "capacidades", label: "Capacidades", icon: UserCog },
-  { id: "integracoes", label: "Integrações", icon: KeyRound },
-  { id: "ia", label: "IA", icon: Sparkles },
-  { id: "gasto-ia", label: "Gasto de IA", icon: DollarSign },
-  { id: "priorizacao", label: "Priorização", icon: SlidersHorizontal },
-  { id: "localizacao-auvo", label: "Localização Auvo", icon: MapPin },
-  // E01-S188: diagnóstico/abertura de gates. Superadmin + flag (filtro aplicado onde o nav renderiza).
-  { id: "ativacao", label: "Ativação de jornadas", icon: LockKeyhole },
-];
-
-const ATENDIMENTO_NAV: AtendimentoNavGroup[] = [
-  {
-    titulo: "ATENDIMENTO",
-    items: [
-      { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
-      { label: "Inbox", icon: MessageCircle, view: "inbox" },
-      { label: "Config", icon: Settings, view: "config" },
-    ],
-  },
-];
-
-const FINANCEIRO_NAV: FinanceiroNavGroup[] = [
-  {
-    titulo: "VISÃO GERAL",
-    items: [{ label: "Dashboard", icon: LayoutDashboard, view: "dashboard" }],
-  },
-  {
-    titulo: "CAIXA",
-    items: [
-      { label: "Lançamentos", icon: ClipboardList, view: "lancamentos" },
-      { label: "Categorias", icon: LayoutGrid, view: "categorias" },
-      { label: "Contas Bancárias", icon: Building2, view: "contas" },
-      { label: "Importar Extrato", icon: Upload, view: "ofx" },
-    ],
-  },
-  {
-    titulo: "RECEBIMENTOS",
-    items: [
-      { label: "Contas a Receber", icon: TrendingUp, view: "receber" },
-      { label: "Contratos", icon: FileText, view: "contratos" },
-      { label: "Cobrança", icon: BellRing, view: "cobranca" },
-    ],
-  },
-  { titulo: "PAGAMENTOS", items: [{ label: "Contas a Pagar", icon: TrendingDown, view: "pagar" }] },
-  { titulo: "IMPOSTOS", items: [{ label: "Impostos", icon: Landmark, view: "impostos" }] },
-  {
-    titulo: "FECHAMENTO",
-    items: [{ label: "Fechamento Mensal", icon: LockKeyhole, view: "fechamento" }],
-  },
-  {
-    titulo: "RENTABILIDADE",
-    items: [
-      { label: "Rentabilidade", icon: PieChart, view: "rentabilidade" },
-      { label: "Custos de Pessoal", icon: UserCog, view: "pessoal" },
-    ],
-  },
-  {
-    titulo: "GERENCIAL",
-    items: [
-      { label: "DRE", icon: FileBarChart, view: "dre" },
-      { label: "Orçamento", icon: Target, view: "orcamento" },
-      { label: "Cockpit", icon: Gauge, view: "cockpit" },
-    ],
-  },
-];
-
-const COMERCIAL_NAV: ComercialNavItem[] = [
-  { label: "Dashboard", icon: Gauge, view: "dashboard" },
-  { label: "Funil", icon: Columns3, view: "funil" },
-  { label: "Contas", icon: Briefcase, view: "contas" },
-  { label: "Contratos", icon: FileSignature, view: "contratos" },
-  { label: "Precificação", icon: Calculator, view: "precificacao" },
-  { label: "Configuração do funil", icon: SlidersHorizontal, view: "config-funil" },
-];
-
-const GUIA_NAV: GuiaNavItem[] = [
-  { label: "Visão geral", icon: BookOpen, view: "visao-geral" },
-  { label: "PCM · Operação", icon: HardHat, view: "pcm" },
-  { label: "Atendimento · Zé", icon: Bot, view: "atendimento" },
-  { label: "Comercial", icon: Briefcase, view: "comercial" },
-  { label: "Financeiro", icon: BarChart3, view: "financeiro" },
-  { label: "Marketing", icon: Megaphone, view: "marketing" },
-  { label: "Cockpit", icon: LayoutDashboard, view: "cockpit" },
-  { label: "Área do Cliente", icon: UserCircle, view: "area-cliente" },
-  { label: "Papéis e permissões", icon: Users, view: "papeis" },
-];
-
-const PCM_NAV: NavGroup[] = [
-  {
-    titulo: "OPERAÇÃO",
-    items: [
-      { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
-      // E01-S118: "Chamados" e "Operação" viram um menu só (o board). Sempre se abre um Chamado, que
-      // após tratativa deriva numa OS pro Auvo — é o mesmo item, em fases. Backlog GUT deixou de ser
-      // item de nav (virou aba do board, ao lado do Calendário).
-      { label: "Chamados", icon: Headset, view: "ordens" },
-      { label: "Inspeções", icon: CheckCircle2, view: "inspecoes" },
-      { label: "Assessment", icon: ClipboardCheck, view: "assessment" },
-      { label: "Ferramentas por Técnico", icon: HardHat, view: "ferramentas-por-tecnico" },
-      { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
-      { label: "PMOC", icon: Snowflake, view: "pmoc" },
-      { label: "Preventivas", icon: Calendar, view: "preventivas" },
-      // E01-S201 (BL 004): monitor consolidado das exceções do Auvo em T−24 — falha de envio,
-      // Visita não confirmada e tarefa órfã. Fica na Operação, ao lado do Planejamento, porque é
-      // quem opera a Visita que precisa ver a tarefa que não nasceu.
-      { label: "Monitor Auvo (T−24)", icon: AlertTriangle, view: "monitor-excecoes-auvo" },
-      { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
-    ],
-  },
-  {
-    titulo: "CADASTROS",
-    items: [
-      { label: "Clientes", icon: Building2, view: "clientes" },
-      { label: "Componentes", icon: Wrench, view: "equipamentos" },
-      { label: "Sistemas", icon: Link2, view: "sistemas" },
-      { label: "Ferramentas", icon: Package, view: "ferramentas" },
-    ],
-  },
-  {
-    // E01-S80 AC-2/AC-3: cadastros/parametrizações do PCM, reunidos aqui (saíram do topo da
-    // sidebar operacional). "Grupos de Usuário" reusa o hub global de Configurações (E00-S09) —
-    // não duplica o CRUD, só atalho (ver `atalhoConfigGrupos`).
-    titulo: "CONFIGURAÇÕES",
-    items: [
-      { label: "Equipes", icon: Users, view: "equipes" },
-      { label: "Funcionários", icon: UserCog, view: "funcionarios" },
-      { label: "Tipos de Tarefa", icon: ClipboardList, view: "tipos-tarefa" },
-      { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
-      { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
-      { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
-      { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
-      { label: "Segmentos", icon: LayoutGrid, view: "segmentos" },
-      { label: "Grupos de Usuário", icon: UserCog, atalhoConfigGrupos: true },
-      { label: "Palavras-chave", icon: FileText, view: "palavras-chave" },
-    ],
-  },
-  {
-    titulo: "RELATÓRIOS",
-    items: [
-      { label: "Relatório do Dia", icon: FileBarChart, view: "relatorio-diario" },
-      { label: "Relatório do Cliente", icon: FileText, view: "relatorio-cliente" },
-      { label: "Laudo SPDA", icon: Zap, view: "laudos-spda" },
-      { label: "Apontamento de Horas", icon: Clock, view: "apontamento-horas" },
-    ],
-  },
-];
 
 // ─── componentes ─────────────────────────────────────────────────────────────
 
@@ -433,31 +130,34 @@ function EmConstrucao({ modulo }: { modulo: ModuloTab }) {
 
 // ─── página principal ────────────────────────────────────────────────────────
 
+// E01-S190: enquanto `E00-S26` não entregar uma verificação de capacidade sem cliente
+// (`config.sso_autorizar_acao` exige `p_cliente_id`), nenhuma entrada da árvore declara
+// `capacidade` e o conjunto é vazio — a autorização da Administração sai do nível de permissão
+// no módulo, que o servidor já resolve em `config.minhas_permissoes`.
+const CAPACIDADES_SSO_VAZIAS: ReadonlySet<string> = new Set<string>();
+
 export function HomePage() {
   const { user, logout } = useAuth();
   const { mode, toggleMode } = useTheme();
   const { podeAcessar } = usePermissoes();
   const { confirmarSaida } = useNavGuard();
-  const [activeModulo, setActiveModulo] = useState<AreaAtiva>(() =>
-    new URLSearchParams(window.location.search).get("guia") === "pcm" ? "guia" : "inicio",
-  );
-  const [configTab, setConfigTab] = useState<
-    | "grupos"
-    | "usuarios"
-    | "capacidades"
-    | "integracoes"
-    | "ia"
-    | "gasto-ia"
-    | "priorizacao"
-    | "localizacao-auvo"
-    | "ativacao"
-  >("grupos");
+  // E01-S190 (BL 013): navegação por função. Desligada = menu idêntico ao anterior, item por item.
+  const navegacaoPorFuncao = flagLigada("VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED");
+  const [activeModulo, setActiveModulo] = useState<AreaAtiva>(() => {
+    if (new URLSearchParams(window.location.search).get("guia") === "pcm") return "guia";
+    // AC-3: deep-link de rota antiga (`?view=`) cai direto no PCM, nunca numa tela de erro.
+    if (navegacaoPorFuncao && rotaInicialDaUrl(window.location.search)) return "pcm";
+    return "inicio";
+  });
+  const [configTab, setConfigTab] = useState<ConfigTab>("grupos");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // Sub-navegação do Atendimento (E02-S02) — só "inbox" por enquanto (E02-S03+ adiciona mais).
   const [atendimentoView, setAtendimentoView] = useState<AtendimentoView>("inbox");
   // Sub-navegação do PCM (Task 18/E01-S12) — mesmo padrão useState de abas, sem lib de rotas.
-  const [pcmView, setPcmView] = useState<PcmView>("dashboard");
+  const [pcmView, setPcmView] = useState<PcmView>(() =>
+    navegacaoPorFuncao ? (rotaInicialDaUrl(window.location.search) ?? "dashboard") : "dashboard",
+  );
   const [relatorioDiarioDataInicial, setRelatorioDiarioDataInicial] = useState<
     string | undefined
   >();
@@ -589,6 +289,21 @@ export function HomePage() {
     return user?.papel === "superadmin" || podeAcessar(id, "leitura");
   }
 
+  // `navegacaoVisivel` é pura e não conhece `ModuloId`; este adaptador só estreita o tipo. A
+  // decisão continua sendo a permissão resolvida no servidor — nenhum `if` por papel aqui.
+  const podeAcessarNav = useCallback(
+    (modulo: string, nivel: "leitura" | "escrita") => podeAcessar(modulo as ModuloNegocioId, nivel),
+    [podeAcessar],
+  );
+  const entradasVisiveis = navegacaoPorFuncao
+    ? navegacaoVisivel(NAVEGACAO_SSO, podeAcessarNav, CAPACIDADES_SSO_VAZIAS)
+    : [];
+  // AC-5/AC-6: ocultar do menu não basta — a rota oculta também é bloqueada. Quem cair numa view
+  // de Administração sem autorização (deep-link, estado antigo, link colado) não vê a tela.
+  const bloqueioAdmin = navegacaoPorFuncao
+    ? bloqueioDeAdministracao(pcmView, podeAcessarNav, CAPACIDADES_SSO_VAZIAS)
+    : null;
+
   const podeGerenciarConfig = user?.papel === "superadmin" || user?.papel === "supervisor";
   const podeCriarOs = podeAcessar("pcm", "escrita");
   const dashboardModuloIds = MODULOS.filter((m) => m.id !== "inicio" && podeVerModulo(m.id)).map(
@@ -713,77 +428,127 @@ export function HomePage() {
                 })}
             </div>
           ) : activeModulo === "pcm" ? (
-            PCM_NAV.map((group) => (
-              <div key={group.titulo}>
-                {!sidebarCompacta && (
-                  <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
-                    {group.titulo}
-                  </p>
-                )}
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const view = item.view;
-                  // E01-S114 AC-3: com filhos, também ativo se o pcmView atual for de um filho —
-                  // mantém o contexto visível (submenu sempre expandido, ver AC-1 "padrão simples").
-                  const filhoAtivo = item.filhos?.some((filho) => filho.view === pcmView) ?? false;
-                  const isActive = view ? view === pcmView || filhoAtivo : item.active;
-                  return (
-                    <div key={item.label}>
-                      <button
-                        type="button"
-                        title={item.label}
-                        onClick={
-                          item.atalhoConfigGrupos
-                            ? () => {
-                                setConfigTab("grupos");
-                                navegarModulo("config");
-                              }
-                            : view
-                              ? () => irParaPcmView(view)
-                              : undefined
-                        }
-                        className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
-                          isActive
-                            ? "border-orange bg-card/[0.07] text-white font-medium"
-                            : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
-                        }`}
-                      >
-                        <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                        {!sidebarCompacta && <span className="truncate">{item.label}</span>}
-                      </button>
-                      {item.filhos && !sidebarCompacta && (
-                        <div className="ml-4 border-l border-navy-line pl-2">
-                          {item.filhos.map((filho) => {
-                            const FilhoIcon = filho.icon;
-                            const filhoIsActive = filho.view === pcmView;
-                            return (
-                              <button
-                                key={filho.label}
-                                type="button"
-                                title={filho.label}
-                                onClick={
-                                  filho.view
-                                    ? () => irParaPcmView(filho.view as PcmView)
-                                    : undefined
-                                }
-                                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${
-                                  filhoIsActive
-                                    ? "border-orange bg-card/[0.07] text-white font-medium"
-                                    : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
-                                }`}
-                              >
-                                <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
-                                <span className="truncate">{filho.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
+            navegacaoPorFuncao ? (
+              navegacaoAgrupada(entradasVisiveis).map((bloco) => (
+                <div key={bloco.nivel}>
+                  {!sidebarCompacta && (
+                    <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                      {bloco.titulo}
+                    </p>
+                  )}
+                  {bloco.grupos.map((grupo) => (
+                    <div key={grupo.grupo} className="mb-1">
+                      {!sidebarCompacta && bloco.grupos.length > 1 && (
+                        <p className="px-2 text-caption text-nav-ink">{grupo.grupo}</p>
                       )}
+                      {grupo.itens.map((entrada) => {
+                        const Icon = entrada.icone;
+                        const view = entrada.view;
+                        const isActive = view === pcmView;
+                        return (
+                          <button
+                            key={entrada.id}
+                            type="button"
+                            title={entrada.label}
+                            onClick={
+                              entrada.atalhoConfigGrupos
+                                ? () => {
+                                    setConfigTab("grupos");
+                                    navegarModulo("config");
+                                  }
+                                : view
+                                  ? () => irParaPcmView(view)
+                                  : undefined
+                            }
+                            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                              isActive
+                                ? "border-orange bg-card/[0.07] text-white font-medium"
+                                : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                            {!sidebarCompacta && <span className="truncate">{entrada.label}</span>}
+                          </button>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            ))
+                  ))}
+                </div>
+              ))
+            ) : (
+              PCM_NAV.map((group) => (
+                <div key={group.titulo}>
+                  {!sidebarCompacta && (
+                    <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                      {group.titulo}
+                    </p>
+                  )}
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const view = item.view;
+                    // E01-S114 AC-3: com filhos, também ativo se o pcmView atual for de um filho —
+                    // mantém o contexto visível (submenu sempre expandido, ver AC-1 "padrão simples").
+                    const filhoAtivo =
+                      item.filhos?.some((filho) => filho.view === pcmView) ?? false;
+                    const isActive = view ? view === pcmView || filhoAtivo : item.active;
+                    return (
+                      <div key={item.label}>
+                        <button
+                          type="button"
+                          title={item.label}
+                          onClick={
+                            item.atalhoConfigGrupos
+                              ? () => {
+                                  setConfigTab("grupos");
+                                  navegarModulo("config");
+                                }
+                              : view
+                                ? () => irParaPcmView(view)
+                                : undefined
+                          }
+                          className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                            isActive
+                              ? "border-orange bg-card/[0.07] text-white font-medium"
+                              : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                          {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                        </button>
+                        {item.filhos && !sidebarCompacta && (
+                          <div className="ml-4 border-l border-navy-line pl-2">
+                            {item.filhos.map((filho) => {
+                              const FilhoIcon = filho.icon;
+                              const filhoIsActive = filho.view === pcmView;
+                              return (
+                                <button
+                                  key={filho.label}
+                                  type="button"
+                                  title={filho.label}
+                                  onClick={
+                                    filho.view
+                                      ? () => irParaPcmView(filho.view as PcmView)
+                                      : undefined
+                                  }
+                                  className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${
+                                    filhoIsActive
+                                      ? "border-orange bg-card/[0.07] text-white font-medium"
+                                      : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                                  }`}
+                                >
+                                  <FilhoIcon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
+                                  <span className="truncate">{filho.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )
           ) : activeModulo === "atendimento" ? (
             ATENDIMENTO_NAV.map((group) => (
               <div key={group.titulo}>
@@ -1053,7 +818,16 @@ export function HomePage() {
           {activeModulo === "inicio" ? (
             <DashboardGeral moduloIds={dashboardModuloIds} onSelect={navegarModulo} />
           ) : activeModulo === "pcm" ? (
-            pcmView === "clientes" ? (
+            bloqueioAdmin ? (
+              // E00-S28 AC-3: recurso barrado se anuncia; `return null` silencioso é indistinguível
+              // de "não existe". Quem não administra não vê nome de permissão, flag ou gate (AC-6
+              // do componente) — só que a área existe e não é dele.
+              <RecursoNaoAtivado
+                recurso={`Administração · ${bloqueioAdmin.label}`}
+                podeAdministrar={podeAcessarNav("pcm", "escrita")}
+                faltando={["permissão de escrita no módulo PCM"]}
+              />
+            ) : pcmView === "clientes" ? (
               clienteSelecionado ? (
                 // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),
                 // por isso mora aqui e não dentro da VisaoClientePage — que segue read-only (AC-7).
