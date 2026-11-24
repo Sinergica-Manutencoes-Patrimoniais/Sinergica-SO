@@ -10,7 +10,7 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { flagLigada } from "../config/flags-sso";
 import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
@@ -100,6 +100,7 @@ import {
   bloqueioDeAdministracao,
   navegacaoAgrupada,
   navegacaoVisivel,
+  pcmNavConsolidado,
 } from "./navegacao-sso";
 import type { AtendimentoView, ComercialView, ConfigTab, PcmView } from "./navegacao-sso";
 import { usePermissoes } from "./permissoes-context";
@@ -142,6 +143,11 @@ export function HomePage() {
   const { confirmarSaida } = useNavGuard();
   // E01-S190 (BL 013): navegação por função. Desligada = menu idêntico ao anterior, item por item.
   const navegacaoPorFuncao = flagLigada("VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED");
+  // E01-S190 task 9 (ADR-1697): Assessment deixou de ser módulo e virou a Inspeção do tipo
+  // "Diagnóstico Inicial do Cliente" — classificação feita pelas migrations `1868`/`1869`. Tirar
+  // a entrada do menu publicado é mudança de alcance na tela, então entra por flag própria,
+  // `false` por padrão (E00-S28). Com ela desligada, "Assessment" continua onde sempre esteve.
+  const assessmentComoInspecao = flagLigada("VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED");
   const [activeModulo, setActiveModulo] = useState<AreaAtiva>(() => {
     if (new URLSearchParams(window.location.search).get("guia") === "pcm") return "guia";
     // AC-3: deep-link de rota antiga (`?view=`) cai direto no PCM, nunca numa tela de erro.
@@ -297,6 +303,12 @@ export function HomePage() {
   const entradasVisiveis = navegacaoPorFuncao
     ? navegacaoVisivel(NAVEGACAO_SSO, podeAcessarNav, CAPACIDADES_SSO_VAZIAS)
     : [];
+  // Árvore vigente: com a flag de consolidação ligada, "Assessment" sai do menu publicado — o
+  // registro continua alcançável pela lista de Inspeções, que é onde a classificação o colocou.
+  const pcmNavVigente = useMemo(
+    () => (assessmentComoInspecao ? pcmNavConsolidado() : PCM_NAV),
+    [assessmentComoInspecao],
+  );
   // AC-5/AC-6: ocultar do menu não basta — a rota oculta também é bloqueada. Quem cair numa view
   // de Administração sem autorização (deep-link, estado antigo, link colado) não vê a tela.
   const bloqueioAdmin = navegacaoPorFuncao
@@ -475,7 +487,7 @@ export function HomePage() {
                 </div>
               ))
             ) : (
-              PCM_NAV.map((group) => (
+              pcmNavVigente.map((group) => (
                 <div key={group.titulo}>
                   {!sidebarCompacta && (
                     <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
@@ -875,7 +887,16 @@ export function HomePage() {
                 <ListaClientesPage onSelecionar={setClienteSelecionado} />
               )
             ) : pcmView === "inspecoes" ? (
-              <InspecoesPage inspecaoIdInicial={inspecaoDeepLinkId} />
+              <InspecoesPage
+                inspecaoIdInicial={inspecaoDeepLinkId}
+                // AC-7: tirar Assessment do menu não pode levar embora a única ação que só ele
+                // tem — importar o questionário do Auvo. Com a consolidação ligada, Inspeções
+                // passa a ser a porta de entrada dela. Desligada, o botão não aparece porque o
+                // item de menu ainda existe (nada de dois caminhos para a mesma coisa).
+                onAbrirDiagnosticoInicial={
+                  assessmentComoInspecao ? () => setPcmView("assessment") : undefined
+                }
+              />
             ) : pcmView === "assessment" ? (
               <AssessmentPage />
             ) : pcmView === "cliente-marcacoes" ? (

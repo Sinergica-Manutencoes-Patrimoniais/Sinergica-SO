@@ -378,10 +378,14 @@ export interface EntradaNav {
 /**
  * Árvore aprovada em BL 013 do Pacote Consolidado e detalhada na tabela do `plan.md`.
  *
+ * O que mudou na task 9 (migrations `1868`/`1869` aplicadas, ADR-1697):
+ * - **Assessment** deixou de ser entrada própria. Agora é a Inspeção do tipo "Diagnóstico Inicial
+ *   do Cliente", e `trabalho.inspecoes` declara `absorveu: ['assessment']`.
+ *
  * O que ainda NÃO mudou aqui, e por quê:
- * - **Assessment** e **PMOC** continuam como entrada própria. Tirá-los do menu depende das
- *   migrations de classificação (tasks 6–8), que tocam dado de produção e exigem ADR +
- *   `/revisao-adversarial`. Removê-los antes disso deixaria os registros sem porta de entrada.
+ * - **PMOC** continua como entrada própria — ver `VIEWS_CONSOLIDADAS` e ADR-1697 §3. A modalidade
+ *   do Plano existe (`1869`), mas os Contratos PMOC de produção não são Planos, e inventar essa
+ *   conversão seria criar registro, não classificar.
  * - **Sistemas** e **Componentes** continuam visíveis dentro de "Clientes e Estrutura". O
  *   `plan.md` os tira do menu principal porque a jornada da Visão 360 passaria a alcançá-los —
  *   e essa jornada é a task 12, que não está feita. Tirar agora é perder alcance (AC-7).
@@ -409,6 +413,10 @@ export const NAVEGACAO_SSO: readonly EntradaNav[] = [
     absorveu: ["chamados", "backlog"],
   },
   {
+    // Task 9: Inspeções passou a CONTER o antigo Assessment. Isso só é verdade porque a
+    // migration `1868` classificou os registros como Inspeção do tipo "Diagnóstico Inicial do
+    // Cliente" — e porque `listarInspecoes` nunca filtrou `e_assessment`, então eles já
+    // apareciam nesta lista. A entrada própria "Assessment" saiu daqui (ADR-1697).
     id: "trabalho.inspecoes",
     label: "Inspeções",
     nivel: "trabalho",
@@ -416,15 +424,7 @@ export const NAVEGACAO_SSO: readonly EntradaNav[] = [
     modulo: "pcm",
     view: "inspecoes",
     icone: CheckCircle2,
-  },
-  {
-    id: "trabalho.assessment",
-    label: "Assessment",
-    nivel: "trabalho",
-    grupo: "ROTINA",
-    modulo: "pcm",
-    view: "assessment",
-    icone: ClipboardCheck,
+    absorveu: ["assessment"],
   },
   {
     id: "trabalho.pmoc",
@@ -650,6 +650,39 @@ export const NAVEGACAO_SSO: readonly EntradaNav[] = [
     atalhoConfigGrupos: true,
   },
 ];
+
+/**
+ * E01-S190 task 9 — views que deixaram de ser **módulo próprio** depois que a classificação de
+ * dado existiu (migrations `1868`/`1869`, ADR-1697).
+ *
+ * Só `assessment` está aqui. **PMOC não está, e isso é decisão, não esquecimento:** o módulo PMOC
+ * (`pcm.pmoc_properties`/`pmoc_contracts`/`pmoc_schedules`, de `0023_E01-S03`) não tem nenhuma FK
+ * para `pcm.planos_manutencao`. A migration `1869` deu ao Plano a modalidade `pmoc` e a visão
+ * filtrada, mas transformar um Contrato PMOC existente — com imóvel, ART e 12 visitas emitidas —
+ * num Plano seria CRIAR registro, não classificar. Enquanto a pergunta de produto da ADR-1697 §3
+ * não for respondida, tirar PMOC do menu deixaria esses registros de produção sem porta de
+ * entrada, que é exatamente a perda de alcance que o AC-7 proíbe.
+ */
+export const VIEWS_CONSOLIDADAS: readonly PcmView[] = ["assessment"];
+
+/**
+ * A árvore vigente sem as views consolidadas.
+ *
+ * `PCM_NAV` continua literal e verbatim de propósito: ele **é** o menu publicado, e a promessa
+ * desta story é que com `VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED` desligada a navegação é
+ * exatamente a de hoje. A remoção de Assessment é uma mudança de alcance na tela, então ela entra
+ * pela porta que o E00-S28 definiu: uma flag própria
+ * (`VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED`), `false` por padrão, aplicada aqui no render.
+ */
+export function pcmNavConsolidado(grupos: readonly NavGroup[] = PCM_NAV): NavGroup[] {
+  const consolidadas = new Set<PcmView>(VIEWS_CONSOLIDADAS);
+  return grupos
+    .map((grupo) => ({
+      ...grupo,
+      items: grupo.items.filter((item) => !(item.view && consolidadas.has(item.view))),
+    }))
+    .filter((grupo) => grupo.items.length > 0);
+}
 
 export const NIVEIS: readonly { readonly nivel: Nivel; readonly titulo: string }[] = [
   { nivel: "trabalho", titulo: "TRABALHO" },

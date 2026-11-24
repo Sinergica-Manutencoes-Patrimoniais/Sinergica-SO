@@ -87,14 +87,55 @@ fixa por papel. Quando `E00-S26` existir, `capacidades` passa a vir dela; até l
 
 ### Consolidação de dados — AC-1, AC-2
 
-**Nenhum registro é recriado.** O caminho é de classificação, não de migração de conteúdo:
+**Nenhum registro é recriado.** O caminho é de classificação, não de migração de conteúdo.
 
-- Assessment: migration **aditiva** registra o tipo de Inspeção `diagnostico_inicial_cliente` no
-  catálogo `pcm.tipos_inspecao` e classifica os Assessments existentes (`0137`, `0958`, `1162`–`1166`)
-  como Inspeção desse tipo, **preservando id, histórico e evidências**.
-- PMOC: ganha `modalidade='pmoc'` no Plano de Manutenção, com **visão filtrada**. O schema PMOC
-  (`0023_E01-S03_pmoc_core.sql` e descendentes) **não é apagado nem reescrito**; documento PMOC já
-  emitido não é reescrito (edge case da spec).
+#### Inventário real das tabelas (levantado antes de escrever SQL — tasks 6/7)
+
+**Assessment — já é uma Inspeção. Não existe tabela de Assessment.**
+
+| Objeto | Migration | O que é |
+|---|---|---|
+| `pcm.inspecoes` (`id`, `client_id`, `titulo`, `status`, `codigo`, soft delete) | `0019_E01-S19` | a Inspeção |
+| `pcm.inspecoes.e_assessment boolean not null default false` | `0137_E01-S90` | o marcador do assessment |
+| `pcm.inspecoes.motivo_assessment` (`inicio`/`alteracao_contrato`/`anual`) | `0137_E01-S90` | motivo |
+| `pcm.inspecoes.tipo_inspecao_id uuid` → `pcm.tipos_inspecao(id)` | `0091_E01-S73` (FK validada em `0092`) | **o campo de tipo que já existia e estava NULO nos assessments** |
+| `pcm.tipos_inspecao` (`id`, `nome`, `norma_tecnica`, `descricao`, `ativo`, soft delete) | `0091_E01-S73` | catálogo de tipos, administrado em `TiposInspecaoPage` |
+| `pcm.checklist_templates` / `pcm.checklist_template_itens` | `0091_E01-S73` | checklist por tipo |
+| `pcm.inspecao_itens` (+ `destino`, `destino_responsavel`, `auvo_questao_chave`, `midias`, GUT) | `0019`, `0137`, `0150`, `0174`, `0179` | itens e evidências |
+| `pcm.chamados.origem_inspecao_item_id` | `0137`/`0138` | rastro item → Chamado |
+| `comercial.propostas.assessment_id` → `pcm.inspecoes(id)` + triggers `s181_*` | `0958`, `1162`–`1166` | vínculo de pré-venda, com guarda de cliente |
+| questionário Auvo / `auvo_task_id` | `0165`, `0170`, `0185`–`0187` | origem dos itens |
+
+**PMOC — NÃO é um Plano de Manutenção.**
+
+| Objeto | Migration | O que é |
+|---|---|---|
+| `pcm.pmoc_properties`, `pmoc_equipment`, `pmoc_contracts`, `pmoc_schedules`, `pmoc_records`, `pmoc_microbio_analysis`, `pmoc_nonconformity_log` | `0023_E01-S03` | cadastro e execução PMOC, ancorados em `pmoc_properties.client_id`, **sem nenhuma FK para `pcm.planos_manutencao`** |
+| `pcm.planos_manutencao` (`id`, `cliente_id`, `nome`, `estado`, `revisao`) | `0260_E01-S165` | o Plano |
+| `pcm.plano_versoes`, `pcm.rotinas_manutencao` (`plano_id`, `rotina_logica_id`, alvo em sistema/componente/grupo) | `0261_E01-S165` | versões e rotinas |
+| `pcm.rotina_origem_geracao` (`origem in ('plano','pmoc')`) | `0337_E01-S166` | **declaração explícita do PCM de que um ciclo é de origem PMOC** |
+| `pcm.sso_vinculos_ciclo_pmoc` (`plano_id`, `contrato_pmoc_id`, `agendamento_id`) | `1631_E01-S166` | ponte Plano ↔ PMOC, atrás de gate fechado |
+
+#### O que as migrations fazem
+
+- **`1868_E01-S190_diagnostico_inicial_cliente.sql` (task 6):** `pcm.tipos_inspecao` ganha `chave`
+  (índice único parcial); nasce a linha `diagnostico_inicial_cliente` / "Diagnóstico Inicial do
+  Cliente"; `update` aditivo preenche `tipo_inspecao_id` **só onde `e_assessment` é verdadeiro e o
+  tipo é nulo**, com um `audit.events` por linha; um trigger `before insert or update` mantém a
+  equivalência nos dois sentidos daí em diante e também audita. `e_assessment` e
+  `motivo_assessment` permanecem (sinônimo histórico). Índice
+  `idx_inspecoes_tipo_inspecao` para o filtro por tipo na lista de Inspeções.
+- **`1869_E01-S190_modalidade_pmoc_plano.sql` (task 7):** `pcm.planos_manutencao.modalidade`
+  (`padrao`/`pmoc`, CHECK `not valid` + `validate` dentro de um `do $$` atômico); view filtrada
+  `pcm.planos_pmoc` com `security_invoker = true`; classificação **só** dos Planos que o PCM já
+  declarou PMOC (`rotina_origem_geracao.origem = 'pmoc'` ou `sso_vinculos_ciclo_pmoc`), auditada.
+- **Fora de escopo, com motivo escrito:** transformar `pcm.pmoc_contracts` existentes em
+  `pcm.planos_manutencao` **não é feito** — seria criar registro, não classificar. A pergunta de
+  produto está textual em **ADR-1697 §3**. Por isso PMOC **continua no menu** (tirá-lo deixaria
+  imóvel, ART, inventário de AR e laudos sem porta de entrada — AC-7).
+
+O schema PMOC (`0023_E01-S03_pmoc_core.sql` e descendentes) **não é apagado nem reescrito**;
+documento PMOC já emitido não é reescrito (edge case da spec).
 
 ### Rotas antigas — AC-3
 
@@ -116,9 +157,12 @@ Esta story **é** navegação, então o alcance é o produto, não um anexo:
 
 ## Procedimento de retorno
 
-- Navegação: reverter `navegacao-sso.ts` restaura o menu antigo (dado puro, sem efeito em banco).
-- Classificação de Assessment/PMOC: migration de reverso declarada no cabeçalho, como manda
-  `db/README.md` — remove a classificação sem tocar nos registros.
+- Navegação: desligar `VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED` (ou
+  `VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED`) restaura o menu antigo — dado puro, sem efeito em banco.
+- Classificação de Assessment/PMOC: reverso exato declarado no cabeçalho de cada migration, lido
+  de `audit.events` (nunca "tudo que tem o tipo X"). **A ordem importa:** em `1868` o trigger cai
+  ANTES do `update`, senão a regra repõe a classificação na mesma transação — provado pelo teste
+  29 do pgTAP. Nenhum registro é apagado em nenhum passo do reverso.
 
 ## Riscos
 

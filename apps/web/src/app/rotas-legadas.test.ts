@@ -42,10 +42,19 @@ describe("E01-S190 task 5 — rotas legadas (AC-3 / SC-003)", () => {
 
   it("lê o deep-link ?view= da URL e resolve pelo mapa", () => {
     expect(rotaInicialDaUrl("?view=inspecoes")).toBe("inspecoes");
-    expect(rotaInicialDaUrl("?view=assessment")).toBe("assessment");
+    // Task 9: o favorito antigo de Assessment cai em Inspeções, nunca numa tela vazia (AC-3).
+    expect(rotaInicialDaUrl("?view=assessment")).toBe("inspecoes");
     expect(rotaInicialDaUrl("?outra=coisa")).toBeNull();
     expect(rotaInicialDaUrl("")).toBeNull();
     expect(rotaInicialDaUrl("?view=nao-existe")).toBeNull();
+  });
+
+  it("a rota de Assessment aponta para Inspeções, que é onde a classificação o colocou", () => {
+    // Trava da task 9: esta é a linha que impede tirar Assessment do menu em silêncio. Se alguém
+    // remover a entrada da árvore sem declarar o destino, `viewsAlcancaveis()` deixa de conter
+    // `assessment` e o teste de tabela acima quebra antes do merge.
+    expect(resolverRotaLegada("assessment")).toBe("inspecoes");
+    expect(viewsAlcancaveis().has("inspecoes")).toBe(true);
   });
 
   it("backlog continua carregando a aba do board — mapear para 'ordens' perderia o deep-link", () => {
