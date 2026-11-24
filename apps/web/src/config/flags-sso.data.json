@@ -30,6 +30,13 @@
     "descricao": "Admin contrato origem"
   },
   {
+    "nome": "VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED",
+    "padrao": false,
+    "jornada": "visita",
+    "gate": "pcm.capacidade_agenda_tecnico_gate",
+    "descricao": "Agenda do Tecnico como projecao da Visita (E01-S202), no lugar do cadastro manual"
+  },
+  {
     "nome": "VITE_SSO_AGENDA_TECNICO_CAPACIDADE_ENABLED",
     "padrao": false,
     "jornada": "visita",
