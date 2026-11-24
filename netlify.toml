@@ -17,6 +17,9 @@
   # E01-S202: Agenda do Tecnico como projecao da Visita. Desligada ate o gate de banco
   # pcm.capacidade_agenda_tecnico_gate ser aberto (decisao operacional separada).
   VITE_SSO_AGENDA_PROJECAO_VISITA_ENABLED = "false"
+  # E01-S203: criacao manual do Plano PMOC a partir de um Contrato PMOC (ADR-1698, decisao (b)).
+  # Desligada ate os gates pcm.sso_pmoc_mediado_gate e pcm.sso_diagnostico_pmoc_gate serem abertos.
+  VITE_SSO_PLANO_PMOC_MANUAL_ENABLED = "false"
   # E01-S190: navegacao agrupada em Trabalho, Gestao e Administracao (BL 013). Desligada ate a
   # homologacao — com ela desligada o menu e exatamente o anterior.
   VITE_SSO_NAVEGACAO_POR_FUNCAO_ENABLED = "false"
