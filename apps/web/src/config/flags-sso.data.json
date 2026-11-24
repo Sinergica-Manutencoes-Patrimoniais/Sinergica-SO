@@ -2769,6 +2769,13 @@
     "descricao": "Modo faturamento proposta"
   },
   {
+    "nome": "VITE_SSO_MONITOR_EXCECOES_AUVO_ENABLED",
+    "padrao": false,
+    "jornada": "integracao-auvo",
+    "gate": "pcm.sso_consulta_estado_campo_gate",
+    "descricao": "Monitor consolidado de excecoes do Auvo em T-24: falha de envio, Visita nao confirmada e tarefa orfa (E01-S201)"
+  },
+  {
     "nome": "VITE_SSO_MOTIVOS_HISTORICO_GRUPO_ENABLED",
     "padrao": false,
     "jornada": "estrutura",

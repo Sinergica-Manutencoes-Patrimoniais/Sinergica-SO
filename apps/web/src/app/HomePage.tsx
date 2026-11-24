@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   BarChart3,
   BellRing,
   BookOpen,
@@ -115,6 +116,7 @@ import { InspecoesPage } from "../features/pcm/pages/InspecoesPage";
 import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
 import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
 import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage";
+import { MonitorExcecoesAuvoPage } from "../features/pcm/pages/MonitorExcecoesAuvoPage";
 import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
 import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
 import { PmocPage } from "../features/pcm/pages/PmocPage";
@@ -167,6 +169,7 @@ type PcmView =
   | "cliente-marcacoes"
   | "pmoc"
   | "preventivas"
+  | "monitor-excecoes-auvo"
   | "laudos-spda"
   | "apontamento-horas"
   | "tipos-inspecao"
@@ -362,6 +365,10 @@ const PCM_NAV: NavGroup[] = [
       { label: "Agenda do Técnico", icon: Calendar, view: "agenda-tecnico" },
       { label: "PMOC", icon: Snowflake, view: "pmoc" },
       { label: "Preventivas", icon: Calendar, view: "preventivas" },
+      // E01-S201 (BL 004): monitor consolidado das exceções do Auvo em T−24 — falha de envio,
+      // Visita não confirmada e tarefa órfã. Fica na Operação, ao lado do Planejamento, porque é
+      // quem opera a Visita que precisa ver a tarefa que não nasceu.
+      { label: "Monitor Auvo (T−24)", icon: AlertTriangle, view: "monitor-excecoes-auvo" },
       { label: "Relatório", icon: FileBarChart, view: "relatorio-planejamento" },
     ],
   },
@@ -1143,6 +1150,8 @@ export function HomePage() {
               <PmocPage />
             ) : pcmView === "preventivas" ? (
               <PreventivasPage />
+            ) : pcmView === "monitor-excecoes-auvo" ? (
+              <MonitorExcecoesAuvoPage />
             ) : pcmView === "ordens" || pcmView === "chamados" || pcmView === "backlog" ? (
               // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
               // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.

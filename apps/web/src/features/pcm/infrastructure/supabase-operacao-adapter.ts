@@ -9,6 +9,7 @@ import type {
   PaginaOperacao,
 } from "../application/operacao-gateway";
 import type { ItemCampoAConciliar } from "../domain/campo-a-conciliar";
+import type { ExcecaoAuvo } from "../domain/excecoes-auvo";
 
 interface OperacaoRow {
   item_id: string;
@@ -158,6 +159,62 @@ const linhaCampoAConciliarSchema = z
     task_id: z.number().int().nullable(),
     status_os: z.string(),
     criado_em: z.string(),
+  })
+  .strict();
+
+/** E01-S201 — monitor consolidado de exceções do Auvo T−24 (migration 1867). Devolve as três
+ * famílias (falha de envio, Visita não confirmada, tarefa órfã) numa chamada só. A RPC recusa
+ * com erro NOMEADO quando o gate `pcm.sso_consulta_estado_campo_gate` está fechado
+ * (`consulta_desabilitada`) ou falta a capacidade `execucao.validar` (`sem_acesso`) — a página
+ * dá uma frase diferente a cada caso; nenhum deles pode parecer "nenhuma exceção". */
+export async function listarExcecoesAuvoT24(
+  atorId: string,
+  clienteId: string,
+  signal?: AbortSignal,
+): Promise<ExcecaoAuvo[]> {
+  if (
+    !z.string().guid().safeParse(atorId).success ||
+    !z.string().guid().safeParse(clienteId).success
+  )
+    throw new Error("Contexto inválido.");
+  let chamada = supabase.schema("pcm").rpc("sso_listar_excecoes_auvo_t24", {
+    p_ator_id: atorId,
+    p_cliente_id: clienteId,
+    p_limite: 50,
+  });
+  if (signal) chamada = chamada.abortSignal(signal);
+  const { data, error } = await chamada;
+  if (error) throw error;
+  const linhas = linhaExcecaoAuvoSchema.array().safeParse(data ?? []);
+  if (!linhas.success) throw new Error("Monitor de exceções em formato inesperado.");
+  return linhas.data.map((linha) => ({
+    tipo: linha.tipo,
+    clienteId: linha.cliente_id,
+    clienteNome: linha.cliente_nome,
+    visitaId: linha.visita_id,
+    visitaInicioEm: linha.visita_inicio_em,
+    osId: linha.os_id,
+    osNumero: linha.os_numero,
+    taskId: linha.task_id,
+    tentativas: linha.tentativas,
+    ultimoErro: linha.ultimo_erro,
+    ocorridoEm: linha.ocorrido_em,
+  }));
+}
+
+const linhaExcecaoAuvoSchema = z
+  .object({
+    tipo: z.enum(["falha_envio", "visita_nao_confirmada", "tarefa_orfa"]),
+    cliente_id: z.string().guid(),
+    cliente_nome: z.string(),
+    visita_id: z.string().guid().nullable(),
+    visita_inicio_em: z.string().nullable(),
+    os_id: z.string().guid(),
+    os_numero: z.string(),
+    task_id: z.number().int().nullable(),
+    tentativas: z.number().int(),
+    ultimo_erro: z.string(),
+    ocorrido_em: z.string(),
   })
   .strict();
 
