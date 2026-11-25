@@ -139,3 +139,20 @@ it("permite abrir a OS de uma lista na Central global", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Abrir contexto da OS" }));
   expect(abrir).toHaveBeenCalledWith(os);
 });
+
+// E01-S179 AC-7: aquisição e estados terminais não desaparecem no filtro.
+it("oferece os sete estados de materiais na entrada única", async () => {
+  vi.stubEnv("VITE_SSO_CENTRAL_MATERIAIS_ENABLED", "true");
+  mocks.autorizar.mockResolvedValue(true);
+  mocks.consultar.mockResolvedValue([]);
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <CentralMateriais usuario="usuario" cliente="cliente" />
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByRole("option", { name: "Aguardando aquisição" })).toBeTruthy();
+  expect(screen.getByRole("option", { name: "Dispensada" })).toBeTruthy();
+  expect(screen.getByRole("option", { name: "Concluída" })).toBeTruthy();
+});

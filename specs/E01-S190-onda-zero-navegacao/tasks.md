@@ -22,8 +22,8 @@ Detalhe técnico em `plan.md`. Desbloqueada em 17/11/2026 pelas respostas 26/27 
 | 8 | pgTAP: identidade, histórico e evidência preservados na classificação (permitido e negado, RLS FORCE) | AC-1, AC-2 | 6, 7 | `npx supabase@2.114.0 test db supabase/tests/E01-S190_*.test.sql` | **done** — 35/35 em `E01-S190_classificacao_diagnostico_e_pmoc.test.sql` |
 | 9 | Retirar Assessment e PMOC do menu; Inspeções e Planos passam a contê-los | AC-1, AC-2, AC-4 | 4, 6, 7 | `cd apps/web && pnpm vitest run src/app` | **parcial** — Assessment saiu das duas árvores (flag `VITE_SSO_ASSESSMENT_COMO_INSPECAO_ENABLED`, `false`); **PMOC continua**, ver Achados |
 | 10 | Absorver Agenda do Técnico em "Planejamento e Visitas"; unificar Ferramentas em "Equipes e Recursos" | AC-4 | 4 | inventário antes/depois sem perda | **done** |
-| 11 | `PesquisaGlobalEstrutura.tsx` — resultado identifica o tipo de cada entidade | AC-9 | 4 | `cd apps/web && pnpm vitest run src/features/pcm/interfaces/estrutura` | todo — fatia seguinte |
-| 12 | Jornada Visão 360 → Área → Local → Sistema → Equipamento → Componente/Grupo, cada nível na tela da sua entidade | AC-10 | 11 | teste de componente da jornada | todo — fatia seguinte |
+| 11 | `PesquisaGlobalEstrutura.tsx` — resultado identifica o tipo de cada entidade | AC-9 | 4 | `cd apps/web && pnpm vitest run src/features/pcm/interfaces/estrutura` | **done** — continuação 25/11, testes de pesquisa/navegação e pgTAP |
+| 12 | Jornada Visão 360 → Área → Local → Sistema → Equipamento → Componente/Grupo, cada nível na tela da sua entidade | AC-10 | 11 | teste de componente da jornada | **done** — continuação 25/11, testes de pesquisa/navegação e pgTAP |
 | 13 | Catálogos administrativos (tipos, categorias, segmentos, palavras-chave) para Administração, com guarda de rota | AC-5, AC-6 | 4 | `cd apps/web && pnpm vitest run src/app` + acesso por URL negado | **done** |
 | 14 | Glossário: "Diagnóstico Inicial do Cliente" e "PMOC (modalidade)" — já escritos em 17/11; conferir sinônimo histórico | AC-8 | 6, 7 | revisão humana | **done** — entrada **PMOC** da tabela principal corrigida (não é mais "sub-módulo") e **Assessment** criada como sinônimo histórico |
 | 15 | Inventário DEPOIS + diff no corpo do PR; qualquer ação sumida vira decisão registrada | AC-7 | 9–13 | `diff /tmp/nav-antes.txt /tmp/nav-depois.txt` anexado ao PR | **done** para a fatia de front (ver Diff de alcance) |
@@ -169,3 +169,10 @@ entrada de menu para botão dentro de Inspeções — decisão registrada, não 
 - Diff de ações alcançáveis por perfil sem perda não decidida (SC-004).
 - **Nenhuma tabela de estrutura fundida** — conferido no diff de migration.
 - CI verde, `db-tests` não pulado.
+
+## Continuação 25/11 — AC-9/AC-10
+- [x] T017 [US3] Consulta tipada paginada em `1893_E01-S190_pesquisa_estrutura.sql` e prova `E01-S190_pesquisa_estrutura.test.sql` (AC-9, AC-10).
+- [x] T018 [US3] Gateway/adapter/hook e `PesquisaGlobalEstrutura.tsx` com caminhos separados e detalhes existentes (AC-9, AC-10).
+- [x] T019 [US3] Integração em `VisaoClientePage.tsx`, testes de navegação e autorização (AC-9, AC-10).
+
+A story inteira continua parcial: decisão PMOC descrita acima não foi inferida nesta continuação.

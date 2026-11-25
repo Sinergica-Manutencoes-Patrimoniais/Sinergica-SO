@@ -172,3 +172,22 @@ Esta story **é** navegação, então o alcance é o produto, não um anexo:
   antes/depois, ou a regressão passa despercebida.
 - Pesquisa global que não identifica o tipo do resultado viola AC-9 **e** a restrição dura — é o
   caminho mais fácil para acidentalmente "achatar" as entidades na percepção do usuário.
+
+## Continuação 25/11 — tasks 11/12 (owner Codex)
+
+Pesquisa e navegação em `interfaces/estrutura/PesquisaGlobalEstrutura.tsx`, dentro da aba Estrutura
+na Visão 360. Gateway de leitura em `application/pesquisa-estrutura-gateway.ts`; adapter reúne
+Áreas, Locais, Sistemas, Equipamentos/Componentes, vínculos e Grupos sem alterar schema ou entidades.
+TanStack Query por usuário/Cliente/fonte, sem reaproveitar dado de outra identidade, cancelamento
+e reconferência de sessão; fontes parciais e paginação explicitadas. Domínio puro constrói caminhos,
+filtra nome/código/TAG e mantém localização distinta de pertencimento funcional. Detalhes reutilizam
+as telas de Sistema, Ativo e Composição do Local; Grupo mantém identidade e histórico próprios.
+Não retirar entradas legadas antes de provar alcance. Nenhuma flag ou gate novo.
+
+### Consulta definitiva (ADR-1701)
+A composição no navegador foi substituída na implementação por uma RPC paginada única,
+`pcm.sso_pesquisar_estrutura` (migration 1893). Isso permite pesquisa em todo o Cliente e código
+atual de Grupo sem N+1. Contrato em `application/pesquisa-estrutura-gateway.ts`; adapter valida
+Zod, sessão antes/depois e cancelamento; hook em `application/pesquisa-estrutura-queries.ts`.
+Cursor tipo:id, limite 50 na UI/100 no servidor; contexto tipado por entidade. Leitura requer
+cadastro.ler ou cadastro.gerir no Cliente e PCM relido ao vivo. Nenhum gate ou flag novo.

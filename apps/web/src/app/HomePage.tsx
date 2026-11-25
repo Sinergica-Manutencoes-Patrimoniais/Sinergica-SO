@@ -46,6 +46,12 @@ import { usePermissoes } from "./permissoes-context";
 import { rotaInicialDaUrl } from "./rotas-legadas";
 import { useTheme } from "./theme-context";
 
+const MateriaisAquisicoesPage = lazy(() =>
+  import("../features/pcm/pages/MateriaisAquisicoesPage").then((m) => ({
+    default: m.MateriaisAquisicoesPage,
+  })),
+);
+
 // E00-S29 — páginas por módulo fora do caminho crítico; moldura preservada pelo Suspense.
 const AreaClienteAdminPage = lazy(() =>
   import("../features/area-cliente/pages/AreaClienteAdminPage").then((m) => ({
@@ -1102,6 +1108,22 @@ export function HomePage() {
                   podeAdministrar={podeAcessarNav("pcm", "escrita")}
                   faltando={["permissão de escrita no módulo PCM"]}
                 />
+              ) : pcmView === "materiais-aquisicoes" ? (
+                user && (
+                  <MateriaisAquisicoesPage
+                    usuario={user.id}
+                    onAbrirOs={(clienteId, osId) => {
+                      if (!confirmarSaida()) return;
+                      setPcmView("ordens");
+                      setClienteSelecionado(clienteId);
+                      setOsDeepLink((atual) => ({
+                        osId,
+                        origemClienteId: clienteId,
+                        seq: (atual?.seq ?? 0) + 1,
+                      }));
+                    }}
+                  />
+                )
               ) : pcmView === "clientes" ? (
                 clienteSelecionado ? (
                   // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),

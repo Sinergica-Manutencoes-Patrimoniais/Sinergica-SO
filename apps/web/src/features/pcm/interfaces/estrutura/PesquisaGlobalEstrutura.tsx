@@ -1,0 +1,237 @@
+import { Button, DataTable, Modal } from "@sinergica/ui";
+import { useState } from "react";
+import type {
+  PesquisaEstruturaGateway,
+  ResultadoEstrutura,
+  TipoEstrutura,
+} from "../../application/pesquisa-estrutura-gateway";
+import { usePesquisaEstrutura } from "../../application/pesquisa-estrutura-queries";
+import { DrawerDetalheAtivo } from "../../components/DrawerDetalheAtivo";
+import { DrawerDetalheSistema } from "../../components/DrawerDetalheSistema";
+import { supabasePesquisaEstruturaAdapter } from "../../infrastructure/supabase-pesquisa-estrutura-adapter";
+import { ComposicaoLocal } from "../estrutura-tecnica/ComposicaoLocal";
+import { HistoricoGrupo } from "../estrutura-tecnica/HistoricoGrupo";
+import { PlanosDoAlvo } from "../estrutura-tecnica/PlanosDoAlvo";
+import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
+
+const nomes: Record<TipoEstrutura, string> = {
+  area: "Área",
+  local: "Local",
+  sistema: "Sistema",
+  equipamento: "Equipamento",
+  componente: "Componente",
+  grupo_quantitativo: "Grupo Quantitativo",
+};
+type Props = {
+  usuario: string;
+  clienteId: string;
+  gateway?: PesquisaEstruturaGateway;
+  onAbrirOs?: (id: string) => void;
+};
+export function PesquisaGlobalEstrutura(props: Props) {
+  return <Conteudo key={JSON.stringify([props.usuario, props.clienteId])} {...props} />;
+}
+function Conteudo({
+  usuario,
+  clienteId,
+  gateway = supabasePesquisaEstruturaAdapter,
+  onAbrirOs,
+}: Props) {
+  const [entrada, setEntrada] = useState("");
+  const [busca, setBusca] = useState("");
+  const [tipo, setTipo] = useState<TipoEstrutura | "">("");
+  const [caminho, setCaminho] = useState<ResultadoEstrutura[]>([]);
+  const [detalhe, setDetalhe] = useState<ResultadoEstrutura | null>(null);
+  const contexto = caminho.at(-1) ?? null;
+  const consulta = usePesquisaEstrutura(gateway, { usuario, clienteId, busca, tipo, contexto });
+  const indisponivel = consulta.isError || (consulta.isFetching && !consulta.isFetchingNextPage);
+  const itens = indisponivel ? [] : (consulta.data?.pages.flat() ?? []);
+  const recusado =
+    consulta.error &&
+    typeof consulta.error === "object" &&
+    "code" in consulta.error &&
+    consulta.error.code === "42501";
+  function navegar(item: ResultadoEstrutura) {
+    setCaminho([...caminho, item]);
+    setBusca("");
+    setEntrada("");
+    setTipo("");
+    setDetalhe(null);
+  }
+  function voltar(indice: number) {
+    setCaminho(caminho.slice(0, indice));
+    setBusca("");
+    setEntrada("");
+    setTipo("");
+    setDetalhe(null);
+  }
+  return (
+    <section
+      className="space-y-4 rounded-lg border border-line bg-card p-4"
+      aria-label="Pesquisa e navegação da estrutura"
+    >
+      <h2 className="text-heading-sm font-semibold text-ink">Clientes e Estrutura</h2>
+      <p className="text-body text-ink-3">
+        Pesquise por nome, código ou TAG. Localização física e pertencimento a Sistema são
+        preservados.
+      </p>
+      <form
+        className="flex flex-wrap items-end gap-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setCaminho([]);
+          setDetalhe(null);
+          if (busca === entrada.trim()) void consulta.refetch();
+          else setBusca(entrada.trim());
+        }}
+      >
+        <label className="flex flex-col gap-1 text-body">
+          Nome, código ou TAG
+          <input
+            className="input"
+            maxLength={200}
+            value={entrada}
+            onChange={(e) => setEntrada(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-body">
+          Tipo
+          <select
+            className="input"
+            value={tipo}
+            onChange={(e) => {
+              setTipo(e.target.value as TipoEstrutura | "");
+              setDetalhe(null);
+            }}
+          >
+            <option value="">Todos os tipos</option>
+            {Object.entries(nomes).map(([id, nome]) => (
+              <option key={id} value={id}>
+                {nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button type="submit">Pesquisar estrutura</Button>
+      </form>
+      <nav className="flex flex-wrap gap-2" aria-label="Caminho da estrutura">
+        <Button size="sm" variant="secondary" onClick={() => voltar(0)}>
+          Voltar ao Cliente
+        </Button>
+        {caminho.map((item, i) => (
+          <Button key={item.chave} size="sm" variant="secondary" onClick={() => voltar(i + 1)}>
+            {nomes[item.tipo]}: {item.nome}
+          </Button>
+        ))}
+      </nav>
+      {contexto && (
+        <h3 className="text-body font-semibold text-ink">
+          {nomes[contexto.tipo]}: {contexto.nome}
+        </h3>
+      )}
+      {consulta.isError && (
+        <p role="alert">
+          {recusado
+            ? "Sem permissão para consultar a estrutura deste Cliente."
+            : "Não foi possível consultar a estrutura."}{" "}
+          <Button size="sm" onClick={() => void consulta.refetch()}>
+            Tentar novamente
+          </Button>
+        </p>
+      )}
+      <DataTable
+        legenda="Resultados tipados da estrutura do Cliente"
+        itens={itens}
+        chaveLinha={(r) => r.chave}
+        carregando={consulta.isPending || (indisponivel && !consulta.isError)}
+        vazio="Nenhum resultado neste contexto ou filtro."
+        colunas={[
+          { chave: "tipo", cabecalho: "Tipo", render: (r) => nomes[r.tipo] },
+          { chave: "nome", cabecalho: "Nome", cabecalhoLinha: true, render: (r) => r.nome },
+          { chave: "codigo", cabecalho: "Código / TAG", render: (r) => r.codigo || "—" },
+          {
+            chave: "acoes",
+            cabecalho: "Ações",
+            render: (r) => (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  aria-label={`Navegar em ${nomes[r.tipo]} ${r.nome}`}
+                  onClick={() => navegar(r)}
+                >
+                  Navegar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  aria-label={`Ver ${nomes[r.tipo]} ${r.nome}`}
+                  onClick={() => setDetalhe(r)}
+                >
+                  Ver detalhes
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+      />
+      {consulta.hasNextPage && (
+        <Button disabled={consulta.isFetching} onClick={() => void consulta.fetchNextPage()}>
+          Carregar mais resultados
+        </Button>
+      )}
+      {detalhe &&
+        !indisponivel &&
+        (detalhe.tipo === "sistema" ? (
+          <DrawerDetalheSistema
+            sistemaId={detalhe.id}
+            clienteEsperadoId={clienteId}
+            onClose={() => setDetalhe(null)}
+            onAbrirOs={onAbrirOs}
+          />
+        ) : detalhe.tipo === "equipamento" || detalhe.tipo === "componente" ? (
+          <DrawerDetalheAtivo
+            itemId={detalhe.id}
+            onClose={() => setDetalhe(null)}
+            onAtualizado={() => void consulta.refetch()}
+          />
+        ) : (
+          <Modal
+            open
+            onOpenChange={(aberto) => {
+              if (!aberto) setDetalhe(null);
+            }}
+            titulo={`${nomes[detalhe.tipo]}: ${detalhe.nome}`}
+          >
+            <p>Código / TAG: {detalhe.codigo || "não informado"}</p>
+            {detalhe.tipo === "local" && (
+              <ComposicaoLocal
+                userId={usuario}
+                clienteId={clienteId}
+                localId={detalhe.id}
+                caminho={[...caminho.map((r) => r.nome), detalhe.nome]}
+              />
+            )}
+            {detalhe.tipo === "grupo_quantitativo" && (
+              <>
+                <HistoricoGrupo userId={usuario} clienteId={clienteId} grupoId={detalhe.id} />
+                <PlanosDoAlvo userId={usuario} clienteId={clienteId} tipo="grupo" id={detalhe.id} />
+                <PendenciasDoAlvo
+                  userId={usuario}
+                  clienteId={clienteId}
+                  tipo="grupo"
+                  id={detalhe.id}
+                />
+              </>
+            )}
+            <Button
+              onClick={() => {
+                navegar(detalhe);
+              }}
+            >
+              Navegar neste contexto
+            </Button>
+          </Modal>
+        ))}
+    </section>
+  );
+}

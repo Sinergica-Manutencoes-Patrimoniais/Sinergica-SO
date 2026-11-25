@@ -12,12 +12,23 @@ import { WorkspaceListasMateriais } from "./Workspace";
 
 type Props = { usuario: string; cliente: string; onAbrirOs?: (osId: string) => void };
 type Responsavel = "cliente" | "sinergica" | "todos";
-type EstadoLista = "todos" | "levantada" | "informada_disponivel" | "parcial" | "indisponivel";
+type EstadoLista =
+  | "todos"
+  | "levantada"
+  | "informada_disponivel"
+  | "parcial"
+  | "indisponivel"
+  | "aguardando_aquisicao"
+  | "dispensada"
+  | "concluida";
 const estadosLista: Record<string, string> = {
   levantada: "Levantada",
   informada_disponivel: "Disponibilidade informada",
   parcial: "Parcial",
   indisponivel: "Indisponível",
+  aguardando_aquisicao: "Aguardando aquisição",
+  dispensada: "Dispensada",
+  concluida: "Concluída",
 };
 
 function erroTemporario(error: unknown): boolean {
@@ -240,6 +251,9 @@ function Conteudo({
             <option value="informada_disponivel">Disponibilidade informada</option>
             <option value="parcial">Parcial</option>
             <option value="indisponivel">Indisponível</option>
+            <option value="aguardando_aquisicao">Aguardando aquisição</option>
+            <option value="dispensada">Dispensada</option>
+            <option value="concluida">Concluída</option>
           </select>
         </label>
         <button type="submit">Filtrar OS</button>

@@ -80,6 +80,7 @@ export type AtendimentoView = "dashboard" | "inbox" | "config";
 // Sub-navegação interna do PCM (mesmo padrão useState de abas do resto do app — sem lib de rotas).
 // "dashboard" = tela mock atual; "clientes" = lista mínima → Visão 360 (Task 18/E01-S12).
 export type PcmView =
+  | "materiais-aquisicoes"
   | "dashboard"
   | "clientes"
   | "cliente-grupos"
@@ -313,6 +314,7 @@ export const PCM_NAV: NavGroup[] = [
     titulo: "OPERAÇÃO",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, view: "dashboard" },
+      { label: "Materiais e Aquisições", icon: Package, view: "materiais-aquisicoes" },
       // E01-S118: "Chamados" e "Operação" viram um menu só (o board). Sempre se abre um Chamado, que
       // após tratativa deriva numa OS pro Auvo — é o mesmo item, em fases. Backlog GUT deixou de ser
       // item de nav (virou aba do board, ao lado do Calendário).
@@ -419,6 +421,15 @@ export interface EntradaNav {
  * - **Central de Pendências** ainda não tem view no front; entra quando E01-S197 existir.
  */
 export const NAVEGACAO_SSO: readonly EntradaNav[] = [
+  {
+    id: "trabalho.materiais",
+    label: "Materiais e Aquisições",
+    nivel: "trabalho",
+    grupo: "ROTINA",
+    modulo: "pcm",
+    view: "materiais-aquisicoes",
+    icone: Package,
+  },
   // ── Trabalho — a rotina do operador, o que ele abre todo dia.
   {
     id: "trabalho.dashboard",

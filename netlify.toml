@@ -4,6 +4,13 @@
   publish = "dist"
 
 [build.environment]
+  # E01-S179 — entrada única e contratos mediados; exige concessão por Cliente.
+  VITE_SSO_CENTRAL_MATERIAIS_ENABLED = "true"
+  VITE_SSO_CENTRAL_MATERIAIS_SITUACAO_ENABLED = "true"
+  VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED = "true"
+  VITE_SSO_LISTAS_MATERIAIS_ENABLED = "true"
+  VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED = "true"
+
   NODE_VERSION = "22"
   PNPM_VERSION = "9.0.0"
   # E01-S199: fila "Campo a conciliar" do Kanban. LIGADA em 24/11/2026 para a homologação —
