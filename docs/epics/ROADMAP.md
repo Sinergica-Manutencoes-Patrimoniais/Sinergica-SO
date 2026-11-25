@@ -29,8 +29,9 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner | Status | Spec |
+_15 concluídas no histórico · maior ID usado: E00-S30_| ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
+| E00-S30 | Destrave do Financeiro e do Comercial — 72 travas de banco abertas e 85 flags declaradas | Claude (sessão Lucas) | Implementada (2026-11-25) — migration 1872, 74 asserções pgTAP. Autorização do Lucas em 25/11 | — (chore, sem spec) |
 | E00-S25 | Workflow enxuto — ROADMAP compacto, Spec Kit, gates só nos afetados | Claude (sessão Lucas) | Em andamento | [spec](../../specs/E00-S25-workflow-enxuto/spec.md) |
 | E00-S09 | Grupos e permissões por módulo — fundação: schema, resolver, hook JWT, Edge Function de g… | Claude (sessão Lucas) | PR #9 aberto — db-tests (pgTAP) achou e… | [spec](../../specs/E00-S09-grupos-permissao-modulo/spec.md) |
 | E00-S10 | Grupos e permissões por módulo — UI administrativa (grupos, usuários) e gating de sidebar | Claude (sessão Lucas) | PR #9 aberto (bundle com E00-S09) — lin… | [spec](../../specs/E00-S10-grupos-permissao-ui/spec.md) |
