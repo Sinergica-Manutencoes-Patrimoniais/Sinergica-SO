@@ -1,5 +1,12 @@
 -- Teste sintético isolado; todos os registros são revertidos.
 begin;
+-- E00-S29: a migration 1872 abriu `comercial.sso_escrita_assessment_gate` na linha de base. Aberto,
+-- ele exige que todo UPDATE de `assessment_id` passe por `comercial.sso_vincular_assessment`
+-- (ADR-1014). Este teste prova outra guarda — `s181_assessment_cliente`/`sso_guardar_cliente_assessment`,
+-- a divergência de Cliente — e usa o UPDATE direto como veículo, inclusive para desvincular, caso
+-- que o comando mediado nem atende. Satisfazer o guard aqui trocaria o sujeito do teste, então ele
+-- declara o gate fechado dentro da própria transação (o `rollback` do fim desfaz).
+update comercial.sso_escrita_assessment_gate set habilitado = false where id;
 set local app.auvo_sync_write = 'true';
 select plan(9);
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
