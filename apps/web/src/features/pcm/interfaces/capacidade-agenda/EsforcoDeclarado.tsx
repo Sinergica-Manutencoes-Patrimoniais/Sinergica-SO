@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -31,7 +32,7 @@ export function EsforcoDeclarado({
     gcTime: 0,
   });
   const client = useQueryClient();
-  if (consulta.isPending) return <output>Carregando declaração…</output>;
+  if (consulta.isPending) return <AvisoCarregando>Carregando declaração…</AvisoCarregando>;
   if (consulta.isError)
     return (
       <p role="alert">

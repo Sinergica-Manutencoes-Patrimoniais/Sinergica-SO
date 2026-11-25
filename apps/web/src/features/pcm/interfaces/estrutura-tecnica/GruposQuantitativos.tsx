@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
@@ -105,7 +106,7 @@ function GruposQuantitativosContexto({
     permissao.data?.leitura === true && !permissao.isFetching && !permissao.isError,
   );
   if (permissao.isPending || (permissao.isFetching && !aberto))
-    return <output>Verificando acesso aos grupos…</output>;
+    return <AvisoCarregando>Verificando acesso aos grupos…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <section>

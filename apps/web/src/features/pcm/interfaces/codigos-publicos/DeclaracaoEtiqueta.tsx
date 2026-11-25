@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -164,7 +165,7 @@ function Conteudo({ userId, clienteId, tipo, ativoId }: Props) {
     }
   }
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando permissão de etiquetagem…</output>;
+    return <AvisoCarregando>Verificando permissão de etiquetagem…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

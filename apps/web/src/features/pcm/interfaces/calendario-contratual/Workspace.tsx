@@ -1,4 +1,4 @@
-import { Button } from "@sinergica/ui";
+import { AvisoCarregando, Button } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -105,7 +105,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     },
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso ao calendário…</output>;
+    return <AvisoCarregando>Verificando acesso ao calendário…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

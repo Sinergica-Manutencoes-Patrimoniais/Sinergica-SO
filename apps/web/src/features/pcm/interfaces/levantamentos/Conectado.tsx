@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
@@ -63,7 +63,7 @@ export function LevantamentosConectado(props: {
     queryFn: () => supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", props.clienteId),
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos levantamentos…</output>;
+    return <AvisoCarregando>Verificando acesso aos levantamentos…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <div role="alert">

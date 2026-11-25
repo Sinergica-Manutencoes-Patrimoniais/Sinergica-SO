@@ -1,4 +1,4 @@
-import { Button } from "@sinergica/ui";
+import { AvisoCarregando, Button } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../../lib/supabase-client";
 import { planoManutencaoKeys } from "../../application/plano-manutencao-queries";
@@ -43,7 +43,8 @@ export function QuestionarioAprovado({
     gcTime: 0,
     retry: false,
   });
-  if (consulta.isFetching) return <output>Carregando questionário histórico…</output>;
+  if (consulta.isFetching)
+    return <AvisoCarregando>Carregando questionário histórico…</AvisoCarregando>;
   if (consulta.isError)
     return (
       <div role="alert">

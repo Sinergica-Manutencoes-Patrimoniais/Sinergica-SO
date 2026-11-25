@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -179,7 +179,7 @@ function Conteudo({ userId, clienteId, localId, caminho }: Props) {
     getNextPageParam: (pagina, paginas) => (pagina.length === 50 ? paginas.length * 50 : undefined),
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso à composição…</output>;
+    return <AvisoCarregando>Verificando acesso à composição…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -103,7 +104,8 @@ export function OcorrenciasSemOs({
         : undefined;
     },
   });
-  if (q.isPending || q.isFetching) return <output>Carregando ocorrências…</output>;
+  if (q.isPending || q.isFetching)
+    return <AvisoCarregando>Carregando ocorrências…</AvisoCarregando>;
   if (q.isError)
     return (
       <p role="alert">

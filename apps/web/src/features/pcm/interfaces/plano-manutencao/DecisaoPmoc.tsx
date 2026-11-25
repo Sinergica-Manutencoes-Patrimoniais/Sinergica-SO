@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -202,7 +203,8 @@ function Conteudo({
     setPendente(p);
     envio.mutate(p);
   };
-  if (permissao.isPending || permissao.isFetching) return <p>Verificando autorização…</p>;
+  if (permissao.isPending || permissao.isFetching)
+    return <AvisoCarregando>Verificando autorização…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

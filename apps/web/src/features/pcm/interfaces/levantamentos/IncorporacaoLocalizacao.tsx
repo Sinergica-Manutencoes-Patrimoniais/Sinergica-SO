@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -180,7 +180,7 @@ function Conteudo({ userId, clienteId, loteId, chave, revisao, tipo }: Props) {
     }
   }
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando permissão de incorporação…</output>;
+    return <AvisoCarregando>Verificando permissão de incorporação…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

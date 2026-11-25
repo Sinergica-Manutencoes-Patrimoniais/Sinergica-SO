@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -111,7 +112,8 @@ function ComOrigem(props: Props) {
       return r;
     },
   });
-  if (q.isFetching || q.isPending) return <output>Conferindo origem do ciclo…</output>;
+  if (q.isFetching || q.isPending)
+    return <AvisoCarregando>Conferindo origem do ciclo…</AvisoCarregando>;
   if (q.isError || !q.data)
     return (
       <p role="alert">

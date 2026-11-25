@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -189,7 +190,7 @@ export function Conferencia({
     envio.mutate(p);
   };
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando permissão de conferência…</output>;
+    return <AvisoCarregando>Verificando permissão de conferência…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -71,7 +71,7 @@ function Conteudo({ userId, clienteId, tipo, ativoId }: Props) {
     },
   });
   if (consulta.isFetching || consulta.isPending)
-    return <output>Consultando evidências de uso…</output>;
+    return <AvisoCarregando>Consultando evidências de uso…</AvisoCarregando>;
   if (consulta.isError || !consulta.data)
     return (
       <p role="alert">
