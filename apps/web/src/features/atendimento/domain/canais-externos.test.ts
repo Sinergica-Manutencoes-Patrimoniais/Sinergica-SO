@@ -77,7 +77,9 @@ describe("validarConexaoMeta", () => {
   });
 
   it("recusa ID de conta que não é numérico", () => {
-    expect(() => validarConexaoMeta({ ...base, contaExternaId: "@sinergica" })).toThrow(/só número/);
+    expect(() => validarConexaoMeta({ ...base, contaExternaId: "@sinergica" })).toThrow(
+      /só número/,
+    );
   });
 
   it("recusa token, app secret e verify token curtos demais", () => {

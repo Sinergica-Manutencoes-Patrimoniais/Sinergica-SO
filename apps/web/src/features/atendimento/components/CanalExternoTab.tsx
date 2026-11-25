@@ -300,8 +300,8 @@ export function CanalExternoTab({
             )}
           </div>
           <p className="mt-2 text-micro text-ink-3">
-            Criar a conexão não a conecta. Depois de salvar, use “Conectar” para informar token,
-            app secret e token de verificação — eles vão para o cofre do servidor, nunca para esta
+            Criar a conexão não a conecta. Depois de salvar, use “Conectar” para informar token, app
+            secret e token de verificação — eles vão para o cofre do servidor, nunca para esta
             tabela.
           </p>
           {erro && (

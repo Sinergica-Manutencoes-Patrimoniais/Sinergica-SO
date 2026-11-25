@@ -2,13 +2,13 @@ import { Bot, History, MessageCircle, RefreshCw, Send, UserCheck } from "lucide-
 import { useEffect, useRef, useState } from "react";
 import type { WaTemplateItem } from "../domain/canais-externos";
 import { canalSuportaIa, labelCanal } from "../domain/conversas";
+import type { ConversaItem } from "../domain/conversas";
 import {
+  LIMITE_DE_BYTES_DO_DIRECT,
   bytesDoTexto,
   janelaDoDirectFechada,
-  LIMITE_DE_BYTES_DO_DIRECT,
   validarTextoDoDirect,
 } from "../domain/instagram-direct";
-import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
 import { formatarTotalCustoIaConversa, totalCustoIaConversa } from "../domain/mensagens";
 import type { MensagemRicaInput } from "../domain/mensagens";
@@ -246,8 +246,8 @@ export function ConversaChat({
 
       {temEscrita && janelaFechada && (
         <div className="mx-4 mb-2 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-body text-ink-2">
-          A janela de 24 h do Instagram fechou; a mensagem não será entregue. Ela só reabre quando
-          o contato escrever de novo.
+          A janela de 24 h do Instagram fechou; a mensagem não será entregue. Ela só reabre quando o
+          contato escrever de novo.
         </div>
       )}
 
@@ -269,9 +269,7 @@ export function ConversaChat({
                 enviar();
               }
             }}
-            placeholder={
-              ehDirect ? "Direct do Instagram: só texto." : "Escreva uma mensagem…"
-            }
+            placeholder={ehDirect ? "Direct do Instagram: só texto." : "Escreva uma mensagem…"}
             className="input min-h-[40px] flex-1 resize-none"
             rows={1}
           />

@@ -8,7 +8,11 @@ function direct(item: Record<string, unknown>, contaId = "17841400000000000") {
 describe("classificarEventosMeta — Instagram Direct", () => {
   it("classifica mensagem de texto com o IGSID do remetente como identidade da conversa", () => {
     const [evento] = classificarEventosMeta(
-      direct({ sender: { id: "123" }, recipient: { id: "17841400000000000" }, message: { mid: "m1", text: "oi" } }),
+      direct({
+        sender: { id: "123" },
+        recipient: { id: "17841400000000000" },
+        message: { mid: "m1", text: "oi" },
+      }),
     );
     expect(evento).toEqual({
       tipo: "texto",
@@ -132,7 +136,9 @@ describe("classificarEventosMeta — WhatsApp Cloud e payloads inválidos", () =
               value: {
                 metadata: { phone_number_id: "5511" },
                 contacts: [{ profile: { name: "Ana" } }],
-                messages: [{ id: "wam1", from: "5511999990000", type: "text", text: { body: "oi" } }],
+                messages: [
+                  { id: "wam1", from: "5511999990000", type: "text", text: { body: "oi" } },
+                ],
               },
             },
           ],

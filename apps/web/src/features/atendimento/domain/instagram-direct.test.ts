@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  LIMITE_DE_BYTES_DO_DIRECT,
   bytesDoTexto,
   janelaDoDirectFechada,
-  LIMITE_DE_BYTES_DO_DIRECT,
   validarTextoDoDirect,
 } from "./instagram-direct";
 
@@ -11,15 +11,15 @@ const horasAtras = (h: number) => new Date(AGORA.getTime() - h * 3600_000).toISO
 
 describe("janelaDoDirectFechada", () => {
   it("fica aberta com mensagem do contato dentro de 24 h", () => {
-    expect(
-      janelaDoDirectFechada([{ direcao: "entrada", createdAt: horasAtras(23) }], AGORA),
-    ).toBe(false);
+    expect(janelaDoDirectFechada([{ direcao: "entrada", createdAt: horasAtras(23) }], AGORA)).toBe(
+      false,
+    );
   });
 
   it("fecha quando a última mensagem do contato passou de 24 h", () => {
-    expect(
-      janelaDoDirectFechada([{ direcao: "entrada", createdAt: horasAtras(25) }], AGORA),
-    ).toBe(true);
+    expect(janelaDoDirectFechada([{ direcao: "entrada", createdAt: horasAtras(25) }], AGORA)).toBe(
+      true,
+    );
   });
 
   it("mensagem NOSSA não reabre a janela — só a do contato conta", () => {
