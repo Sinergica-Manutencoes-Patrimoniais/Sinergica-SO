@@ -6,6 +6,14 @@
 begin;
 select plan(17);
 
+-- As travas desta jornada são abertas em produção pela migration 1875 (destrave autorizado em
+-- 25/11/2026). A prova do caminho negado precisa delas fechadas: sem este bloco, os throws_ok de
+-- 55000 abaixo virariam falso verde. O fechamento é local à transação e revertido pelo rollback.
+update pcm.sso_conflito_webhook_chamado_gate set habilitado = false where id;
+update pcm.sso_consulta_conflitos_webhook_gate set habilitado = false where id;
+update pcm.sso_resolucao_conflito_webhook_gate set habilitado = false where id;
+update pcm.reconciliacao_outbox_gate set habilitado = false where id;
+
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
  ('18500000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 's185-conflito@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now());
 insert into config.usuarios (user_id, papel, nome, ativo) values ('18500000-0000-4000-8000-000000000001', 'superadmin', 'S185 Conflito', true);
