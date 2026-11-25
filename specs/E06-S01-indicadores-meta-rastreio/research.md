@@ -80,3 +80,19 @@ adiar a story inteira (perde a prova do modelo).
 **Decisão**: `MetaAdsPort` declara `hierarquia` e `numerosDiarios`. Nada mais.
 **Porquê**: "fora de escopo" é vinculante. Um método de escrita não usado é um convite a ser
 usado; o escopo do token pedido (`ads_read`) torna a decisão também operacional, não só de código.
+
+## D9 — Permissão relida ao vivo, não lida do token
+
+**Decisão**: toda policy e toda RPC desta story chamam
+`config.sso_acesso_atual(modulo, nivel)` (E00-S27, migration 1859) em vez de ler
+`auth.jwt() -> 'user_modulos'`.
+**Porquê**: o claim é um retrato do momento do login. Uma policy que confia só nele fica **cega à
+revogação** até o token expirar — quem foi desligado hoje de manhã continua lendo gasto de
+campanha com o token que já tem no bolso. A função relê `config.usuarios` +
+`resolver_permissoes_modulo` a cada avaliação e ainda confere que o papel do token bate com o do
+banco. Cobrado por `scripts/check-revogacao-coberta.mjs`, que foi quem pegou isto na CI.
+**Efeito colateral bem-vindo**: a função devolve `boolean`, nunca `NULL`. Some a armadilha do
+`NULL in (...)` → `NULL` → `if NULL then raise` que não dispara, documentada no corpo do PR.
+**Alternativas**: `coalesce(claim..., false)` (corrige o fail-open mas continua cego à revogação —
+descartado); replicar a lógica de releitura em cada policy (duplicação que envelhece mal —
+descartado em favor da função sancionada).

@@ -44,7 +44,7 @@ métrica por anúncio e dia. 2 telas novas, 1 Edge Function, 1 migration, 2 flag
 
 | Princípio | Como esta story cumpre |
 |---|---|
-| I — `enable` + `force row level security` em schema do domínio | As 8 tabelas nascem com `enable` + `force`, GRANT explícito e policy por `user_modulos ->> 'marketing'`. |
+| I — `enable` + `force row level security` em schema do domínio | As 8 tabelas nascem com `enable` + `force`, GRANT explícito e policy chamando `config.sso_acesso_atual` (releitura ao vivo, E00-S27). |
 | I — pgTAP com permitido **e** negado | `supabase/tests/marketing_indicadores_rls.test.sql` cobre leitura/escrita permitida, negada por falta de módulo, negada por só-leitura, e a negativa de `fn_receita_por_campanha` sem Comercial. |
 | I — segredo no Vault, nunca no client | Token em `vault` sob nome fixo `marketing_meta_access_token`; leitura só por `marketing.fn_token_meta()`, `grant execute` apenas a `service_role`. Nenhuma resposta da função devolve o token nem seu indício. |
 | I — Edge Function: CORS → auth → Zod → lógica → resposta sem stack | `marketing-sincronizar-meta` segue `_template/index.ts` literalmente; erro em `problem+json` com `reqId`. |
@@ -190,8 +190,11 @@ insert ... values (true, true)     -- gate ABERTO nesta migration (autorização
 `anuncios(conjunto_id)`, `entradas_anuncio(anuncio_id, ocorrido_em)`,
 `entradas_anuncio(oportunidade_id) where oportunidade_id is not null`.
 
-Policies (padrão de `db/rls.template.sql`, módulo `marketing`):
-`select` para `leitura`/`escrita`, `insert`/`update` para `escrita`, `delete` só `superadmin`.
+Policies: **releitura ao vivo**, não o claim do token —
+`config.sso_acesso_atual('marketing', 'leitura' | 'escrita')` (E00-S27/ADR-1691, cobrado por
+`scripts/check-revogacao-coberta.mjs`). Uma policy que lê `user_modulos` do JWT fica cega à
+revogação até o token expirar: quem foi desligado continuaria lendo gasto de campanha com o token
+que já tem no bolso. `delete` é só `superadmin`, e mesmo ele passa pela releitura.
 `sincronizacoes` é append-only: GRANT só `select, insert` (nem superadmin reescreve histórico).
 `sso_indicadores_meta_gate`: GRANT `select` a `authenticated`, nenhuma escrita.
 
@@ -199,10 +202,10 @@ RPCs:
 
 | Função | Segurança | Autorização | Papel |
 |---|---|---|---|
-| `marketing.fn_metricas_periodo(p_de date, p_ate date)` | `stable` (invoker) | RLS das tabelas | devolve o grão anúncio-dia agregado por anúncio com a hierarquia resolvida (campanha/conjunto/anúncio id+nome+situação). Recusa `p_ate < p_de` e janela > 366 dias com `22023`. |
-| `marketing.fn_receita_por_campanha(p_de date, p_ate date)` | `security definer` | exige `marketing` **e** `comercial` no claim, senão `42501` | por campanha: gasto, leads, oportunidades, contratos, receita em centavos. Única travessia Marketing↔Comercial (ADR-1699 §2). |
-| `marketing.fn_registrar_entrada_anuncio(p_token, p_nome, p_email, p_telefone, p_ocorrido_em)` | `security definer` | `marketing = escrita` | resolve token → anúncio; token ausente/desconhecido grava `anuncio_id` nulo (AC-14). |
-| `marketing.fn_vincular_oportunidade(p_entrada_id, p_oportunidade_id)` | `security definer` | `marketing = escrita` **e** `comercial` ∈ (leitura, escrita) | grava o vínculo; `unique` do banco garante AC-15. |
+| `marketing.fn_metricas_periodo(p_de date, p_ate date)` | `stable` (invoker) | RLS das tabelas (releitura ao vivo) | devolve o grão anúncio-dia agregado por anúncio com a hierarquia resolvida (campanha/conjunto/anúncio id+nome+situação). Recusa `p_ate < p_de` e janela > 366 dias com `22023`. |
+| `marketing.fn_receita_por_campanha(p_de date, p_ate date)` | `security definer` | `sso_acesso_atual` em `marketing` **e** `comercial`, senão `42501` | por campanha: gasto, leads, oportunidades, contratos, receita em centavos. Única travessia Marketing↔Comercial (ADR-1699 §2). |
+| `marketing.fn_registrar_entrada_anuncio(p_token, p_nome, p_email, p_telefone, p_ocorrido_em)` | `security definer` | `sso_acesso_atual('marketing','escrita')` | resolve token → anúncio; token ausente/desconhecido grava `anuncio_id` nulo (AC-14). |
+| `marketing.fn_vincular_oportunidade(p_entrada_id, p_oportunidade_id)` | `security definer` | `sso_acesso_atual` em `marketing`:escrita **e** `comercial`:leitura | grava o vínculo; `unique` do banco garante AC-15. |
 | `marketing.fn_token_meta()` | `security definer` | `grant execute` só a `service_role` | lê `vault.decrypted_secrets` com **nome fixo**, nunca por parâmetro. |
 
 `fn_metricas_periodo` devolve **uma linha por anúncio** com as somas do período (não o grão

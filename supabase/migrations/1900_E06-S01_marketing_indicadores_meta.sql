@@ -222,174 +222,129 @@ grant select, insert, update, delete on marketing.entradas_anuncio     to servic
 grant select, insert                 on marketing.sincronizacoes       to service_role;
 grant select                         on marketing.sso_indicadores_meta_gate to service_role;
 
--- Policies por permissão de módulo (ADR-0004). Escritas à mão, uma a uma: policy é segurança —
--- ler o arquivo tem que bastar para saber quem entra, sem executar um loop de `format()`.
+-- Policies por permissão de módulo (ADR-0004), com RELEITURA AO VIVO (E00-S27/ADR-1691).
+--
+-- `config.sso_acesso_atual(modulo, nivel)` em vez de ler `user_modulos` direto do JWT: o
+-- claim é um retrato do login, e uma policy que confia só nele fica CEGA à revogação até o
+-- token expirar — quem foi desligado continua lendo gasto de campanha com o token que já
+-- tem no bolso. A função relê `config.usuarios` + `resolver_permissoes_modulo` a cada
+-- avaliação, confere que o usuário está ativo e que o papel bate com o do token.
+-- Cobrado por `scripts/check-revogacao-coberta.mjs`.
+--
+-- Escritas à mão, uma a uma: policy é segurança — ler o arquivo tem que bastar para saber
+-- quem entra, sem executar um loop de `format()`.
 
 create policy "contas_anuncio_select" on marketing.contas_anuncio for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "contas_anuncio_insert" on marketing.contas_anuncio for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "contas_anuncio_update" on marketing.contas_anuncio for update to authenticated
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+create policy "contas_anuncio_delete" on marketing.contas_anuncio for delete to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
-create policy "contas_anuncio_delete" on marketing.contas_anuncio for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 create policy "campanhas_select" on marketing.campanhas for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "campanhas_insert" on marketing.campanhas for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "campanhas_update" on marketing.campanhas for update to authenticated
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+create policy "campanhas_delete" on marketing.campanhas for delete to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
-create policy "campanhas_delete" on marketing.campanhas for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 create policy "conjuntos_select" on marketing.conjuntos for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "conjuntos_insert" on marketing.conjuntos for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "conjuntos_update" on marketing.conjuntos for update to authenticated
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+create policy "conjuntos_delete" on marketing.conjuntos for delete to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
-create policy "conjuntos_delete" on marketing.conjuntos for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 create policy "anuncios_select" on marketing.anuncios for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "anuncios_insert" on marketing.anuncios for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "anuncios_update" on marketing.anuncios for update to authenticated
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+create policy "anuncios_delete" on marketing.anuncios for delete to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
-create policy "anuncios_delete" on marketing.anuncios for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 create policy "metricas_anuncio_dia_select" on marketing.metricas_anuncio_dia for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "metricas_anuncio_dia_insert" on marketing.metricas_anuncio_dia for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "metricas_anuncio_dia_update" on marketing.metricas_anuncio_dia for update to authenticated
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+create policy "metricas_anuncio_dia_delete" on marketing.metricas_anuncio_dia for delete to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
-create policy "metricas_anuncio_dia_delete" on marketing.metricas_anuncio_dia for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 create policy "links_rastreados_select" on marketing.links_rastreados for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "links_rastreados_insert" on marketing.links_rastreados for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "links_rastreados_update" on marketing.links_rastreados for update to authenticated
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+create policy "links_rastreados_delete" on marketing.links_rastreados for delete to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
-create policy "links_rastreados_delete" on marketing.links_rastreados for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 
 create policy "entradas_anuncio_select" on marketing.entradas_anuncio for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "entradas_anuncio_insert" on marketing.entradas_anuncio for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "entradas_anuncio_update" on marketing.entradas_anuncio for update to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  using (config.sso_acesso_atual('marketing', 'escrita'))
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
 create policy "entradas_anuncio_delete" on marketing.entradas_anuncio for delete to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
-
--- Policies literais para o lint (`CREATE POLICY` com GRANT) enxergar as duas tabelas restantes.
-create policy "sincronizacoes_select" on marketing.sincronizacoes for select to authenticated
+  -- Apagar dado de plataforma é só superadmin. O `and` não é redundante: o papel vem
+  -- do token, a confirmação de que ele ainda vale vem do banco.
   using (
     auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
+    and config.sso_acesso_atual('marketing', 'escrita')
   );
+
+create policy "sincronizacoes_select" on marketing.sincronizacoes for select to authenticated
+  using (config.sso_acesso_atual('marketing', 'leitura'));
 create policy "sincronizacoes_insert" on marketing.sincronizacoes for insert to authenticated
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-  );
+  with check (config.sso_acesso_atual('marketing', 'escrita'));
+-- O gate da jornada é leitura pública entre autenticados: não é dado, é configuração de
+-- alcance, e a tela precisa dele para decidir se se anuncia como não ativada.
 create policy "sso_indicadores_meta_gate_select" on marketing.sso_indicadores_meta_gate
   for select to authenticated using (true);
 
@@ -465,16 +420,13 @@ begin
     raise exception 'periodo_invalido' using errcode = '22023';
   end if;
   -- AC-17: dado de receita do Comercial não vaza por caminho do Marketing.
-  -- `coalesce(..., false)` NAO e defensivo decorativo: um claim AUSENTE produz NULL, `NULL in
-  -- (...)` produz NULL, e `if NULL then raise` NAO dispara. Sem o coalesce, quem nao tem o
-  -- modulo passaria direto — fail-OPEN silencioso. Achado pelo pgTAP desta story (caso negado).
-  if not coalesce(
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or (
-      auth.jwt() -> 'user_modulos' ->> 'marketing' in ('leitura', 'escrita')
-      and auth.jwt() -> 'user_modulos' ->> 'comercial' in ('leitura', 'escrita')
-    ),
-    false
+  -- Releitura ao vivo (E00-S27/ADR-1691), não o claim do token: a RPC é tão sensível quanto a
+  -- policy, e quem foi revogado não pode continuar lendo com o token que já tem. De quebra, a
+  -- função devolve boolean — some a armadilha do `NULL in (...)`, que produzia NULL e fazia
+  -- `if NULL then raise` NÃO disparar (fail-open silencioso, achado pelo pgTAP do caso negado).
+  if not (
+    config.sso_acesso_atual('marketing', 'leitura')
+    and config.sso_acesso_atual('comercial', 'leitura')
   ) then
     raise exception 'sem_permissao' using errcode = '42501';
   end if;
@@ -538,14 +490,11 @@ declare
   v_link marketing.links_rastreados%rowtype;
   v_id uuid;
 begin
-  -- `coalesce(..., false)` NAO e defensivo decorativo: um claim AUSENTE produz NULL, `NULL in
-  -- (...)` produz NULL, e `if NULL then raise` NAO dispara. Sem o coalesce, quem nao tem o
-  -- modulo passaria direto — fail-OPEN silencioso. Achado pelo pgTAP desta story (caso negado).
-  if not coalesce(
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita',
-    false
-  ) then
+  -- Releitura ao vivo (E00-S27/ADR-1691), não o claim do token: a RPC é tão sensível quanto a
+  -- policy, e quem foi revogado não pode continuar lendo com o token que já tem. De quebra, a
+  -- função devolve boolean — some a armadilha do `NULL in (...)`, que produzia NULL e fazia
+  -- `if NULL then raise` NÃO disparar (fail-open silencioso, achado pelo pgTAP do caso negado).
+  if not config.sso_acesso_atual('marketing', 'escrita') then
     raise exception 'sem_permissao' using errcode = '42501';
   end if;
 
@@ -581,16 +530,13 @@ as $$
 begin
   -- Vincular toca os dois contextos: escrever no Marketing exige escrita lá; apontar para uma
   -- oportunidade exige, no mínimo, poder vê-la no Comercial.
-  -- `coalesce(..., false)` NAO e defensivo decorativo: um claim AUSENTE produz NULL, `NULL in
-  -- (...)` produz NULL, e `if NULL then raise` NAO dispara. Sem o coalesce, quem nao tem o
-  -- modulo passaria direto — fail-OPEN silencioso. Achado pelo pgTAP desta story (caso negado).
-  if not coalesce(
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or (
-      auth.jwt() -> 'user_modulos' ->> 'marketing' = 'escrita'
-      and auth.jwt() -> 'user_modulos' ->> 'comercial' in ('leitura', 'escrita')
-    ),
-    false
+  -- Releitura ao vivo (E00-S27/ADR-1691), não o claim do token: a RPC é tão sensível quanto a
+  -- policy, e quem foi revogado não pode continuar lendo com o token que já tem. De quebra, a
+  -- função devolve boolean — some a armadilha do `NULL in (...)`, que produzia NULL e fazia
+  -- `if NULL then raise` NÃO disparar (fail-open silencioso, achado pelo pgTAP do caso negado).
+  if not (
+    config.sso_acesso_atual('marketing', 'escrita')
+    and config.sso_acesso_atual('comercial', 'leitura')
   ) then
     raise exception 'sem_permissao' using errcode = '42501';
   end if;
