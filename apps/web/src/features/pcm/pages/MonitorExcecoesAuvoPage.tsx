@@ -7,7 +7,7 @@
 //
 // SÓ LEITURA nesta fatia: reprocessar uma falha é ação (escrita, auditoria, idempotência) e fica
 // para a fatia seguinte — ver tasks.md. Botão que não faz nada seria pior que botão nenhum.
-import { DataTable } from "@sinergica/ui";
+import { DataTable, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -112,10 +112,12 @@ export function MonitorExcecoesAuvoPage() {
         </output>
       ) : null}
 
-      {lista.length > 0 || (ligada && clienteId && excecoes.isPending) ? (
+      {ligada && clienteId && excecoes.isPending ? <Skeleton className="h-4 w-48" /> : null}
+
+      {lista.length > 0 ? (
         <div className="rounded-lg border border-line">
           <DataTable
-            carregando={excecoes.isPending}
+            legenda="Exceções do Auvo em T−24 do Cliente selecionado"
             itens={lista}
             chaveLinha={(excecao) => `${excecao.tipo}-${excecao.osId}`}
             vazio="Nenhuma exceção do Auvo neste Cliente."
@@ -125,13 +127,12 @@ export function MonitorExcecoesAuvoPage() {
                 cabecalho: "Exceção",
                 render: (excecao) => rotuloTipoExcecao(excecao.tipo),
               },
-              { chave: "cliente", cabecalho: "Cliente", render: (excecao) => excecao.clienteNome },
               {
-                chave: "os",
-                cabecalho: "OS",
-                cabecalhoLinha: true,
-                render: (excecao) => excecao.osNumero,
+                chave: "cliente",
+                cabecalho: "Cliente",
+                render: (excecao) => excecao.clienteNome,
               },
+              { chave: "os", cabecalho: "OS", render: (excecao) => excecao.osNumero },
               {
                 chave: "visita",
                 cabecalho: "Visita",

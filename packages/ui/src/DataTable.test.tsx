@@ -27,6 +27,33 @@ describe("DataTable — E00-S15 AC-5", () => {
     expect(screen.getByText("100")).toBeInTheDocument();
   });
 
+  // E01-S201: a migração do monitor de exceções para cá não podia perder o `<caption>` sr-only
+  // que a tabela manual tinha. Sem legenda, nenhum caption é emitido — tabela que não pede.
+  it("emite a legenda como caption só para leitor de tela", () => {
+    const { container, rerender } = render(
+      <DataTable
+        colunas={colunas}
+        itens={[{ id: "1", nome: "Cliente A", valor: 100 }]}
+        chaveLinha={(l) => l.id}
+        vazio="Nada aqui"
+        legenda="Exceções do Auvo do Cliente selecionado"
+      />,
+    );
+    const caption = container.querySelector("caption");
+    expect(caption).toHaveTextContent("Exceções do Auvo do Cliente selecionado");
+    expect(caption).toHaveClass("sr-only");
+
+    rerender(
+      <DataTable
+        colunas={colunas}
+        itens={[{ id: "1", nome: "Cliente A", valor: 100 }]}
+        chaveLinha={(l) => l.id}
+        vazio="Nada aqui"
+      />,
+    );
+    expect(container.querySelector("caption")).toBeNull();
+  });
+
   it("preserva o cabeçalho da linha quando solicitado", () => {
     render(
       <DataTable
