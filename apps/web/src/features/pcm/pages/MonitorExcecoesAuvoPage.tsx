@@ -7,8 +7,8 @@
 //
 // SÓ LEITURA nesta fatia: reprocessar uma falha é ação (escrita, auditoria, idempotência) e fica
 // para a fatia seguinte — ver tasks.md. Botão que não faz nada seria pior que botão nenhum.
-import { DataTable, Skeleton } from "@sinergica/ui";
-import { useQuery } from "@tanstack/react-query";
+import { DataTable } from "@sinergica/ui";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { flagLigada } from "../../../config/flags-sso";
@@ -54,6 +54,10 @@ export function MonitorExcecoesAuvoPage() {
     enabled: Boolean(ligada && user?.id && clienteId),
     retry: false,
     staleTime: 30_000,
+    // E00-S29 — trocar de Cliente cria chave nova. Sem isto a tabela caía para vazio antes de
+    // encher de novo. O `signal` acima já cancela a consulta anterior, então o resultado
+    // mostrado corresponde sempre ao último Cliente escolhido.
+    placeholderData: keepPreviousData,
   });
 
   const lista = excecoes.data ?? [];
@@ -112,11 +116,15 @@ export function MonitorExcecoesAuvoPage() {
         </output>
       ) : null}
 
-      {ligada && clienteId && excecoes.isPending ? <Skeleton className="h-4 w-48" /> : null}
-
-      {lista.length > 0 ? (
+      {/* E00-S29 — antes havia um <Skeleton className="h-4 w-48"> solto acima: uma barrinha
+          fina onde ia nascer uma tabela de oito colunas, que contradizia a regra do próprio
+          primitivo ("forma do conteúdo real, nunca spinner") e fazia o layout saltar quando a
+          tabela chegava. O `carregando` do DataTable já desenha linhas fantasma na largura real
+          das colunas — é a forma certa, e já vem com o anti-flash embutido. */}
+      {lista.length > 0 || excecoes.isPending ? (
         <div className="rounded-lg border border-line">
           <DataTable
+            carregando={excecoes.isPending}
             legenda="Exceções do Auvo em T−24 do Cliente selecionado"
             itens={lista}
             chaveLinha={(excecao) => `${excecao.tipo}-${excecao.osId}`}
