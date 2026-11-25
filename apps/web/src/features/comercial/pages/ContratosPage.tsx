@@ -1,7 +1,16 @@
 /** Lista de contratos comerciais (E03-S07, task 7). Ativar/encerrar passam pelas RPCs atômicas —
  * esta página só oferece os botões; a guarda real (piso, vigência, unicidade) está no banco. */
 
-import { Badge, Button, Card, EmptyState, Field, Input, Skeleton } from "@sinergica/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Input,
+  Skeleton,
+  useCargaVisivel,
+} from "@sinergica/ui";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useContas } from "../application/comercial-queries";
@@ -76,9 +85,6 @@ export function ContratosPage() {
     );
   }
 
-  if (contratosQuery.isPending) {
-    return <Skeleton className="h-4 w-40" />;
-  }
   if (contratosQuery.error) {
     return (
       <Card>
@@ -91,6 +97,7 @@ export function ContratosPage() {
     );
   }
 
+  const mostrarEsqueleto = useCargaVisivel(contratosQuery.isPending);
   const contratos = contratosQuery.data ?? [];
   const nomePorConta = new Map((contasQuery.data ?? []).map((c) => [c.id, c.nome]));
 
@@ -109,7 +116,18 @@ export function ContratosPage() {
         </Card>
       )}
 
-      {contratos.length === 0 ? (
+      {/* E00-S29 — o título e a descrição ficam SEMPRE montados; antes a página inteira era
+          substituída por uma barrinha de esqueleto. O esqueleto agora cobre só a lista, e passa
+          pelo anti-flash: consulta rápida não chega a mostrá-lo. */}
+      {mostrarEsqueleto ? (
+        <Card>
+          <div className="flex flex-col gap-3 p-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </Card>
+      ) : contratos.length === 0 ? (
         <EmptyState titulo="Nenhum contrato ainda">
           Contratos nascem de uma proposta aceita — vá até o editor de proposta da oportunidade e
           clique em "Gerar contrato".

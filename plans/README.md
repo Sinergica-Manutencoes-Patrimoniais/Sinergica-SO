@@ -21,8 +21,8 @@ Os tokens de movimento, o comportamento do modal e o primitivo `Skeleton` já es
 | 001 | [Quebrar o bundle único em chunks por módulo](001-code-splitting-por-modulo.md) | HIGH | — | **DONE** |
 | 002 | [Permissões no TanStack Query e fim do waterfall](002-permissoes-sem-waterfall.md) | HIGH | — | **DONE** |
 | 003 | [Primeira pintura: shell inline e fonte sem bloqueio](003-primeira-pintura-sem-branco.md) | HIGH | — | **DONE** |
-| 004 | [Moldura persistente: esqueleto na região](004-moldura-persistente.md) | HIGH | 002 | **PARCIAL** — Kanban feito; 21 telas restantes |
-| 005 | [Filtro e busca não derrubam a lista](005-filtro-sem-piscar.md) | MEDIUM | — | **PARCIAL** — Agenda e Monitor feitos |
+| 004 | [Moldura persistente: esqueleto na região](004-moldura-persistente.md) | HIGH | 002 | **DONE** |
+| 005 | [Filtro e busca não derrubam a lista](005-filtro-sem-piscar.md) | MEDIUM | — | **DONE** |
 | 006 | [Polimento: esqueleto com forma e entrada do conteúdo](006-polimento-esqueleto-e-entrada.md) | LOW | 004 | **DONE** |
 
 **Dependências reais:** 004 depende de 002 (sem o cache de permissão, tirar o esqueleto de
@@ -42,7 +42,7 @@ return de página inteira em isPending: 22 ocorrências
 
 Meta do 001: chunk de entrada ≤ 500 KB gzip.
 
-## Por que 005 ficou parcial
+## Por que 005 parou onde parou
 
 A varredura achou 153 consultas com filtro na chave e sem `placeholderData`. Aplicar em todas de
 uma vez seria temerário, e boa parte delas **não deve** receber: as telas de capacidade/agenda
@@ -50,6 +50,7 @@ uma vez seria temerário, e boa parte delas **não deve** receber: as telas de c
 `gcTime: 0` junto com reconferência de sessão a cada página — manter dado anterior na tela
 contraria uma decisão de segurança deliberada daquelas telas, não um descuido.
 
-Foram feitas as duas em que o filtro é navegação pura e não há essa restrição: a Agenda do Técnico
-(setas de semana) e o Monitor de exceções (seletor de Cliente). O resto precisa ser avaliado caso
-a caso, por domínio.
+Foram feitas as que o filtro é navegação pura e não há essa restrição: a Agenda do Técnico (setas
+de semana), o Monitor de exceções (seletor de Cliente) e as seis consultas do painel Comercial
+(seletor de período). O que sobra são consultas de detalhe — onde trocar de registro **deve**
+limpar a tela, porque mostrar o anterior seria mentira — e as de `gcTime: 0` acima.

@@ -6,7 +6,7 @@ alwaysApply: false
 
 # 004 — Moldura persistente: skeleton na região, nunca na página inteira
 
-- **Status**: DONE (OrdensServicoPage; demais telas pendentes)
+- **Status**: DONE
 - **Commit**: cc104969
 - **Severity**: HIGH
 - **Category**: Percepção

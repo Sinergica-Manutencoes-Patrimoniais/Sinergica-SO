@@ -6,7 +6,7 @@ alwaysApply: false
 
 # 005 — Filtro e busca não derrubam a lista para vazio
 
-- **Status**: PARCIAL (Agenda do Técnico e Monitor; demais pendentes)
+- **Status**: DONE (restam só as consultas com `gcTime: 0`, que não devem receber)
 - **Commit**: cc104969
 - **Severity**: MEDIUM
 - **Category**: Percepção

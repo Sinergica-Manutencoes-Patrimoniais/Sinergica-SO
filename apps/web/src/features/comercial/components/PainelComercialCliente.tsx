@@ -5,7 +5,7 @@
  * página do PCM só monta o componente e passa o `clienteId`, que é a Conta compartilhada
  * (ADR-0020). */
 
-import { Badge, Button, Card, EmptyState, Skeleton } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Skeleton, useCargaVisivel } from "@sinergica/ui";
 import { ClipboardList, FileText, MessageCircle, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -77,10 +77,6 @@ export function PainelComercialCliente({
     );
   }
 
-  if (oportunidadesQuery.isPending) {
-    return <Skeleton className="h-4 w-40" />;
-  }
-
   const erro = oportunidadesQuery.error ?? etapasQuery.error;
   if (erro) {
     return (
@@ -108,6 +104,7 @@ export function PainelComercialCliente({
   }
 
   const levantamentos = levantamentosQuery.data ?? [];
+  const mostrarEsqueleto = useCargaVisivel(oportunidadesQuery.isPending);
 
   return (
     <div className="space-y-3">
@@ -121,7 +118,16 @@ export function PainelComercialCliente({
         )}
       </div>
 
-      {oportunidades.length === 0 ? (
+      {/* E00-S29 — o título e o botão "Nova oportunidade" ficam SEMPRE montados; antes o painel
+          inteiro virava uma barrinha de esqueleto. Agora só a lista troca, com anti-flash. */}
+      {mostrarEsqueleto ? (
+        <Card>
+          <div className="flex flex-col gap-3 p-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </Card>
+      ) : oportunidades.length === 0 ? (
         // Conta sem oportunidade é o caso comum (as 49 contas vivas nasceram antes do módulo) —
         // estado vazio explicativo, nunca erro.
         <EmptyState titulo="Nenhuma oportunidade nesta conta">
