@@ -7,6 +7,11 @@
 -- responsabilidade é da `sinergica` (lista de responsabilidade do Cliente não gera faturável),
 -- e a revisão trabalha sobre a revisão exata da declaração, nunca sobre uma leitura velha.
 begin;
+-- E00-S29: a migration 1872 abriu estes gates na linha de base do banco. As asserções abaixo
+-- provam o comportamento de gate FECHADO, então o teste declara aqui, dentro da própria
+-- transação, o estado de que precisa (o `rollback` do fim desfaz). Onde o teste reabre o gate
+-- mais adiante, a abertura continua valendo.
+update financeiro.sso_material_declaracao_gate set habilitado = false where id;
 select plan(15);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
