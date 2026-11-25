@@ -257,11 +257,10 @@ _0 concluídas no histórico · maior ID usado: E07-S00_
 _0 concluídas no histórico · maior ID usado: E08-S00_
 
 ### E09 — Área do Cliente (Portal do Cliente / Portal do Síndico) |
-_10 concluídas no histórico · maior ID usado: E09-S11_
+_10 concluídas no histórico · maior ID usado: E09-S12_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
-| E09-S11 | Deploy separado do portal | Codex | Código/build isolado concluído; deploy… | [spec](../../specs/E09-S11-portal-deploy-separado/design.md) |
 
 ## Como abrir uma nova story
 
