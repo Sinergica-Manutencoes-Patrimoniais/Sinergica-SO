@@ -1,5 +1,5 @@
--- E01-S196 / migration 1872 — a contingência Auvo precisa ser autorizável por quem NÃO é
--- superadmin. Antes da 1872 ela era negada para todo mundo, porque `config.sso_acoes` tinha a
+-- E01-S196 / migration 1876 — a contingência Auvo precisa ser autorizável por quem NÃO é
+-- superadmin. Antes da 1876 ela era negada para todo mundo, porque `config.sso_acoes` tinha a
 -- linha e `config.sso_acao_modulos` não — e `sso_autorizar_acao` lê a elegibilidade da segunda.
 -- O teste prova pelo par: `plano.gerir` e `execucao.contingencia_auvo` são ambas individuais, de
 -- módulo `pcm`/`escrita`, concedidas ao mesmo usuário no mesmo Cliente. Se uma passa e a outra
