@@ -48,3 +48,11 @@ E01-S167, E01-S171, E01-S170 antes da integração. Setup e testes de persistên
 ## Parallel Opportunities and Terra Strategy
 
 Testes de domínio e application/pgTAP em arquivos distintos podem ser preparados simultaneamente depois da fundação. Não paralelizar migrations nem alterações no mesmo gateway/domain/Workspace entre US. Implementar uma US e provar seus AC antes da próxima; fixtures isolam dependências sem declarar integração concluída. Atualizar glossário para termos introduzidos conforme índice global, e graphify após código; apenas humano/@devops fecha PR/deploy. Fora do escopo: Estoque/ERP completo; conferir fisicamente material do cliente obrigatoriamente; inventar unidade/produto; tratar compra como despesa/reembolso.
+
+## Continuação 25/11 — entrada única
+- [x] T017 [US3] Testar seleção/isolamento e menu em `MateriaisAquisicoesPage.test.tsx` e `navegacao-sso.test.ts` (AC-7, AC-8).
+- [x] T018 [US3] Implementar `pages/MateriaisAquisicoesPage.tsx` reutilizando Central e contratos de Cliente (AC-7, AC-8).
+- [x] T019 [US3] Integrar menu/HomePage com lazy e preservar contexto da OS (AC-7, AC-8).
+
+- [x] T020 [US3] Filtro dos sete estados e ativação de cinco gates em `1894_E01-S179_entrada_materiais_aquisicoes.sql` (AC-7, AC-8).
+- [x] T021 [US3] Testes pgTAP e regressão de gate fechado com estado transacional explícito (AC-7, AC-8).

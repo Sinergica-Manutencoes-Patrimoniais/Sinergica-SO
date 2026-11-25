@@ -17,6 +17,7 @@ import { NAVEGACAO_SSO } from "./navegacao-sso";
 
 /** Toda view de PCM que já teve entrada de menu própria em alguma versão publicada. */
 export const VIEWS_LEGADAS: readonly PcmView[] = [
+  "materiais-aquisicoes",
   "dashboard",
   "clientes",
   "cliente-grupos",
@@ -62,6 +63,7 @@ export const VIEWS_LEGADAS: readonly PcmView[] = [
  */
 export const ROTAS_LEGADAS: Readonly<Record<PcmView, PcmView>> = {
   dashboard: "dashboard",
+  "materiais-aquisicoes": "materiais-aquisicoes",
   clientes: "clientes",
   "cliente-grupos": "cliente-grupos",
   equipamentos: "equipamentos",

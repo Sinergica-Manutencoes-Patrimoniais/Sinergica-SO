@@ -1,4 +1,6 @@
 begin;
+-- 1894 abre a jornada; este caso prova explicitamente o estado fechado, só nesta transação.
+update pcm.sso_criacao_materiais_mediada_gate set habilitado=false where id;
 set local app.auvo_sync_write='true';
 create extension if not exists pgtap with schema extensions;
 set local search_path=extensions,public;

@@ -8,6 +8,8 @@
 -- As regras de transição foram derivadas do §8.1/§8.3 e estão documentadas no cabeçalho da
 -- migration; este arquivo é onde elas viram contrato.
 begin;
+-- 1894 abre a jornada; este caso prova explicitamente o estado fechado, só nesta transação.
+update pcm.sso_eventos_materiais_mediados_gate set habilitado=false where id;
 select plan(19);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values

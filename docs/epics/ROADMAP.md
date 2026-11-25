@@ -155,7 +155,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S176 | Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos | Terra | Em andamento — integridade de hierarquia (2026-10-26) | [spec](../../specs/E01-S176-estrutura-tecnica-grupos/spec.md) |
 | E01-S177 | Código público protegido, aliases e política de Equipment Auvo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S177-codigos-publicos-alias/spec.md) |
 | E01-S178 | Levantamentos de planilha/Auvo e aprovação PCM em staging | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S178-levantamentos-staging-aprovacao/spec.md) |
-| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
+| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Codex (Lucas, 25/11) | Entrada única Materiais e Aquisições implementada; continuação de AC-7/AC-8 em validação | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
 | E01-S180 | Despesas previstas/realizadas por Visita | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S180-despesas-visita/spec.md) |
 | E01-S181 | Orçamento operacional canônico no Comercial | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S181-orcamentos-operacionais/spec.md) |
 | E01-S182 | Fila A Faturar e efetivação por origem única | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S182-faturaveis-origem/spec.md) |
@@ -167,7 +167,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
 | E01-S189 | Alcance dos sete escritores sem gate (orçamento, despesas, cobrança, grupos) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S189-alcance-escritores-sem-gate/spec.md) |
 
-| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | Claude (sessão Lucas) | **Desbloqueada em 2026-11-17** (respostas 26/27 do Fabrício) — pronta para implementar | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
+| E01-S190 | Onda Zero: navegação consolidada (Assessment, PMOC, Clientes e Estrutura) | Codex (Lucas, 25/11) | Pesquisa tipada e jornada 360 implementadas (tasks 11/12); PMOC mantém decisão pendente | [spec](../../specs/E01-S190-onda-zero-navegacao/spec.md) |
 | E01-S191 | Jornada vertical do piloto Guainumbi ponta a ponta, com evidência e rollback | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S191-piloto-vertical-guainumbi/spec.md) |
 | E01-S192 | Agenda com alocações e Preventivas com jornada visível (diagnóstico primeiro) | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S192-agenda-preventivas-visiveis/spec.md) |
 | E01-S193 | Backlog como escopo validado que antecede Chamado e OS | Claude (sessão Lucas) | Especificada (2026-11-17) — BL 002. Tier arquitetural (dado em produção) | [spec](../../specs/E01-S193-backlog-antecede-chamado/spec.md) |

@@ -28,6 +28,7 @@ describe("E01-S190 task 2 — extração sem troca de rótulo", () => {
     ]);
     expect(PCM_NAV.flatMap((g) => g.items.map((i) => i.label))).toEqual([
       "Dashboard",
+      "Materiais e Aquisições",
       "Chamados",
       "Inspeções",
       "Assessment",
@@ -221,4 +222,13 @@ describe("E01-S190 task 9 — Assessment deixa de ser módulo (ADR-1697)", () =>
     }
     for (const view of VIEWS_CONSOLIDADAS) expect(alcancaveis.has(view)).toBe(true);
   });
+});
+
+it("E01-S179 AC-7: Materiais e Aquisições alcançável nas duas navegações", () => {
+  expect(PCM_NAV.flatMap((g) => g.items).some((i) => i.view === "materiais-aquisicoes")).toBe(true);
+  expect(
+    navegacaoVisivel(NAVEGACAO_SSO, tudoLiberado, SEM_CAPACIDADES).some(
+      (i) => i.view === "materiais-aquisicoes",
+    ),
+  ).toBe(true);
 });

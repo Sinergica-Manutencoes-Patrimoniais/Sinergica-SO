@@ -63,3 +63,17 @@ Futura implementação exige testes focados, `pnpm run eval:spec` (ver limitaç�
 ## Complexity Tracking
 
 Sem exceção à constituição. Estoque/ERP completo; conferir fisicamente material do cliente obrigatoriamente; inventar unidade/produto; tratar compra como despesa/reembolso.
+
+## Continuação 25/11 — área única (owner Codex)
+`MateriaisAquisicoesPage` no PCM reaproveita `CentralMateriais`, com seletor de Cliente pelos
+contratos existentes. Menu legado e consolidado recebem a entrada; HomePage carrega página por
+`lazy()` e Suspense local. Não cria schema de negócio nem regra de aquisição ou cobrança; ativação detalhada abaixo.
+Caminho: Trabalho → Materiais e Aquisições → Cliente → OS/lista → Orçamento da OS.
+AC-F5: menu acessível após deploy; consultas e escritas mantêm flags/gates/concessões já existentes.
+
+### Ativação necessária para o alcance (ADR-1702)
+Migration 1894 abre os cinco gates mediados de Central, listagem, criação, edição e eventos de
+materiais. Cinco flags já registradas são declaradas true no Netlify e false no exemplo local.
+A consulta por situação passa a aceitar os sete estados da 1843. Nenhuma concessão é alterada;
+material.gerir continua obrigatório por Cliente. Não publica no Portal nem altera integração Auvo.
+Retorno: fechar os cinco gates da migration e republicar com as cinco flags false.

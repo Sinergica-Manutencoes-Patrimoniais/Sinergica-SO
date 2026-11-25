@@ -89,6 +89,7 @@ import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-36
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
 import { CalendarioContratualWorkspace } from "../interfaces/calendario-contratual/Workspace";
+import { PesquisaGlobalEstrutura } from "../interfaces/estrutura/PesquisaGlobalEstrutura";
 import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { PendenciasTecnicasWorkspace } from "../interfaces/pendencias-tecnicas/Workspace";
 import { PlanoManutencaoWorkspace } from "../interfaces/plano-manutencao/Workspace";
@@ -591,13 +592,20 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <EstruturaClientePage
-          key={`${user.id}:${cliente.id}`}
-          cliente={cliente}
-          temEscrita={temEscrita}
-          userId={user.id}
-          onAbrirOs={abrirDetalheOs}
-        />
+        <>
+          <PesquisaGlobalEstrutura
+            usuario={user.id}
+            clienteId={cliente.id}
+            onAbrirOs={abrirDetalheOs}
+          />
+          <EstruturaClientePage
+            key={`${user.id}:${cliente.id}`}
+            cliente={cliente}
+            temEscrita={temEscrita}
+            userId={user.id}
+            onAbrirOs={abrirDetalheOs}
+          />
+        </>
       )}
 
       {aba === "sistemas" && user && (

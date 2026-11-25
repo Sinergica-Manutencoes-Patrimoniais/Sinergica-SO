@@ -10,7 +10,7 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { flagLigada } from "../config/flags-sso";
 import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
 import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
@@ -117,6 +117,12 @@ import type {
 import { usePermissoes } from "./permissoes-context";
 import { rotaInicialDaUrl } from "./rotas-legadas";
 import { useTheme } from "./theme-context";
+
+const MateriaisAquisicoesPage = lazy(() =>
+  import("../features/pcm/pages/MateriaisAquisicoesPage").then((m) => ({
+    default: m.MateriaisAquisicoesPage,
+  })),
+);
 
 // ─── componentes ─────────────────────────────────────────────────────────────
 
@@ -882,6 +888,24 @@ export function HomePage() {
                 podeAdministrar={podeAcessarNav("pcm", "escrita")}
                 faltando={["permissão de escrita no módulo PCM"]}
               />
+            ) : pcmView === "materiais-aquisicoes" ? (
+              <Suspense fallback={<output>Carregando Materiais e Aquisições…</output>}>
+                {user && (
+                  <MateriaisAquisicoesPage
+                    usuario={user.id}
+                    onAbrirOs={(clienteId, osId) => {
+                      if (!confirmarSaida()) return;
+                      setPcmView("ordens");
+                      setClienteSelecionado(clienteId);
+                      setOsDeepLink((atual) => ({
+                        osId,
+                        origemClienteId: clienteId,
+                        seq: (atual?.seq ?? 0) + 1,
+                      }));
+                    }}
+                  />
+                )}
+              </Suspense>
             ) : pcmView === "clientes" ? (
               clienteSelecionado ? (
                 // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),

@@ -69,3 +69,13 @@ Estoque/ERP completo; conferir fisicamente material do cliente obrigatoriamente;
 ## Traceability
 
 CT-022, CT-023. Ver matriz global em `docs/planejamento/plano-manutencao/matriz-rastreabilidade.md` e `tasks.md` local.
+
+## Continuação autorizada — 25/11/2026 (owner Codex)
+
+US3 — Entrada única Materiais e Aquisições (P1): o operador acessa a central pelo menu de Trabalho,
+seleciona Cliente e usa as consultas, disponibilidade, exceções e orçamentos da OS já existentes.
+- **AC-7:** Menu → Materiais e Aquisições → Cliente → lista/OS/orçamento preserva os caminhos anteriores.
+- **AC-8:** Trocar Cliente desmonta seleção e dados anteriores; sem permissão ou jornada desligada,
+  mostra recusa ou requisito de ativação e não consulta dados protegidos.
+Não introduz estoque, compra automática, nova regra financeira ou abertura de gate. Este recorte
+atualiza a restrição histórica de sessão “somente especificação” para implementação autorizada.
