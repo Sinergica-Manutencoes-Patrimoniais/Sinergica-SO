@@ -1,10 +1,11 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { z } from "zod";
 import { useState } from "react";
+import { z } from "zod";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { consolidarEsforcoVisitas } from "../../domain/consolidar-esforco-visitas";
 import { EsforcoDeclarado } from "./EsforcoDeclarado";
-import { flagLigada } from "../../../../config/flags-sso";
 
 const minutos = z.number().int().nonnegative().nullable();
 const linha = z.object({
@@ -40,32 +41,54 @@ export function OcorrenciasSemOs({
         throw new Error("Sessão alterada.");
       const { data, error } = await supabase
         .schema("pcm")
-        .rpc(referenciaProgramada ? "sso_ocorrencias_sem_os_referencia" : "sso_ocorrencias_sem_os_autorizadas", {
-          p_cliente_id: clienteId,
-          p_semana_inicio: semana,
-          p_apos_tipo: pageParam?.tipo ?? null,
-          p_apos_id: pageParam?.id ?? null,
-          p_limite: 50,
-        })
+        .rpc(
+          referenciaProgramada
+            ? "sso_ocorrencias_sem_os_referencia"
+            : "sso_ocorrencias_sem_os_autorizadas",
+          {
+            p_cliente_id: clienteId,
+            p_semana_inicio: semana,
+            p_apos_tipo: pageParam?.tipo ?? null,
+            p_apos_id: pageParam?.id ?? null,
+            p_limite: 50,
+          },
+        )
         .abortSignal(signal);
       if (error) throw error;
       const pagina = z.array(linha).max(50).parse(data);
       const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const inicio = new Date(`${semana}T00:00:00.000Z`);
-      if (!Number.isFinite(inicio.getTime()) || inicio.toISOString().slice(0, 10) !== semana || inicio.getUTCDay() !== 1)
+      if (
+        !Number.isFinite(inicio.getTime()) ||
+        inicio.toISOString().slice(0, 10) !== semana ||
+        inicio.getUTCDay() !== 1
+      )
         throw new Error("Semana inválida.");
       let anterior: Cursor = pageParam;
       for (const item of pagina) {
         const id = item.ocorrencia_id.toLowerCase();
         const vencimento = new Date(`${item.vencimento_original}T00:00:00.000Z`);
-        const referenciaTexto = referenciaProgramada ? item.data_referencia : item.vencimento_original;
+        const referenciaTexto = referenciaProgramada
+          ? item.data_referencia
+          : item.vencimento_original;
         const referencia = new Date(`${referenciaTexto}T00:00:00.000Z`);
-        if (!uuid.test(id) || !uuid.test(item.plano_id) || !uuid.test(item.rotina_id) || !uuid.test(item.alvo_id) ||
-          !Number.isFinite(vencimento.getTime()) || vencimento.toISOString().slice(0, 10) !== item.vencimento_original ||
-          !referenciaTexto || !Number.isFinite(referencia.getTime()) || referencia.toISOString().slice(0, 10) !== referenciaTexto ||
-          referencia.getTime() < inicio.getTime() || referencia.getTime() >= inicio.getTime() + 7 * 86_400_000 ||
+        if (
+          !uuid.test(id) ||
+          !uuid.test(item.plano_id) ||
+          !uuid.test(item.rotina_id) ||
+          !uuid.test(item.alvo_id) ||
+          !Number.isFinite(vencimento.getTime()) ||
+          vencimento.toISOString().slice(0, 10) !== item.vencimento_original ||
+          !referenciaTexto ||
+          !Number.isFinite(referencia.getTime()) ||
+          referencia.toISOString().slice(0, 10) !== referenciaTexto ||
+          referencia.getTime() < inicio.getTime() ||
+          referencia.getTime() >= inicio.getTime() + 7 * 86_400_000 ||
           (item.tipo === "calendario" && referenciaTexto !== item.vencimento_original) ||
-          (anterior !== null && (item.tipo < anterior.tipo || (item.tipo === anterior.tipo && id <= anterior.id.toLowerCase()))))
+          (anterior !== null &&
+            (item.tipo < anterior.tipo ||
+              (item.tipo === anterior.tipo && id <= anterior.id.toLowerCase())))
+        )
           throw new Error("Paginação ou ocorrência inválida.");
         anterior = { tipo: item.tipo, id };
       }
@@ -81,7 +104,8 @@ export function OcorrenciasSemOs({
         : undefined;
     },
   });
-  if (q.isPending || q.isFetching) return <output>Carregando ocorrências…</output>;
+  if (q.isPending || q.isFetching)
+    return <AvisoCarregando>Carregando ocorrências…</AvisoCarregando>;
   if (q.isError)
     return (
       <p role="alert">
@@ -93,11 +117,23 @@ export function OcorrenciasSemOs({
     );
   const linhas = q.data.pages.flat();
   const divergentes = linhas.some((linha, i) => {
-    if (i === 0) return false;
-    const anterior = linhas[i - 1]!;
-    return linha.tipo < anterior.tipo || (linha.tipo === anterior.tipo && linha.ocorrencia_id.toLowerCase() <= anterior.ocorrencia_id.toLowerCase());
+    const anterior = linhas[i - 1];
+    if (i === 0 || !anterior) return false;
+    return (
+      linha.tipo < anterior.tipo ||
+      (linha.tipo === anterior.tipo &&
+        linha.ocorrencia_id.toLowerCase() <= anterior.ocorrencia_id.toLowerCase())
+    );
   });
-  if (divergentes) return <p role="alert">As páginas de ocorrências divergiram; nenhum subtotal será apresentado. <button type="button" onClick={() => void q.refetch()}>Consultar novamente</button></p>;
+  if (divergentes)
+    return (
+      <p role="alert">
+        As páginas de ocorrências divergiram; nenhum subtotal será apresentado.{" "}
+        <button type="button" onClick={() => void q.refetch()}>
+          Consultar novamente
+        </button>
+      </p>
+    );
   let resumo: ReturnType<typeof consolidarEsforcoVisitas> | null = null;
   try {
     resumo = consolidarEsforcoVisitas(
@@ -116,7 +152,11 @@ export function OcorrenciasSemOs({
     <section aria-label="Ocorrências sem OS identificada">
       <h3>Ocorrências sem OS identificada</h3>
       <p>
-        {referenciaProgramada ? "Semana pela programação da Visita ou vencimento quando indisponível; calendário usa vencimento original." : "Semana por vencimento original, não por programação."} Estado de execução desconhecido; não somar ao subtotal das OS: consultas podem ter snapshots diferentes.
+        {referenciaProgramada
+          ? "Semana pela programação da Visita ou vencimento quando indisponível; calendário usa vencimento original."
+          : "Semana por vencimento original, não por programação."}{" "}
+        Estado de execução desconhecido; não somar ao subtotal das OS: consultas podem ter snapshots
+        diferentes.
       </p>
       {linhas.length === 0 ? (
         <p>Nenhuma candidata carregada; isso não prova demanda zero.</p>
@@ -131,10 +171,10 @@ export function OcorrenciasSemOs({
             {resumo.acompanhamentoMinutos} minutos de acompanhamento; já incluídos no interno.
           </p>
           {resumo.estimativasIncompletas > 0 && (
-            <p role="status">
+            <output>
               {resumo.estimativasIncompletas} fonte(s) com estimativa não informada; ausência não
               significa zero.
-            </p>
+            </output>
           )}
           <p>
             Origens pendentes: {resumo.origensPendentes}; conflitantes: {resumo.origensConflitantes}
@@ -147,13 +187,38 @@ export function OcorrenciasSemOs({
       <ul>
         {linhas.map((f) => (
           <li key={`${f.tipo}:${f.ocorrencia_id}`}>
-            {f.tipo} {f.ocorrencia_id} · vencimento {f.vencimento_original}{referenciaProgramada && f.data_referencia && <> · referência na agenda {f.data_referencia}</>} · execução desconhecida
-            {flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") && (f.tipo === "calendario" || flagLigada("VITE_SSO_ESFORCO_OCORRENCIA_VISITA_ENABLED")) && (
-              <>
-                <button type="button" onClick={() => setEditada(editada === `${f.tipo}:${f.ocorrencia_id}` ? null : `${f.tipo}:${f.ocorrencia_id}`)}>Declarar esforço da ocorrência</button>
-                {editada === `${f.tipo}:${f.ocorrencia_id}` && <EsforcoDeclarado key={`${f.tipo}:${f.ocorrencia_id}`} userId={userId} clienteId={clienteId} osId={f.ocorrencia_id} origemTipo={f.tipo === "visita" ? "ocorrencia_visita" : "ocorrencia"} />}
-              </>
-            )}
+            {f.tipo} {f.ocorrencia_id} · vencimento {f.vencimento_original}
+            {referenciaProgramada && f.data_referencia && (
+              <> · referência na agenda {f.data_referencia}</>
+            )}{" "}
+            · execução desconhecida
+            {flagLigada("VITE_SSO_ESFORCO_DECLARADO_ENABLED") &&
+              (f.tipo === "calendario" ||
+                flagLigada("VITE_SSO_ESFORCO_OCORRENCIA_VISITA_ENABLED")) && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditada(
+                        editada === `${f.tipo}:${f.ocorrencia_id}`
+                          ? null
+                          : `${f.tipo}:${f.ocorrencia_id}`,
+                      )
+                    }
+                  >
+                    Declarar esforço da ocorrência
+                  </button>
+                  {editada === `${f.tipo}:${f.ocorrencia_id}` && (
+                    <EsforcoDeclarado
+                      key={`${f.tipo}:${f.ocorrencia_id}`}
+                      userId={userId}
+                      clienteId={clienteId}
+                      osId={f.ocorrencia_id}
+                      origemTipo={f.tipo === "visita" ? "ocorrencia_visita" : "ocorrencia"}
+                    />
+                  )}
+                </>
+              )}
           </li>
         ))}
       </ul>

@@ -108,7 +108,11 @@ export async function criarRelatorioPdf(
     let restante = texto.trim();
     while (restante.length > 0) {
       let fim = Math.min(LARGURA_MAX_LINHA, restante.length);
-      while (fim > 1 && fonte.widthOfTextAtSize(restante.slice(0, fim), 10) > PAGINA_LARGURA - 2 * MARGEM_X) fim--;
+      while (
+        fim > 1 &&
+        fonte.widthOfTextAtSize(restante.slice(0, fim), 10) > PAGINA_LARGURA - 2 * MARGEM_X
+      )
+        fim--;
       if (fim < restante.length) {
         const espaco = restante.lastIndexOf(" ", fim);
         if (espaco > 0) fim = espaco;

@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
 import {
   BookOpen,
   ChevronLeft,
@@ -12,82 +12,10 @@ import {
 } from "lucide-react";
 import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { flagLigada } from "../config/flags-sso";
-import { AreaClienteAdminPage } from "../features/area-cliente/pages/AreaClienteAdminPage";
-import { AtendimentoConfigPage } from "../features/atendimento/pages/AtendimentoConfigPage";
-import { AtendimentoDashboardPage } from "../features/atendimento/pages/AtendimentoDashboardPage";
-import { AtendimentoInboxPage } from "../features/atendimento/pages/AtendimentoInboxPage";
-import { PainelComercialCliente } from "../features/comercial/components/PainelComercialCliente";
-import { OrcamentosDaOs } from "../features/comercial/interfaces/orcamento-operacional/OrcamentosDaOs";
-import { ConfigFunilPage as ComercialConfigFunilPage } from "../features/comercial/pages/ConfigFunilPage";
-import { ContasPage as ComercialContasPage } from "../features/comercial/pages/ContasPage";
-import { ContratosPage as ComercialContratosPage } from "../features/comercial/pages/ContratosPage";
-import { DashboardComercialPage as ComercialDashboardPage } from "../features/comercial/pages/DashboardComercialPage";
-import { FunilPage as ComercialFunilPage } from "../features/comercial/pages/FunilPage";
-import { ParametrosPrecoPage as ComercialParametrosPrecoPage } from "../features/comercial/pages/ParametrosPrecoPage";
 import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modulo";
-import { AtivacaoJornadasPage } from "../features/config/pages/AtivacaoJornadasPage";
-import { ConfigIaPage } from "../features/config/pages/ConfigIaPage";
-import { GruposPage } from "../features/config/pages/GruposPage";
-import { IntegracoesPage } from "../features/config/pages/IntegracoesPage";
-import { RelatorioGastoIaPage } from "../features/config/pages/RelatorioGastoIaPage";
-import { UsuariosPage } from "../features/config/pages/UsuariosPage";
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
-import { FinanceiroMockRouter } from "../features/financeiro/mock/FinanceiroMockRouter";
-import { CategoriasPage as FinanceiroCategoriasPage } from "../features/financeiro/pages/CategoriasPage";
-import { CobrancaPage as FinanceiroCobrancaPage } from "../features/financeiro/pages/CobrancaPage";
-import { CockpitFinanceiroPage as FinanceiroCockpitPage } from "../features/financeiro/pages/CockpitFinanceiroPage";
-import { ContasPagarPage as FinanceiroContasPagarPage } from "../features/financeiro/pages/ContasPagarPage";
-import { ContasPage as FinanceiroContasPage } from "../features/financeiro/pages/ContasPage";
-import { ContasReceberPage as FinanceiroContasReceberPage } from "../features/financeiro/pages/ContasReceberPage";
-import { ContratosPage as FinanceiroContratosPage } from "../features/financeiro/pages/ContratosPage";
-import { CustosPessoalPage as FinanceiroCustosPessoalPage } from "../features/financeiro/pages/CustosPessoalPage";
-import { DrePage as FinanceiroDrePage } from "../features/financeiro/pages/DrePage";
-import { FechamentoPage as FinanceiroFechamentoPage } from "../features/financeiro/pages/FechamentoPage";
-import { FinanceiroDashboardPage } from "../features/financeiro/pages/FinanceiroDashboardPage";
-import { ImportOfxPage as FinanceiroImportOfxPage } from "../features/financeiro/pages/ImportOfxPage";
-import { ImpostosPage as FinanceiroImpostosPage } from "../features/financeiro/pages/ImpostosPage";
-import { LancamentosPage as FinanceiroLancamentosPage } from "../features/financeiro/pages/LancamentosPage";
-import { OrcamentoPage as FinanceiroOrcamentoPage } from "../features/financeiro/pages/OrcamentoPage";
-import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/financeiro/pages/RentabilidadePage";
 import type { GuiaView } from "../features/guia/GuiaRouter";
-import { GuiaRouter } from "../features/guia/GuiaRouter";
-import { IndicadoresMetaPage } from "../features/marketing/interfaces/IndicadoresMetaPage";
-import { ReceitaPorCampanhaPage } from "../features/marketing/interfaces/ReceitaPorCampanhaPage";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
-import { CapacidadesWorkspace } from "../features/pcm/interfaces/capacidades-sso/Workspace";
-import { AgendaTecnicoPage } from "../features/pcm/pages/AgendaTecnicoPage";
-import { ApontamentoHorasPage } from "../features/pcm/pages/ApontamentoHorasPage";
-import { AssessmentPage } from "../features/pcm/pages/AssessmentPage";
-import {
-  EquipamentoCategoriasPage,
-  PalavrasChavePage,
-  SegmentosPage,
-} from "../features/pcm/pages/CatalogoSimplesPage";
-import { ClienteGruposPage } from "../features/pcm/pages/ClienteGruposPage";
-import { ConfigLocalizacaoAuvoPage } from "../features/pcm/pages/ConfigLocalizacaoAuvoPage";
-import { ConfigPriorizacaoPage } from "../features/pcm/pages/ConfigPriorizacaoPage";
-import { EquipamentosPage } from "../features/pcm/pages/EquipamentosPage";
-import { EquipesPage } from "../features/pcm/pages/EquipesPage";
-import { FerramentasPage } from "../features/pcm/pages/FerramentasPage";
-import { FerramentasPorTecnicoPage } from "../features/pcm/pages/FerramentasPorTecnicoPage";
-import { FuncionariosPage } from "../features/pcm/pages/FuncionariosPage";
-import { InspecoesPage } from "../features/pcm/pages/InspecoesPage";
-import { LaudosSpdaPage } from "../features/pcm/pages/LaudosSpdaPage";
-import { ListaClientesPage } from "../features/pcm/pages/ListaClientesPage";
-import { MarcacoesClientePage } from "../features/pcm/pages/MarcacoesClientePage";
-import { MonitorExcecoesAuvoPage } from "../features/pcm/pages/MonitorExcecoesAuvoPage";
-import { OrdensServicoPage } from "../features/pcm/pages/OrdensServicoPage";
-import { PcmDashboardPage } from "../features/pcm/pages/PcmDashboardPage";
-import { PmocPage } from "../features/pcm/pages/PmocPage";
-import { PreventivasPage } from "../features/pcm/pages/PreventivasPage";
-import { RelatorioClientePage } from "../features/pcm/pages/RelatorioClientePage";
-import { RelatorioDiarioPage } from "../features/pcm/pages/RelatorioDiarioPage";
-import { RelatorioPlanejamentoPage } from "../features/pcm/pages/RelatorioPlanejamentoPage";
-import { RoteirosEntrevistaPage } from "../features/pcm/pages/RoteirosEntrevistaPage";
-import { SistemasPage } from "../features/pcm/pages/SistemasPage";
-import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
-import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
-import { VisaoClientePage } from "../features/pcm/pages/VisaoClientePage";
 import { DashboardGeral } from "./DashboardGeral";
 import { useAuth } from "./auth-context";
 import { MODULOS, isModuloNegocio } from "./modulos";
@@ -122,6 +50,290 @@ const MateriaisAquisicoesPage = lazy(() =>
   import("../features/pcm/pages/MateriaisAquisicoesPage").then((m) => ({
     default: m.MateriaisAquisicoesPage,
   })),
+);
+
+// E00-S29 — páginas por módulo fora do caminho crítico; moldura preservada pelo Suspense.
+const AreaClienteAdminPage = lazy(() =>
+  import("../features/area-cliente/pages/AreaClienteAdminPage").then((m) => ({
+    default: m.AreaClienteAdminPage,
+  })),
+);
+const AtendimentoConfigPage = lazy(() =>
+  import("../features/atendimento/pages/AtendimentoConfigPage").then((m) => ({
+    default: m.AtendimentoConfigPage,
+  })),
+);
+const AtendimentoDashboardPage = lazy(() =>
+  import("../features/atendimento/pages/AtendimentoDashboardPage").then((m) => ({
+    default: m.AtendimentoDashboardPage,
+  })),
+);
+const AtendimentoInboxPage = lazy(() =>
+  import("../features/atendimento/pages/AtendimentoInboxPage").then((m) => ({
+    default: m.AtendimentoInboxPage,
+  })),
+);
+const PainelComercialCliente = lazy(() =>
+  import("../features/comercial/components/PainelComercialCliente").then((m) => ({
+    default: m.PainelComercialCliente,
+  })),
+);
+const OrcamentosDaOs = lazy(() =>
+  import("../features/comercial/interfaces/orcamento-operacional/OrcamentosDaOs").then((m) => ({
+    default: m.OrcamentosDaOs,
+  })),
+);
+const ComercialConfigFunilPage = lazy(() =>
+  import("../features/comercial/pages/ConfigFunilPage").then((m) => ({
+    default: m.ConfigFunilPage,
+  })),
+);
+const ComercialContasPage = lazy(() =>
+  import("../features/comercial/pages/ContasPage").then((m) => ({ default: m.ContasPage })),
+);
+const ComercialContratosPage = lazy(() =>
+  import("../features/comercial/pages/ContratosPage").then((m) => ({ default: m.ContratosPage })),
+);
+const ComercialDashboardPage = lazy(() =>
+  import("../features/comercial/pages/DashboardComercialPage").then((m) => ({
+    default: m.DashboardComercialPage,
+  })),
+);
+const ComercialFunilPage = lazy(() =>
+  import("../features/comercial/pages/FunilPage").then((m) => ({ default: m.FunilPage })),
+);
+const ComercialParametrosPrecoPage = lazy(() =>
+  import("../features/comercial/pages/ParametrosPrecoPage").then((m) => ({
+    default: m.ParametrosPrecoPage,
+  })),
+);
+const AtivacaoJornadasPage = lazy(() =>
+  import("../features/config/pages/AtivacaoJornadasPage").then((m) => ({
+    default: m.AtivacaoJornadasPage,
+  })),
+);
+const ConfigIaPage = lazy(() =>
+  import("../features/config/pages/ConfigIaPage").then((m) => ({ default: m.ConfigIaPage })),
+);
+const GruposPage = lazy(() =>
+  import("../features/config/pages/GruposPage").then((m) => ({ default: m.GruposPage })),
+);
+const IntegracoesPage = lazy(() =>
+  import("../features/config/pages/IntegracoesPage").then((m) => ({ default: m.IntegracoesPage })),
+);
+const RelatorioGastoIaPage = lazy(() =>
+  import("../features/config/pages/RelatorioGastoIaPage").then((m) => ({
+    default: m.RelatorioGastoIaPage,
+  })),
+);
+const UsuariosPage = lazy(() =>
+  import("../features/config/pages/UsuariosPage").then((m) => ({ default: m.UsuariosPage })),
+);
+const FinanceiroMockRouter = lazy(() =>
+  import("../features/financeiro/mock/FinanceiroMockRouter").then((m) => ({
+    default: m.FinanceiroMockRouter,
+  })),
+);
+const FinanceiroCategoriasPage = lazy(() =>
+  import("../features/financeiro/pages/CategoriasPage").then((m) => ({
+    default: m.CategoriasPage,
+  })),
+);
+const FinanceiroCobrancaPage = lazy(() =>
+  import("../features/financeiro/pages/CobrancaPage").then((m) => ({ default: m.CobrancaPage })),
+);
+const FinanceiroCockpitPage = lazy(() =>
+  import("../features/financeiro/pages/CockpitFinanceiroPage").then((m) => ({
+    default: m.CockpitFinanceiroPage,
+  })),
+);
+const FinanceiroContasPagarPage = lazy(() =>
+  import("../features/financeiro/pages/ContasPagarPage").then((m) => ({
+    default: m.ContasPagarPage,
+  })),
+);
+const FinanceiroContasPage = lazy(() =>
+  import("../features/financeiro/pages/ContasPage").then((m) => ({ default: m.ContasPage })),
+);
+const FinanceiroContasReceberPage = lazy(() =>
+  import("../features/financeiro/pages/ContasReceberPage").then((m) => ({
+    default: m.ContasReceberPage,
+  })),
+);
+const FinanceiroContratosPage = lazy(() =>
+  import("../features/financeiro/pages/ContratosPage").then((m) => ({ default: m.ContratosPage })),
+);
+const FinanceiroCustosPessoalPage = lazy(() =>
+  import("../features/financeiro/pages/CustosPessoalPage").then((m) => ({
+    default: m.CustosPessoalPage,
+  })),
+);
+const FinanceiroDrePage = lazy(() =>
+  import("../features/financeiro/pages/DrePage").then((m) => ({ default: m.DrePage })),
+);
+const FinanceiroFechamentoPage = lazy(() =>
+  import("../features/financeiro/pages/FechamentoPage").then((m) => ({
+    default: m.FechamentoPage,
+  })),
+);
+const FinanceiroDashboardPage = lazy(() =>
+  import("../features/financeiro/pages/FinanceiroDashboardPage").then((m) => ({
+    default: m.FinanceiroDashboardPage,
+  })),
+);
+const FinanceiroImportOfxPage = lazy(() =>
+  import("../features/financeiro/pages/ImportOfxPage").then((m) => ({ default: m.ImportOfxPage })),
+);
+const FinanceiroImpostosPage = lazy(() =>
+  import("../features/financeiro/pages/ImpostosPage").then((m) => ({ default: m.ImpostosPage })),
+);
+const FinanceiroLancamentosPage = lazy(() =>
+  import("../features/financeiro/pages/LancamentosPage").then((m) => ({
+    default: m.LancamentosPage,
+  })),
+);
+const FinanceiroOrcamentoPage = lazy(() =>
+  import("../features/financeiro/pages/OrcamentoPage").then((m) => ({ default: m.OrcamentoPage })),
+);
+const FinanceiroRentabilidadePage = lazy(() =>
+  import("../features/financeiro/pages/RentabilidadePage").then((m) => ({
+    default: m.RentabilidadePage,
+  })),
+);
+const GuiaRouter = lazy(() =>
+  import("../features/guia/GuiaRouter").then((m) => ({ default: m.GuiaRouter })),
+);
+const IndicadoresMetaPage = lazy(() =>
+  import("../features/marketing/interfaces/IndicadoresMetaPage").then((m) => ({
+    default: m.IndicadoresMetaPage,
+  })),
+);
+const ReceitaPorCampanhaPage = lazy(() =>
+  import("../features/marketing/interfaces/ReceitaPorCampanhaPage").then((m) => ({
+    default: m.ReceitaPorCampanhaPage,
+  })),
+);
+const CapacidadesWorkspace = lazy(() =>
+  import("../features/pcm/interfaces/capacidades-sso/Workspace").then((m) => ({
+    default: m.CapacidadesWorkspace,
+  })),
+);
+const AgendaTecnicoPage = lazy(() =>
+  import("../features/pcm/pages/AgendaTecnicoPage").then((m) => ({ default: m.AgendaTecnicoPage })),
+);
+const ApontamentoHorasPage = lazy(() =>
+  import("../features/pcm/pages/ApontamentoHorasPage").then((m) => ({
+    default: m.ApontamentoHorasPage,
+  })),
+);
+const AssessmentPage = lazy(() =>
+  import("../features/pcm/pages/AssessmentPage").then((m) => ({ default: m.AssessmentPage })),
+);
+const EquipamentoCategoriasPage = lazy(() =>
+  import("../features/pcm/pages/CatalogoSimplesPage").then((m) => ({
+    default: m.EquipamentoCategoriasPage,
+  })),
+);
+const PalavrasChavePage = lazy(() =>
+  import("../features/pcm/pages/CatalogoSimplesPage").then((m) => ({
+    default: m.PalavrasChavePage,
+  })),
+);
+const SegmentosPage = lazy(() =>
+  import("../features/pcm/pages/CatalogoSimplesPage").then((m) => ({ default: m.SegmentosPage })),
+);
+const ClienteGruposPage = lazy(() =>
+  import("../features/pcm/pages/ClienteGruposPage").then((m) => ({ default: m.ClienteGruposPage })),
+);
+const ConfigLocalizacaoAuvoPage = lazy(() =>
+  import("../features/pcm/pages/ConfigLocalizacaoAuvoPage").then((m) => ({
+    default: m.ConfigLocalizacaoAuvoPage,
+  })),
+);
+const ConfigPriorizacaoPage = lazy(() =>
+  import("../features/pcm/pages/ConfigPriorizacaoPage").then((m) => ({
+    default: m.ConfigPriorizacaoPage,
+  })),
+);
+const EquipamentosPage = lazy(() =>
+  import("../features/pcm/pages/EquipamentosPage").then((m) => ({ default: m.EquipamentosPage })),
+);
+const EquipesPage = lazy(() =>
+  import("../features/pcm/pages/EquipesPage").then((m) => ({ default: m.EquipesPage })),
+);
+const FerramentasPage = lazy(() =>
+  import("../features/pcm/pages/FerramentasPage").then((m) => ({ default: m.FerramentasPage })),
+);
+const FerramentasPorTecnicoPage = lazy(() =>
+  import("../features/pcm/pages/FerramentasPorTecnicoPage").then((m) => ({
+    default: m.FerramentasPorTecnicoPage,
+  })),
+);
+const FuncionariosPage = lazy(() =>
+  import("../features/pcm/pages/FuncionariosPage").then((m) => ({ default: m.FuncionariosPage })),
+);
+const InspecoesPage = lazy(() =>
+  import("../features/pcm/pages/InspecoesPage").then((m) => ({ default: m.InspecoesPage })),
+);
+const LaudosSpdaPage = lazy(() =>
+  import("../features/pcm/pages/LaudosSpdaPage").then((m) => ({ default: m.LaudosSpdaPage })),
+);
+const ListaClientesPage = lazy(() =>
+  import("../features/pcm/pages/ListaClientesPage").then((m) => ({ default: m.ListaClientesPage })),
+);
+const MarcacoesClientePage = lazy(() =>
+  import("../features/pcm/pages/MarcacoesClientePage").then((m) => ({
+    default: m.MarcacoesClientePage,
+  })),
+);
+const MonitorExcecoesAuvoPage = lazy(() =>
+  import("../features/pcm/pages/MonitorExcecoesAuvoPage").then((m) => ({
+    default: m.MonitorExcecoesAuvoPage,
+  })),
+);
+const OrdensServicoPage = lazy(() =>
+  import("../features/pcm/pages/OrdensServicoPage").then((m) => ({ default: m.OrdensServicoPage })),
+);
+const PcmDashboardPage = lazy(() =>
+  import("../features/pcm/pages/PcmDashboardPage").then((m) => ({ default: m.PcmDashboardPage })),
+);
+const PmocPage = lazy(() =>
+  import("../features/pcm/pages/PmocPage").then((m) => ({ default: m.PmocPage })),
+);
+const PreventivasPage = lazy(() =>
+  import("../features/pcm/pages/PreventivasPage").then((m) => ({ default: m.PreventivasPage })),
+);
+const RelatorioClientePage = lazy(() =>
+  import("../features/pcm/pages/RelatorioClientePage").then((m) => ({
+    default: m.RelatorioClientePage,
+  })),
+);
+const RelatorioDiarioPage = lazy(() =>
+  import("../features/pcm/pages/RelatorioDiarioPage").then((m) => ({
+    default: m.RelatorioDiarioPage,
+  })),
+);
+const RelatorioPlanejamentoPage = lazy(() =>
+  import("../features/pcm/pages/RelatorioPlanejamentoPage").then((m) => ({
+    default: m.RelatorioPlanejamentoPage,
+  })),
+);
+const RoteirosEntrevistaPage = lazy(() =>
+  import("../features/pcm/pages/RoteirosEntrevistaPage").then((m) => ({
+    default: m.RoteirosEntrevistaPage,
+  })),
+);
+const SistemasPage = lazy(() =>
+  import("../features/pcm/pages/SistemasPage").then((m) => ({ default: m.SistemasPage })),
+);
+const TiposInspecaoPage = lazy(() =>
+  import("../features/pcm/pages/TiposInspecaoPage").then((m) => ({ default: m.TiposInspecaoPage })),
+);
+const TiposTarefaPage = lazy(() =>
+  import("../features/pcm/pages/TiposTarefaPage").then((m) => ({ default: m.TiposTarefaPage })),
+);
+const VisaoClientePage = lazy(() =>
+  import("../features/pcm/pages/VisaoClientePage").then((m) => ({ default: m.VisaoClientePage })),
 );
 
 // ─── componentes ─────────────────────────────────────────────────────────────
@@ -875,22 +1087,29 @@ export function HomePage() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5">
-          {/* Conteúdo por módulo */}
-          {activeModulo === "inicio" ? (
-            <DashboardGeral moduloIds={dashboardModuloIds} onSelect={navegarModulo} />
-          ) : activeModulo === "pcm" ? (
-            bloqueioAdmin ? (
-              // E00-S28 AC-3: recurso barrado se anuncia; `return null` silencioso é indistinguível
-              // de "não existe". Quem não administra não vê nome de permissão, flag ou gate (AC-6
-              // do componente) — só que a área existe e não é dele.
-              <RecursoNaoAtivado
-                recurso={`Administração · ${bloqueioAdmin.label}`}
-                podeAdministrar={podeAcessarNav("pcm", "escrita")}
-                faltando={["permissão de escrita no módulo PCM"]}
-              />
-            ) : pcmView === "materiais-aquisicoes" ? (
-              <Suspense fallback={<output>Carregando Materiais e Aquisições…</output>}>
-                {user && (
+          <Suspense
+            fallback={
+              <div className="space-y-4" aria-label="Carregando módulo">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            }
+          >
+            {/* Conteúdo por módulo */}
+            {activeModulo === "inicio" ? (
+              <DashboardGeral moduloIds={dashboardModuloIds} onSelect={navegarModulo} />
+            ) : activeModulo === "pcm" ? (
+              bloqueioAdmin ? (
+                // E00-S28 AC-3: recurso barrado se anuncia; `return null` silencioso é indistinguível
+                // de "não existe". Quem não administra não vê nome de permissão, flag ou gate (AC-6
+                // do componente) — só que a área existe e não é dele.
+                <RecursoNaoAtivado
+                  recurso={`Administração · ${bloqueioAdmin.label}`}
+                  podeAdministrar={podeAcessarNav("pcm", "escrita")}
+                  faltando={["permissão de escrita no módulo PCM"]}
+                />
+              ) : pcmView === "materiais-aquisicoes" ? (
+                user && (
                   <MateriaisAquisicoesPage
                     usuario={user.id}
                     onAbrirOs={(clienteId, osId) => {
@@ -904,320 +1123,320 @@ export function HomePage() {
                       }));
                     }}
                   />
-                )}
-              </Suspense>
-            ) : pcmView === "clientes" ? (
-              clienteSelecionado ? (
-                // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),
-                // por isso mora aqui e não dentro da VisaoClientePage — que segue read-only (AC-7).
+                )
+              ) : pcmView === "clientes" ? (
+                clienteSelecionado ? (
+                  // Visão 360 de um cliente específico. O botão "Voltar" é RE-navegação (não mutação),
+                  // por isso mora aqui e não dentro da VisaoClientePage — que segue read-only (AC-7).
+                  <div className="flex flex-col gap-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setClienteSelecionado(null);
+                        setClientePeriodo(null);
+                      }}
+                      className="self-start inline-flex items-center gap-1.5 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+                      Voltar para clientes
+                    </button>
+                    <VisaoClientePage
+                      clienteId={clienteSelecionado}
+                      onAbrirOs={abrirOsDoCliente}
+                      periodo={clientePeriodo ?? undefined}
+                      painelOrcamentoOs={
+                        user?.id && flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
+                          ? (ordemServicoId) => (
+                              <OrcamentosDaOs
+                                usuario={user?.id ?? ""}
+                                cliente={clienteSelecionado}
+                                ordemServico={ordemServicoId}
+                              />
+                            )
+                          : undefined
+                      }
+                      // E03-S01 AC-9: o shell injeta a aba Comercial. `features/pcm` não importa
+                      // `features/comercial` (fronteira do CLAUDE.md) — quem compõe é o app.
+                      // Sem o módulo, nada é injetado e a aba não aparece.
+                      painelComercial={
+                        podeVerModulo("comercial") ? (
+                          <PainelComercialCliente
+                            clienteId={clienteSelecionado}
+                            onAbrirLevantamento={abrirInspecaoDoComercial}
+                            onAbrirConversa={abrirConversaDoComercial}
+                          />
+                        ) : undefined
+                      }
+                    />
+                  </div>
+                ) : (
+                  <ListaClientesPage onSelecionar={setClienteSelecionado} />
+                )
+              ) : pcmView === "inspecoes" ? (
+                <InspecoesPage
+                  inspecaoIdInicial={inspecaoDeepLinkId}
+                  // AC-7: tirar Assessment do menu não pode levar embora a única ação que só ele
+                  // tem — importar o questionário do Auvo. Com a consolidação ligada, Inspeções
+                  // passa a ser a porta de entrada dela. Desligada, o botão não aparece porque o
+                  // item de menu ainda existe (nada de dois caminhos para a mesma coisa).
+                  onAbrirDiagnosticoInicial={
+                    assessmentComoInspecao ? () => setPcmView("assessment") : undefined
+                  }
+                />
+              ) : pcmView === "assessment" ? (
+                <AssessmentPage />
+              ) : pcmView === "cliente-marcacoes" ? (
+                <MarcacoesClientePage />
+              ) : pcmView === "cliente-grupos" ? (
+                <ClienteGruposPage />
+              ) : pcmView === "funcionarios" ? (
+                <FuncionariosPage />
+              ) : pcmView === "equipamentos" ? (
+                <EquipamentosPage />
+              ) : pcmView === "sistemas" ? (
+                <SistemasPage onAbrirOs={abrirOsDoSistema} />
+              ) : pcmView === "equipes" ? (
+                <EquipesPage />
+              ) : pcmView === "agenda-tecnico" ? (
+                <AgendaTecnicoPage />
+              ) : pcmView === "relatorio-planejamento" ? (
+                <RelatorioPlanejamentoPage />
+              ) : pcmView === "relatorio-diario" ? (
+                <RelatorioDiarioPage dataInicial={relatorioDiarioDataInicial} />
+              ) : pcmView === "relatorio-cliente" ? (
+                <RelatorioClientePage />
+              ) : pcmView === "ferramentas" ? (
+                <FerramentasPage />
+              ) : pcmView === "ferramentas-por-tecnico" ? (
+                <FerramentasPorTecnicoPage />
+              ) : pcmView === "apontamento-horas" ? (
+                <ApontamentoHorasPage
+                  onAbrirCliente={abrirClienteNoPeriodo}
+                  onAbrirTecnico={abrirOrdensDoTecnicoNoPeriodo}
+                />
+              ) : pcmView === "roteiros-entrevista" ? (
+                <RoteirosEntrevistaPage />
+              ) : pcmView === "tipos-inspecao" ? (
+                <TiposInspecaoPage />
+              ) : pcmView === "tipos-tarefa" ? (
+                <TiposTarefaPage />
+              ) : pcmView === "segmentos" ? (
+                <SegmentosPage />
+              ) : pcmView === "palavras-chave" ? (
+                <PalavrasChavePage />
+              ) : pcmView === "equipamento-categorias" ? (
+                <EquipamentoCategoriasPage />
+              ) : pcmView === "laudos-spda" ? (
+                <LaudosSpdaPage />
+              ) : pcmView === "pmoc" ? (
+                <PmocPage />
+              ) : pcmView === "preventivas" ? (
+                <PreventivasPage />
+              ) : pcmView === "monitor-excecoes-auvo" ? (
+                <MonitorExcecoesAuvoPage />
+              ) : pcmView === "ordens" || pcmView === "chamados" || pcmView === "backlog" ? (
+                // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
+                // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.
                 <div className="flex flex-col gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClienteSelecionado(null);
-                      setClientePeriodo(null);
-                    }}
-                    className="self-start inline-flex items-center gap-1.5 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" strokeWidth={2} />
-                    Voltar para clientes
-                  </button>
-                  <VisaoClientePage
-                    clienteId={clienteSelecionado}
-                    onAbrirOs={abrirOsDoCliente}
-                    periodo={clientePeriodo ?? undefined}
+                  {osDeepLink?.origemClienteId && (
+                    <button
+                      type="button"
+                      onClick={voltarAoClienteDoDeepLink}
+                      className="self-start inline-flex items-center gap-1.5 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+                      Voltar ao cliente
+                    </button>
+                  )}
+                  <OrdensServicoPage
+                    refreshKey={pcmRefreshKey}
+                    onNovaOs={() => setNovaOsAberta(true)}
+                    abaInicial={pcmView === "backlog" ? "backlog" : undefined}
+                    osIdInicialToken={
+                      osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
+                    }
                     painelOrcamentoOs={
-                      user?.id && flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
-                        ? (ordemServicoId) => (
-                            <OrcamentosDaOs
-                              usuario={user?.id ?? ""}
-                              cliente={clienteSelecionado}
-                              ordemServico={ordemServicoId}
-                            />
-                          )
+                      user?.id &&
+                      osDeepLink?.origemClienteId &&
+                      flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
+                        ? (ordemServicoId) =>
+                            ordemServicoId === osDeepLink?.osId ? (
+                              <OrcamentosDaOs
+                                usuario={user?.id ?? ""}
+                                cliente={osDeepLink?.origemClienteId ?? ""}
+                                ordemServico={ordemServicoId}
+                              />
+                            ) : null
                         : undefined
                     }
-                    // E03-S01 AC-9: o shell injeta a aba Comercial. `features/pcm` não importa
-                    // `features/comercial` (fronteira do CLAUDE.md) — quem compõe é o app.
-                    // Sem o módulo, nada é injetado e a aba não aparece.
-                    painelComercial={
-                      podeVerModulo("comercial") ? (
-                        <PainelComercialCliente
-                          clienteId={clienteSelecionado}
-                          onAbrirLevantamento={abrirInspecaoDoComercial}
-                          onAbrirConversa={abrirConversaDoComercial}
-                        />
-                      ) : undefined
+                    filtrosIniciais={
+                      ordensFiltrosPreset
+                        ? {
+                            tecnicoFuncionarioId: ordensFiltrosPreset.tecnicoFuncionarioId,
+                            dataInicio: ordensFiltrosPreset.dataInicio,
+                            dataFim: ordensFiltrosPreset.dataFim,
+                          }
+                        : undefined
                     }
                   />
                 </div>
               ) : (
-                <ListaClientesPage onSelecionar={setClienteSelecionado} />
+                <div className="flex flex-col gap-4">
+                  {feedbackOs && (
+                    <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-body text-success">
+                      {feedbackOs}
+                    </div>
+                  )}
+                  <PcmDashboardPage
+                    refreshKey={pcmRefreshKey}
+                    podeCriarOs={podeCriarOs}
+                    onNovaOs={() => setNovaOsAberta(true)}
+                    onVerOrdens={() => irParaPcmView("ordens")}
+                    onVerOrdensHoje={abrirOrdensHoje}
+                    onVerBacklog={() => irParaPcmView("backlog")}
+                    onVerAgenda={() => irParaPcmView("agenda-tecnico")}
+                    onVerInspecoes={() => irParaPcmView("inspecoes")}
+                    onVerFerramentas={() => irParaPcmView("ferramentas-por-tecnico")}
+                    onVerRelatorioDiario={(data) => {
+                      setRelatorioDiarioDataInicial(data);
+                      irParaPcmView("relatorio-diario");
+                    }}
+                  />
+                </div>
               )
-            ) : pcmView === "inspecoes" ? (
-              <InspecoesPage
-                inspecaoIdInicial={inspecaoDeepLinkId}
-                // AC-7: tirar Assessment do menu não pode levar embora a única ação que só ele
-                // tem — importar o questionário do Auvo. Com a consolidação ligada, Inspeções
-                // passa a ser a porta de entrada dela. Desligada, o botão não aparece porque o
-                // item de menu ainda existe (nada de dois caminhos para a mesma coisa).
-                onAbrirDiagnosticoInicial={
-                  assessmentComoInspecao ? () => setPcmView("assessment") : undefined
-                }
-              />
-            ) : pcmView === "assessment" ? (
-              <AssessmentPage />
-            ) : pcmView === "cliente-marcacoes" ? (
-              <MarcacoesClientePage />
-            ) : pcmView === "cliente-grupos" ? (
-              <ClienteGruposPage />
-            ) : pcmView === "funcionarios" ? (
-              <FuncionariosPage />
-            ) : pcmView === "equipamentos" ? (
-              <EquipamentosPage />
-            ) : pcmView === "sistemas" ? (
-              <SistemasPage onAbrirOs={abrirOsDoSistema} />
-            ) : pcmView === "equipes" ? (
-              <EquipesPage />
-            ) : pcmView === "agenda-tecnico" ? (
-              <AgendaTecnicoPage />
-            ) : pcmView === "relatorio-planejamento" ? (
-              <RelatorioPlanejamentoPage />
-            ) : pcmView === "relatorio-diario" ? (
-              <RelatorioDiarioPage dataInicial={relatorioDiarioDataInicial} />
-            ) : pcmView === "relatorio-cliente" ? (
-              <RelatorioClientePage />
-            ) : pcmView === "ferramentas" ? (
-              <FerramentasPage />
-            ) : pcmView === "ferramentas-por-tecnico" ? (
-              <FerramentasPorTecnicoPage />
-            ) : pcmView === "apontamento-horas" ? (
-              <ApontamentoHorasPage
-                onAbrirCliente={abrirClienteNoPeriodo}
-                onAbrirTecnico={abrirOrdensDoTecnicoNoPeriodo}
-              />
-            ) : pcmView === "roteiros-entrevista" ? (
-              <RoteirosEntrevistaPage />
-            ) : pcmView === "tipos-inspecao" ? (
-              <TiposInspecaoPage />
-            ) : pcmView === "tipos-tarefa" ? (
-              <TiposTarefaPage />
-            ) : pcmView === "segmentos" ? (
-              <SegmentosPage />
-            ) : pcmView === "palavras-chave" ? (
-              <PalavrasChavePage />
-            ) : pcmView === "equipamento-categorias" ? (
-              <EquipamentoCategoriasPage />
-            ) : pcmView === "laudos-spda" ? (
-              <LaudosSpdaPage />
-            ) : pcmView === "pmoc" ? (
-              <PmocPage />
-            ) : pcmView === "preventivas" ? (
-              <PreventivasPage />
-            ) : pcmView === "monitor-excecoes-auvo" ? (
-              <MonitorExcecoesAuvoPage />
-            ) : pcmView === "ordens" || pcmView === "chamados" || pcmView === "backlog" ? (
-              // E01-S118: Chamados/Operação/Backlog são o mesmo board (o Chamado evolui pra OS);
-              // `view=backlog` (deep-link do Dashboard) abre já na aba Backlog.
-              <div className="flex flex-col gap-4">
-                {osDeepLink?.origemClienteId && (
-                  <button
-                    type="button"
-                    onClick={voltarAoClienteDoDeepLink}
-                    className="self-start inline-flex items-center gap-1.5 text-body font-semibold text-orange hover:text-orange-deep cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" strokeWidth={2} />
-                    Voltar ao cliente
-                  </button>
-                )}
-                <OrdensServicoPage
-                  refreshKey={pcmRefreshKey}
-                  onNovaOs={() => setNovaOsAberta(true)}
-                  abaInicial={pcmView === "backlog" ? "backlog" : undefined}
-                  osIdInicialToken={
-                    osDeepLink ? `${osDeepLink.osId}::${osDeepLink.seq}` : undefined
-                  }
-                  painelOrcamentoOs={
-                    user?.id &&
-                    osDeepLink?.origemClienteId &&
-                    flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED")
-                      ? (ordemServicoId) =>
-                          ordemServicoId === osDeepLink?.osId ? (
-                            <OrcamentosDaOs
-                              usuario={user?.id ?? ""}
-                              cliente={osDeepLink?.origemClienteId ?? ""}
-                              ordemServico={ordemServicoId}
-                            />
-                          ) : null
-                      : undefined
-                  }
-                  filtrosIniciais={
-                    ordensFiltrosPreset
-                      ? {
-                          tecnicoFuncionarioId: ordensFiltrosPreset.tecnicoFuncionarioId,
-                          dataInicio: ordensFiltrosPreset.dataInicio,
-                          dataFim: ordensFiltrosPreset.dataFim,
-                        }
-                      : undefined
-                  }
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {feedbackOs && (
-                  <div className="rounded-md border border-success-line bg-success-soft px-4 py-2 text-body text-success">
-                    {feedbackOs}
-                  </div>
-                )}
-                <PcmDashboardPage
-                  refreshKey={pcmRefreshKey}
-                  podeCriarOs={podeCriarOs}
-                  onNovaOs={() => setNovaOsAberta(true)}
-                  onVerOrdens={() => irParaPcmView("ordens")}
-                  onVerOrdensHoje={abrirOrdensHoje}
-                  onVerBacklog={() => irParaPcmView("backlog")}
-                  onVerAgenda={() => irParaPcmView("agenda-tecnico")}
-                  onVerInspecoes={() => irParaPcmView("inspecoes")}
-                  onVerFerramentas={() => irParaPcmView("ferramentas-por-tecnico")}
-                  onVerRelatorioDiario={(data) => {
-                    setRelatorioDiarioDataInicial(data);
-                    irParaPcmView("relatorio-diario");
+            ) : activeModulo === "config" ? (
+              configTab === "grupos" ? (
+                <GruposPage />
+              ) : configTab === "usuarios" ? (
+                <UsuariosPage />
+              ) : configTab === "capacidades" && user?.papel === "superadmin" ? (
+                <CapacidadesWorkspace userId={user.id} />
+              ) : configTab === "ia" ? (
+                <ConfigIaPage />
+              ) : configTab === "gasto-ia" ? (
+                <RelatorioGastoIaPage />
+              ) : configTab === "priorizacao" ? (
+                <ConfigPriorizacaoPage />
+              ) : configTab === "localizacao-auvo" ? (
+                <ConfigLocalizacaoAuvoPage />
+              ) : configTab === "ativacao" &&
+                user?.papel === "superadmin" &&
+                flagLigada("VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED") ? (
+                <AtivacaoJornadasPage userId={user.id} />
+              ) : (
+                <IntegracoesPage />
+              )
+            ) : activeModulo === "atendimento" ? (
+              atendimentoView === "dashboard" ? (
+                <AtendimentoDashboardPage />
+              ) : atendimentoView === "inbox" ? (
+                <AtendimentoInboxPage conversaIdInicial={conversaDeepLinkId} />
+              ) : atendimentoView === "config" ? (
+                <AtendimentoConfigPage />
+              ) : null
+            ) : activeModulo === "financeiro" ? (
+              financeiroView === "dashboard" ? (
+                <FinanceiroDashboardPage />
+              ) : financeiroView === "lancamentos" ? (
+                <FinanceiroLancamentosPage />
+              ) : financeiroView === "categorias" ? (
+                <FinanceiroCategoriasPage />
+              ) : financeiroView === "contas" ? (
+                <FinanceiroContasPage />
+              ) : financeiroView === "contratos" ? (
+                <FinanceiroContratosPage />
+              ) : financeiroView === "receber" ? (
+                <FinanceiroContasReceberPage />
+              ) : financeiroView === "ofx" ? (
+                <FinanceiroImportOfxPage />
+              ) : financeiroView === "pagar" ? (
+                <FinanceiroContasPagarPage />
+              ) : financeiroView === "rentabilidade" ? (
+                <FinanceiroRentabilidadePage />
+              ) : financeiroView === "pessoal" ? (
+                <FinanceiroCustosPessoalPage />
+              ) : financeiroView === "cobranca" ? (
+                <FinanceiroCobrancaPage />
+              ) : financeiroView === "impostos" ? (
+                <FinanceiroImpostosPage />
+              ) : financeiroView === "fechamento" ? (
+                <FinanceiroFechamentoPage />
+              ) : financeiroView === "dre" ? (
+                <FinanceiroDrePage />
+              ) : financeiroView === "orcamento" ? (
+                <FinanceiroOrcamentoPage />
+              ) : financeiroView === "cockpit" ? (
+                <FinanceiroCockpitPage />
+              ) : (
+                <FinanceiroMockRouter view={financeiroView} />
+              )
+            ) : activeModulo === "comercial" ? (
+              // Abrir a Conta cai na Visão 360 do PCM — é a mesma Conta (ADR-0020), e a aba
+              // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
+              comercialView === "dashboard" ? (
+                <ComercialDashboardPage />
+              ) : comercialView === "config-funil" ? (
+                <ComercialConfigFunilPage />
+              ) : comercialView === "precificacao" ? (
+                <ComercialParametrosPrecoPage />
+              ) : comercialView === "contratos" ? (
+                <ComercialContratosPage />
+              ) : comercialView === "funil" ? (
+                <ComercialFunilPage
+                  onAbrirConta={(clienteId) => {
+                    navegarModulo("pcm");
+                    irParaPcmView("clientes");
+                    setClienteSelecionado(clienteId);
                   }}
                 />
-              </div>
-            )
-          ) : activeModulo === "config" ? (
-            configTab === "grupos" ? (
-              <GruposPage />
-            ) : configTab === "usuarios" ? (
-              <UsuariosPage />
-            ) : configTab === "capacidades" && user?.papel === "superadmin" ? (
-              <CapacidadesWorkspace userId={user.id} />
-            ) : configTab === "ia" ? (
-              <ConfigIaPage />
-            ) : configTab === "gasto-ia" ? (
-              <RelatorioGastoIaPage />
-            ) : configTab === "priorizacao" ? (
-              <ConfigPriorizacaoPage />
-            ) : configTab === "localizacao-auvo" ? (
-              <ConfigLocalizacaoAuvoPage />
-            ) : configTab === "ativacao" &&
-              user?.papel === "superadmin" &&
-              flagLigada("VITE_SSO_DIAGNOSTICO_ATIVACAO_ENABLED") ? (
-              <AtivacaoJornadasPage userId={user.id} />
-            ) : (
-              <IntegracoesPage />
-            )
-          ) : activeModulo === "atendimento" ? (
-            atendimentoView === "dashboard" ? (
-              <AtendimentoDashboardPage />
-            ) : atendimentoView === "inbox" ? (
-              <AtendimentoInboxPage conversaIdInicial={conversaDeepLinkId} />
-            ) : atendimentoView === "config" ? (
-              <AtendimentoConfigPage />
-            ) : null
-          ) : activeModulo === "financeiro" ? (
-            financeiroView === "dashboard" ? (
-              <FinanceiroDashboardPage />
-            ) : financeiroView === "lancamentos" ? (
-              <FinanceiroLancamentosPage />
-            ) : financeiroView === "categorias" ? (
-              <FinanceiroCategoriasPage />
-            ) : financeiroView === "contas" ? (
-              <FinanceiroContasPage />
-            ) : financeiroView === "contratos" ? (
-              <FinanceiroContratosPage />
-            ) : financeiroView === "receber" ? (
-              <FinanceiroContasReceberPage />
-            ) : financeiroView === "ofx" ? (
-              <FinanceiroImportOfxPage />
-            ) : financeiroView === "pagar" ? (
-              <FinanceiroContasPagarPage />
-            ) : financeiroView === "rentabilidade" ? (
-              <FinanceiroRentabilidadePage />
-            ) : financeiroView === "pessoal" ? (
-              <FinanceiroCustosPessoalPage />
-            ) : financeiroView === "cobranca" ? (
-              <FinanceiroCobrancaPage />
-            ) : financeiroView === "impostos" ? (
-              <FinanceiroImpostosPage />
-            ) : financeiroView === "fechamento" ? (
-              <FinanceiroFechamentoPage />
-            ) : financeiroView === "dre" ? (
-              <FinanceiroDrePage />
-            ) : financeiroView === "orcamento" ? (
-              <FinanceiroOrcamentoPage />
-            ) : financeiroView === "cockpit" ? (
-              <FinanceiroCockpitPage />
-            ) : (
-              <FinanceiroMockRouter view={financeiroView} />
-            )
-          ) : activeModulo === "comercial" ? (
-            // Abrir a Conta cai na Visão 360 do PCM — é a mesma Conta (ADR-0020), e a aba
-            // Comercial de lá mostra o funil. Nada de reconstruir a 360 dentro do Comercial.
-            comercialView === "dashboard" ? (
-              <ComercialDashboardPage />
-            ) : comercialView === "config-funil" ? (
-              <ComercialConfigFunilPage />
-            ) : comercialView === "precificacao" ? (
-              <ComercialParametrosPrecoPage />
-            ) : comercialView === "contratos" ? (
-              <ComercialContratosPage />
-            ) : comercialView === "funil" ? (
-              <ComercialFunilPage
-                onAbrirConta={(clienteId) => {
-                  navegarModulo("pcm");
-                  irParaPcmView("clientes");
-                  setClienteSelecionado(clienteId);
-                }}
-              />
-            ) : (
-              <ComercialContasPage
-                onAbrirConta={(clienteId) => {
-                  navegarModulo("pcm");
-                  irParaPcmView("clientes");
-                  setClienteSelecionado(clienteId);
-                }}
-              />
-            )
-          ) : activeModulo === "area-cliente" ? (
-            <AreaClienteAdminPage
-              onAbrirClientes={() => {
-                navegarModulo("pcm");
-                irParaPcmView("clientes");
-              }}
-            />
-          ) : activeModulo === "marketing" ? (
-            // E06-S01: o módulo saiu do placeholder "Em construção". Com a jornada desligada, a
-            // área CONTINUA no menu e se anuncia — `return null` silencioso é indistinguível de
-            // "não foi feito" (E00-S28 AC-3).
-            !flagLigada("VITE_SSO_MARKETING_INDICADORES_ENABLED") ? (
-              <RecursoNaoAtivado
-                recurso="Marketing · Indicadores da Meta"
-                podeAdministrar={podeAcessarNav("marketing", "escrita")}
-                faltando={[
-                  "flag VITE_SSO_MARKETING_INDICADORES_ENABLED",
-                  "gate marketing.sso_indicadores_meta_gate",
-                ]}
-              />
-            ) : marketingView === "receita-campanha" ? (
-              flagLigada("VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED") ? (
-                <ReceitaPorCampanhaPage />
               ) : (
-                <RecursoNaoAtivado
-                  recurso="Marketing · Receita por campanha"
-                  podeAdministrar={podeAcessarNav("marketing", "escrita")}
-                  faltando={["flag VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED"]}
+                <ComercialContasPage
+                  onAbrirConta={(clienteId) => {
+                    navegarModulo("pcm");
+                    irParaPcmView("clientes");
+                    setClienteSelecionado(clienteId);
+                  }}
                 />
               )
-            ) : (
-              <IndicadoresMetaPage />
-            )
-          ) : activeModulo === "guia" ? (
-            <GuiaRouter view={guiaView} />
-          ) : modulo ? (
-            <EmConstrucao modulo={modulo} />
-          ) : null}
+            ) : activeModulo === "area-cliente" ? (
+              <AreaClienteAdminPage
+                onAbrirClientes={() => {
+                  navegarModulo("pcm");
+                  irParaPcmView("clientes");
+                }}
+              />
+            ) : activeModulo === "marketing" ? (
+              // E06-S01: o módulo saiu do placeholder "Em construção". Com a jornada desligada, a
+              // área CONTINUA no menu e se anuncia — `return null` silencioso é indistinguível de
+              // "não foi feito" (E00-S28 AC-3).
+              !flagLigada("VITE_SSO_MARKETING_INDICADORES_ENABLED") ? (
+                <RecursoNaoAtivado
+                  recurso="Marketing · Indicadores da Meta"
+                  podeAdministrar={podeAcessarNav("marketing", "escrita")}
+                  faltando={[
+                    "flag VITE_SSO_MARKETING_INDICADORES_ENABLED",
+                    "gate marketing.sso_indicadores_meta_gate",
+                  ]}
+                />
+              ) : marketingView === "receita-campanha" ? (
+                flagLigada("VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED") ? (
+                  <ReceitaPorCampanhaPage />
+                ) : (
+                  <RecursoNaoAtivado
+                    recurso="Marketing · Receita por campanha"
+                    podeAdministrar={podeAcessarNav("marketing", "escrita")}
+                    faltando={["flag VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED"]}
+                  />
+                )
+              ) : (
+                <IndicadoresMetaPage />
+              )
+            ) : activeModulo === "guia" ? (
+              <GuiaRouter view={guiaView} />
+            ) : modulo ? (
+              <EmConstrucao modulo={modulo} />
+            ) : null}
+          </Suspense>
         </main>
       </div>
       {podeCriarOs && (

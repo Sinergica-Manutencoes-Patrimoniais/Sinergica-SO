@@ -7,7 +7,7 @@
 // Regra de alcance (E00-S28): desligado, gate fechado, sem permissão, "nenhum contrato pendente"
 // e "este Cliente não faz PMOC" são CINCO estados com CINCO frases diferentes. Nenhum
 // `return null` silencioso — foi exatamente o que escondeu regra pronta em produção antes.
-import { Button } from "@sinergica/ui";
+import { AvisoCarregando, Button } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -87,7 +87,9 @@ export function ContratosPmocSemPlano({
   if (pendentes.isPending || cobertura.isPending)
     return (
       <section aria-label="Contratos PMOC sem Plano">
-        <output>Consultando Contratos PMOC sem Plano…</output>
+        {/* E00-S29 — a moldura da seção fica montada; só o aviso passa pelo anti-flash, então
+            uma consulta rápida não pisca um texto que ninguém chega a ler. */}
+        <AvisoCarregando>Consultando Contratos PMOC sem Plano…</AvisoCarregando>
       </section>
     );
 

@@ -1,6 +1,8 @@
-import { registrarDespesaVisitaSchema, type RegistrarDespesaVisita } from "@sinergica/shared";
+import { type RegistrarDespesaVisita, registrarDespesaVisitaSchema } from "@sinergica/shared";
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { criarDespesaVisita } from "../../application/despesas-visita";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -9,22 +11,21 @@ import {
   listarDespesasVisita,
   supabaseDespesasVisitaAdapter,
 } from "../../infrastructure/supabase-despesas-visita-adapter";
-import { EditarPrevisao } from "./EditarPrevisao";
-import { DeclararRepasse } from "./DeclararRepasse";
+import { AtribuirTecnico } from "./AtribuirTecnico";
 import { BaixarComprovante } from "./BaixarComprovante";
-import { RateioDespesa } from "./RateioDespesa";
+import { ConferenciaDespesa } from "./ConferenciaDespesa";
 import { CorrigirRealizada } from "./CorrigirRealizada";
 import { CorrigirValorComprovante } from "./CorrigirValorComprovante";
+import { DeclararRepasse } from "./DeclararRepasse";
+import { EditarPrevisao } from "./EditarPrevisao";
 import { HistoricoComprovantes } from "./HistoricoComprovantes";
-import { ResumoDespesas } from "./ResumoDespesas";
-import { RelatorioClienteDespesas } from "./RelatorioClienteDespesas";
-import { AtribuirTecnico } from "./AtribuirTecnico";
-import { RealizarDespesa } from "./RealizarDespesa";
-import { ConferenciaDespesa } from "./ConferenciaDespesa";
 import { HistoricoRateio } from "./HistoricoRateio";
+import { RateioDespesa } from "./RateioDespesa";
+import { RealizarDespesa } from "./RealizarDespesa";
 import { RecuperarAtribuicoesTecnico } from "./RecuperarAtribuicoesTecnico";
 import { RecuperarCorrecoesMediadas } from "./RecuperarCorrecoesMediadas";
-import { flagLigada } from "../../../../config/flags-sso";
+import { RelatorioClienteDespesas } from "./RelatorioClienteDespesas";
+import { ResumoDespesas } from "./ResumoDespesas";
 
 /** Não ativar a flag antes da migration e dos gates de autorização/RLS. */
 export function DespesasVisitaWorkspace({
@@ -42,7 +43,10 @@ export function DespesasVisitaWorkspace({
     queryKey: [...raiz, "permissao"],
     queryFn: async ({ signal }) => {
       await conferirSessao(signal);
-      const resultado = await supabaseCapacidadesSsoAdapter.autorizarAcao("despesa_visita.gerir", clienteId);
+      const resultado = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "despesa_visita.gerir",
+        clienteId,
+      );
       await conferirSessao(signal);
       return resultado;
     },
@@ -68,7 +72,7 @@ export function DespesasVisitaWorkspace({
   });
   if (!habilitado) return null;
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando acesso às despesas…</output>;
+    return <AvisoCarregando>Verificando acesso às despesas…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -84,9 +88,21 @@ export function DespesasVisitaWorkspace({
   return (
     <section aria-label="Despesas da Visita">
       <h4>Despesas da Visita</h4>
-      {flagLigada("VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED") && <RecuperarAtribuicoesTecnico userId={userId} clienteId={clienteId} visitaId={visitaId} />}
-      {flagLigada("VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED") && <RecuperarCorrecoesMediadas userId={userId} clienteId={clienteId} visitaId={visitaId}
-        despesasVisiveis={!despesas.isFetching && !despesas.isError ? despesas.data?.pages.flat().map(item => item.id) ?? [] : []} />}
+      {flagLigada("VITE_SSO_RECIBO_TECNICO_DESPESA_ENABLED") && (
+        <RecuperarAtribuicoesTecnico userId={userId} clienteId={clienteId} visitaId={visitaId} />
+      )}
+      {flagLigada("VITE_SSO_RECIBO_CORRECAO_MEDIADA_ENABLED") && (
+        <RecuperarCorrecoesMediadas
+          userId={userId}
+          clienteId={clienteId}
+          visitaId={visitaId}
+          despesasVisiveis={
+            !despesas.isFetching && !despesas.isError
+              ? (despesas.data?.pages.flat().map((item) => item.id) ?? [])
+              : []
+          }
+        />
+      )}
       <ResumoDespesas userId={userId} clienteId={clienteId} visitaId={visitaId} />
       <RelatorioClienteDespesas userId={userId} clienteId={clienteId} />
       <NovaDespesa
@@ -119,16 +135,73 @@ export function DespesasVisitaWorkspace({
                   visitaId={visitaId}
                   despesa={item}
                 />
-                <RealizarDespesa userId={userId} clienteId={clienteId} visitaId={visitaId} despesa={item} />
-                {item.realizadoCentavos !== null && <BaixarComprovante key={`${userId}:${clienteId}:${visitaId}:${item.id}`} userId={userId} clienteId={clienteId} visitaId={visitaId} despesaId={item.id} />}
-                {item.realizadoCentavos !== null && <HistoricoComprovantes userId={userId} clienteId={clienteId} visitaId={visitaId} despesaId={item.id} />}
-                <DeclararRepasse userId={userId} clienteId={clienteId} visitaId={visitaId} despesa={item} />
-                <RateioDespesa userId={userId} clienteId={clienteId} visitaId={visitaId} despesa={item} />
-                <ConferenciaDespesa userId={userId} clienteId={clienteId} visitaId={visitaId} despesaId={item.id} revisao={item.revisao} />
-                <HistoricoRateio userId={userId} clienteId={clienteId} visitaId={visitaId} despesaId={item.id} revisao={item.revisao} />
-                <CorrigirRealizada userId={userId} clienteId={clienteId} visitaId={visitaId} despesa={item} />
-                <CorrigirValorComprovante userId={userId} clienteId={clienteId} visitaId={visitaId} despesa={item} />
-                <AtribuirTecnico userId={userId} clienteId={clienteId} visitaId={visitaId} despesa={item} />
+                <RealizarDespesa
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesa={item}
+                />
+                {item.realizadoCentavos !== null && (
+                  <BaixarComprovante
+                    key={`${userId}:${clienteId}:${visitaId}:${item.id}`}
+                    userId={userId}
+                    clienteId={clienteId}
+                    visitaId={visitaId}
+                    despesaId={item.id}
+                  />
+                )}
+                {item.realizadoCentavos !== null && (
+                  <HistoricoComprovantes
+                    userId={userId}
+                    clienteId={clienteId}
+                    visitaId={visitaId}
+                    despesaId={item.id}
+                  />
+                )}
+                <DeclararRepasse
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesa={item}
+                />
+                <RateioDespesa
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesa={item}
+                />
+                <ConferenciaDespesa
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesaId={item.id}
+                  revisao={item.revisao}
+                />
+                <HistoricoRateio
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesaId={item.id}
+                  revisao={item.revisao}
+                />
+                <CorrigirRealizada
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesa={item}
+                />
+                <CorrigirValorComprovante
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesa={item}
+                />
+                <AtribuirTecnico
+                  userId={userId}
+                  clienteId={clienteId}
+                  visitaId={visitaId}
+                  despesa={item}
+                />
               </li>
             ))}
           </ul>
@@ -139,9 +212,7 @@ export function DespesasVisitaWorkspace({
           )}
         </div>
       )}
-      <p>
-        Recursos de despesas dependem de habilitação segura e validação antes do uso.
-      </p>
+      <p>Recursos de despesas dependem de habilitação segura e validação antes do uso.</p>
     </section>
   );
 }
@@ -178,19 +249,26 @@ function NovaDespesa({
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const pagina = await listarCategoriasDespesa(pageParam, signal);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return pagina;
     },
-    getNextPageParam: (pagina) => pagina.length === 100 ? pagina.at(-1)?.id : undefined,
+    getNextPageParam: (pagina) => (pagina.length === 100 ? pagina.at(-1)?.id : undefined),
     gcTime: 0,
   });
   const enviar = useMutation({
     mutationFn: async (pedido: RegistrarDespesaVisita) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Sessão ou tentativa alterada.");
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        sessionStorage.getItem(chave) !== JSON.stringify(pedido)
+      )
+        throw new Error("Sessão ou tentativa alterada.");
       const resultado = await criarDespesaVisita(supabaseDespesasVisitaAdapter, pedido);
       const depois = await supabase.auth.getUser();
       if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
@@ -198,8 +276,12 @@ function NovaDespesa({
     },
     onSuccess: async (_resultado, pedido) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["despesas-visita", userId, clienteId, visitaId] }),
-        queryClient.invalidateQueries({ queryKey: ["relatorio-despesas-cliente", userId, clienteId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["despesas-visita", userId, clienteId, visitaId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["relatorio-despesas-cliente", userId, clienteId],
+        }),
       ]);
       try {
         const atual = await supabase.auth.getUser();
@@ -224,7 +306,9 @@ function NovaDespesa({
       setMensagem(
         "Resultado não confirmado. Repita a mesma tentativa; não crie outra despesa para este fato.",
       ),
-    onSettled: () => { enviando.current = false; },
+    onSettled: () => {
+      enviando.current = false;
+    },
   });
   const enviarPedido = (pedido: RegistrarDespesaVisita) => {
     if (enviando.current) return;
@@ -232,7 +316,9 @@ function NovaDespesa({
       const anterior = sessionStorage.getItem(chave);
       const novo = JSON.stringify(pedido);
       if (anterior !== null && anterior !== novo) {
-        setMensagem("Há outra tentativa pendente; procure suporte antes de registrar nova despesa.");
+        setMensagem(
+          "Há outra tentativa pendente; procure suporte antes de registrar nova despesa.",
+        );
         return;
       }
       if (anterior === null && pendente) throw new Error("Tentativa ausente.");
@@ -250,7 +336,15 @@ function NovaDespesa({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (pendente || enviando.current || enviar.isPending || categorias.isFetching || categorias.isError || !categorias.data?.pages.flat().some((item) => item.id === categoria)) return;
+        if (
+          pendente ||
+          enviando.current ||
+          enviar.isPending ||
+          categorias.isFetching ||
+          categorias.isError ||
+          !categorias.data?.pages.flat().some((item) => item.id === categoria)
+        )
+          return;
         const parsed = registrarDespesaVisitaSchema.safeParse({
           requestId: crypto.randomUUID(),
           despesaId: crypto.randomUUID(),
@@ -258,7 +352,7 @@ function NovaDespesa({
           categoriaId: categoria,
           data,
           descricao,
-          previstoCentavos: /^\d+$/.test(centavos) ? Number(centavos) : NaN,
+          previstoCentavos: /^\d+$/.test(centavos) ? Number(centavos) : Number.NaN,
           realizadoCentavos: null,
           comprovantes: [],
         });
@@ -273,13 +367,24 @@ function NovaDespesa({
       {categorias.isError && (
         <p role="alert">
           Categorias indisponíveis.{" "}
-          <button type="button" onClick={() => void (categorias.isFetchNextPageError ? categorias.fetchNextPage() : categorias.refetch())}>
+          <button
+            type="button"
+            onClick={() =>
+              void (categorias.isFetchNextPageError
+                ? categorias.fetchNextPage()
+                : categorias.refetch())
+            }
+          >
             Tentar novamente
           </button>
         </p>
       )}
       {categorias.hasNextPage && !categorias.isError && (
-        <button type="button" disabled={categorias.isFetching} onClick={() => void categorias.fetchNextPage()}>
+        <button
+          type="button"
+          disabled={categorias.isFetching}
+          onClick={() => void categorias.fetchNextPage()}
+        >
           Mais categorias
         </button>
       )}
@@ -336,7 +441,7 @@ function NovaDespesa({
           </button>
         </div>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output>{mensagem}</output>}
     </form>
   );
 }

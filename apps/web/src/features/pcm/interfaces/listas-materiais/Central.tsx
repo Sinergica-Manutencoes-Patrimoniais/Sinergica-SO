@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -83,7 +83,7 @@ function CentralGlobalConteudo(props: Props) {
     refetchOnWindowFocus: true,
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos materiais…</output>;
+    return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -172,7 +172,7 @@ function Conteudo({
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
   if (!permissaoMonitorada && (permissao.isPending || permissao.isFetching))
-    return <output>Verificando acesso aos materiais…</output>;
+    return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (!permissaoMonitorada && permissao.isError)
     return (
       <p role="alert">

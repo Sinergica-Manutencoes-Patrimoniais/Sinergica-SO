@@ -1,7 +1,8 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "../../../../lib/supabase-client";
 import { flagLigada } from "../../../../config/flags-sso";
+import { supabase } from "../../../../lib/supabase-client";
 
 export function BreadcrumbAtivo({
   userId,
@@ -52,7 +53,8 @@ export function BreadcrumbAtivo({
     },
   });
   if (!habilitado) return null;
-  if (consulta.isFetching || consulta.isPending) return <p>Consultando caminho físico…</p>;
+  if (consulta.isFetching || consulta.isPending)
+    return <AvisoCarregando>Consultando caminho físico…</AvisoCarregando>;
   if (consulta.isError)
     return (
       <p role="alert">

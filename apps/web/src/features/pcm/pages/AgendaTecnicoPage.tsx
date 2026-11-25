@@ -11,7 +11,7 @@
 // 1867): o histórico continua legível, escrita nova é recusada com erro nomeado — traduzido para
 // uma frase em português no formulário, nunca um erro cru do Postgres.
 import { Button, DataTable, type DataTableColumn, Modal, Skeleton } from "@sinergica/ui";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -106,6 +106,11 @@ export function AgendaTecnicoPage() {
   const projecao = useQuery({
     queryKey: agendaProjecaoQueryKeys.semana(semanaInicio, null),
     queryFn: ({ signal }) => listarAgendaProjetada(semanaInicio, null, signal),
+    // E00-S29 — navegar entre semanas troca a chave. Sem isto o calendário esvaziava a cada
+    // clique na seta antes de encher de novo. `keepPreviousData` mantém a semana anterior na
+    // tela até a nova chegar; o `signal` acima garante que uma resposta atrasada nunca
+    // sobrescreva a semana que o usuário já escolheu depois.
+    placeholderData: keepPreviousData,
     enabled: projecaoLigada && !permissoesCarregando && temLeitura,
     retry: false,
   });

@@ -1,25 +1,26 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
-import { semanaCapacidade } from "../../domain/semana-capacidade";
 import { agruparCapacidadePorTecnico } from "../../domain/capacidade-por-tecnico";
+import { semanaCapacidade } from "../../domain/semana-capacidade";
 import {
   type DisponibilidadeDeclarada,
   listarDisponibilidades,
   listarVinculosCapacidade,
 } from "../../infrastructure/supabase-capacidade-agenda-adapter";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
-import { ConflitosInterclientes } from "./ConflitosInterclientes";
 import { AgendaTecnicoContexto } from "./AgendaTecnicoContexto";
+import { ConflitosInterclientes } from "./ConflitosInterclientes";
 import { DiagnosticoConflitos } from "./DiagnosticoConflitos";
 import { FontesDemanda } from "./FontesDemanda";
 import { FormularioDisponibilidade } from "./Formulario";
 import { HorizonteCapacidade } from "./HorizonteCapacidade";
 import { IntervalosDeclarados } from "./IntervalosDeclarados";
 import { OcorrenciasSemOs } from "./OcorrenciasSemOs";
-import { SnapshotCapacidade } from "./SnapshotCapacidade";
 import { SimulacaoManual } from "./SimulacaoManual";
-import { flagLigada } from "../../../../config/flags-sso";
+import { SnapshotCapacidade } from "./SnapshotCapacidade";
 
 /** Consulta parcial de declarações; não calcula demanda nem confirma capacidade efetiva. */
 export function CapacidadeAgendaWorkspace({
@@ -40,7 +41,10 @@ export function CapacidadeAgendaWorkspace({
     queryKey: ["capacidade-agenda", userId, clienteId, "permissao"],
     queryFn: async ({ signal }) => {
       await conferirSessao(signal);
-      const resultado = await supabaseCapacidadesSsoAdapter.autorizarAcao("capacidade.gerir", clienteId);
+      const resultado = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "capacidade.gerir",
+        clienteId,
+      );
       await conferirSessao(signal);
       return resultado;
     },
@@ -76,11 +80,24 @@ export function CapacidadeAgendaWorkspace({
   });
   let porTecnico: ReturnType<typeof agruparCapacidadePorTecnico> | null = null;
   let agrupamentoInconsistente = false;
-  if (lista.data && vinculos.data && !lista.isFetching && !vinculos.isFetching && !lista.isError && !vinculos.isError && !lista.hasNextPage && !vinculos.hasNextPage) {
-    try { porTecnico = agruparCapacidadePorTecnico(lista.data.pages.flat(), vinculos.data.pages.flat()); } catch { agrupamentoInconsistente = true; }
+  if (
+    lista.data &&
+    vinculos.data &&
+    !lista.isFetching &&
+    !vinculos.isFetching &&
+    !lista.isError &&
+    !vinculos.isError &&
+    !lista.hasNextPage &&
+    !vinculos.hasNextPage
+  ) {
+    try {
+      porTecnico = agruparCapacidadePorTecnico(lista.data.pages.flat(), vinculos.data.pages.flat());
+    } catch {
+      agrupamentoInconsistente = true;
+    }
   }
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso à capacidade…</output>;
+    return <AvisoCarregando>Verificando acesso à capacidade…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -159,7 +176,10 @@ export function CapacidadeAgendaWorkspace({
               <li key={item.id}>
                 Técnico {item.funcionarioId}: {item.destinadosMinutos} min destinados,{" "}
                 {item.reservasMinutos} min reservados, {item.ausenciasMinutos} min de ausência;{" "}
-                {item.disponiveisMinutos === null ? "disponibilidade não informada" : `${item.disponiveisMinutos} min disponíveis declarados`}.
+                {item.disponiveisMinutos === null
+                  ? "disponibilidade não informada"
+                  : `${item.disponiveisMinutos} min disponíveis declarados`}
+                .
                 <button type="button" onClick={() => setFormulario(item)}>
                   Revisar
                 </button>
@@ -203,10 +223,44 @@ export function CapacidadeAgendaWorkspace({
             <SimulacaoManual key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
           )}
           <h3>Disponibilidade e Visitas por técnico</h3>
-          <p>Comparação de registros carregados em consultas independentes; não comprova execução, simultaneidade, cobertura integral nem saldo operacional.</p>
-          {(lista.hasNextPage || vinculos.hasNextPage) && <p>Carregue todas as páginas de disponibilidade e vínculos para relacionar por técnico.</p>}
-          {agrupamentoInconsistente && <p role="alert">Os registros carregados são inconsistentes ou duplicados. A comparação foi suspensa. <button type="button" onClick={() => { void lista.refetch(); void vinculos.refetch(); }}>Atualizar fontes</button></p>}
-          {porTecnico && <ul>{porTecnico.map((t) => <li key={t.funcionarioId}>Técnico {t.funcionarioId} · disponibilidade declarada {t.disponibilidade === null ? "não informada" : `${t.disponibilidade} min`} · {t.participacoes} participação(ões) em Visitas · {t.estimativaCompleta === null ? "estimativa incompleta ou não informada" : `${t.estimativaCompleta} min estimados`} · {t.estimativasPendentes} estimativa(s) pendente(s)</li>)}</ul>}
+          <p>
+            Comparação de registros carregados em consultas independentes; não comprova execução,
+            simultaneidade, cobertura integral nem saldo operacional.
+          </p>
+          {(lista.hasNextPage || vinculos.hasNextPage) && (
+            <p>
+              Carregue todas as páginas de disponibilidade e vínculos para relacionar por técnico.
+            </p>
+          )}
+          {agrupamentoInconsistente && (
+            <p role="alert">
+              Os registros carregados são inconsistentes ou duplicados. A comparação foi suspensa.{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  void lista.refetch();
+                  void vinculos.refetch();
+                }}
+              >
+                Atualizar fontes
+              </button>
+            </p>
+          )}
+          {porTecnico && (
+            <ul>
+              {porTecnico.map((t) => (
+                <li key={t.funcionarioId}>
+                  Técnico {t.funcionarioId} · disponibilidade declarada{" "}
+                  {t.disponibilidade === null ? "não informada" : `${t.disponibilidade} min`} ·{" "}
+                  {t.participacoes} participação(ões) em Visitas ·{" "}
+                  {t.estimativaCompleta === null
+                    ? "estimativa incompleta ou não informada"
+                    : `${t.estimativaCompleta} min estimados`}{" "}
+                  · {t.estimativasPendentes} estimativa(s) pendente(s)
+                </li>
+              ))}
+            </ul>
+          )}
           {flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_ENABLED") && (
             <SnapshotCapacidade userId={userId} clienteId={clienteId} semana={semana} />
           )}

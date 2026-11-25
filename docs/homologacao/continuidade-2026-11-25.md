@@ -52,9 +52,13 @@ A aposentadoria cancela somente a Visita não operada e faz soft-delete de OS/Ch
 processamentos e histórico append-only. Não cancela tarefa externa. Exemplo já operado exige
 tratativa própria; o script recusa a aposentadoria automática.
 
-**Estado da execução publicada:** ainda não realizada nesta sessão. Falta conexão administrativa
-ou execução do SQL pelo Lucas no Dashboard; pergunta enviada no chat. URL/chave pública local não
-autorizam semear esses dados. Validação local usa exatamente os mesmos arquivos SQL.
+**Execução publicada realizada:** 25/11/2026, 18:42 BRT, via API administrativa com credencial
+já salva localmente. Cliente e conta conferidos antes da escrita; o arquivo de preparação foi
+executado integralmente em um bloco atômico. A identidade real do Gestor PCM (supervisor)
+consultou os três roteiros: Campo a conciliar (`CH-HOMOLOG-PCM-01`), exceção
+`visita_nao_confirmada` (`CH-HOMOLOG-PCM-02`) e Agenda com Visita planejada.
+Visita em 25/11/2026, 20:42–22:42, America/Sao_Paulo. Verificação posterior confirmou zero outbox
+Auvo, zero tentativas T−24, contrato sintético desabilitado e Visita ainda planejada.
 
 ## Validação e limites
 
@@ -75,4 +79,4 @@ arquitetura, gitleaks, testes, typecheck e build passaram. O lint bruto legado r
 já baselinada; a baseline efetivamente usada na CI passa sem dívida nova.
 Revisão adversarial: cursor, contexto inexistente, literal %, outro Cliente, sem identidade,
 revogação e replay exercitados. Sem achado alto/médio aberto na implementação deste recorte.
-Execução publicada dos exemplos continua dependente de acesso administrativo.
+Exemplos executados em produção; evidência acima e no PR #126.

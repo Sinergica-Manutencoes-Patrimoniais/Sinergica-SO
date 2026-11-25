@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -11,8 +12,15 @@ type Pedido = {
   revisao: number;
   observacao: string;
 };
-const pedidoSchema = z.object({ requestId: z.string().guid(), loteId: z.string().guid(), chave: z.string().min(1).max(200),
-  revisao: z.number().int().positive(), observacao: z.string().trim().min(1).max(2000) }).strict();
+const pedidoSchema = z
+  .object({
+    requestId: z.string().guid(),
+    loteId: z.string().guid(),
+    chave: z.string().min(1).max(200),
+    revisao: z.number().int().positive(),
+    observacao: z.string().trim().min(1).max(2000),
+  })
+  .strict();
 
 /** Anotação de conferência não equivale à aprovação nem incorpora cadastros. */
 export function Conferencia({
@@ -41,10 +49,15 @@ export function Conferencia({
     queryKey: ["levantamentos", userId, clienteId, "conferencia-permissao"],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
-      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.aprovar", clienteId);
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "cadastro.aprovar",
+        clienteId,
+      );
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return autorizada;
     },
     gcTime: 0,
@@ -54,9 +67,10 @@ export function Conferencia({
   const historico = useInfiniteQuery({
     queryKey: ["levantamentos", userId, clienteId, loteId, chave, "conferencias", revisao],
     initialPageParam: null as number | null,
-    queryFn: async ({pageParam, signal}) => {
+    queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const { data, error } = await supabase
         .schema("pcm")
         .rpc("sso_listar_conferencias_levantamento", {
@@ -64,7 +78,8 @@ export function Conferencia({
           p_chave_linha: chave,
           p_apos_revision: pageParam,
           p_limite: 100,
-        }).abortSignal(signal);
+        })
+        .abortSignal(signal);
       if (error) throw error;
       if (!Array.isArray(data)) throw new Error("Histórico inválido.");
       if (data.length > 100) throw new Error("Histórico inválido.");
@@ -73,7 +88,8 @@ export function Conferencia({
         if (
           typeof v.id !== "string" ||
           typeof v.observacao !== "string" ||
-          !Number.isSafeInteger(v.revisao_lote) || v.revisao_lote <= anterior
+          !Number.isSafeInteger(v.revisao_lote) ||
+          v.revisao_lote <= anterior
         )
           throw new Error("Histórico inválido.");
         anterior = v.revisao_lote;
@@ -84,17 +100,23 @@ export function Conferencia({
         };
       });
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return pagina;
     },
     enabled: permitido,
     gcTime: 0,
-    getNextPageParam: (pagina) => pagina.length === 100 ? pagina.at(-1)?.revisao : undefined,
+    getNextPageParam: (pagina) => (pagina.length === 100 ? pagina.at(-1)?.revisao : undefined),
   });
   const envio = useMutation({
     mutationFn: async (p: Pedido) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(chaveLocal) !== JSON.stringify(p)) throw new Error("Sessão ou tentativa alterada.");
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        sessionStorage.getItem(chaveLocal) !== JSON.stringify(p)
+      )
+        throw new Error("Sessão ou tentativa alterada.");
       const { data, error } = await supabase
         .schema("pcm")
         .rpc("sso_anotar_conferencia_levantamento", {
@@ -118,32 +140,44 @@ export function Conferencia({
     },
     onSuccess: async (_resposta, confirmado) => {
       try {
-        await client.invalidateQueries({ queryKey: ["levantamentos", userId, clienteId, "lotes"], refetchType: "none" });
+        await client.invalidateQueries({
+          queryKey: ["levantamentos", userId, clienteId, "lotes"],
+          refetchType: "none",
+        });
         const atual = await supabase.auth.getUser();
         if (atual.error || atual.data.user?.id !== userId) throw new Error("Sessão alterada.");
-        if (sessionStorage.getItem(chaveLocal) !== JSON.stringify(confirmado)) throw new Error("Tentativa alterada.");
+        if (sessionStorage.getItem(chaveLocal) !== JSON.stringify(confirmado))
+          throw new Error("Tentativa alterada.");
         sessionStorage.removeItem(chaveLocal);
       } catch {
-        setAviso("Não foi possível concluir a conferência da sessão ou tentativa. Consulte o recibo.");
+        setAviso(
+          "Não foi possível concluir a conferência da sessão ou tentativa. Consulte o recibo.",
+        );
         return;
       }
       setPendente(null);
       setObservacao("");
       setAviso("Observação registrada; linha permanece pendente.");
-      await client.refetchQueries({ queryKey: ["levantamentos", userId, clienteId, "lotes"], type: "active" });
+      await client.refetchQueries({
+        queryKey: ["levantamentos", userId, clienteId, "lotes"],
+        type: "active",
+      });
     },
     onError: () =>
       setAviso(
         "Resultado não confirmado. Repita a mesma tentativa ou procure suporte se houver conflito de revisão.",
       ),
-    onSettled: () => { trava.current = false; },
+    onSettled: () => {
+      trava.current = false;
+    },
   });
   const repetir = (p: Pedido) => {
     if (trava.current || !permitido) return;
     try {
       pedidoSchema.parse(p);
       const existente = sessionStorage.getItem(chaveLocal);
-      if (existente !== null && existente !== JSON.stringify(p)) throw new Error("Tentativa alterada.");
+      if (existente !== null && existente !== JSON.stringify(p))
+        throw new Error("Tentativa alterada.");
       if (existente === null && pendente) throw new Error("Tentativa não encontrada.");
       if (existente === null) sessionStorage.setItem(chaveLocal, JSON.stringify(p));
     } catch {
@@ -156,7 +190,7 @@ export function Conferencia({
     envio.mutate(p);
   };
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando permissão de conferência…</output>;
+    return <AvisoCarregando>Verificando permissão de conferência…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -188,7 +222,15 @@ export function Conferencia({
           ))}
         </ul>
       )}
-      {historico.hasNextPage && !historico.isError && <button type="button" disabled={historico.isFetching} onClick={() => void historico.fetchNextPage()}>Mais observações</button>}
+      {historico.hasNextPage && !historico.isError && (
+        <button
+          type="button"
+          disabled={historico.isFetching}
+          onClick={() => void historico.fetchNextPage()}
+        >
+          Mais observações
+        </button>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -227,7 +269,7 @@ export function Conferencia({
           </button>
         </p>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output>{aviso}</output>}
     </section>
   );
 }

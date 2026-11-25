@@ -385,13 +385,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/app/HomePage.tsx": {
-      "sha256": "05d8b4cc05a194210df5f315a825a07b8d1ed70a83163211af8ae78859718efd",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/area-cliente/components/AnexosOsPortal.tsx": {
       "sha256": "c35e72b14511457510333dee5ad377d073a336d52a906a975b20b2a4edd91a63",
       "diagnostics": [
@@ -469,16 +462,6 @@
         "d6a931d94b938ed6f23b02176019a456562add2530d863b33de7d28f731049bc"
       ]
     },
-    "apps/web/src/features/area-cliente/components/HistoricoPropostaOs.tsx": {
-      "sha256": "a57ff5655b3aa29842a5714f2b93092c367548cdd91175cd82deaa93fa7a58b2",
-      "diagnostics": [
-        "55966c6438b3af72e9a13103a8d7b1e3c860f19a6ac02543b72982f114e8d52e",
-        "864a8c2cfd70dfe0ef2a36ae61b836fa08392f0a271a26b48081bf84c1fa3cc5",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "c0742c64bca84a708429764a991fb53adf1e907deacd38fbd45efbca8e1f8078"
-      ]
-    },
     "apps/web/src/features/area-cliente/components/ListasHistoricoMateriais.tsx": {
       "sha256": "8b3cc0a90fc79b7d1367195275c2f79be4bd60c88a404bf4b4daa11186a401b3",
       "diagnostics": [
@@ -515,14 +498,6 @@
       "sha256": "12f022b125c6171ca4fecfd10d6cd121fe71e6ccd5617b2a7c07bebe40d02714",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/area-cliente/components/PropostasOsPortal.tsx": {
-      "sha256": "eba86303a907b60cbb143f3387c9d456645c85c26f4aa34846016efa459f5bb6",
-      "diagnostics": [
-        "43e43fd100023ffd929e212228cb183f98636c1d7beb598278d9bad5fb09b113",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/area-cliente/components/RecuperarDecisoesProposta.tsx": {
@@ -604,13 +579,6 @@
       "sha256": "2e55fc090599c8381802999a06560a9c206de1cc693588de5ec5db06a660a2ae",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/area-cliente/PortalShell.tsx": {
-      "sha256": "e874008799fe1691a002dcd779980f2c61f901c6fbe58b466df0e95b314b72e1",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/comercial/application/levantamento-queries.test.ts": {
@@ -2840,13 +2808,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/calendario-contratual/Workspace.tsx": {
-      "sha256": "b353f91a9688dfea190462f04fd0d513b45e69dfcc3650eb1ed099f522c7da03",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/capacidade-agenda/AgendaTecnicoContexto.test.tsx": {
       "sha256": "250f91f2c3469478794d994c4fba960d2ff9c28baa39dcced6925e43f9cd5f2f",
       "diagnostics": [
@@ -2909,12 +2870,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/capacidade-agenda/EsforcoDeclarado.tsx": {
-      "sha256": "95210a9f89de4fca7221d662d5890702c283ac272704dffdbbd35cb7dad31f4f",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/capacidade-agenda/FontesDemanda.test.tsx": {
       "sha256": "d50e08adfd5204da2903fc19e788b46188dadba02892d2d1f05421eea6691ce8",
       "diagnostics": [
@@ -2960,15 +2915,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/capacidade-agenda/OcorrenciasSemOs.tsx": {
-      "sha256": "b30ee3302cd7323569a1517b4c1f7eb283fdd95c773442e7cd95e3389c3b583e",
-      "diagnostics": [
-        "3ab6210f58d01695e3d86eec87fabb4ab18eab42755746be9e7e68771d4ca821",
-        "715697ec92301758466f053113d95759637dc5602765c65e68db725b32b8aa1a",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/capacidade-agenda/SimulacaoManual.tsx": {
       "sha256": "456f7c4b45871c554de52623f19d93b17634d9bc8890a3403e77502ae3ec7804",
       "diagnostics": [
@@ -2984,26 +2930,10 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/capacidade-agenda/SnapshotCapacidade.tsx": {
-      "sha256": "e26500fcc429c360715a8d63d88334719679f33ddf2f6c9edebcab479fedbeea",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "d80dce4bffd723f62c322f297d52875ff2ecb3db6f0defd29cdb5dc12040b443",
-        "ef58515ca5b5ec425f23571e5492b3eee5aea3f4cde13797e45ae991ba588372"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/capacidade-agenda/Workspace.test.tsx": {
       "sha256": "f91805d58adc0b92f099fb3375a3dac6d30378b6b0bf515c9ae2db9106ae5754",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/capacidade-agenda/Workspace.tsx": {
-      "sha256": "931e30ab629686b3a4a921b29a7b8326e06bd1a491a5eb73d3b8cdf922c134be",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/pcm/interfaces/capacidades-sso/Workspace.test.tsx": {
@@ -3168,13 +3098,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/Consulta.tsx": {
-      "sha256": "2c0ce374afcca4a7c43a2358409d0bc52780db6cbe98ef201cdc5616cde5ea15",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/codigos-publicos/ConsultaCodigoGrupo.tsx": {
       "sha256": "400854d5773adf4010cd234356a935456537a312b95a31d167174ba5d51be662",
       "diagnostics": [
@@ -3184,29 +3107,6 @@
     },
     "apps/web/src/features/pcm/interfaces/codigos-publicos/ConsultaUnificada.tsx": {
       "sha256": "3473830e44143fbb31a4e6dede90cbc847d4aa6f791e9472240129b7be2ec901",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/DeclaracaoEtiqueta.tsx": {
-      "sha256": "e4732ba1c6d643cb26f750883bbf67fbed662a85ec71351d247260ac4a7b7d4d",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "e88a82dc80a0d6b60d929a1165250740cb957eb1677965a3da4fad28728b827a"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/EdicaoRascunho.tsx": {
-      "sha256": "91f7fe437f26adb4b91b35382eba5621df338b3cb9950065b423bfad997efda1",
-      "diagnostics": [
-        "47797bebdf23437eae261a56940e4bb0d5c8cabe36967b4baf4d74fb65f5eac8",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/EvidenciasUso.tsx": {
-      "sha256": "728fcaf41c50262dac03238dd53e8a110ffb2a3b989e5c5151ac61436605daa2",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
@@ -3235,14 +3135,6 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/QrCodigoGrupo.tsx": {
-      "sha256": "a3fc2a099d68daa1de7df794f53333ac3c3cfd81455678a621df40bda58ab4dd",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "fe29a08c77295644858931b2cae7afcf61e138405c6c735dbfffc594e6c4408f"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/codigos-publicos/RecuperarObservacoesReserva.tsx": {
       "sha256": "d4de6d68902c2be2db1ece30d106039a592453f292f5380468bf1a1aad517891",
       "diagnostics": [
@@ -3261,14 +3153,6 @@
       "sha256": "f8422a3ad6b7921566a38872b6bccf41f9e1dbed88978041c7c1dbef7a2c89c6",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/Substituicao.tsx": {
-      "sha256": "fda07c879564e5964e47984d7ab92bfbf7ef1f955a2064dcca9228bb81923c6c",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "ebcca460454211127bcb1f6e5dae9f78e15c7406b6132281714b4358da063133"
       ]
     },
     "apps/web/src/features/pcm/interfaces/despesas-visita/AtribuirTecnico.tsx": {
@@ -3434,15 +3318,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/despesas-visita/Workspace.tsx": {
-      "sha256": "1efd324ec099cf83284cbb48abaed71ecc0a844c38f0b77a4023bff429c3965f",
-      "diagnostics": [
-        "8480f6185021f0ba09ddd40d56a9eee5faaf49a8945786ccd2fc2a5e847ddcc3",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "fb41340cadbc48e4ef6f5267fa7e90002e460238d5f4bb700b05109856bdd368"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/estrutura-tecnica/AtivoLocalLeitura.tsx": {
       "sha256": "04f5a11d1f6577abd22c54e07831f761ccdbf60b9c6854d57d3af331d0ada249",
       "diagnostics": [
@@ -3464,12 +3339,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbAtivo.tsx": {
-      "sha256": "d5943b26810078a90808450064e0e740fb0b1f7416815320d9ac0ba8ce160e60",
-      "diagnostics": [
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/estrutura-tecnica/BreadcrumbGrupo.tsx": {
       "sha256": "7d682385584ce5066ae1a548d25730f3aa7f9ab02eded1c31d848bbecc50b31b",
       "diagnostics": [
@@ -3489,13 +3358,6 @@
       "diagnostics": [
         "bd5e53779fa911d848019c8266d1aba9afb37ce864c9bfa08210a7f87cba06d6",
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/ComposicaoLocal.tsx": {
-      "sha256": "d470de1a045fc789b8b64d03de5863d65bd9d5ea5c073986052d3cf594773745",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/pcm/interfaces/estrutura-tecnica/DiagnosticoAncestraisGrupos.tsx": {
@@ -3613,12 +3475,6 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/HistoricoGrupo.tsx": {
-      "sha256": "f8014cc16c337bde36f226194c8e71e02eca203a1853a71a8cb5683fcb6f3fad",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/estrutura-tecnica/lerComposicao176.ts": {
       "sha256": "0e72ac8d3588fe7bb5de3521ea2241cb966d447c367bf6392ee6806437410f8b",
       "diagnostics": [
@@ -3642,12 +3498,6 @@
     },
     "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentacaoDetalhe.test.tsx": {
       "sha256": "a3978c86ae52bfa530f414127180be151e82712414fbe1a033f5997a27523adc",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/estrutura-tecnica/MovimentacaoDetalhe.tsx": {
-      "sha256": "1daa4b7c3a78023513a64e3d9603f92ffc9d659bcf446917441d652aa46651d5",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
@@ -3717,14 +3567,6 @@
       "sha256": "90d779f4be403f6a7efce1865b17124b917b3daab44f82f5d5f01f5ad3d00e56",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/importacao-plano/AprovarLote.tsx": {
-      "sha256": "0ad4766ddca1ff8ab7b12b1bee6223ac5d5eb4a41a2c996b6ebcb3ea40f32982",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "e0b04ac5d1cc83293f6c568e9201014ee547ca55e09a4f2890464a5f2b09a1a7"
       ]
     },
     "apps/web/src/features/pcm/interfaces/importacao-plano/AvisosXlsx.test.tsx": {
@@ -3899,16 +3741,6 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/importacao-plano/Workspace.tsx": {
-      "sha256": "166d9de3987219509f19d2f1f5e8fc710a19c768742bbd4db34ac12227e6bb92",
-      "diagnostics": [
-        "174a48e3aa453ab8782e38a849b43218e4f7c08c8f4f66a2474dc63da0dd21d6",
-        "3795a4bfeb195de4bdf336aedf76b1e56b7230e02aeec439af18ee241bc3bb4e",
-        "ab0cc1cca89434c9d4bfd8fabdc7d5f84e7ea53588d89c32db9ca3f1c4c68ee4",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/levantamentos/AdequacaoDocumento.tsx": {
       "sha256": "347b6694662eccb5230095301a3e836201c7f016376fedf5ba65150305e45849",
       "diagnostics": [
@@ -4066,20 +3898,6 @@
         "e91fa54aa1f3d9b896cdb745a74a14cf62df184381175e07d41d8c56c0c3e04b"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/levantamentos/Conectado.tsx": {
-      "sha256": "5f54c4e4e8eca271ed91497a6d75915c0456b5d999b84a6b1222ae95364b4e64",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/levantamentos/Conferencia.tsx": {
-      "sha256": "eaa203cfcfebcedceefa2bbc2dd9393188b87e81921a3689797b12a2767acfc9",
-      "diagnostics": [
-        "2574e10ccbd62dfa21feb33dcbee02a45ac5a352f62c841311e8ee0e7805bff7",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/levantamentos/ConferenciaCodigosLote.tsx": {
       "sha256": "ccb8d7eac22294eaafc4c1400283d56b9496d9b1a4d739b5755e962a74e94b3b",
       "diagnostics": [
@@ -4179,13 +3997,6 @@
       "sha256": "5214909f8a8bb79fc67e703c802589757a00f8d4d004d2c63d90471cc382bbfa",
       "diagnostics": [
         "7e3beafb9357aadacd1d514dcbfe9edc1c8d0a76c1fb08d76c6f16193670e26f",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/levantamentos/DecisaoLinha.tsx": {
-      "sha256": "27bdef7fc5adca60da65b92c443ca200b4d30434605f2c55fc825d345452c541",
-      "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
@@ -4326,22 +4137,6 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/levantamentos/IncorporacaoAtivo.tsx": {
-      "sha256": "dc44e35e2fa780c6e219eb54148afee9801fb9810d3cddeef937d2975b34f3c1",
-      "diagnostics": [
-        "688c3557aacfbf8e40ed3f671af616673d282cff93738f62d4c51430f18b6319",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/levantamentos/IncorporacaoLocalizacao.tsx": {
-      "sha256": "411d5d830be5165d5b038376541d7b1d4906350b51f65508f84a5ae2c790b933",
-      "diagnostics": [
-        "33374e7403f6923b9a93f8be408db64d97cad963eef17df13f60cf0920c3e10e",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/levantamentos/LinhasEditadasLote.tsx": {
       "sha256": "d5ccd92cff20b412021a1a15518fbfe1ba914ae3fc599fe2aa72448feae5f3b2",
       "diagnostics": [
@@ -4439,12 +4234,6 @@
       "diagnostics": [
         "7eac34cc66b286b25f709701f0576d65d7d5c83feec67b8c8ffa389b9bfb54e6",
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/levantamentos/Rejeicao.tsx": {
-      "sha256": "fa6936e1f33e0dbc3d15ce240f1fdd71e8f9d70f09bca79b6de83e2419c2d18a",
-      "diagnostics": [
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
@@ -4562,13 +4351,6 @@
         "fc4ff31d3459eac76eb0910ff54ab8bac3f2d9ba977c570b9ce9168a8df6a326"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/Central.tsx": {
-      "sha256": "753589392f5005c7affae44f01be9a2451dad9591a83fbdfa650c6b3c42fdd97",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/listas-materiais/DisponibilidadeMateriais.test.tsx": {
       "sha256": "bf3d2c2b3f3910fce20792fcd92d4d0743d3c1490090c0445383406837fc2979",
       "diagnostics": [
@@ -4581,12 +4363,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
         "d4983e3d9add6ea2a9214ae9297d81ee4c9af70b38a5bb2a12de8397fa0350c8"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/EditorPersistido.tsx": {
-      "sha256": "59a1fe8425d93f20205b45d9648e60bb6457a6043a3eb7c8bb5392c8e3b87d96",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
     "apps/web/src/features/pcm/interfaces/listas-materiais/EvidenciasExcecao.test.tsx": {
@@ -4663,14 +4439,6 @@
       "sha256": "e776b65f5245798f220b439782b3eb9fc9cee25371b6fbe9b85b5fd77e02f409",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/listas-materiais/Workspace.tsx": {
-      "sha256": "6c308ef0f2aa4a00d8a0f8a31b6f0867974032e6386ebc51b83f9ba6fb2f6452",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "d8902090bd5519b1ec9c23aa4dd207a9b625f4763238d3ddafc18d412adf6368"
       ]
     },
     "apps/web/src/features/pcm/interfaces/migracao/ConferenciaPlanoLegado.tsx": {
@@ -5398,15 +5166,6 @@
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/pendencias-tecnicas/Workspace.tsx": {
-      "sha256": "619ba6abf695fa2714cd7e5c35830b939f6e580eefd27e237cdb37cb9f13b703",
-      "diagnostics": [
-        "2020c40134275e096a34d9380be4118e3d1c46c5755e9d9df7ae1744065ee43f",
-        "42c5094873f148f39580dcb940b22cd268f860c3a2df15c7f8ec25cf1f61e4a0",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/plano-manutencao/AcoesRevisaoConcorrencia.test.tsx": {
       "sha256": "ac41d793e8c1b67cede2046a83ea46d38b744c5d497ee5e4ab169fc83cb16a98",
       "diagnostics": [
@@ -5705,15 +5464,6 @@
         "27829a5465e474d0814e5536e558df82b3029b73ce5b6631bcf493ccaebfb8e9",
         "4bc68426f0a78cbbcbf56e6a0dff1c8f087778daa05851e89a6ff8f2121de065",
         "6f4f4ea2c4113003cfff718d89ac6c42b9b311784015b0ee36ea011aa1fae5c7",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/plano-manutencao/DecisaoPmoc.tsx": {
-      "sha256": "394ac9d0c2767920cc8b1ecfb5e8135669717cb7ccd8772b452e14a991e9e0ef",
-      "diagnostics": [
-        "534210f2914a713f0d4c3f8c0e0a0ded672d71a03add1188060e9e8e83d4b13a",
-        "a65cdba8347279e3147e40e8fd40ebf262d9db38be10eb0cf724dd89b9db8503",
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
@@ -6179,13 +5929,6 @@
         "d869a36e26a34bac5c18d439d2a1f14a9036f49a70d490663a6515a49159a847"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloCanonico.tsx": {
-      "sha256": "6987236613bcc8ba89c81a2209766d5ca97a562352baa423a4bb9ef4f4e1fbea",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/plano-manutencao/MaterializarCicloLegado.test.tsx": {
       "sha256": "53cc5f4fe73bfdbc4f84f66bbcecdceea3dd0b757f3df3cad876cdb1b9f4cb1e",
       "diagnostics": [
@@ -6456,13 +6199,6 @@
         "debdb3a543252c844ea175229a65851f6c85733b4a49810d2352afca0c6f32e5"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/plano-manutencao/QuestionarioAprovado.tsx": {
-      "sha256": "e3feabfa639b98c2c61842a7a2cc31f69b365133a1d3b2b34bbec63f2779c5b9",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/pcm/interfaces/plano-manutencao/ReabrirGrupoFila.test.tsx": {
       "sha256": "da1372c778a56c113237b7f1455870089486399a4d65be2ae8d36858a555ef7d",
       "diagnostics": [
@@ -6698,13 +6434,6 @@
       "sha256": "61a70a21767863d67c717a2ad8f1767886e2bb5bebc7e2ad59d74399a127c1ac",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/plano-manutencao/Workspace.tsx": {
-      "sha256": "4e55e002e08a6ae086433e63655ee3eaf6b368b7fe4bef3b70844d6716e6a74b",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/pcm/interfaces/reconciliacao/AcoesLocaisFila.tsx": {
@@ -7099,14 +6828,6 @@
       "sha256": "f7ab41b58c3949919480b96b2aa7950c04ac7898a248852c2ddfff75d03a2635",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/retorno-campo/AprovarRetornoPcm.tsx": {
-      "sha256": "18f2619107d6d4625916f78384835128520abdeeee81f361e5bbf65eee01d6b5",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "d0d32a9d6d3cfb822067bdad554942e6a827b343e0de4808d259312f1b69cc72"
       ]
     },
     "apps/web/src/features/pcm/interfaces/retorno-campo/ClassificarRetorno.tsx": {
@@ -7510,18 +7231,6 @@
         "f0e37f52af35a81188cbb846b9407f76c312c6429196ddc1f473f7d8851880f0"
       ]
     },
-    "apps/web/src/features/pcm/interfaces/visitas/Workspace.tsx": {
-      "sha256": "cc08f98d02fafed10e12933a3112695f19ad97ff5880f6f871e350e156aff672",
-      "diagnostics": [
-        "13e3944de9c911babe69cf210cad0d23a5e0c0f5496fcf6693baf3988b346ffe",
-        "429f7f15b0e5fb3c14cdf5cd1f06cf6c0c5afc98f9022882f0286cf81805c6f7",
-        "4363254183e5205046aef2a0a91aaf3d69f64e995e0b5c3aa34d6db778bcdbd4",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "c91ea8eb026ba38e5f04c2b99b9e6b7e0630a8dea8834d09bef9e501998cbb03",
-        "f87189b44e62d20464c52ef6f0c9e3e96189d0c709aff583936a2a598d58a04d"
-      ]
-    },
     "apps/web/src/features/pcm/pages/BacklogGutPage.tsx": {
       "sha256": "a4d6f41d5822c1fee4291b4014d063d42c763732ec7e6c6e53d86c6338ff37cd",
       "diagnostics": [
@@ -7593,12 +7302,6 @@
     },
     "apps/web/src/lib/pdf/relatorio-pdf.test.ts": {
       "sha256": "c479a7578c3190c677107100a1b60e2b32b2a4af3f51280452cf63c69367c757",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/lib/pdf/relatorio-pdf.ts": {
-      "sha256": "13a5030fd61cfbf7c8bce8e1245fdaabe8a6587af1f50dc1150729f9d0ad1d0a",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
