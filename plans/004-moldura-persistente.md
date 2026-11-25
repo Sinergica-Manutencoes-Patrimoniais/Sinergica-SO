@@ -1,6 +1,6 @@
 # 004 — Moldura persistente: skeleton na região, nunca na página inteira
 
-- **Status**: TODO
+- **Status**: DONE (OrdensServicoPage; demais telas pendentes)
 - **Commit**: cc104969
 - **Severity**: HIGH
 - **Category**: Percepção
