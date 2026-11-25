@@ -9,7 +9,7 @@
 // seja de outra identidade, sem precisar de um state `origem` paralelo comparando quem pediu.
 import { useQuery } from "@tanstack/react-query";
 import type { PermissaoModulo } from "../domain/grupo";
-import { supabaseConfigAdapter } from "../infrastructure/supabase-config-adapter";
+import type { ConfigGateway } from "./config-gateway";
 import { resolverMinhasPermissoes } from "./resolver-minhas-permissoes";
 
 export const permissoesQueryKeys = {
@@ -22,14 +22,17 @@ export const permissoesQueryKeys = {
 const CINCO_MINUTOS = 5 * 60 * 1000;
 const MEIA_HORA = 30 * 60 * 1000;
 
+// `application/` não importa `infrastructure/` (regra do dependency-cruiser) — quem injeta o
+// gateway é a borda, igual `agenda-projecao-queries.ts` já faz.
 export function useMinhasPermissoes(
+  gateway: ConfigGateway,
   usuarioId: string | undefined,
   papel: string | undefined,
   habilitado: boolean,
 ) {
   return useQuery<PermissaoModulo[]>({
     queryKey: permissoesQueryKeys.minhas(usuarioId, papel),
-    queryFn: () => resolverMinhasPermissoes(supabaseConfigAdapter),
+    queryFn: () => resolverMinhasPermissoes(gateway),
     enabled: habilitado && Boolean(usuarioId) && Boolean(papel),
     staleTime: CINCO_MINUTOS,
     gcTime: MEIA_HORA,

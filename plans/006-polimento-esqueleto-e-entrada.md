@@ -1,3 +1,9 @@
+---
+name: plano-006-polimento-esqueleto
+description: Plano E00-S29/006 — esqueleto com a forma do conteúdo e fade curto na entrada, usando os tokens que já existem.
+alwaysApply: false
+---
+
 # 006 — Polimento: esqueleto com a forma certa e entrada do conteúdo
 
 - **Status**: DONE

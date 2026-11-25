@@ -1,3 +1,9 @@
+---
+name: plano-003-primeira-pintura
+description: Plano E00-S29/003 — shell inline no index.html e fonte fora do caminho crítico, para a tela não nascer branca.
+alwaysApply: false
+---
+
 # 003 — Primeira pintura: shell inline e fonte sem bloqueio
 
 - **Status**: DONE
