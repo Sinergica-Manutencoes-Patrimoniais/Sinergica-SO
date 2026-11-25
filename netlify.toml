@@ -38,6 +38,11 @@
   # deslocamento e as Fontes de Demanda. Declarada aqui pela primeira vez: sem ela, ligar os
   # Trechos não traz a tela, porque o bloco inteiro não renderiza.
   VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
+  # E02-S16 (ADR-1700): Instagram Direct no Atendimento — aba de conexão em Atendimento →
+  # Configurações → Instagram. LIGADA em 25/11/2026 por decisão do Lucas. Desligar devolve a aba
+  # ao aviso de recurso desligado; NÃO derruba canal já conectado (quem autoriza o recebimento é o
+  # segredo por canal, não a flag do front).
+  VITE_SSO_INSTAGRAM_DIRECT_ENABLED = "true"
 
 # SPA: todas as rotas servem index.html
 [[redirects]]

@@ -201,8 +201,8 @@ _6 concluídas no histórico · maior ID usado: E02-S43_
 | E02-S13 | IA | Codex | Implementada localmente — identidade, m… | [spec](../../specs/E02-S13-config-aba-ia/spec.md) |
 | E02-S14 | Operação | Codex | Implementada localmente — regras, limit… | [spec](../../specs/E02-S14-config-aba-operacao/spec.md) |
 | E02-S15 | Conhecimento / Base RAG | Codex | Implementada localmente — CRUD, busca p… | [spec](../../specs/E02-S15-config-conhecimento-rag/spec.md) |
-| E02-S16 | Meta | Codex | Código implementado localmente — conexã… | [spec](../../specs/E02-S16-config-canais-meta/spec.md) |
-| E02-S17 | Coment. IG + Opt-outs | Codex | Implementada localmente — automações IG… | [spec](../../specs/E02-S17-config-automacao-igcomments-optouts/spec.md) |
+| E02-S16 | Meta | Claude (sessão Lucas) | Código implementado localmente — conexã… | [spec](../../specs/E02-S16-config-canais-meta/spec.md) |
+| E02-S17 | Coment. IG + Opt-outs | Claude (sessão Lucas) | Implementada localmente — automações IG… | [spec](../../specs/E02-S17-config-automacao-igcomments-optouts/spec.md) |
 | E02-S18 | Scoring + Clusters | Codex | Implementada localmente — configuração,… | [spec](../../specs/E02-S18-config-scoring-clusters/spec.md) |
 | E02-S19 | Evolution | Codex | Implementada localmente; UAT Evolution… | [spec](../../specs/E02-S19-config-aba-evolution/spec.md) |
 | E02-S20 | Fluxos | Codex | Implementada localmente; pgTAP/UAT pend… | [spec](../../specs/E02-S20-fluxos-node-graph/spec.md) |

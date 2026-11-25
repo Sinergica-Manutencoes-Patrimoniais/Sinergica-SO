@@ -2524,6 +2524,12 @@
     "descricao": "Inicio processamento"
   },
   {
+    "nome": "VITE_SSO_INSTAGRAM_DIRECT_ENABLED",
+    "padrao": true,
+    "jornada": "outra",
+    "descricao": "Conectar a conta do Instagram e atender o Direct no Inbox (E02-S16, ADR-1700)."
+  },
+  {
     "nome": "VITE_SSO_INTEGRAR_LEGADA_EXISTENTE_ENABLED",
     "padrao": false,
     "jornada": "outra",

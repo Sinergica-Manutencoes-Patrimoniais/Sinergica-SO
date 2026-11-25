@@ -2,6 +2,12 @@ import { Bot, History, MessageCircle, RefreshCw, Send, UserCheck } from "lucide-
 import { useEffect, useRef, useState } from "react";
 import type { WaTemplateItem } from "../domain/canais-externos";
 import { canalSuportaIa, labelCanal } from "../domain/conversas";
+import {
+  bytesDoTexto,
+  janelaDoDirectFechada,
+  LIMITE_DE_BYTES_DO_DIRECT,
+  validarTextoDoDirect,
+} from "../domain/instagram-direct";
 import type { ConversaItem } from "../domain/conversas";
 import type { MensagemItem } from "../domain/mensagens";
 import { formatarTotalCustoIaConversa, totalCustoIaConversa } from "../domain/mensagens";
@@ -61,12 +67,20 @@ export function ConversaChat({
   const suportaIa = canalSuportaIa(conversa.canal);
   const totalIa = totalCustoIaConversa(mensagens);
 
+  // E02-S16/ADR-1700 — regras do Direct que vêm da Meta: texto puro, 1000 bytes e janela de 24 h
+  // desde a última mensagem do contato. O atendente vê isso ANTES de escrever, não depois de a
+  // Meta recusar.
+  const ehDirect = conversa.canal === "instagram";
+  const bytesDaResposta = ehDirect ? bytesDoTexto(texto) : 0;
+  const acimaDoLimite = ehDirect && bytesDaResposta > LIMITE_DE_BYTES_DO_DIRECT;
+  const janelaFechada = ehDirect && janelaDoDirectFechada(mensagens);
+
   async function enviar() {
     if (!texto.trim()) return;
     try {
       setEnviando(true);
       setErro(null);
-      await onEnviar(texto);
+      await onEnviar(ehDirect ? validarTextoDoDirect(texto) : texto);
       setTexto("");
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Não foi possível enviar a mensagem.");
@@ -222,12 +236,19 @@ export function ConversaChat({
         </div>
       )}
 
-      {temEscrita && (
+      {temEscrita && !ehDirect && (
         <RichComposer
           templates={templates}
           disabled={conversa.canal !== "whatsapp"}
           onEnviar={enviarRico}
         />
+      )}
+
+      {temEscrita && janelaFechada && (
+        <div className="mx-4 mb-2 rounded-md border border-warning-line bg-warning-soft px-3 py-2 text-body text-ink-2">
+          A janela de 24 h do Instagram fechou; a mensagem não será entregue. Ela só reabre quando
+          o contato escrever de novo.
+        </div>
       )}
 
       {temEscrita && (
@@ -248,14 +269,23 @@ export function ConversaChat({
                 enviar();
               }
             }}
-            placeholder="Escreva uma mensagem…"
+            placeholder={
+              ehDirect ? "Direct do Instagram: só texto." : "Escreva uma mensagem…"
+            }
             className="input min-h-[40px] flex-1 resize-none"
             rows={1}
           />
+          {ehDirect && (
+            <span
+              className={`text-micro font-semibold ${acimaDoLimite ? "text-danger" : "text-ink-3"}`}
+            >
+              {bytesDaResposta}/{LIMITE_DE_BYTES_DO_DIRECT}
+            </span>
+          )}
           <button
             type="button"
             onClick={enviar}
-            disabled={enviando || !texto.trim()}
+            disabled={enviando || !texto.trim() || acimaDoLimite || janelaFechada}
             className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-orange px-3 text-body font-semibold text-white hover:bg-orange-deep disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
