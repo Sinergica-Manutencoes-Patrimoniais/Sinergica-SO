@@ -15,7 +15,7 @@ Os tokens de movimento, o comportamento do modal e o primitivo `Skeleton` já es
 | # | Plano | Sev | Depende de | Status |
 |---|---|---|---|---|
 | 001 | [Quebrar o bundle único em chunks por módulo](001-code-splitting-por-modulo.md) | HIGH | — | **DONE** |
-| 002 | [Permissões no TanStack Query e fim do waterfall](002-permissoes-sem-waterfall.md) | HIGH | — | TODO |
+| 002 | [Permissões no TanStack Query e fim do waterfall](002-permissoes-sem-waterfall.md) | HIGH | — | **DONE** |
 | 003 | [Primeira pintura: shell inline e fonte sem bloqueio](003-primeira-pintura-sem-branco.md) | HIGH | — | TODO |
 | 004 | [Moldura persistente: esqueleto na região](004-moldura-persistente.md) | HIGH | 002 | TODO |
 | 005 | [Filtro e busca não derrubam a lista](005-filtro-sem-piscar.md) | MEDIUM | — | TODO |

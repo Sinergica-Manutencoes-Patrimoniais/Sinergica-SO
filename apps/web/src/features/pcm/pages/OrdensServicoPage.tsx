@@ -197,7 +197,12 @@ export function OrdensServicoPage({
     }),
     [buscaDebounced, filtros, visao, intervaloAgenda],
   );
-  const consultasAtivas = !permissoesCarregando && temLeitura;
+  // E00-S29 — `!permissoesCarregando` saiu daqui de propósito. Ele serializava a tela: nenhuma
+  // consulta de dado partia antes da viagem de permissão terminar. `temLeitura` já é `false`
+  // enquanto a permissão não resolveu (`podeAcessar` devolve `false` sem dado), então o gate
+  // continua igualmente seguro — só deixou de ser sequencial. Com a permissão em cache
+  // (permissoes-queries.ts), na segunda visita as consultas partem no primeiro render.
+  const consultasAtivas = temLeitura;
   const consultaKpis = useMemo(
     () => ({
       busca: consulta.busca,
