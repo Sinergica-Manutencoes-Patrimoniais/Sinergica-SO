@@ -28,7 +28,7 @@ function descrever(valor: unknown): string {
 
 function atributos(valor: unknown): Record<string, unknown> {
   return valor !== null && typeof valor === "object" && !Array.isArray(valor)
-    ? valor as Record<string, unknown>
+    ? (valor as Record<string, unknown>)
     : {};
 }
 
@@ -49,8 +49,7 @@ export function HistoricoGrupo({
     },
     gcTime: 0,
   });
-  if (historico.isPending || historico.isFetching)
-    return <output>Carregando histórico…</output>;
+  if (historico.isPending || historico.isFetching) return <output>Carregando histórico…</output>;
   if (historico.isError)
     return (
       <div role="alert">
@@ -78,7 +77,14 @@ export function HistoricoGrupo({
                   : "Grupo atualizado"}
             </strong>{" "}
             <time dateTime={evento.data}>{new Date(evento.data).toLocaleString("pt-BR")}</time>
-            {tipo === "grupo" && <MotivoEventoGrupo userId={userId} clienteId={clienteId} grupoId={grupoId} eventoId={evento.id} />}
+            {tipo === "grupo" && (
+              <MotivoEventoGrupo
+                userId={userId}
+                clienteId={clienteId}
+                grupoId={grupoId}
+                eventoId={evento.id}
+              />
+            )}
             {evento.antes?.quantidade != null && evento.depois.quantidade != null && (
               <p>
                 Quantidade: {String(evento.antes.quantidade)} para{" "}
@@ -90,9 +96,10 @@ export function HistoricoGrupo({
               <dl>
                 {Object.entries(nomesCampos)
                   .filter(
-                    ([campo]) => campo !== "caracteristicas" &&
+                    ([campo]) =>
+                      campo !== "caracteristicas" &&
                       JSON.stringify(evento.antes?.[campo] ?? null) !==
-                      JSON.stringify(evento.depois[campo] ?? null),
+                        JSON.stringify(evento.depois[campo] ?? null),
                   )
                   .map(([campo, rotulo]) => (
                     <div key={campo}>
@@ -103,13 +110,32 @@ export function HistoricoGrupo({
                     </div>
                   ))}
               </dl>
-              {JSON.stringify(evento.antes?.caracteristicas ?? null) !== JSON.stringify(evento.depois.caracteristicas ?? null) && (
+              {JSON.stringify(evento.antes?.caracteristicas ?? null) !==
+                JSON.stringify(evento.depois.caracteristicas ?? null) && (
                 <section aria-label="Alterações de características">
                   <h5>Características</h5>
                   <dl>
-                    {[...new Set([...Object.keys(atributos(evento.antes?.caracteristicas)), ...Object.keys(atributos(evento.depois.caracteristicas))])].sort().filter((nome) =>
-                      JSON.stringify(atributos(evento.antes?.caracteristicas)[nome] ?? null) !== JSON.stringify(atributos(evento.depois.caracteristicas)[nome] ?? null),
-                    ).map((nome) => <div key={nome}><dt>{nome}</dt><dd>{descrever(atributos(evento.antes?.caracteristicas)[nome])} para {descrever(atributos(evento.depois.caracteristicas)[nome])}</dd></div>)}
+                    {[
+                      ...new Set([
+                        ...Object.keys(atributos(evento.antes?.caracteristicas)),
+                        ...Object.keys(atributos(evento.depois.caracteristicas)),
+                      ]),
+                    ]
+                      .sort()
+                      .filter(
+                        (nome) =>
+                          JSON.stringify(atributos(evento.antes?.caracteristicas)[nome] ?? null) !==
+                          JSON.stringify(atributos(evento.depois.caracteristicas)[nome] ?? null),
+                      )
+                      .map((nome) => (
+                        <div key={nome}>
+                          <dt>{nome}</dt>
+                          <dd>
+                            {descrever(atributos(evento.antes?.caracteristicas)[nome])} para{" "}
+                            {descrever(atributos(evento.depois.caracteristicas)[nome])}
+                          </dd>
+                        </div>
+                      ))}
                   </dl>
                 </section>
               )}

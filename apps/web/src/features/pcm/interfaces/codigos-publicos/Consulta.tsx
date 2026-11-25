@@ -1,24 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { localizarCodigoPublico } from "../../infrastructure/supabase-codigos-publicos-adapter";
-import { SubstituicaoCodigoPublico } from "./Substituicao";
-import { EdicaoRascunhoCodigo } from "./EdicaoRascunho";
 import { AliasesAtivo } from "./AliasesAtivo";
-import { DeclaracaoEtiqueta } from "./DeclaracaoEtiqueta";
-import { EvidenciasUso } from "./EvidenciasUso";
 import { CategoriaComponente } from "./CategoriaComponente";
 import { ConsultaCodigoGrupo } from "./ConsultaCodigoGrupo";
 import { ConsultaUnificada } from "./ConsultaUnificada";
-import { flagLigada } from "../../../../config/flags-sso";
+import { DeclaracaoEtiqueta } from "./DeclaracaoEtiqueta";
+import { EdicaoRascunhoCodigo } from "./EdicaoRascunho";
+import { EvidenciasUso } from "./EvidenciasUso";
+import { SubstituicaoCodigoPublico } from "./Substituicao";
 
 export function ConsultaCodigoPublico({
   userId,
   clienteId,
 }: { userId: string; clienteId: string }) {
-  if (flagLigada("VITE_SSO_BUSCA_UNIFICADA_GRUPO_ENABLED")) return <ConsultaUnificada userId={userId} clienteId={clienteId} />;
-  return <Conteudo key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} />;
+  if (flagLigada("VITE_SSO_BUSCA_UNIFICADA_GRUPO_ENABLED"))
+    return <ConsultaUnificada userId={userId} clienteId={clienteId} />;
+  return (
+    <Conteudo key={JSON.stringify([userId, clienteId])} userId={userId} clienteId={clienteId} />
+  );
 }
 
 function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) {
@@ -28,10 +31,15 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     queryKey: ["codigos-publicos", userId, clienteId, "permissao"],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
-      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.ler", clienteId);
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão indisponível ou alterada.");
+      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "cadastro.ler",
+        clienteId,
+      );
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão indisponível ou alterada.");
       return autorizada;
     },
     gcTime: 0,
@@ -42,44 +50,102 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     queryKey: ["codigos-publicos", userId, clienteId, "busca", busca],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão indisponível ou alterada.");
       const resposta = await localizarCodigoPublico(clienteId, busca, userId, signal);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão indisponível ou alterada.");
       return resposta;
     },
     enabled: permitido && Boolean(busca) && busca === codigo,
     gcTime: 0,
   });
-  const encontrado = permitido && !resultado.isFetching && !resultado.isError && busca === codigo && resultado.data?.situacao === "encontrado" && "tipo" in resultado.data && "ativoId" in resultado.data ? resultado.data : null;
+  const encontrado =
+    permitido &&
+    !resultado.isFetching &&
+    !resultado.isError &&
+    busca === codigo &&
+    resultado.data?.situacao === "encontrado" &&
+    "tipo" in resultado.data &&
+    "ativoId" in resultado.data
+      ? resultado.data
+      : null;
   const atual = useQuery({
-    queryKey: ["codigos-publicos", userId, clienteId, "codigo-atual", encontrado?.tipo, encontrado?.ativoId],
-    enabled: permitido && !!encontrado && (flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") || flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")),
+    queryKey: [
+      "codigos-publicos",
+      userId,
+      clienteId,
+      "codigo-atual",
+      encontrado?.tipo,
+      encontrado?.ativoId,
+    ],
+    enabled:
+      permitido &&
+      !!encontrado &&
+      (flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") ||
+        flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")),
     gcTime: 0,
     queryFn: async ({ signal }) => {
       if (!encontrado) throw new Error("Ativo não selecionado.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão indisponível ou alterada.");
       if (flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED")) {
-        const { data, error } = await supabase.schema("pcm").rpc("sso_consultar_codigo_atual_mediado", {
-          p_ator_id: userId, p_cliente_id: clienteId, p_tipo: encontrado.tipo, p_ativo_id: encontrado.ativoId,
-        }).abortSignal(signal);
+        const { data, error } = await supabase
+          .schema("pcm")
+          .rpc("sso_consultar_codigo_atual_mediado", {
+            p_ator_id: userId,
+            p_cliente_id: clienteId,
+            p_tipo: encontrado.tipo,
+            p_ativo_id: encontrado.ativoId,
+          })
+          .abortSignal(signal);
         if (error) throw error;
         const depois = await supabase.auth.getUser();
-        if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
-        if (!data || data.tipo !== encontrado.tipo || data.ativoId !== encontrado.ativoId || typeof data.codigo !== "string" || !data.codigo.trim() || data.codigo.length > 200)
+        if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+          throw new Error("Sessão indisponível ou alterada.");
+        if (
+          !data ||
+          data.tipo !== encontrado.tipo ||
+          data.ativoId !== encontrado.ativoId ||
+          typeof data.codigo !== "string" ||
+          !data.codigo.trim() ||
+          data.codigo.length > 200
+        )
           throw new Error("Código atual indisponível.");
         return data.codigo as string;
       }
-      const consulta = encontrado.tipo === "sistema"
-        ? supabase.schema("pcm").from("sistemas").select("codigo").eq("cliente_id", clienteId).eq("id", encontrado.ativoId).is("deleted_at", null).abortSignal(signal).maybeSingle()
-        : supabase.schema("pcm").from("equipamentos").select("identificador").eq("client_id", clienteId).eq("id", encontrado.ativoId).is("deleted_at", null).abortSignal(signal).maybeSingle();
+      const consulta =
+        encontrado.tipo === "sistema"
+          ? supabase
+              .schema("pcm")
+              .from("sistemas")
+              .select("codigo")
+              .eq("cliente_id", clienteId)
+              .eq("id", encontrado.ativoId)
+              .is("deleted_at", null)
+              .abortSignal(signal)
+              .maybeSingle()
+          : supabase
+              .schema("pcm")
+              .from("equipamentos")
+              .select("identificador")
+              .eq("client_id", clienteId)
+              .eq("id", encontrado.ativoId)
+              .is("deleted_at", null)
+              .abortSignal(signal)
+              .maybeSingle();
       const { data, error } = await consulta;
       if (error) throw error;
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão indisponível ou alterada.");
-      const valor = data && ("codigo" in data ? data.codigo : "identificador" in data ? data.identificador : null);
-      if (typeof valor !== "string" || !valor.trim() || valor.length > 200) throw new Error("Código atual indisponível.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão indisponível ou alterada.");
+      const valor =
+        data &&
+        ("codigo" in data ? data.codigo : "identificador" in data ? data.identificador : null);
+      if (typeof valor !== "string" || !valor.trim() || valor.length > 200)
+        throw new Error("Código atual indisponível.");
       return valor;
     },
   });
@@ -119,7 +185,9 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
             onChange={(e) => setCodigo(e.target.value)}
           />
         </label>
-        <button type="submit" disabled={resultado.isFetching}>Consultar</button>
+        <button type="submit" disabled={resultado.isFetching}>
+          Consultar
+        </button>
       </form>
       {busca === codigo && resultado.isFetching && <output>Consultando código…</output>}
       {busca === codigo && resultado.isError && (
@@ -148,31 +216,93 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
         resultado.data?.situacao === "encontrado" && (
           <>
             <p>
-              {resultado.data.tipo === "sistema" ? "Sistema" : "Equipamento ou Componente (cadastro compartilhado)"} · ID{" "}
-              {resultado.data.ativoId}
+              {resultado.data.tipo === "sistema"
+                ? "Sistema"
+                : "Equipamento ou Componente (cadastro compartilhado)"}{" "}
+              · ID {resultado.data.ativoId}
             </p>
-            {flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && <section aria-label="Código atual do cadastro">
-              {atual.isFetching && <output>Consultando código atual…</output>}
-              {atual.isError && <p role="alert">Código atual indisponível. <button type="button" onClick={() => void atual.refetch()}>Tentar novamente</button></p>}
-              {!atual.isFetching && !atual.isError && atual.data && <p>Código consultado: {busca} · código atual: {atual.data}. Códigos anteriores permanecem no histórico quando disponíveis.</p>}
-            </section>}
-            <EdicaoRascunhoCodigo userId={userId} clienteId={clienteId} tipo={resultado.data.tipo} ativoId={resultado.data.ativoId} />
-            <AliasesAtivo userId={userId} clienteId={clienteId} tipo={resultado.data.tipo} ativoId={resultado.data.ativoId} />
-            <EvidenciasUso userId={userId} clienteId={clienteId} tipo={resultado.data.tipo} ativoId={resultado.data.ativoId} />
-            {resultado.data.tipo === "componente" && <CategoriaComponente userId={userId} clienteId={clienteId} componenteId={resultado.data.ativoId} />}
-            <DeclaracaoEtiqueta userId={userId} clienteId={clienteId} tipo={resultado.data.tipo} ativoId={resultado.data.ativoId} />
-            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && atual.isFetching && <output>Consultando código atual…</output>}
-            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && atual.isError && <p role="alert">Código atual indisponível; correção não oferecida. <button type="button" onClick={() => void atual.refetch()}>Tentar novamente</button></p>}
-            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") && !atual.isFetching && !atual.isError && atual.data && (
-              <SubstituicaoCodigoPublico
-                key={JSON.stringify([userId, clienteId, resultado.data.tipo, resultado.data.ativoId, atual.data])}
+            {flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") && (
+              <section aria-label="Código atual do cadastro">
+                {atual.isFetching && <output>Consultando código atual…</output>}
+                {atual.isError && (
+                  <p role="alert">
+                    Código atual indisponível.{" "}
+                    <button type="button" onClick={() => void atual.refetch()}>
+                      Tentar novamente
+                    </button>
+                  </p>
+                )}
+                {!atual.isFetching && !atual.isError && atual.data && (
+                  <p>
+                    Código consultado: {busca} · código atual: {atual.data}. Códigos anteriores
+                    permanecem no histórico quando disponíveis.
+                  </p>
+                )}
+              </section>
+            )}
+            <EdicaoRascunhoCodigo
+              userId={userId}
+              clienteId={clienteId}
+              tipo={resultado.data.tipo}
+              ativoId={resultado.data.ativoId}
+            />
+            <AliasesAtivo
+              userId={userId}
+              clienteId={clienteId}
+              tipo={resultado.data.tipo}
+              ativoId={resultado.data.ativoId}
+            />
+            <EvidenciasUso
+              userId={userId}
+              clienteId={clienteId}
+              tipo={resultado.data.tipo}
+              ativoId={resultado.data.ativoId}
+            />
+            {resultado.data.tipo === "componente" && (
+              <CategoriaComponente
                 userId={userId}
                 clienteId={clienteId}
-                tipo={resultado.data.tipo}
-                ativoId={resultado.data.ativoId}
-                codigoAnterior={atual.data}
+                componenteId={resultado.data.ativoId}
               />
             )}
+            <DeclaracaoEtiqueta
+              userId={userId}
+              clienteId={clienteId}
+              tipo={resultado.data.tipo}
+              ativoId={resultado.data.ativoId}
+            />
+            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") &&
+              !flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") &&
+              atual.isFetching && <output>Consultando código atual…</output>}
+            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") &&
+              !flagLigada("VITE_SSO_CODIGO_ATUAL_MEDIADO_ENABLED") &&
+              atual.isError && (
+                <p role="alert">
+                  Código atual indisponível; correção não oferecida.{" "}
+                  <button type="button" onClick={() => void atual.refetch()}>
+                    Tentar novamente
+                  </button>
+                </p>
+              )}
+            {flagLigada("VITE_SSO_SUBSTITUICAO_CODIGOS_ENABLED") &&
+              !atual.isFetching &&
+              !atual.isError &&
+              atual.data && (
+                <SubstituicaoCodigoPublico
+                  key={JSON.stringify([
+                    userId,
+                    clienteId,
+                    resultado.data.tipo,
+                    resultado.data.ativoId,
+                    atual.data,
+                  ])}
+                  userId={userId}
+                  clienteId={clienteId}
+                  tipo={resultado.data.tipo}
+                  ativoId={resultado.data.ativoId}
+                  codigoAnterior={atual.data}
+                />
+              )}
           </>
         )}
     </section>

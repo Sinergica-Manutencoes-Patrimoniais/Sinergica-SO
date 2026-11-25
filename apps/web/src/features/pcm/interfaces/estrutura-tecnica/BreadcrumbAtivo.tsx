@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "../../../../lib/supabase-client";
 import { flagLigada } from "../../../../config/flags-sso";
+import { supabase } from "../../../../lib/supabase-client";
 
 export function BreadcrumbAtivo({
   userId,

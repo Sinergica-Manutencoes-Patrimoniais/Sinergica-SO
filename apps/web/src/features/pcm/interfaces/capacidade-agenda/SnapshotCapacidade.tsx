@@ -1,16 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
-import { supabase } from "../../../../lib/supabase-client";
-import { consolidarEsforcoVisitas, identificarConflitosEsforco, type EsforcoVisita } from "../../domain/consolidar-esforco-visitas";
-import { chaveIdentidade } from "../../domain/capacidade-por-tecnico";
 import { flagLigada } from "../../../../config/flags-sso";
+import { supabase } from "../../../../lib/supabase-client";
+import { chaveIdentidade } from "../../domain/capacidade-por-tecnico";
+import {
+  type EsforcoVisita,
+  consolidarEsforcoVisitas,
+  identificarConflitosEsforco,
+} from "../../domain/consolidar-esforco-visitas";
 
 const minutos = z.number().int().nonnegative().nullable();
 function dataCivil(valor: string): number {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(valor) || valor.startsWith("0000")) return Number.NaN;
   const data = new Date(`${valor}T00:00:00.000Z`);
-  return Number.isFinite(data.getTime()) && data.toISOString().slice(0, 10) === valor ? data.getTime() : Number.NaN;
+  return Number.isFinite(data.getTime()) && data.toISOString().slice(0, 10) === valor
+    ? data.getTime()
+    : Number.NaN;
 }
 const estimativa = {
   esforco_revision: z.number().int().nonnegative(),
@@ -105,34 +111,68 @@ export function SnapshotCapacidade({
   clienteId,
   semana,
   aoUsarParcial,
-}: { userId: string; clienteId: string; semana: string; aoUsarParcial?: (dados: { semana: string; disponibilidade: number; demanda: number }) => void }) {
+}: {
+  userId: string;
+  clienteId: string;
+  semana: string;
+  aoUsarParcial?: (dados: { semana: string; disponibilidade: number; demanda: number }) => void;
+}) {
   const [filtroTecnico, setFiltroTecnico] = useState<{ contexto: string; id: string } | null>(null);
   const contexto = JSON.stringify([userId, clienteId, semana]);
   const usarCiclos = flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_CICLOS_ENABLED");
-  const usarReferencia = usarCiclos || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_REFERENCIA_ENABLED");
+  const usarReferencia =
+    usarCiclos || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_REFERENCIA_ENABLED");
   const usarV5 = usarReferencia || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V5_ENABLED");
   const usarV4 = usarV5 || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V4_ENABLED");
   const usarV3 = usarV4 || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V3_ENABLED");
   const usarV2 = usarV3 || flagLigada("VITE_SSO_SNAPSHOT_CAPACIDADE_V2_ENABLED");
   const q = useQuery({
-    queryKey: ["capacidade-snapshot", userId, clienteId, semana, usarV2, usarV3, usarV4, usarV5, usarReferencia, usarCiclos],
+    queryKey: [
+      "capacidade-snapshot",
+      userId,
+      clienteId,
+      semana,
+      usarV2,
+      usarV3,
+      usarV4,
+      usarV5,
+      usarReferencia,
+      usarCiclos,
+    ],
     gcTime: 0,
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       const { data, error } = await supabase
         .schema("pcm")
         .rpc(
-          usarCiclos ? "sso_snapshot_capacidade_ciclos" : usarReferencia ? "sso_snapshot_capacidade_referencia" : "sso_snapshot_capacidade_autorizado",
-          usarReferencia ? { p_cliente_id: clienteId, p_semana_inicio: semana } : {
-            p_cliente_id: clienteId, p_semana_inicio: semana,
-            p_versao: usarV5 ? 5 : usarV4 ? 4 : usarV3 ? 3 : usarV2 ? 2 : 1,
-          },
+          usarCiclos
+            ? "sso_snapshot_capacidade_ciclos"
+            : usarReferencia
+              ? "sso_snapshot_capacidade_referencia"
+              : "sso_snapshot_capacidade_autorizado",
+          usarReferencia
+            ? { p_cliente_id: clienteId, p_semana_inicio: semana }
+            : {
+                p_cliente_id: clienteId,
+                p_semana_inicio: semana,
+                p_versao: usarV5 ? 5 : usarV4 ? 4 : usarV3 ? 3 : usarV2 ? 2 : 1,
+              },
         )
         .abortSignal(signal);
       if (error) throw error;
-      if (usarReferencia) z.object({ referenciaVisita: z.literal("programacao_ou_vencimento"), fotografiaTransacional: z.literal(false) }).passthrough().parse(data);
-      if (usarCiclos) z.object({ identidadeCicloParcial: z.literal(true) }).passthrough().parse(data);
+      if (usarReferencia)
+        z.object({
+          referenciaVisita: z.literal("programacao_ou_vencimento"),
+          fotografiaTransacional: z.literal(false),
+        })
+          .passthrough()
+          .parse(data);
+      if (usarCiclos)
+        z.object({ identidadeCicloParcial: z.literal(true) })
+          .passthrough()
+          .parse(data);
       const r = usarV5
         ? snapshotV5.parse(data)
         : usarV4
@@ -161,19 +201,30 @@ export function SnapshotCapacidade({
               };
       const inicio = dataCivil(semana);
       if (
-        !Number.isFinite(inicio) || new Date(inicio).getUTCDay() !== 1 ||
+        !Number.isFinite(inicio) ||
+        new Date(inicio).getUTCDay() !== 1 ||
         r.osSemVisita.some((f) => {
           const dia = dataCivil(f.data_referencia);
           return !Number.isFinite(dia) || dia < inicio || dia >= inicio + 7 * 86_400_000;
         }) ||
-        (usarReferencia && r.ocorrenciasSemOs.some((f) => {
-          const referencia = dataCivil(f.data_referencia ?? ""); const vencimento = dataCivil(f.vencimento_original ?? "");
-          return !Number.isFinite(referencia) || !Number.isFinite(vencimento) || referencia < inicio || referencia >= inicio + 7 * 86_400_000 ||
-            (f.tipo === "calendario" && referencia !== vencimento);
-        })) ||
+        (usarReferencia &&
+          r.ocorrenciasSemOs.some((f) => {
+            const referencia = dataCivil(f.data_referencia ?? "");
+            const vencimento = dataCivil(f.vencimento_original ?? "");
+            return (
+              !Number.isFinite(referencia) ||
+              !Number.isFinite(vencimento) ||
+              referencia < inicio ||
+              referencia >= inicio + 7 * 86_400_000 ||
+              (f.tipo === "calendario" && referencia !== vencimento)
+            );
+          })) ||
         r.clienteId !== clienteId ||
         r.semanaInicio !== semana ||
-        (usarCiclos && [...r.fontesVisita, ...r.ocorrenciasSemOs, ...r.osSemVisita].some((f) => f.ciclo_id === undefined)) ||
+        (usarCiclos &&
+          [...r.fontesVisita, ...r.ocorrenciasSemOs, ...r.osSemVisita].some(
+            (f) => f.ciclo_id === undefined,
+          )) ||
         (r.fontesVisita.length === 100) !== r.limiteFontesAtingido ||
         (r.ocorrenciasSemOs.length === 100) !== r.limiteOcorrenciasAtingido ||
         (r.osSemVisita.length === 100) !== r.limiteOsSemVisitaAtingido ||
@@ -182,9 +233,13 @@ export function SnapshotCapacidade({
         new Set(r.vinculosIntervalo.map((v) => chaveIdentidade(v.intervalo_id))).size !==
           r.vinculosIntervalo.length ||
         r.vinculosIntervalo.some(
-          (v) => !r.disponibilidades.some((d) => chaveIdentidade(d.id) === chaveIdentidade(v.disponibilidade_id)),
+          (v) =>
+            !r.disponibilidades.some(
+              (d) => chaveIdentidade(d.id) === chaveIdentidade(v.disponibilidade_id),
+            ),
         ) ||
-        new Set(r.disponibilidades.map((d) => chaveIdentidade(d.id))).size !== r.disponibilidades.length ||
+        new Set(r.disponibilidades.map((d) => chaveIdentidade(d.id))).size !==
+          r.disponibilidades.length ||
         new Set(r.disponibilidades.map((d) => chaveIdentidade(d.funcionario_id))).size !==
           r.disponibilidades.length ||
         r.disponibilidades.some(
@@ -196,7 +251,8 @@ export function SnapshotCapacidade({
       )
         throw new Error("Snapshot divergente.");
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
       return r;
     },
   });
@@ -218,7 +274,9 @@ export function SnapshotCapacidade({
   );
   const tecnicoSelecionado = filtroTecnico?.contexto === contexto ? filtroTecnico.id : "";
   const disponibilidadesExibidas = tecnicoSelecionado
-    ? q.data.disponibilidades.filter((d) => chaveIdentidade(d.funcionario_id) === chaveIdentidade(tecnicoSelecionado))
+    ? q.data.disponibilidades.filter(
+        (d) => chaveIdentidade(d.funcionario_id) === chaveIdentidade(tecnicoSelecionado),
+      )
     : q.data.disponibilidades;
   try {
     const fontes: EsforcoVisita[] = [
@@ -282,14 +340,26 @@ export function SnapshotCapacidade({
     <section aria-label="Snapshot parcial de capacidade">
       <h3>Snapshot parcial da semana</h3>
       <p>
-        {usarReferencia ? "Visitas e ocorrências de Visita usam programação quando disponível; o vencimento original é preservado." : "Visitas usam data programada; ocorrências sem OS identificada usam vencimento original."} O
-        resultado não representa demanda completa nem saldo; execução e esforço restante não foram
+        {usarReferencia
+          ? "Visitas e ocorrências de Visita usam programação quando disponível; o vencimento original é preservado."
+          : "Visitas usam data programada; ocorrências sem OS identificada usam vencimento original."}{" "}
+        O resultado não representa demanda completa nem saldo; execução e esforço restante não foram
         comprovados.
       </p>
-      {aoUsarParcial && usarV4 && resumo && q.data.disponibilidades.length > 0 && Number.isSafeInteger(disponibilidade) &&
-        <button type="button" onClick={() => aoUsarParcial({ semana, disponibilidade, demanda: resumo!.internosMinutos })}>
-          Usar subtotais parciais como hipótese
-        </button>}
+      {aoUsarParcial &&
+        usarV4 &&
+        resumo &&
+        q.data.disponibilidades.length > 0 &&
+        Number.isSafeInteger(disponibilidade) && (
+          <button
+            type="button"
+            onClick={() =>
+              aoUsarParcial({ semana, disponibilidade, demanda: resumo?.internosMinutos })
+            }
+          >
+            Usar subtotais parciais como hipótese
+          </button>
+        )}
       {usarV2 && (
         <p>
           {q.data.pendentesSemSemana} OS abertas sem semana comprovada (contagem do Cliente, não
@@ -319,20 +389,55 @@ export function SnapshotCapacidade({
             Descontos declarados; sobreposição não verificada. Não representa disponibilidade
             efetiva nem saldo.
           </p>
-          {q.data.disponibilidades.length > 0 && <details>
-            <summary>Conferir disponibilidade declarada por técnico</summary>
-            <p>Valores por técnico, referentes apenas a este Cliente e semana; não comprovam disponibilidade simultânea ou ausência de conflitos em outros Clientes.</p>
-            <label>Filtrar técnico carregado <select value={tecnicoSelecionado} onChange={(e) => setFiltroTecnico({ contexto, id: e.target.value })}>
-              <option value="">Todos os técnicos carregados</option>
-              {tecnicoSelecionado && !q.data.disponibilidades.some((d) => chaveIdentidade(d.funcionario_id) === chaveIdentidade(tecnicoSelecionado)) && <option value={tecnicoSelecionado}>Técnico não disponível nesta consulta</option>}
-              {q.data.disponibilidades.map((d) => <option key={d.id} value={d.funcionario_id}>{d.funcionario_id}</option>)}
-            </select></label>
-            <p>O filtro altera apenas a lista abaixo; o subtotal da semana não é filtrado. Técnicos fora das fontes carregadas não aparecem.</p>
-            {disponibilidadesExibidas.length === 0 && <p>Nenhuma disponibilidade para o técnico selecionado nesta consulta.</p>}
-            <ul>{disponibilidadesExibidas.map((d) => <li key={d.id}>
-              Técnico {d.funcionario_id} · destinados {d.destinados_minutos} min · reservas {d.reservas_minutos} min · ausências {d.ausencias_minutos} min · diferença declarada {d.destinados_minutos-d.reservas_minutos-d.ausencias_minutos} min · revisão {d.revisao}.
-            </li>)}</ul>
-          </details>}
+          {q.data.disponibilidades.length > 0 && (
+            <details>
+              <summary>Conferir disponibilidade declarada por técnico</summary>
+              <p>
+                Valores por técnico, referentes apenas a este Cliente e semana; não comprovam
+                disponibilidade simultânea ou ausência de conflitos em outros Clientes.
+              </p>
+              <label>
+                Filtrar técnico carregado{" "}
+                <select
+                  value={tecnicoSelecionado}
+                  onChange={(e) => setFiltroTecnico({ contexto, id: e.target.value })}
+                >
+                  <option value="">Todos os técnicos carregados</option>
+                  {tecnicoSelecionado &&
+                    !q.data.disponibilidades.some(
+                      (d) =>
+                        chaveIdentidade(d.funcionario_id) === chaveIdentidade(tecnicoSelecionado),
+                    ) && (
+                      <option value={tecnicoSelecionado}>
+                        Técnico não disponível nesta consulta
+                      </option>
+                    )}
+                  {q.data.disponibilidades.map((d) => (
+                    <option key={d.id} value={d.funcionario_id}>
+                      {d.funcionario_id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p>
+                O filtro altera apenas a lista abaixo; o subtotal da semana não é filtrado. Técnicos
+                fora das fontes carregadas não aparecem.
+              </p>
+              {disponibilidadesExibidas.length === 0 && (
+                <p>Nenhuma disponibilidade para o técnico selecionado nesta consulta.</p>
+              )}
+              <ul>
+                {disponibilidadesExibidas.map((d) => (
+                  <li key={d.id}>
+                    Técnico {d.funcionario_id} · destinados {d.destinados_minutos} min · reservas{" "}
+                    {d.reservas_minutos} min · ausências {d.ausencias_minutos} min · diferença
+                    declarada {d.destinados_minutos - d.reservas_minutos - d.ausencias_minutos} min
+                    · revisão {d.revisao}.
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           {q.data.limiteDisponibilidadesAtingido && (
             <p>Limite de disponibilidades atingido; subtotal pode estar incompleto.</p>
           )}
@@ -363,34 +468,112 @@ export function SnapshotCapacidade({
       q.data.limiteOsSemVisitaAtingido ? (
         <p>Limite da consulta atingido: existem ou podem existir mais fontes não incluídas.</p>
       ) : null}
-      {conflitos.length > 0 && <details>
-        <summary>Conferir origens com possível duplicidade ({conflitos.length})</summary>
-        <p>As fontes abaixo compartilham uma identidade de origem e não entram automaticamente no subtotal. Confira os vínculos antes de planejar; a lista cobre apenas os registros carregados.</p>
-        <ul>{conflitos.map((conflito) => <li key={conflito.origem}>Origem {conflito.origem} · fontes {conflito.fontes.join(", ")}</li>)}</ul>
-      </details>}
+      {conflitos.length > 0 && (
+        <details>
+          <summary>Conferir origens com possível duplicidade ({conflitos.length})</summary>
+          <p>
+            As fontes abaixo compartilham uma identidade de origem e não entram automaticamente no
+            subtotal. Confira os vínculos antes de planejar; a lista cobre apenas os registros
+            carregados.
+          </p>
+          <ul>
+            {conflitos.map((conflito) => (
+              <li key={conflito.origem}>
+                Origem {conflito.origem} · fontes {conflito.fontes.join(", ")}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       <details>
         <summary>Conferir estimativas das fontes carregadas</summary>
-        <p>Valores declarados não comprovam execução nem esforço restante. Ausência de valor não equivale a zero; a mesma origem pode aparecer em mais de uma fonte.</p>
+        <p>
+          Valores declarados não comprovam execução nem esforço restante. Ausência de valor não
+          equivale a zero; a mesma origem pode aparecer em mais de uma fonte.
+        </p>
         {q.data.fontesVisita.length === 0 && <p>Nenhuma OS vinculada a Visita nesta consulta.</p>}
-        {q.data.fontesVisita.length > 0 && <section aria-label="OS programadas em Visitas">
-          <h4>OS programadas em Visitas</h4>
-          <ul>{q.data.fontesVisita.map((fonte, indice) => <li key={`${fonte.os_id}:${indice}`}>
-            OS {fonte.os_id} · situação {fonte.os_status} · internos {fonte.internos_minutos === null ? "não informado" : `${fonte.internos_minutos} min`} · terceiros {fonte.terceiros_minutos === null ? "não informado" : `${fonte.terceiros_minutos} min`} · acompanhamento {fonte.acompanhamento_minutos === null ? "não informado" : `${fonte.acompanhamento_minutos} min`} · revisão {fonte.esforco_revision}.
-          </li>)}</ul>
-        </section>}
+        {q.data.fontesVisita.length > 0 && (
+          <section aria-label="OS programadas em Visitas">
+            <h4>OS programadas em Visitas</h4>
+            <ul>
+              {q.data.fontesVisita.map((fonte, indice) => (
+                <li key={`${fonte.os_id}:${indice}`}>
+                  OS {fonte.os_id} · situação {fonte.os_status} · internos{" "}
+                  {fonte.internos_minutos === null
+                    ? "não informado"
+                    : `${fonte.internos_minutos} min`}{" "}
+                  · terceiros{" "}
+                  {fonte.terceiros_minutos === null
+                    ? "não informado"
+                    : `${fonte.terceiros_minutos} min`}{" "}
+                  · acompanhamento{" "}
+                  {fonte.acompanhamento_minutos === null
+                    ? "não informado"
+                    : `${fonte.acompanhamento_minutos} min`}{" "}
+                  · revisão {fonte.esforco_revision}.
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {q.data.ocorrenciasSemOs.length === 0 && <p>Nenhuma ocorrência sem OS nesta consulta.</p>}
-        {q.data.ocorrenciasSemOs.length > 0 && <section aria-label="Ocorrências sem OS identificada">
-          <h4>Ocorrências sem OS identificada</h4>
-          <ul>{q.data.ocorrenciasSemOs.map((fonte) => <li key={`${fonte.tipo}:${fonte.ocorrencia_id}`}>
-            {fonte.tipo === "calendario" ? "Calendário" : "Visita"} · ocorrência {fonte.ocorrencia_id}{usarReferencia && <> · vencimento {fonte.vencimento_original} · referência {fonte.data_referencia}</>} · internos {fonte.internos_minutos === null ? "não informado" : `${fonte.internos_minutos} min`} · terceiros {fonte.terceiros_minutos === null ? "não informado" : `${fonte.terceiros_minutos} min`} · acompanhamento {fonte.acompanhamento_minutos === null ? "não informado" : `${fonte.acompanhamento_minutos} min`} · revisão {fonte.esforco_revision}.
-          </li>)}</ul>
-        </section>}
-        {usarV2 && q.data.osSemVisita.length > 0 && <section aria-label="OS sem Visita">
-          <h4>OS sem Visita na semana</h4>
-          <ul>{q.data.osSemVisita.map((fonte) => <li key={fonte.os_id}>
-            OS {fonte.os_id} · situação {fonte.os_status} · data de referência {fonte.data_referencia} · internos {fonte.internos_minutos === null ? "não informado" : `${fonte.internos_minutos} min`} · terceiros {fonte.terceiros_minutos === null ? "não informado" : `${fonte.terceiros_minutos} min`} · acompanhamento {fonte.acompanhamento_minutos === null ? "não informado" : `${fonte.acompanhamento_minutos} min`} · revisão {fonte.esforco_revision}.
-          </li>)}</ul>
-        </section>}
+        {q.data.ocorrenciasSemOs.length > 0 && (
+          <section aria-label="Ocorrências sem OS identificada">
+            <h4>Ocorrências sem OS identificada</h4>
+            <ul>
+              {q.data.ocorrenciasSemOs.map((fonte) => (
+                <li key={`${fonte.tipo}:${fonte.ocorrencia_id}`}>
+                  {fonte.tipo === "calendario" ? "Calendário" : "Visita"} · ocorrência{" "}
+                  {fonte.ocorrencia_id}
+                  {usarReferencia && (
+                    <>
+                      {" "}
+                      · vencimento {fonte.vencimento_original} · referência {fonte.data_referencia}
+                    </>
+                  )}{" "}
+                  · internos{" "}
+                  {fonte.internos_minutos === null
+                    ? "não informado"
+                    : `${fonte.internos_minutos} min`}{" "}
+                  · terceiros{" "}
+                  {fonte.terceiros_minutos === null
+                    ? "não informado"
+                    : `${fonte.terceiros_minutos} min`}{" "}
+                  · acompanhamento{" "}
+                  {fonte.acompanhamento_minutos === null
+                    ? "não informado"
+                    : `${fonte.acompanhamento_minutos} min`}{" "}
+                  · revisão {fonte.esforco_revision}.
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {usarV2 && q.data.osSemVisita.length > 0 && (
+          <section aria-label="OS sem Visita">
+            <h4>OS sem Visita na semana</h4>
+            <ul>
+              {q.data.osSemVisita.map((fonte) => (
+                <li key={fonte.os_id}>
+                  OS {fonte.os_id} · situação {fonte.os_status} · data de referência{" "}
+                  {fonte.data_referencia} · internos{" "}
+                  {fonte.internos_minutos === null
+                    ? "não informado"
+                    : `${fonte.internos_minutos} min`}{" "}
+                  · terceiros{" "}
+                  {fonte.terceiros_minutos === null
+                    ? "não informado"
+                    : `${fonte.terceiros_minutos} min`}{" "}
+                  · acompanhamento{" "}
+                  {fonte.acompanhamento_minutos === null
+                    ? "não informado"
+                    : `${fonte.acompanhamento_minutos} min`}{" "}
+                  · revisão {fonte.esforco_revision}.
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </details>
       {!resumo ? (
         <p role="alert">Subtotal indisponível por dados inconsistentes.</p>
@@ -400,15 +583,32 @@ export function SnapshotCapacidade({
             Interno declarado: {resumo.internosMinutos} minutos-homem, incluindo acompanhamento.
           </p>
           <p>Terceiros declarados: {resumo.terceirosMinutos} minutos-homem.</p>
-          <p>Detalhe parcial da equipe própria: execução {resumo.execucaoPropriaMinutos} min e acompanhamento de terceiros {resumo.acompanhamentoMinutos} min. São parcelas do interno declarado, não somas adicionais.</p>
-          {resumo.estimativasIncompletas > 0 && <p role="status">{resumo.estimativasIncompletas} fonte(s) somáveis têm estimativa ausente ou totalmente zerada; a demanda permanece incompleta.</p>}
+          <p>
+            Detalhe parcial da equipe própria: execução {resumo.execucaoPropriaMinutos} min e
+            acompanhamento de terceiros {resumo.acompanhamentoMinutos} min. São parcelas do interno
+            declarado, não somas adicionais.
+          </p>
+          {resumo.estimativasIncompletas > 0 && (
+            <output>
+              {resumo.estimativasIncompletas} fonte(s) somáveis têm estimativa ausente ou totalmente
+              zerada; a demanda permanece incompleta.
+            </output>
+          )}
           <p>
             Origens pendentes: {resumo.origensPendentes}; conflitantes e excluídas:{" "}
             {resumo.origensConflitantes}.
           </p>
-          {usarV4 && q.data.disponibilidades.length > 0 && resumo.internosMinutos > 0 && Number.isSafeInteger(disponibilidade) && Number.isSafeInteger(disponibilidade - resumo.internosMinutos) && (
-            <p>Diferença aritmética declarada: {disponibilidade - resumo.internosMinutos} minutos-homem. Não representa saldo operacional: execução, cobertura, sobreposições e dados pendentes não foram comprovados.</p>
-          )}
+          {usarV4 &&
+            q.data.disponibilidades.length > 0 &&
+            resumo.internosMinutos > 0 &&
+            Number.isSafeInteger(disponibilidade) &&
+            Number.isSafeInteger(disponibilidade - resumo.internosMinutos) && (
+              <p>
+                Diferença aritmética declarada: {disponibilidade - resumo.internosMinutos}{" "}
+                minutos-homem. Não representa saldo operacional: execução, cobertura, sobreposições
+                e dados pendentes não foram comprovados.
+              </p>
+            )}
         </>
       )}
     </section>

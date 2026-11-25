@@ -1,27 +1,27 @@
 import { Button } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseVisitasAdapter } from "../../infrastructure/supabase-visitas-adapter";
+import { MateriaisDaOrdem } from "../chamados-os/MateriaisDaOrdem";
+import { DespesasVisitaWorkspace } from "../despesas-visita/Workspace";
 import { AcoesVisita } from "./AcoesVisita";
+import { ConferenciaConfirmacaoCliente } from "./ConferenciaConfirmacaoCliente";
+import { ConferirComposicao } from "./ConferirComposicao";
+import { ConferirConteudoOs } from "./ConferirConteudoOs";
+import { DiagnosticoSincronizacao } from "./DiagnosticoSincronizacao";
+import { HistoricoAlertasReprogramacao } from "./HistoricoAlertasReprogramacao";
+import { HistoricoIntencaoLocal } from "./HistoricoIntencaoLocal";
+import { IntencaoLocalEnvio } from "./IntencaoLocalEnvio";
+import { IntencaoOsEnviada } from "./IntencaoOsEnviada";
 import { NovaVisita } from "./NovaVisita";
+import { PublicarVisitaPortal } from "./PublicarVisitaPortal";
+import { RetificarOsRotina } from "./RetificarOsRotina";
 import { TransferirOs } from "./TransferirOs";
 import { TransicaoVisita } from "./TransicaoVisita";
-import { IntencaoOsEnviada } from "./IntencaoOsEnviada";
-import { DespesasVisitaWorkspace } from "../despesas-visita/Workspace";
-import { MateriaisDaOrdem } from "../chamados-os/MateriaisDaOrdem";
-import { PublicarVisitaPortal } from "./PublicarVisitaPortal";
-import { ConferenciaConfirmacaoCliente } from "./ConferenciaConfirmacaoCliente";
-import { IntencaoLocalEnvio } from "./IntencaoLocalEnvio";
-import { HistoricoIntencaoLocal } from "./HistoricoIntencaoLocal";
-import { HistoricoAlertasReprogramacao } from "./HistoricoAlertasReprogramacao";
-import { ConferirConteudoOs } from "./ConferirConteudoOs";
-import { VincularOsRotina } from "./VincularOsRotina";
-import { RetificarOsRotina } from "./RetificarOsRotina";
-import { ConferirComposicao } from "./ConferirComposicao";
-import { DiagnosticoSincronizacao } from "./DiagnosticoSincronizacao";
 import { TriagemSyncEquipe } from "./TriagemSyncEquipe";
-import { flagLigada } from "../../../../config/flags-sso";
+import { VincularOsRotina } from "./VincularOsRotina";
 
 const limite = 20;
 type Props = { userId: string; clienteId: string; clienteNome: string };
@@ -89,10 +89,13 @@ function Conteudo({ userId, clienteId, clienteNome }: Props) {
         },
         signal,
       ),
-    getNextPageParam: (pagina) =>
-      pagina.length === limite
-        ? { inicio: pagina[pagina.length - 1]!.inicioEm, id: pagina[pagina.length - 1]!.id }
-        : undefined,
+    getNextPageParam: (pagina) => {
+      // O último item é o cursor. Guardado num const para o tipo continuar `string` (acesso
+      // opcional devolveria `string | undefined` e não casa com `initialPageParam`).
+      const ultimo = pagina[pagina.length - 1];
+      if (pagina.length !== limite || !ultimo) return undefined;
+      return { inicio: ultimo.inicioEm, id: ultimo.id };
+    },
     enabled: permitido,
     gcTime: 0,
   });
@@ -164,9 +167,21 @@ function Conteudo({ userId, clienteId, clienteNome }: Props) {
       </form>
       {erroPeriodo && <p role="alert">{erroPeriodo}</p>}
       {flagLigada("VITE_SSO_TRANSFERENCIA_VISITA_ENABLED") && (
-        <TransferirOs userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />
+        <TransferirOs
+          userId={userId}
+          clienteId={clienteId}
+          visitas={itens}
+          bloqueado={visitas.isFetching || visitas.isError}
+        />
       )}
-      {flagLigada("VITE_SSO_INTENCAO_OS_ENVIADA_ENABLED") && <IntencaoOsEnviada userId={userId} clienteId={clienteId} visitas={itens} bloqueado={visitas.isFetching || visitas.isError} />}
+      {flagLigada("VITE_SSO_INTENCAO_OS_ENVIADA_ENABLED") && (
+        <IntencaoOsEnviada
+          userId={userId}
+          clienteId={clienteId}
+          visitas={itens}
+          bloqueado={visitas.isFetching || visitas.isError}
+        />
+      )}
       {(visitas.isPending || visitas.isFetching) && <output>Carregando Visitas…</output>}
       {visitas.isError && (
         <p role="alert">
@@ -274,10 +289,12 @@ function Detalhe({
         { clienteId, visitaId, incluirHistorico: historico, limite, apos: pageParam },
         signal,
       ),
-    getNextPageParam: (pagina) =>
-      pagina.length === limite
-        ? { sequencia: pagina[pagina.length - 1]!.sequencia, id: pagina[pagina.length - 1]!.id }
-        : undefined,
+    getNextPageParam: (pagina) => {
+      // Mesmo motivo do cursor acima: const para o tipo não virar `| undefined`.
+      const ultimo = pagina[pagina.length - 1];
+      if (pagina.length !== limite || !ultimo) return undefined;
+      return { sequencia: ultimo.sequencia, id: ultimo.id };
+    },
     gcTime: 0,
   });
   const equipe = useInfiniteQuery({
@@ -289,7 +306,7 @@ function Detalhe({
         signal,
       ),
     getNextPageParam: (pagina) =>
-      pagina.length === limite ? pagina[pagina.length - 1]!.id : undefined,
+      pagina.length === limite ? pagina[pagina.length - 1]?.id : undefined,
     gcTime: 0,
   });
   const situacoes: Record<string, string> = {
@@ -332,17 +349,32 @@ function Detalhe({
           />
         )}
         {detalhe.data && flagLigada("VITE_SSO_COMPOSICAO_VISITA_ENABLED") && (
-          <ConferirComposicao userId={userId} clienteId={clienteId} visitaId={visitaId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError} />
+          <ConferirComposicao
+            userId={userId}
+            clienteId={clienteId}
+            visitaId={visitaId}
+            bloqueado={bloqueado || detalhe.isFetching || detalhe.isError}
+          />
         )}
         {detalhe.data && !bloqueado && flagLigada("VITE_SSO_DIAGNOSTICO_SYNC_VISITA_ENABLED") && (
           <DiagnosticoSincronizacao userId={userId} clienteId={clienteId} visitaId={visitaId} />
         )}
         {detalhe.data && !bloqueado && flagLigada("VITE_SSO_TRIAGEM_SYNC_EQUIPE_ENABLED") && (
-          <TriagemSyncEquipe userId={userId} clienteId={clienteId} visitaId={visitaId} revisaoVisita={detalhe.data.revisao} />
+          <TriagemSyncEquipe
+            userId={userId}
+            clienteId={clienteId}
+            visitaId={visitaId}
+            revisaoVisita={detalhe.data.revisao}
+          />
         )}
         {detalhe.data && flagLigada("VITE_SSO_TRANSICAO_VISITA_ENABLED") && (
-          <TransicaoVisita key={detalhe.data.id} userId={userId} clienteId={clienteId} visita={detalhe.data}
-            bloqueado={bloqueado || detalhe.isFetching || detalhe.isError} />
+          <TransicaoVisita
+            key={detalhe.data.id}
+            userId={userId}
+            clienteId={clienteId}
+            visita={detalhe.data}
+            bloqueado={bloqueado || detalhe.isFetching || detalhe.isError}
+          />
         )}
         {detalhe.data && !bloqueado && (
           <DespesasVisitaWorkspace
@@ -362,10 +394,22 @@ function Detalhe({
           </p>
         )}
         {ciencia.data && !ciencia.isFetching && !ciencia.isError && (
-          <p>{situacoes[ciencia.data.situacao]} (registro de ciência; não substitui confirmação explícita nem autoriza envio).</p>
+          <p>
+            {situacoes[ciencia.data.situacao]} (registro de ciência; não substitui confirmação
+            explícita nem autoriza envio).
+          </p>
         )}
-        {detalhe.data && flagLigada("VITE_SSO_CONFERIR_CONFIRMACAO_CLIENTE_ENABLED") && <ConferenciaConfirmacaoCliente userId={userId} clienteId={clienteId} visitaId={visitaId} revisao={detalhe.data.revisao} />}
-        {flagLigada("VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED") && <HistoricoIntencaoLocal userId={userId} clienteId={clienteId} visitaId={visitaId} />}
+        {detalhe.data && flagLigada("VITE_SSO_CONFERIR_CONFIRMACAO_CLIENTE_ENABLED") && (
+          <ConferenciaConfirmacaoCliente
+            userId={userId}
+            clienteId={clienteId}
+            visitaId={visitaId}
+            revisao={detalhe.data.revisao}
+          />
+        )}
+        {flagLigada("VITE_SSO_HISTORICO_INTENCAO_LOCAL_ENABLED") && (
+          <HistoricoIntencaoLocal userId={userId} clienteId={clienteId} visitaId={visitaId} />
+        )}
         <HistoricoAlertasReprogramacao userId={userId} clienteId={clienteId} visitaId={visitaId} />
         <Button
           variant="secondary"
@@ -402,20 +446,102 @@ function Detalhe({
                       (o.encerradoEm
                         ? ` — encerrado em ${horario(o.encerradoEm, detalhe.data?.fuso ?? "UTC")} — motivo: ${o.encerramentoMotivo ?? "não informado"}`
                         : " — vigente")}
-                    {!o.encerradoEm && !bloqueado && !detalhe.isFetching && !detalhe.isError && <MateriaisDaOrdem
-                      usuario={userId} cliente={clienteId} ordem={o.osId} numero={o.numero} />}
-                    {flagLigada("VITE_SSO_PORTAL_VISITAS_PUBLICACAO_ENABLED") && !o.encerradoEm && detalhe.data &&
-                      ["planejada", "confirmada", "enviada", "em_execucao", "parcial"].includes(detalhe.data.estado) &&
-                      <PublicarVisitaPortal key={`${o.id}:${detalhe.data.revisao}`} userId={userId} clienteId={clienteId} visitaId={visitaId} osId={o.osId}
-                        revisao={detalhe.data.revisao} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {flagLigada("VITE_SSO_INTENCAO_LOCAL_ENVIO_ENABLED") && !o.encerradoEm && detalhe.data?.estado === "confirmada" &&
-                      <IntencaoLocalEnvio key={`${o.id}:${detalhe.data.revisao}`} userId={userId} clienteId={clienteId} visitaId={visitaId} osId={o.osId}
-                        revisao={detalhe.data.revisao} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {flagLigada("VITE_SSO_CONTEUDO_BASICO_OS_ENABLED") && !o.encerradoEm && detalhe.data?.estado === "planejada" &&
-                      <ConferirConteudoOs key={`${o.id}:${detalhe.data.revisao}`} userId={userId} clienteId={clienteId} visitaId={visitaId} osId={o.osId}
-                        revisao={detalhe.data.revisao} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {flagLigada("VITE_SSO_VINCULO_OS_ROTINA_ENABLED") && !o.encerradoEm && <VincularOsRotina userId={userId} clienteId={clienteId} osId={o.osId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
-                    {flagLigada("VITE_SSO_RETIFICAR_OS_ROTINA_ENABLED") && !o.encerradoEm && <RetificarOsRotina userId={userId} clienteId={clienteId} osId={o.osId} bloqueado={bloqueado || detalhe.isFetching || detalhe.isError || os.isFetching || os.isError} />}
+                    {!o.encerradoEm && !bloqueado && !detalhe.isFetching && !detalhe.isError && (
+                      <MateriaisDaOrdem
+                        usuario={userId}
+                        cliente={clienteId}
+                        ordem={o.osId}
+                        numero={o.numero}
+                      />
+                    )}
+                    {flagLigada("VITE_SSO_PORTAL_VISITAS_PUBLICACAO_ENABLED") &&
+                      !o.encerradoEm &&
+                      detalhe.data &&
+                      ["planejada", "confirmada", "enviada", "em_execucao", "parcial"].includes(
+                        detalhe.data.estado,
+                      ) && (
+                        <PublicarVisitaPortal
+                          key={`${o.id}:${detalhe.data.revisao}`}
+                          userId={userId}
+                          clienteId={clienteId}
+                          visitaId={visitaId}
+                          osId={o.osId}
+                          revisao={detalhe.data.revisao}
+                          bloqueado={
+                            bloqueado ||
+                            detalhe.isFetching ||
+                            detalhe.isError ||
+                            os.isFetching ||
+                            os.isError
+                          }
+                        />
+                      )}
+                    {flagLigada("VITE_SSO_INTENCAO_LOCAL_ENVIO_ENABLED") &&
+                      !o.encerradoEm &&
+                      detalhe.data?.estado === "confirmada" && (
+                        <IntencaoLocalEnvio
+                          key={`${o.id}:${detalhe.data.revisao}`}
+                          userId={userId}
+                          clienteId={clienteId}
+                          visitaId={visitaId}
+                          osId={o.osId}
+                          revisao={detalhe.data.revisao}
+                          bloqueado={
+                            bloqueado ||
+                            detalhe.isFetching ||
+                            detalhe.isError ||
+                            os.isFetching ||
+                            os.isError
+                          }
+                        />
+                      )}
+                    {flagLigada("VITE_SSO_CONTEUDO_BASICO_OS_ENABLED") &&
+                      !o.encerradoEm &&
+                      detalhe.data?.estado === "planejada" && (
+                        <ConferirConteudoOs
+                          key={`${o.id}:${detalhe.data.revisao}`}
+                          userId={userId}
+                          clienteId={clienteId}
+                          visitaId={visitaId}
+                          osId={o.osId}
+                          revisao={detalhe.data.revisao}
+                          bloqueado={
+                            bloqueado ||
+                            detalhe.isFetching ||
+                            detalhe.isError ||
+                            os.isFetching ||
+                            os.isError
+                          }
+                        />
+                      )}
+                    {flagLigada("VITE_SSO_VINCULO_OS_ROTINA_ENABLED") && !o.encerradoEm && (
+                      <VincularOsRotina
+                        userId={userId}
+                        clienteId={clienteId}
+                        osId={o.osId}
+                        bloqueado={
+                          bloqueado ||
+                          detalhe.isFetching ||
+                          detalhe.isError ||
+                          os.isFetching ||
+                          os.isError
+                        }
+                      />
+                    )}
+                    {flagLigada("VITE_SSO_RETIFICAR_OS_ROTINA_ENABLED") && !o.encerradoEm && (
+                      <RetificarOsRotina
+                        userId={userId}
+                        clienteId={clienteId}
+                        osId={o.osId}
+                        bloqueado={
+                          bloqueado ||
+                          detalhe.isFetching ||
+                          detalhe.isError ||
+                          os.isFetching ||
+                          os.isError
+                        }
+                      />
+                    )}
                   </li>
                 ))}
               </ol>

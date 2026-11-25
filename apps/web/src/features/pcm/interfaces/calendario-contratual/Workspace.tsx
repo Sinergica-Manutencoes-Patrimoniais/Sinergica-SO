@@ -1,18 +1,21 @@
 import { Button } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import {
   criarRegraContratual,
   validarCriacaoRegraContratual,
 } from "../../application/calendario-contratual";
 import type { CriarRegraContratualCommand } from "../../application/calendario-contratual-gateway";
-import { rejeicaoInicialRegraComprovada, supabaseCalendarioContratualAdapter } from "../../infrastructure/supabase-calendario-contratual-adapter";
+import {
+  rejeicaoInicialRegraComprovada,
+  supabaseCalendarioContratualAdapter,
+} from "../../infrastructure/supabase-calendario-contratual-adapter";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
-import { SimulacaoRegra } from "./SimulacaoRegra";
 import { AlterarDiaContratual } from "./AlterarDiaContratual";
 import { FeriadosDeclarados } from "./FeriadosDeclarados";
-import { flagLigada } from "../../../../config/flags-sso";
+import { SimulacaoRegra } from "./SimulacaoRegra";
 
 const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 const limite = 20;
@@ -51,10 +54,19 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [simulacaoId, setSimulacaoId] = useState<string | null>(null);
-  const [feriadosSimulados, setFeriadosSimulados] = useState<{contratoId:string|null;datas:string[];periodo:{inicio:string;fim:string}}|null>(null);
+  const [feriadosSimulados, setFeriadosSimulados] = useState<{
+    contratoId: string | null;
+    datas: string[];
+    periodo: { inicio: string; fim: string };
+  } | null>(null);
   const emEnvio = useRef(false);
   const montado = useRef(false);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+  useEffect(() => {
+    montado.current = true;
+    return () => {
+      montado.current = false;
+    };
+  }, []);
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
@@ -107,7 +119,8 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
   async function enviar(c: CriarRegraContratualCommand, primeira = false) {
     if (emEnvio.current) return;
     try {
-      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+        throw new Error("Tentativa alterada.");
     } catch {
       setErro("Tentativa guardada indisponível ou alterada. Consulte o suporte.");
       return;
@@ -116,10 +129,12 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     setErro("");
     try {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+        throw new Error("Tentativa alterada.");
       await salvar.mutateAsync(c);
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada após confirmação.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+        throw new Error("Tentativa alterada após confirmação.");
       sessionStorage.removeItem(chave);
       setPendente(null);
       setAberto(false);
@@ -139,14 +154,20 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
       if (primeira && rejeicaoInicialRegraComprovada(falha)) {
         try {
           await conferirSessao();
-          if (sessionStorage.getItem(chave) !== JSON.stringify(c)) throw new Error("Tentativa alterada.");
+          if (sessionStorage.getItem(chave) !== JSON.stringify(c))
+            throw new Error("Tentativa alterada.");
           sessionStorage.removeItem(chave);
           setPendente(null);
           setErro("A regra foi recusada. Confira os dados antes de salvar novamente.");
           return;
-        } catch { /* Mantém a tentativa quando sessão ou armazenamento mudaram. */ }
+        } catch {
+          /* Mantém a tentativa quando sessão ou armazenamento mudaram. */
+        }
       }
-      if (montado.current) setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados ou consulte suporte.");
+      if (montado.current)
+        setErro(
+          "Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados ou consulte suporte.",
+        );
     } finally {
       emEnvio.current = false;
     }
@@ -193,8 +214,17 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
     >
       <h2 className="text-body font-semibold text-ink">Calendário contratual</h2>
       <p>Regras de {clienteNome}. Cadastrar uma regra não cria Visitas nem tarefas.</p>
-      {flagLigada("VITE_SSO_FERIADOS_DECLARADOS_ENABLED") && <FeriadosDeclarados
-        userId={userId} clienteId={clienteId} contratos={opcoes} regras={itens} onUsar={(contratoId,datas,periodo) => setFeriadosSimulados(periodo ? {contratoId,datas,periodo} : null)} />}
+      {flagLigada("VITE_SSO_FERIADOS_DECLARADOS_ENABLED") && (
+        <FeriadosDeclarados
+          userId={userId}
+          clienteId={clienteId}
+          contratos={opcoes}
+          regras={itens}
+          onUsar={(contratoId, datas, periodo) =>
+            setFeriadosSimulados(periodo ? { contratoId, datas, periodo } : null)
+          }
+        />
+      )}
       {recuperacao.falhou && (
         <p role="alert">
           Não foi possível recuperar operação anterior. Consulte o suporte antes de cadastrar outra
@@ -232,9 +262,7 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
           }}
         >
           {contratos.isPending && <output>Carregando contratos…</output>}
-          {contratos.isFetching && !contratos.isPending && (
-            <output>Atualizando contratos…</output>
-          )}
+          {contratos.isFetching && !contratos.isPending && <output>Atualizando contratos…</output>}
           {contratos.isError && (
             <p role="alert">
               Não foi possível carregar contratos.{" "}
@@ -425,9 +453,26 @@ function ConteudoCalendario({ userId, clienteId, clienteNome }: Props) {
             >
               {simulacaoId === r.id ? "Fechar simulação" : "Simular regra"}
             </Button>
-            {simulacaoId === r.id && <SimulacaoRegra key={r.id} regra={r}
-              feriadosDeclarados={feriadosSimulados && (feriadosSimulados.contratoId === null || feriadosSimulados.contratoId === r.contratoId) ? feriadosSimulados.datas : []}
-              periodoDeclaracoes={feriadosSimulados && (feriadosSimulados.contratoId === null || feriadosSimulados.contratoId === r.contratoId) ? feriadosSimulados.periodo : null} />}
+            {simulacaoId === r.id && (
+              <SimulacaoRegra
+                key={r.id}
+                regra={r}
+                feriadosDeclarados={
+                  feriadosSimulados &&
+                  (feriadosSimulados.contratoId === null ||
+                    feriadosSimulados.contratoId === r.contratoId)
+                    ? feriadosSimulados.datas
+                    : []
+                }
+                periodoDeclaracoes={
+                  feriadosSimulados &&
+                  (feriadosSimulados.contratoId === null ||
+                    feriadosSimulados.contratoId === r.contratoId)
+                    ? feriadosSimulados.periodo
+                    : null
+                }
+              />
+            )}
           </li>
         ))}
       </ul>

@@ -1,22 +1,22 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
-import { EditorPersistido } from "./EditorPersistido";
-import { PublicarPortal } from "./PublicarPortal";
-import { VisibilidadePortal } from "./VisibilidadePortal";
-import { ExcecoesOs } from "./ExcecoesOs";
-import type { RascunhoEditorMateriais } from "./EditorMateriais";
-import {
-  DisponibilidadeMateriais,
-  type RascunhoInformacaoMaterial,
-} from "./DisponibilidadeMateriais";
 import {
   type CriarListaMateriais,
   supabaseListasMateriaisAdapter,
   validarCriarListaMateriais,
 } from "../../infrastructure/supabase-listas-materiais-adapter";
-import { flagLigada } from "../../../../config/flags-sso";
+import {
+  DisponibilidadeMateriais,
+  type RascunhoInformacaoMaterial,
+} from "./DisponibilidadeMateriais";
+import type { RascunhoEditorMateriais } from "./EditorMateriais";
+import { EditorPersistido } from "./EditorPersistido";
+import { ExcecoesOs } from "./ExcecoesOs";
+import { PublicarPortal } from "./PublicarPortal";
+import { VisibilidadePortal } from "./VisibilidadePortal";
 
 type Props = { usuario: string; cliente: string; ordemServico: string };
 /** Integração condicionada a rollout e validação da migration, sem efeito sobre OS/Auvo. */
@@ -51,11 +51,20 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
   const raiz = ["listas-materiais", usuario, cliente, ordemServico] as const;
   const conferirSessao = async (signal?: AbortSignal) => {
     const atual = await supabase.auth.getUser();
-    if (atual.error || atual.data.user?.id !== usuario || signal?.aborted) throw new Error("Sessão alterada.");
+    if (atual.error || atual.data.user?.id !== usuario || signal?.aborted)
+      throw new Error("Sessão alterada.");
   };
   const permissao = useQuery({
     queryKey: [...raiz, "permissao"],
-    queryFn: async ({ signal }) => { await conferirSessao(signal); const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao("material.gerir", cliente); await conferirSessao(signal); return autorizada; },
+    queryFn: async ({ signal }) => {
+      await conferirSessao(signal);
+      const autorizada = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "material.gerir",
+        cliente,
+      );
+      await conferirSessao(signal);
+      return autorizada;
+    },
     gcTime: 0,
     refetchOnWindowFocus: true,
   });
@@ -67,7 +76,13 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(signal);
-      const pagina = await supabaseListasMateriaisAdapter.listar(cliente, ordemServico, 20, pageParam, signal);
+      const pagina = await supabaseListasMateriaisAdapter.listar(
+        cliente,
+        ordemServico,
+        20,
+        pageParam,
+        signal,
+      );
       await conferirSessao(signal);
       return pagina;
     },
@@ -76,7 +91,8 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
   async function enviar(comando: CriarListaMateriais) {
     if (emEnvio.current || !permitido) return;
     try {
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Operação guardada divergente.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
+        throw new Error("Operação guardada divergente.");
     } catch {
       setErro("Operação pendente indisponível ou alterada. Consulte suporte.");
       return;
@@ -86,7 +102,11 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     setErro("");
     try {
       await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando) || comando.ordemServicoId !== ordemServico) throw new Error("Operação alterada.");
+      if (
+        sessionStorage.getItem(chave) !== JSON.stringify(comando) ||
+        comando.ordemServicoId !== ordemServico
+      )
+        throw new Error("Operação alterada.");
       await supabaseListasMateriaisAdapter.criar(comando);
       await conferirSessao();
       await Promise.all([
@@ -149,7 +169,11 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
       <p>O texto original é preservado. Criar lista não altera a OS nem envia tarefa ao Auvo.</p>
       {flagLigada("VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED") && (
         <>
-          <button type="button" aria-expanded={excecoesAbertas} onClick={() => setExcecoesAbertas((abertas) => !abertas)}>
+          <button
+            type="button"
+            aria-expanded={excecoesAbertas}
+            onClick={() => setExcecoesAbertas((abertas) => !abertas)}
+          >
             {excecoesAbertas ? "Ocultar exceções da OS" : "Consultar exceções da OS"}
           </button>
           {excecoesAbertas && <ExcecoesOs usuario={usuario} cliente={cliente} os={ordemServico} />}
@@ -202,7 +226,12 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
         </p>
       )}
       {!listas.isFetching && !listas.isError && paginasDivergentes && (
-        <p role="alert">A lista mudou durante a consulta. <button type="button" onClick={() => void listas.refetch()}>Atualizar listas</button></p>
+        <p role="alert">
+          A lista mudou durante a consulta.{" "}
+          <button type="button" onClick={() => void listas.refetch()}>
+            Atualizar listas
+          </button>
+        </p>
       )}
       {!listas.isFetching && !listas.isError && !paginasDivergentes && itens.length === 0 && (
         <p>Nenhuma lista cadastrada nesta OS.</p>
@@ -244,7 +273,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
                   </p>
                   <ul>
                     {rascunho.edicao.linhas.map((linha, indice) => (
-                      <li key={indice}>
+                      <li key={`${linha.descricao}-${linha.unidade ?? indice}`}>
                         {linha.descricao} · {linha.quantidade ?? "quantidade não informada"} ·{" "}
                         {linha.unidade ?? "unidade não informada"}
                       </li>
@@ -259,7 +288,9 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
                     <p>Junção incompleta: {rascunho.descricaoReunida}</p>
                   )}
                   {rascunho.adicao && (
-                    <p>Adição incompleta: {rascunho.adicao.descricao || "descrição não informada"}</p>
+                    <p>
+                      Adição incompleta: {rascunho.adicao.descricao || "descrição não informada"}
+                    </p>
                   )}
                 </details>
               ))}
@@ -296,7 +327,13 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
                   }
                   onSalvo={() => rascunhosInformacao.current.delete(`${lista.id}:${lista.revisao}`)}
                 />
-                <PublicarPortal usuario={usuario} cliente={cliente} ordemServico={ordemServico} listaId={lista.id} revisao={lista.revisao} />
+                <PublicarPortal
+                  usuario={usuario}
+                  cliente={cliente}
+                  ordemServico={ordemServico}
+                  listaId={lista.id}
+                  revisao={lista.revisao}
+                />
                 <VisibilidadePortal usuario={usuario} cliente={cliente} listaId={lista.id} />
               </>
             )}

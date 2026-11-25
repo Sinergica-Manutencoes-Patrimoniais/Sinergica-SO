@@ -18,7 +18,16 @@ export function EsforcoDeclarado({
   const key = ["capacidade-esforco", userId, clienteId, origemTipo, osId];
   const consulta = useQuery({
     queryKey: key,
-    queryFn: async ({ signal }) => { const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada."); const resultado = await consultarEsforcoDeclarado(clienteId, osId, signal, origemTipo); const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId || signal.aborted) throw new Error("Sessão alterada."); return resultado; },
+    queryFn: async ({ signal }) => {
+      const antes = await supabase.auth.getUser();
+      if (antes.error || antes.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
+      const resultado = await consultarEsforcoDeclarado(clienteId, osId, signal, origemTipo);
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId || signal.aborted)
+        throw new Error("Sessão alterada.");
+      return resultado;
+    },
     gcTime: 0,
   });
   const client = useQueryClient();
@@ -43,7 +52,9 @@ export function EsforcoDeclarado({
           client.invalidateQueries({ queryKey: key }),
           client.invalidateQueries({ queryKey: ["capacidade-fontes-demanda", userId, clienteId] }),
           client.invalidateQueries({ queryKey: ["capacidade-snapshot", userId, clienteId] }),
-          client.invalidateQueries({ queryKey: ["capacidade-ocorrencias-sem-os", userId, clienteId] }),
+          client.invalidateQueries({
+            queryKey: ["capacidade-ocorrencias-sem-os", userId, clienteId],
+          }),
         ])
       }
     />
@@ -59,9 +70,10 @@ function Formulario({
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const trava = useRef(false);
-  const chave = esforco.origemTipo === "os"
-    ? `sso-esforco:${JSON.stringify([userId, clienteId, esforco.origemId])}`
-    : `sso-esforco-${esforco.origemTipo}:${JSON.stringify([userId, clienteId, esforco.origemId])}`;
+  const chave =
+    esforco.origemTipo === "os"
+      ? `sso-esforco:${JSON.stringify([userId, clienteId, esforco.origemId])}`
+      : `sso-esforco-${esforco.origemTipo}:${JSON.stringify([userId, clienteId, esforco.origemId])}`;
   const [pendente, setPendente] = useState<PedidoEsforco | "invalida" | null>(() => {
     try {
       const bruto = sessionStorage.getItem(chave);
@@ -131,12 +143,20 @@ function Formulario({
       setErro("Tentativa armazenada divergente ou inacessível; nenhum envio foi feito.");
       return;
     }
-    trava.current = true; setSalvando(true);
+    trava.current = true;
+    setSalvando(true);
     setErro("");
     try {
-      const antes = await supabase.auth.getUser(); if (antes.error || antes.data.user?.id !== userId || sessionStorage.getItem(chave) !== JSON.stringify(pedido)) throw new Error("Sessão ou tentativa alterada.");
+      const antes = await supabase.auth.getUser();
+      if (
+        antes.error ||
+        antes.data.user?.id !== userId ||
+        sessionStorage.getItem(chave) !== JSON.stringify(pedido)
+      )
+        throw new Error("Sessão ou tentativa alterada.");
       await declararEsforco(pedido);
-      const depois = await supabase.auth.getUser(); if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
+      const depois = await supabase.auth.getUser();
+      if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
       if (sessionStorage.getItem(chave) !== JSON.stringify(pedido))
         throw new Error("tentativa divergente");
       sessionStorage.removeItem(chave);
@@ -145,14 +165,15 @@ function Formulario({
     } catch {
       setErro("Resultado não confirmado. Preserve e repita a mesma tentativa ou consulte suporte.");
     } finally {
-      trava.current = false; setSalvando(false);
+      trava.current = false;
+      setSalvando(false);
     }
   }
   return (
     <form onSubmit={(e) => void salvar(e)}>
       <p>
-        Esforço declarado para esta {esforco.origemTipo === "os" ? "OS" : "ocorrência"}. Campos vazios ou zero mantêm demanda incompleta;
-        nenhuma soma ou deduplicação é feita.
+        Esforço declarado para esta {esforco.origemTipo === "os" ? "OS" : "ocorrência"}. Campos
+        vazios ou zero mantêm demanda incompleta; nenhuma soma ou deduplicação é feita.
       </p>
       {pendente && (
         <output>

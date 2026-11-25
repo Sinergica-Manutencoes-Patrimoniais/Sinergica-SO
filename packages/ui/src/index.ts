@@ -8,6 +8,7 @@ export { Card, CardHeader, EmptyState } from "./Card";
 export type { EmptyStateProps } from "./Card";
 export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
+export { AvisoCarregando } from "./AvisoCarregando";
 export { DataTable } from "./DataTable";
 export type { DataTableColumn, DataTableOrdenacao, DataTableProps } from "./DataTable";
 export { Field } from "./Field";
