@@ -1,4 +1,4 @@
--- E00-S29: corrige `financeiro.sso_proteger_lancamento_faturavel()`, que com a trava
+-- E00-S30: corrige `financeiro.sso_proteger_lancamento_faturavel()`, que com a trava
 -- `financeiro.sso_faturamento_gate` ABERTA engolia o DELETE de lançamento em silêncio.
 --
 -- COMO APARECEU
@@ -29,7 +29,7 @@
 -- entregando a decisão ao próximo trigger (o de mês fechado) em vez de abortar calado.
 --
 -- Reverso: `create or replace` com o corpo anterior (está em `0754_E01-S182_protecao_historico_canonico.sql`).
--- Prova: `supabase/tests/E00-S29_delete_lancamento_nao_some_calado.test.sql`.
+-- Prova: `supabase/tests/E00-S30_delete_lancamento_nao_some_calado.test.sql`.
 create or replace function financeiro.sso_proteger_lancamento_faturavel() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin

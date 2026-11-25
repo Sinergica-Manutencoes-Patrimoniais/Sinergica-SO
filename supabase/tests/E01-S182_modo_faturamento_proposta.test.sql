@@ -6,7 +6,7 @@
 -- que a origem já gerou faturável. Trocar o modo nesse ponto duplicaria ou perderia receita, e a
 -- função recusa com `origem_ja_faturavel_requer_reconciliacao` em vez de decidir sozinha.
 begin;
--- E00-S29: a migration 1872 abriu estes gates na linha de base do banco. As asserções abaixo
+-- E00-S30: a migration 1872 abriu estes gates na linha de base do banco. As asserções abaixo
 -- provam o comportamento de gate FECHADO, então o teste declara aqui, dentro da própria
 -- transação, o estado de que precisa (o `rollback` do fim desfaz). Onde o teste reabre o gate
 -- mais adiante, a abertura continua valendo.

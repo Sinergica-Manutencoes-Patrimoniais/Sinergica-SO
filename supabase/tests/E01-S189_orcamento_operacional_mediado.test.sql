@@ -3,7 +3,7 @@
 -- `permission denied` indistinguível de bug. Agora o alcance passa pelo mediador, com gate
 -- próprio fechado por padrão (AC-1, AC-2, AC-3).
 begin;
--- E00-S29: a migration 1872 abriu estes gates na linha de base do banco. As asserções abaixo
+-- E00-S30: a migration 1872 abriu estes gates na linha de base do banco. As asserções abaixo
 -- provam o comportamento de gate FECHADO, então o teste declara aqui, dentro da própria
 -- transação, o estado de que precisa (o `rollback` do fim desfaz). Onde o teste reabre o gate
 -- mais adiante, a abertura continua valendo.

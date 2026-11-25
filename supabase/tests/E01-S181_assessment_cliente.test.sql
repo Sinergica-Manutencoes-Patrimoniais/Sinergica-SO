@@ -1,6 +1,6 @@
 -- Teste sintético isolado; todos os registros são revertidos.
 begin;
--- E00-S29: a migration 1872 abriu `comercial.sso_escrita_assessment_gate` na linha de base. Aberto,
+-- E00-S30: a migration 1872 abriu `comercial.sso_escrita_assessment_gate` na linha de base. Aberto,
 -- ele exige que todo UPDATE de `assessment_id` passe por `comercial.sso_vincular_assessment`
 -- (ADR-1014). Este teste prova outra guarda — `s181_assessment_cliente`/`sso_guardar_cliente_assessment`,
 -- a divergência de Cliente — e usa o UPDATE direto como veículo, inclusive para desvincular, caso

@@ -1,4 +1,4 @@
--- E00-S29_destrava_financeiro_comercial.test.sql — pgTAP da migration 1872.
+-- E00-S30_destrava_financeiro_comercial.test.sql — pgTAP da migration 1872.
 -- Prova que as 72 travas do Financeiro e do Comercial estão abertas com o schema aplicado, que o
 -- inventário não mudou de tamanho por baixo e que nenhuma delas foi afrouxada no RLS para
 -- "facilitar" a abertura (quem lê o gate é a função security definer, nunca o cliente).

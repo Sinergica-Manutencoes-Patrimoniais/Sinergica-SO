@@ -39,7 +39,7 @@
   # Trechos não traz a tela, porque o bloco inteiro não renderiza.
   VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
 
-  # ── E00-S29 (25/11/2026): destrave do Financeiro e do Comercial para exploração ──────────────
+  # ── E00-S30 (25/11/2026): destrave do Financeiro e do Comercial para exploração ──────────────
   # Autorização do Lucas em 25/11, com o cliente ainda não operando o sistema. A migration 1872
   # abriu as 72 travas de banco correspondentes; sem as flags abaixo as telas continuariam
   # retornando null, e sem a migration estas flags trariam tela que o banco recusa. As duas pontas

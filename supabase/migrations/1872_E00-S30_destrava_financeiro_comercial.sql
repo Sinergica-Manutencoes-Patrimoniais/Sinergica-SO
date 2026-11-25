@@ -1,4 +1,4 @@
--- E00-S29: abre as 72 travas de banco do Financeiro (faturáveis) e do Comercial
+-- E00-S30: abre as 72 travas de banco do Financeiro (faturáveis) e do Comercial
 -- (orçamento operacional) para a rodada de exploração do cliente.
 --
 -- AUTORIZAÇÃO: Lucas, 25/11/2026, decisão explícita de abrir TUDO de uma vez ("pode destravar os
@@ -13,7 +13,7 @@
 -- POR QUE MIGRATION E NÃO SQL MANUAL EM PRODUÇÃO
 -- As travas do PCM foram abertas à mão no console em 24/11. Funciona, mas deixa o banco local e o
 -- de CI diferentes de produção, e o próximo "db reset" volta tudo fechado sem ninguém perceber.
--- Versionada, a abertura é reproduzível, testada em CI (supabase/tests/E00-S29_*.test.sql) e
+-- Versionada, a abertura é reproduzível, testada em CI (supabase/tests/E00-S30_*.test.sql) e
 -- auditável no git.
 --
 -- DUAS FORMAS DE GATE, PORQUE O SCHEMA TEM DUAS
@@ -151,7 +151,7 @@ begin
   v_abertas := v_abertas + v_nesta_linha;
  end loop;
 
- raise notice 'E00-S29: % trava(s) alvo, % aberta(s) nesta execução, % ausente(s): %',
+ raise notice 'E00-S30: % trava(s) alvo, % aberta(s) nesta execução, % ausente(s): %',
   array_length(v_simples, 1) + array_length(v_leitura_escrita, 1),
   v_abertas,
   coalesce(array_length(v_ausentes, 1), 0),
