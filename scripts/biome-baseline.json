@@ -385,13 +385,6 @@
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]
     },
-    "apps/web/src/app/HomePage.tsx": {
-      "sha256": "05d8b4cc05a194210df5f315a825a07b8d1ed70a83163211af8ae78859718efd",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
     "apps/web/src/features/area-cliente/components/AnexosOsPortal.tsx": {
       "sha256": "c35e72b14511457510333dee5ad377d073a336d52a906a975b20b2a4edd91a63",
       "diagnostics": [
@@ -469,16 +462,6 @@
         "d6a931d94b938ed6f23b02176019a456562add2530d863b33de7d28f731049bc"
       ]
     },
-    "apps/web/src/features/area-cliente/components/HistoricoPropostaOs.tsx": {
-      "sha256": "a57ff5655b3aa29842a5714f2b93092c367548cdd91175cd82deaa93fa7a58b2",
-      "diagnostics": [
-        "55966c6438b3af72e9a13103a8d7b1e3c860f19a6ac02543b72982f114e8d52e",
-        "864a8c2cfd70dfe0ef2a36ae61b836fa08392f0a271a26b48081bf84c1fa3cc5",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "c0742c64bca84a708429764a991fb53adf1e907deacd38fbd45efbca8e1f8078"
-      ]
-    },
     "apps/web/src/features/area-cliente/components/ListasHistoricoMateriais.tsx": {
       "sha256": "8b3cc0a90fc79b7d1367195275c2f79be4bd60c88a404bf4b4daa11186a401b3",
       "diagnostics": [
@@ -515,14 +498,6 @@
       "sha256": "12f022b125c6171ca4fecfd10d6cd121fe71e6ccd5617b2a7c07bebe40d02714",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/area-cliente/components/PropostasOsPortal.tsx": {
-      "sha256": "eba86303a907b60cbb143f3387c9d456645c85c26f4aa34846016efa459f5bb6",
-      "diagnostics": [
-        "43e43fd100023ffd929e212228cb183f98636c1d7beb598278d9bad5fb09b113",
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/area-cliente/components/RecuperarDecisoesProposta.tsx": {
@@ -604,13 +579,6 @@
       "sha256": "2e55fc090599c8381802999a06560a9c206de1cc693588de5ec5db06a660a2ae",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/features/area-cliente/PortalShell.tsx": {
-      "sha256": "e874008799fe1691a002dcd779980f2c61f901c6fbe58b466df0e95b314b72e1",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
       ]
     },
     "apps/web/src/features/comercial/application/levantamento-queries.test.ts": {
@@ -3233,14 +3201,6 @@
         "18d867598eb387379494c9e907e50ff784642525b1f26ebf38382899253fefef",
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
         "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee"
-      ]
-    },
-    "apps/web/src/features/pcm/interfaces/codigos-publicos/QrCodigoGrupo.tsx": {
-      "sha256": "a3fc2a099d68daa1de7df794f53333ac3c3cfd81455678a621df40bda58ab4dd",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c",
-        "c0649449bcf207450be1db08211976cfc68141918dd51db57390ef7532cd3bee",
-        "fe29a08c77295644858931b2cae7afcf61e138405c6c735dbfffc594e6c4408f"
       ]
     },
     "apps/web/src/features/pcm/interfaces/codigos-publicos/RecuperarObservacoesReserva.tsx": {
@@ -7593,12 +7553,6 @@
     },
     "apps/web/src/lib/pdf/relatorio-pdf.test.ts": {
       "sha256": "c479a7578c3190c677107100a1b60e2b32b2a4af3f51280452cf63c69367c757",
-      "diagnostics": [
-        "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
-      ]
-    },
-    "apps/web/src/lib/pdf/relatorio-pdf.ts": {
-      "sha256": "13a5030fd61cfbf7c8bce8e1245fdaabe8a6587af1f50dc1150729f9d0ad1d0a",
       "diagnostics": [
         "bfd21a1872f10c294e35327dd0894a9afa825875f8b7e70d9c01b1220c42b16c"
       ]

@@ -1,6 +1,6 @@
 # 001 — Quebrar o bundle único em chunks por módulo
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: cc104969
 - **Severity**: HIGH
 - **Category**: Performance

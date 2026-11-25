@@ -1,10 +1,15 @@
-import { ConfirmDialog } from "@sinergica/ui";
+import { ConfirmDialog, Skeleton } from "@sinergica/ui";
 import { Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import type { FluxoItem, FluxoLog, FluxoRecipe, PassoFluxo } from "../domain/fluxos";
 import { novoPasso } from "../domain/fluxos";
 import type { PersonaItem } from "../domain/personas";
-import { FlowBuilderCanvas } from "./FlowBuilderCanvas";
+
+// E00-S29 — o canvas usa `@xyflow/react` (58 KB gzip) e só aparece quando um fluxo é aberto
+// para edição. Fica em chunk próprio para não entrar no carregamento do Atendimento.
+const FlowBuilderCanvas = lazy(() =>
+  import("./FlowBuilderCanvas").then((m) => ({ default: m.FlowBuilderCanvas })),
+);
 
 export function FluxosManager({
   fluxos,
@@ -248,11 +253,13 @@ export function FluxosManager({
               </div>
             )}
           </div>
-          <FlowBuilderCanvas
-            passos={passosLocais}
-            readOnly={!temEscrita}
-            onChange={setPassosLocais}
-          />
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <FlowBuilderCanvas
+              passos={passosLocais}
+              readOnly={!temEscrita}
+              onChange={setPassosLocais}
+            />
+          </Suspense>
           {mostrarLogs && (
             <section className="rounded-xl border border-line bg-card p-4">
               <h4 className="text-body font-semibold text-ink">Execuções recentes</h4>
