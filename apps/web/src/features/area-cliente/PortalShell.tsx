@@ -4,25 +4,24 @@ import { Button } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useId, useState } from "react";
 import { useAuth } from "../../app/auth-context";
-import { criarRelatorioPdf } from "../../lib/pdf/relatorio-pdf";
+import { flagLigada } from "../../config/flags-sso";
 // E03-S06: o portal reusa a regra de expiração de proposta do Comercial,
 // mesmo padrão já estabelecido de `formatarTextoRelatorioCliente` (E01-S135, importado do PCM
 // logo abaixo) — o portal é o ponto de composição entre módulos, não os módulos entre si.
 import { estaExpirada } from "../comercial/domain/proposta";
 import type { PortalSnapshot } from "./application/portal-gateway";
-import { supabasePortalAdapter } from "./infrastructure/supabase-portal-adapter";
-import { MateriaisOsPortal } from "./components/MateriaisOsPortal";
-import { PropostasOsPortal } from "./components/PropostasOsPortal";
-import { CobrancasOsPortal } from "./components/CobrancasOsPortal";
-import { TimelineOsPortal } from "./components/TimelineOsPortal";
 import { AnexosOsPortal } from "./components/AnexosOsPortal";
 import { AnexosPropriosOs } from "./components/AnexosPropriosOs";
-import { VisitasOsPortal } from "./components/VisitasOsPortal";
 import { CalendarioVisitasPortal } from "./components/CalendarioVisitasPortal";
-import { SituacaoOsPortal } from "./components/SituacaoOsPortal";
-import { PendenciasOsPortal } from "./components/PendenciasOsPortal";
+import { CobrancasOsPortal } from "./components/CobrancasOsPortal";
 import { FilaComunicacoes } from "./components/FilaComunicacoes";
-import { flagLigada } from "../../config/flags-sso";
+import { MateriaisOsPortal } from "./components/MateriaisOsPortal";
+import { PendenciasOsPortal } from "./components/PendenciasOsPortal";
+import { PropostasOsPortal } from "./components/PropostasOsPortal";
+import { SituacaoOsPortal } from "./components/SituacaoOsPortal";
+import { TimelineOsPortal } from "./components/TimelineOsPortal";
+import { VisitasOsPortal } from "./components/VisitasOsPortal";
+import { supabasePortalAdapter } from "./infrastructure/supabase-portal-adapter";
 
 type Secao = PortalSection;
 
@@ -352,18 +351,39 @@ function OrdensServico({
                 {os.categoria} · aberta em {dataPt(os.createdAt)}
               </p>
             </div>
-            {flagLigada("VITE_SSO_PORTAL_SITUACAO_OS_ENABLED") && user?.id
-              ? <SituacaoOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
-              : <Badge texto={os.status} />}
+            {flagLigada("VITE_SSO_PORTAL_SITUACAO_OS_ENABLED") && user?.id ? (
+              <SituacaoOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+            ) : (
+              <Badge texto={os.status} />
+            )}
           </div>
-          {user?.id && <MateriaisOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
-          {user?.id && <PropostasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} clienteNome={data.cliente.nome} />}
-          {user?.id && <CobrancasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
-          {user?.id && <TimelineOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && (
+            <MateriaisOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+          )}
+          {user?.id && (
+            <PropostasOsPortal
+              userId={user.id}
+              clienteId={data.cliente.id}
+              osId={os.id}
+              clienteNome={data.cliente.nome}
+            />
+          )}
+          {user?.id && (
+            <CobrancasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+          )}
+          {user?.id && (
+            <TimelineOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+          )}
           {user?.id && <AnexosOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
-          {user?.id && <AnexosPropriosOs userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
-          {user?.id && <VisitasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
-          {user?.id && <PendenciasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />}
+          {user?.id && (
+            <AnexosPropriosOs userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+          )}
+          {user?.id && (
+            <VisitasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+          )}
+          {user?.id && (
+            <PendenciasOsPortal userId={user.id} clienteId={data.cliente.id} osId={os.id} />
+          )}
           {data.osNotas.some((item) => item.referenciaId === os.id) && (
             <div className="mt-4 rounded-lg bg-paper px-3">
               {data.osNotas
@@ -402,7 +422,10 @@ function OrdensServico({
                 );
                 setNotas((v) => ({ ...v, [os.id]: "" }));
                 setArquivos((v) => ({ ...v, [os.id]: undefined }));
-                if (user?.id) await queryClient.invalidateQueries({ queryKey: ["portal-anexos-proprios", user.id, data.cliente.id, os.id] });
+                if (user?.id)
+                  await queryClient.invalidateQueries({
+                    queryKey: ["portal-anexos-proprios", user.id, data.cliente.id, os.id],
+                  });
                 await onAtualizar();
               }}
               className="rounded-lg border border-orange px-3 py-2 text-body font-semibold text-orange disabled:opacity-50"
@@ -673,6 +696,9 @@ const TIPO_PROPOSTA_LABEL: Record<string, string> = {
 };
 
 async function baixarPdfProposta(payload: unknown, versaoAtual: number, contaNome: string) {
+  // E00-S29 — `pdf-lib` pesa 177 KB gzip e só é usado quando alguém clica em gerar PDF.
+  // Import dinâmico no ponto de uso para não viajar no carregamento do Portal.
+  const { criarRelatorioPdf } = await import("../../lib/pdf/relatorio-pdf");
   const pdf = await criarRelatorioPdf({
     titulo: "Proposta Comercial",
     subtitulo: `${contaNome} · v${versaoAtual}`,

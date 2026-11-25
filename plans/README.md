@@ -1,5 +1,7 @@
 # Planos — fluidez e sensação de carregamento (E00-S29)
 
+Owner E00-S29: Codex — continuação do PR #117 (rebase e CI, 25/11/2026).
+
 Auditoria de 24/11/2026 sobre o `apps/web`, a partir do bundle publicado em
 `https://so-sinergica.netlify.app`. O problema relatado ("muita impressão de loading") tem causa
 dominante **antes** de qualquer esqueleto: 1,49 MB de JS gzip num único chunk, com tela branca até
@@ -12,7 +14,7 @@ Os tokens de movimento, o comportamento do modal e o primitivo `Skeleton` já es
 
 | # | Plano | Sev | Depende de | Status |
 |---|---|---|---|---|
-| 001 | [Quebrar o bundle único em chunks por módulo](001-code-splitting-por-modulo.md) | HIGH | — | TODO |
+| 001 | [Quebrar o bundle único em chunks por módulo](001-code-splitting-por-modulo.md) | HIGH | — | **DONE** |
 | 002 | [Permissões no TanStack Query e fim do waterfall](002-permissoes-sem-waterfall.md) | HIGH | — | TODO |
 | 003 | [Primeira pintura: shell inline e fonte sem bloqueio](003-primeira-pintura-sem-branco.md) | HIGH | — | TODO |
 | 004 | [Moldura persistente: esqueleto na região](004-moldura-persistente.md) | HIGH | 002 | TODO |
