@@ -6,7 +6,7 @@
 // `specs/E02-S26-agente-entrevistador-cadastro/tasks.md`. O aviso no topo diz isso para quem
 // abrir a tela, em vez de deixar a pessoa configurar perguntas e nunca entender por que nenhuma
 // entrevista acontece.
-import { RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
+import { Button, RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -107,9 +107,9 @@ function Conteudo() {
       ) : roteiros.isError ? (
         <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
           <p className="text-body text-red-600">Não foi possível carregar os roteiros.</p>
-          <button type="button" className="btn-secondary mt-2" onClick={() => roteiros.refetch()}>
+          <Button className="mt-2" onClick={() => roteiros.refetch()}>
             Tentar novamente
-          </button>
+          </Button>
         </section>
       ) : (
         <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
@@ -117,11 +117,7 @@ function Conteudo() {
             <h2 className="text-body font-semibold text-ink">
               {roteiros.data.length} roteiro(s) cadastrado(s)
             </h2>
-            {temEscrita && (
-              <button type="button" className="btn-secondary" onClick={abrirNovo}>
-                Novo roteiro
-              </button>
-            )}
+            {temEscrita && <Button onClick={abrirNovo}>Novo roteiro</Button>}
           </div>
           <ul className="mt-3 flex flex-col gap-2">
             {roteiros.data.length === 0 && (
@@ -142,17 +138,11 @@ function Conteudo() {
                 </div>
                 {temEscrita && (
                   <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => abrirEdicao(roteiro.id)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      disabled={alternar.isPending}
+                    <Button onClick={() => abrirEdicao(roteiro.id)}>Editar</Button>
+                    <Button
+                      // Só a linha que está alternando mostra o spinner — `isPending` sozinho
+                      // acenderia o botão de todos os roteiros da lista ao mesmo tempo.
+                      loading={alternar.isPending && alternar.variables?.id === roteiro.id}
                       onClick={() =>
                         user &&
                         alternar.mutate({
@@ -163,7 +153,7 @@ function Conteudo() {
                       }
                     >
                       {roteiro.ativo ? "Desativar" : "Ativar"}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </li>
@@ -232,40 +222,25 @@ function Conteudo() {
                   obrigatória
                 </label>
                 {perguntas.length > 1 && (
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setPerguntas(perguntas.filter((_, i) => i !== indice))}
-                  >
+                  <Button onClick={() => setPerguntas(perguntas.filter((_, i) => i !== indice))}>
                     Remover
-                  </button>
+                  </Button>
                 )}
               </div>
             ))}
           </div>
 
-          <button
-            type="button"
-            className="btn-secondary mt-2"
-            onClick={() => setPerguntas([...perguntas, perguntaVazia()])}
-          >
+          <Button className="mt-2" onClick={() => setPerguntas([...perguntas, perguntaVazia()])}>
             Adicionar pergunta
-          </button>
+          </Button>
 
           {erro && <p className="mt-2 text-body text-red-600">{erro}</p>}
 
           <div className="mt-3 flex justify-end gap-2">
-            <button type="button" className="btn-secondary" onClick={() => setEditandoId(null)}>
-              Cancelar
-            </button>
-            <button
-              type="button"
-              disabled={salvar.isPending}
-              onClick={submeter}
-              className="h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-            >
+            <Button onClick={() => setEditandoId(null)}>Cancelar</Button>
+            <Button variant="primary" loading={salvar.isPending} onClick={submeter}>
               {salvar.isPending ? "Salvando…" : "Salvar roteiro"}
-            </button>
+            </Button>
           </div>
         </section>
       )}

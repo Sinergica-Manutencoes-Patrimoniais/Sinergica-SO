@@ -8,7 +8,7 @@
 -- Rodar com `supabase test db supabase/tests/E02-S25_trigger_automatico.test.sql`.
 
 begin;
-select plan(9);
+select plan(11);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('e0250000-0000-4000-8000-00000000000a', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'trigger-automatico@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
@@ -107,6 +107,25 @@ select throws_ok(
   '23514',
   null,
   'AC-6: fim antes do início é recusado pelo banco, não só pela tela'
+);
+
+-- ── ADR-1691: revogação de acesso não pode depender do JWT ────────────────────────────────────
+-- Achado do gate `check-revogacao-coberta` no PR #120, virado em teste: as policies desta tabela
+-- precisam reler o acesso AO VIVO. Decidir pelo `auth.jwt()` sozinho deixa a sessão já aberta
+-- lendo e escrevendo depois de o acesso ser revogado, até o token expirar.
+select ok(
+  (select bool_and(pg_get_expr(p.polqual, p.polrelid) like '%sso_acesso_atual%')
+     from pg_policy p
+    where p.polrelid = 'atendimento.persona_janela_automatica'::regclass),
+  'ADR-1691: toda policy de persona_janela_automatica relê o acesso ao vivo (config.sso_acesso_atual)'
+);
+
+select is(
+  (select count(*)::int from pg_policy p
+    where p.polrelid = 'atendimento.persona_janela_automatica'::regclass
+      and pg_get_expr(p.polqual, p.polrelid) like '%user_role%'),
+  0,
+  'ADR-1691: nenhuma policy da tabela decide por auth.jwt() -> user_role'
 );
 
 select * from finish();

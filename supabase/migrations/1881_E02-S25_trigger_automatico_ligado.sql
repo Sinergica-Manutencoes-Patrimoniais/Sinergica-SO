@@ -69,23 +69,19 @@ alter table atendimento.persona_janela_automatica force row level security;
 grant select, insert, update, delete on atendimento.persona_janela_automatica to authenticated;
 grant select, insert, update, delete on atendimento.persona_janela_automatica to service_role;
 
+-- ADR-1691 / E00-S27: a condição é `config.sso_acesso_atual`, que relê `config.usuarios` +
+-- `resolver_permissoes_modulo` AO VIVO a cada linha. Decidir pelo `auth.jwt()` sozinho é decidir
+-- por um carimbo do login: revogar o acesso de alguém não surtiria efeito até o token expirar.
+-- A função já cobre superadmin e já exige `u.ativo`, então ela é a condição inteira — somar um
+-- `or auth.jwt() ...` reabriria o mesmo buraco pelo outro lado. Ver também a 1882.
 create policy "persona_janela_automatica_select" on atendimento.persona_janela_automatica
   for select to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'atendimento' in ('leitura', 'escrita')
-  );
+  using (config.sso_acesso_atual('atendimento', 'leitura'));
 
 create policy "persona_janela_automatica_escrita" on atendimento.persona_janela_automatica
   for all to authenticated
-  using (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'atendimento' = 'escrita'
-  )
-  with check (
-    auth.jwt() ->> 'user_role' = 'superadmin'
-    or auth.jwt() -> 'user_modulos' ->> 'atendimento' = 'escrita'
-  );
+  using (config.sso_acesso_atual('atendimento', 'escrita'))
+  with check (config.sso_acesso_atual('atendimento', 'escrita'));
 
 -- ── 2. "Há quantos minutos um humano respondeu?" ──────────────────────────────────────────────
 -- Índice parcial: a consulta é sempre a MESMA (última saída humana de uma conversa), então o

@@ -3,7 +3,7 @@
 // É a regra GLOBAL do AC-5: a configuração vive na persona de chamados, não por cliente. A tela
 // mostra, por dia da semana, o horário em que HUMANOS atendem — fora dele o Zé assume sozinho —
 // e os X minutos de silêncio humano dentro do horário até ele assumir.
-import { RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
+import { Button, RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { flagLigada } from "../../../config/flags-sso";
@@ -69,9 +69,9 @@ function Conteudo({ persona, temEscrita }: { persona: PersonaItem; temEscrita: b
         <p className="text-body text-red-600">
           Não foi possível carregar a configuração da resposta automática.
         </p>
-        <button type="button" className="btn-secondary mt-2" onClick={() => config.refetch()}>
+        <Button className="mt-2" onClick={() => config.refetch()}>
           Tentar novamente
-        </button>
+        </Button>
       </section>
     );
   }
@@ -191,14 +191,9 @@ function Conteudo({ persona, temEscrita }: { persona: PersonaItem; temEscrita: b
 
       {temEscrita && (
         <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            disabled={salvar.isPending}
-            onClick={submeter}
-            className="h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-          >
+          <Button variant="primary" loading={salvar.isPending} onClick={submeter}>
             {salvar.isPending ? "Salvando…" : "Salvar resposta automática"}
-          </button>
+          </Button>
         </div>
       )}
     </section>
