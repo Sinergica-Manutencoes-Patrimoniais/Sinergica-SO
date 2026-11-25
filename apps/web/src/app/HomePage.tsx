@@ -51,6 +51,8 @@ import { OrcamentoPage as FinanceiroOrcamentoPage } from "../features/financeiro
 import { RentabilidadePage as FinanceiroRentabilidadePage } from "../features/financeiro/pages/RentabilidadePage";
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { GuiaRouter } from "../features/guia/GuiaRouter";
+import { IndicadoresMetaPage } from "../features/marketing/interfaces/IndicadoresMetaPage";
+import { ReceitaPorCampanhaPage } from "../features/marketing/interfaces/ReceitaPorCampanhaPage";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
 import { CapacidadesWorkspace } from "../features/pcm/interfaces/capacidades-sso/Workspace";
 import { AgendaTecnicoPage } from "../features/pcm/pages/AgendaTecnicoPage";
@@ -96,6 +98,7 @@ import {
   CONFIG_NAV,
   FINANCEIRO_NAV,
   GUIA_NAV,
+  MARKETING_NAV,
   NAVEGACAO_SSO,
   PCM_NAV,
   bloqueioDeAdministracao,
@@ -103,7 +106,13 @@ import {
   navegacaoVisivel,
   pcmNavConsolidado,
 } from "./navegacao-sso";
-import type { AtendimentoView, ComercialView, ConfigTab, PcmView } from "./navegacao-sso";
+import type {
+  AtendimentoView,
+  ComercialView,
+  ConfigTab,
+  MarketingView,
+  PcmView,
+} from "./navegacao-sso";
 import { usePermissoes } from "./permissoes-context";
 import { rotaInicialDaUrl } from "./rotas-legadas";
 import { useTheme } from "./theme-context";
@@ -173,6 +182,8 @@ export function HomePage() {
   // (E04-S03) — "o funil está funcionando?" é a pergunta que abriu o épico, por isso é a primeira
   // tela, não o Kanban de trabalho (que segue disponível, só deixou de ser o default da E03-S02).
   const [comercialView, setComercialView] = useState<ComercialView>("dashboard");
+  // Sub-navegação do Marketing (E06-S01) — mesmo padrão useState de abas do resto do app.
+  const [marketingView, setMarketingView] = useState<MarketingView>("indicadores");
   // Sub-navegação do Guia do SO (documentação de onboarding — features/guia/).
   const [guiaView, setGuiaView] = useState<GuiaView>(() =>
     new URLSearchParams(window.location.search).get("guia") === "pcm" ? "pcm" : "visao-geral",
@@ -661,6 +672,37 @@ export function HomePage() {
                 );
               })}
             </div>
+          ) : activeModulo === "marketing" ? (
+            <div>
+              {!sidebarCompacta && (
+                <p className="px-2 text-micro font-semibold text-nav-ink uppercase tracking-widest mb-1">
+                  MARKETING
+                </p>
+              )}
+              {MARKETING_NAV.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.view === marketingView;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    title={item.label}
+                    onClick={() => {
+                      setMarketingView(item.view);
+                      setMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm text-body transition-colors cursor-pointer border-l-2 ${sidebarCompacta ? "justify-center" : ""} ${
+                      isActive
+                        ? "border-orange bg-card/[0.07] text-white font-medium"
+                        : "border-transparent text-nav-ink hover:bg-card/[0.04] hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                    {!sidebarCompacta && <span className="truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
           ) : activeModulo === "guia" ? (
             <div>
               {!sidebarCompacta && (
@@ -1118,6 +1160,32 @@ export function HomePage() {
                 irParaPcmView("clientes");
               }}
             />
+          ) : activeModulo === "marketing" ? (
+            // E06-S01: o módulo saiu do placeholder "Em construção". Com a jornada desligada, a
+            // área CONTINUA no menu e se anuncia — `return null` silencioso é indistinguível de
+            // "não foi feito" (E00-S28 AC-3).
+            !flagLigada("VITE_SSO_MARKETING_INDICADORES_ENABLED") ? (
+              <RecursoNaoAtivado
+                recurso="Marketing · Indicadores da Meta"
+                podeAdministrar={podeAcessarNav("marketing", "escrita")}
+                faltando={[
+                  "flag VITE_SSO_MARKETING_INDICADORES_ENABLED",
+                  "gate marketing.sso_indicadores_meta_gate",
+                ]}
+              />
+            ) : marketingView === "receita-campanha" ? (
+              flagLigada("VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED") ? (
+                <ReceitaPorCampanhaPage />
+              ) : (
+                <RecursoNaoAtivado
+                  recurso="Marketing · Receita por campanha"
+                  podeAdministrar={podeAcessarNav("marketing", "escrita")}
+                  faltando={["flag VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED"]}
+                />
+              )
+            ) : (
+              <IndicadoresMetaPage />
+            )
           ) : activeModulo === "guia" ? (
             <GuiaRouter view={guiaView} />
           ) : modulo ? (

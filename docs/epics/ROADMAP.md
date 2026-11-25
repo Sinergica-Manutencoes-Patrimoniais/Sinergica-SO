@@ -21,7 +21,7 @@ alwaysApply: false
 | E03 | Comercial | Especificado por completo — product+design do épico e 14 stories com spec.md+tasks.md prontos para implementar | Claude (sessão Lucas, 2026-08-10) |
 | E04 | Financeiro | Em andamento — S01 (fundação) implementada e em produção; S02-S13 especificadas | Claude (sessão Lucas) |
 | E05 | Operação · Estoque | Planejado | — |
-| E06 | Marketing | Planejado | — |
+| E06 | Marketing | Em andamento — S01 (indicadores Meta + rastreio até a venda) em PR #123 | Claude (sessão Lucas) |
 | E07 | Growth | Planejado | — |
 | E08 | Gestão · Cockpit | Planejado | — |
 | E09 | Área do Cliente (Portal do Cliente) | Especificado (11 stories; S01 fundação design-first) | — |
@@ -248,7 +248,11 @@ _12 concluídas no histórico · maior ID usado: E04-S13_
 _0 concluídas no histórico · maior ID usado: E05-S00_
 
 ### E06 — Marketing
-_0 concluídas no histórico · maior ID usado: E06-S00_
+_0 concluídas no histórico · maior ID usado: E06-S01_
+
+| ID | Título | Owner | Status | Spec |
+|----|--------|-------|--------|------|
+| E06-S01 | Indicadores das campanhas da Meta + rastreio anúncio → lead → proposta → contrato | Claude (sessão Lucas) | **PR #123 aberto (2026-11-25)** — ADR-1699, migration 1900, pgTAP 20/20, 38 testes de domínio. Roda com fixtures: falta o token `ads_read` da Meta no cofre (`marketing_meta_access_token`). Pendente: endpoint público de clique, cron da sincronização e a tela de vínculo entrada→oportunidade | [spec](../../specs/E06-S01-indicadores-meta-rastreio/spec.md) |
 
 ### E07 — Growth
 _0 concluídas no histórico · maior ID usado: E07-S00_

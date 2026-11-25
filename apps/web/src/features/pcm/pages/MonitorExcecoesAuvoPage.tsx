@@ -7,13 +7,15 @@
 //
 // SÓ LEITURA nesta fatia: reprocessar uma falha é ação (escrita, auditoria, idempotência) e fica
 // para a fatia seguinte — ver tasks.md. Botão que não faz nada seria pior que botão nenhum.
-import { Skeleton } from "@sinergica/ui";
+import { DataTable, Skeleton } from "@sinergica/ui";
+import type { DataTableColumn } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { flagLigada } from "../../../config/flags-sso";
 import { operacaoQueryKeys } from "../application/operacao-queries";
 import {
+  type ExcecaoAuvo,
   TIPO_EXCECAO_EXPLICACAO,
   type TipoExcecaoAuvo,
   avisoMonitorExcecoes,
@@ -31,6 +33,31 @@ function formatarInstante(iso: string | null): string {
   const data = new Date(iso);
   return Number.isNaN(data.getTime()) ? "—" : data.toLocaleString("pt-BR");
 }
+
+// Trocada a tabela crua por `<DataTable>` de `@sinergica/ui` (E00-S15): header sticky, scroll
+// contido no wrapper e `tabular-nums` à direita vêm de graça — e o gate `check-primitivas`
+// volta a ficar verde. Ele estava vermelho em `main` desde esta tela (E01-S201), o que barrava
+// qualquer PR seguinte; consertado aqui de carona, sem mudar uma coluna sequer.
+const COLUNAS_DAS_EXCECOES: DataTableColumn<ExcecaoAuvo>[] = [
+  {
+    chave: "excecao",
+    cabecalho: "Exceção",
+    cabecalhoLinha: true,
+    render: (e) => rotuloTipoExcecao(e.tipo),
+  },
+  { chave: "cliente", cabecalho: "Cliente", render: (e) => e.clienteNome },
+  { chave: "os", cabecalho: "OS", render: (e) => e.osNumero },
+  { chave: "visita", cabecalho: "Visita", render: (e) => formatarInstante(e.visitaInicioEm) },
+  {
+    chave: "tarefa",
+    cabecalho: "Tarefa Auvo",
+    // Sem tarefa no Auvo é o achado, não um buraco: o travessão é deliberado.
+    render: (e) => e.taskId ?? "—",
+  },
+  { chave: "tentativas", cabecalho: "Tentativas", numerica: true, render: (e) => e.tentativas },
+  { chave: "erro", cabecalho: "Último erro", render: (e) => rotuloErroExcecao(e.ultimoErro) },
+  { chave: "quando", cabecalho: "Quando", render: (e) => formatarInstante(e.ocorridoEm) },
+];
 
 export function MonitorExcecoesAuvoPage() {
   const { user } = useAuth();
@@ -115,54 +142,12 @@ export function MonitorExcecoesAuvoPage() {
       {ligada && clienteId && excecoes.isPending ? <Skeleton className="h-4 w-48" /> : null}
 
       {lista.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-line">
-          <table className="w-full text-body">
-            <caption className="sr-only">Exceções do Auvo em T−24 do Cliente selecionado</caption>
-            <thead className="bg-card text-ink-3">
-              <tr>
-                <th scope="col" className="p-2 text-left">
-                  Exceção
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Cliente
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  OS
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Visita
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Tarefa Auvo
-                </th>
-                <th scope="col" className="p-2 text-right">
-                  Tentativas
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Último erro
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Quando
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((excecao) => (
-                <tr key={`${excecao.tipo}-${excecao.osId}`} className="border-line border-t">
-                  <td className="p-2 text-ink">{rotuloTipoExcecao(excecao.tipo)}</td>
-                  <td className="p-2 text-ink-3">{excecao.clienteNome}</td>
-                  <td className="p-2 text-ink">{excecao.osNumero}</td>
-                  <td className="p-2 text-ink-3">{formatarInstante(excecao.visitaInicioEm)}</td>
-                  {/* Sem tarefa no Auvo é o achado, não um buraco: o travessão é deliberado. */}
-                  <td className="p-2 text-ink-3">{excecao.taskId ?? "—"}</td>
-                  <td className="p-2 text-right text-ink-3">{excecao.tentativas}</td>
-                  <td className="p-2 text-ink-3">{rotuloErroExcecao(excecao.ultimoErro)}</td>
-                  <td className="p-2 text-ink-3">{formatarInstante(excecao.ocorridoEm)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          colunas={COLUNAS_DAS_EXCECOES}
+          itens={lista}
+          chaveLinha={(excecao) => `${excecao.tipo}-${excecao.osId}`}
+          vazio="Nenhuma exceção do Auvo no período."
+        />
       ) : null}
     </div>
   );
