@@ -7,6 +7,12 @@ tier: arquitetural
 
 # Spec — Deploy separado do Portal do Cliente
 
+> **CANCELADA em 25/11/2026 (E09-S12, ADR-1699).** O Lucas decidiu que o Portal fica dentro do app
+> único: "aumenta muito a complexidade". `apps/portal` foi removido do repositório; as telas do
+> portal continuam em `apps/web/src/features/area-cliente/`, servidas por `App.tsx` para o papel
+> `cliente-sindico`. O que segue abaixo é o contrato original, mantido como registro do que foi
+> construído e de como retomar, nunca como alvo a implementar.
+
 > **Fonte da verdade.** Status: código/build implementados; site/subdomínio Netlify pendente como
 > gate operacional externo pós-merge. Depende de E09-S01..S10 estáveis.
 > Origem: decisão do PO — "depois vamos para um deploy separado para não ter risco do cliente

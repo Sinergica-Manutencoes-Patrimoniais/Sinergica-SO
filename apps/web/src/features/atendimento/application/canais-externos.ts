@@ -1,6 +1,11 @@
-import { validarCanalExterno, validarWaTemplate } from "../domain/canais-externos";
+import {
+  validarCanalExterno,
+  validarConexaoMeta,
+  validarWaTemplate,
+} from "../domain/canais-externos";
 import type {
   CanalExternoFormData,
+  ConexaoMetaFormData,
   TipoCanalExterno,
   WaTemplateFormData,
 } from "../domain/canais-externos";
@@ -28,6 +33,23 @@ export async function editarCanalExterno(
 
 export async function desativarCanalExterno(gateway: CanaisExternosGateway, id: string) {
   return gateway.desativarCanal(id);
+}
+
+export async function conectarCanalMeta(
+  gateway: CanaisExternosGateway,
+  input: ConexaoMetaFormData,
+) {
+  return gateway.conectarCanalMeta(validarConexaoMeta(input));
+}
+
+export async function obterEstadoCanalMeta(gateway: CanaisExternosGateway, canalId: string) {
+  if (!canalId) throw new Error("Selecione a conexão.");
+  return gateway.obterEstadoMeta(canalId);
+}
+
+export async function verificarCanalMeta(gateway: CanaisExternosGateway, canalId: string) {
+  if (!canalId) throw new Error("Selecione a conexão.");
+  return gateway.verificarCanalMeta(canalId);
 }
 
 export async function listarWaTemplates(gateway: CanaisExternosGateway) {

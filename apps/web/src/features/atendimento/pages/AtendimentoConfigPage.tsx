@@ -12,12 +12,14 @@ import {
 } from "../application/automacao";
 import { buscarConfigCanal } from "../application/buscar-config-canal";
 import {
+  conectarCanalMeta,
   criarCanalExterno,
   criarWaTemplate,
   desativarCanalExterno,
   editarWaTemplate,
   listarCanaisExternos,
   listarWaTemplates,
+  verificarCanalMeta,
 } from "../application/canais-externos";
 import type { ClienteOpcao } from "../application/config-gateway";
 import {
@@ -95,6 +97,7 @@ import type {
 import type {
   CanalExternoFormData,
   CanalExternoItem,
+  ConexaoMetaFormData,
   WaTemplateFormData,
   WaTemplateItem,
 } from "../domain/canais-externos";
@@ -437,6 +440,19 @@ export function AtendimentoConfigPage() {
   async function handleCriarCanalExterno(form: CanalExternoFormData) {
     if (!user) return;
     await criarCanalExterno(supabaseCanaisExternosAdapter, { ...form, userId: user.id });
+    await carregarBase();
+  }
+
+  /** E02-S16/ADR-1700: os segredos passam pela Edge Function e vão para o Vault; a tela só
+   * recebe de volta a URL de callback para colar na Meta. */
+  async function handleConectarCanalMeta(form: ConexaoMetaFormData) {
+    const resultado = await conectarCanalMeta(supabaseCanaisExternosAdapter, form);
+    await carregarBase();
+    return resultado;
+  }
+
+  async function handleVerificarCanalMeta(canalId: string) {
+    await verificarCanalMeta(supabaseCanaisExternosAdapter, canalId);
     await carregarBase();
   }
 
@@ -818,6 +834,8 @@ export function AtendimentoConfigPage() {
           temEscrita={temEscrita}
           onCriar={handleCriarCanalExterno}
           onDesativar={handleDesativarCanalExterno}
+          onConectar={handleConectarCanalMeta}
+          onVerificar={handleVerificarCanalMeta}
         />
       ) : aba === "wa-templates" ? (
         <WaTemplatesTab
@@ -835,6 +853,8 @@ export function AtendimentoConfigPage() {
           temEscrita={temEscrita}
           onCriar={handleCriarCanalExterno}
           onDesativar={handleDesativarCanalExterno}
+          onConectar={handleConectarCanalMeta}
+          onVerificar={handleVerificarCanalMeta}
         />
       ) : aba === "messenger" ? (
         <CanalExternoTab
@@ -844,6 +864,8 @@ export function AtendimentoConfigPage() {
           temEscrita={temEscrita}
           onCriar={handleCriarCanalExterno}
           onDesativar={handleDesativarCanalExterno}
+          onConectar={handleConectarCanalMeta}
+          onVerificar={handleVerificarCanalMeta}
         />
       ) : aba === "ig-comments" ? (
         <IgCommentAutomationsTab
