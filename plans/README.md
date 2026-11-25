@@ -17,7 +17,7 @@ Os tokens de movimento, o comportamento do modal e o primitivo `Skeleton` já es
 | 001 | [Quebrar o bundle único em chunks por módulo](001-code-splitting-por-modulo.md) | HIGH | — | **DONE** |
 | 002 | [Permissões no TanStack Query e fim do waterfall](002-permissoes-sem-waterfall.md) | HIGH | — | **DONE** |
 | 003 | [Primeira pintura: shell inline e fonte sem bloqueio](003-primeira-pintura-sem-branco.md) | HIGH | — | **DONE** |
-| 004 | [Moldura persistente: esqueleto na região](004-moldura-persistente.md) | HIGH | 002 | TODO |
+| 004 | [Moldura persistente: esqueleto na região](004-moldura-persistente.md) | HIGH | 002 | **PARCIAL** — Kanban feito; 21 telas restantes |
 | 005 | [Filtro e busca não derrubam a lista](005-filtro-sem-piscar.md) | MEDIUM | — | TODO |
 | 006 | [Polimento: esqueleto com forma e entrada do conteúdo](006-polimento-esqueleto-e-entrada.md) | LOW | 004 | TODO |
 
