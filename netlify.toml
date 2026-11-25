@@ -45,6 +45,13 @@
   # servidor (job de resumo) é controlado pelo cron `atendimento_memoria_resumo_diario`
   # (`select cron.unschedule('atendimento_memoria_resumo_diario')` para parar de gerar resumo).
   VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED = "true"
+  # E02-S25: aba "Resposta automática" em Atendimento → Configurações. LIGADA em 25/11/2026.
+  # A flag só traz a TELA — o trigger em si nasce desligado na persona (`auto_resposta_ativo`
+  # default false, migration 0158), então ligar a flag não faz o Zé responder sozinho: alguém
+  # precisa ligar e configurar o horário na tela. Procedimento de fechamento: desligar a flag
+  # esconde a tela (anunciando), e `update atendimento.personas set auto_resposta_ativo = false`
+  # para o comportamento em si.
+  VITE_SSO_ZE_TRIGGER_AUTOMATICO_ENABLED = "true"
 
 # SPA: todas as rotas servem index.html
 [[redirects]]

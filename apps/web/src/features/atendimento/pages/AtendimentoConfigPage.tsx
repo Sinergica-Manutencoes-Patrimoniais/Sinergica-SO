@@ -84,6 +84,7 @@ import { OptOutsTab } from "../components/OptOutsTab";
 import { PersonasList } from "../components/PersonasList";
 import { ScoringTab } from "../components/ScoringTab";
 import { TagsList } from "../components/TagsList";
+import { TriggerAutomaticoForm } from "../components/TriggerAutomaticoForm";
 import { WaTemplatesTab } from "../components/WaTemplatesTab";
 import type {
   IgAutomationFormData,
@@ -126,6 +127,7 @@ import { supabaseScoringClustersAdapter } from "../infrastructure/supabase-scori
 
 type Aba =
   | "ia"
+  | "resposta-automatica"
   | "operacao"
   | "conhecimento"
   | "meta-wa"
@@ -606,6 +608,19 @@ export function AtendimentoConfigPage() {
         >
           IA
         </button>
+        {/* E02-S25: caminho de navegação nomeado — Atendimento → Configurações → Resposta
+            automática. Sem esta aba a configuração do trigger não tem como ser alcançada. */}
+        <button
+          type="button"
+          onClick={() => setAba("resposta-automatica")}
+          className={`shrink-0 px-3 py-1.5 text-caption font-semibold ${
+            aba === "resposta-automatica"
+              ? "border-b-2 border-orange text-ink"
+              : "text-ink-3 hover:text-ink-2"
+          }`}
+        >
+          Resposta automática
+        </button>
         <button
           type="button"
           onClick={() => setAba("operacao")}
@@ -771,6 +786,8 @@ export function AtendimentoConfigPage() {
           onSalvar={handleSalvarConfigIa}
           onSalvarIdentidade={handleEditarPersona}
         />
+      ) : aba === "resposta-automatica" ? (
+        <TriggerAutomaticoForm personas={personas} temEscrita={temEscrita} />
       ) : aba === "operacao" ? (
         <OperacaoTab
           personas={personas}
