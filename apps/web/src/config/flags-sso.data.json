@@ -4172,6 +4172,12 @@
     "descricao": "Revogar autorizacao complemento"
   },
   {
+    "nome": "VITE_SSO_ROTEIRO_ENTREVISTA_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "E02-S26: administracao do roteiro de perguntas do agente entrevistador de cadastro (AC-1)."
+  },
+  {
     "nome": "VITE_SSO_SERVICO_EXTRA_ENABLED",
     "padrao": false,
     "jornada": "faturaveis",
@@ -4501,5 +4507,17 @@
     "padrao": false,
     "jornada": "outra",
     "descricao": "Visibilidade orcamento"
+  },
+  {
+    "nome": "VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "E02-S24: alma do cliente + resumo rolante de memoria do Ze na Visao 360 (aba Comunicacao)"
+  },
+  {
+    "nome": "VITE_SSO_ZE_TRIGGER_AUTOMATICO_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "E02-S25: aba Resposta automatica nas Configuracoes do Atendimento (trigger por horario e inatividade)"
   }
 ]

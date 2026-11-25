@@ -38,6 +38,25 @@
   # deslocamento e as Fontes de Demanda. Declarada aqui pela primeira vez: sem ela, ligar os
   # Trechos não traz a tela, porque o bloco inteiro não renderiza.
   VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
+  # E02-S24: alma do cliente + resumo rolante de memória do Zé (Visão 360 → Comunicação).
+  # LIGADA em 25/11/2026 (Lucas autorizou abrir o necessário para explorar). Desligar faz a seção
+  # ANUNCIAR que o recurso não está ativado — não some da tela.
+  # Procedimento de abertura/fechamento: só esta variável. Não há gate de banco novo; o lado
+  # servidor (job de resumo) é controlado pelo cron `atendimento_memoria_resumo_diario`
+  # (`select cron.unschedule('atendimento_memoria_resumo_diario')` para parar de gerar resumo).
+  VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED = "true"
+  # E02-S25: aba "Resposta automática" em Atendimento → Configurações. LIGADA em 25/11/2026.
+  # A flag só traz a TELA — o trigger em si nasce desligado na persona (`auto_resposta_ativo`
+  # default false, migration 0158), então ligar a flag não faz o Zé responder sozinho: alguém
+  # precisa ligar e configurar o horário na tela. Procedimento de fechamento: desligar a flag
+  # esconde a tela (anunciando), e `update atendimento.personas set auto_resposta_ativo = false`
+  # para o comportamento em si.
+  VITE_SSO_ZE_TRIGGER_AUTOMATICO_ENABLED = "true"
+  # E02-S26: administração do roteiro do agente entrevistador (Administração → Catálogos →
+  # Roteiros de Entrevista). LIGADA em 25/11/2026. Só CRUD de perguntas numa tabela própria do
+  # SO — não conduz entrevista nem escreve cadastro (isso depende da ADR-0016, ainda Proposta).
+  # Procedimento de fechamento: desligar a flag; a tela passa a anunciar que não está ativada.
+  VITE_SSO_ROTEIRO_ENTREVISTA_ENABLED = "true"
   # E06-S01: modulo Marketing — indicadores das campanhas da Meta e rastreio ate a venda.
   # LIGADA em 25/11/2026 para a exploracao (autorizacao do Lucas); gate
   # marketing.sso_indicadores_meta_gate aberto na propria migration 1900. So LEITURA: nunca

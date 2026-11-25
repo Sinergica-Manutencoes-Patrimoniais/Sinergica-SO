@@ -50,6 +50,8 @@ describe("E01-S190 task 2 — extração sem troca de rótulo", () => {
       "Grupos de Clientes",
       "Marcações de Cliente",
       "Tipos de Inspeção",
+      // E02-S26: entrada NOVA (adição explícita, mesma regra do Monitor Auvo acima).
+      "Roteiros de Entrevista",
       "Categorias Equip.",
       "Segmentos",
       "Grupos de Usuário",

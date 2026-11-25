@@ -21,15 +21,27 @@ import {
   interpretarConfirmacao,
   montarResumoPendentes,
 } from "../_shared/confirmacao-texto.ts";
-import { comporContextoCliente } from "../_shared/memoria-cliente.ts";
+import {
+  comporContextoClienteComOrcamento,
+  limitesMemoria,
+} from "../_shared/memoria-cliente.ts";
 import {
   avaliarMotivoHandoff,
   comporPromptPersona,
   resolverRotaAtendimento,
   type TipoPersonaAtendimento,
 } from "../_shared/atendimento-runtime.ts";
+import {
+  type ConfigTriggerAutomatico,
+  deveResponderAutomaticamente,
+  minutosAteAssumirPorInatividade,
+} from "../_shared/trigger-automatico.ts";
 
 const FN = "pcm-ze-agent";
+
+/** E02-S24: teto de caracteres que alma+resumo podem ocupar no prompt. A janela crua e o prompt
+ * de sistema têm o resto — se o resumo crescer, quem cede espaço é ele, nunca a alma. */
+const ORCAMENTO_CONTEXTO_CLIENTE_CHARS = 6000;
 
 const InputSchema = z.object({
   queueKey: z.string().optional(),
@@ -225,21 +237,46 @@ async function processarChamados(
     }
   }
 
+  // E02-S25: quando o Zé assume SOZINHO (fora do horário humano ou por inatividade), ele não foi
+  // mencionado — e a janela da persona (E02-S06), que é "quando o Zé PODE ser acionado", não deve
+  // calá-lo justamente no horário que esta story existe pra cobrir.
+  let acionamentoAutomatico = false;
+
+  const persona = personaId
+    ? await buscarPersonaPorId(db, personaId)
+    : await buscarPersona(db, "chamados");
+
   if (!forcar) {
     // E02-S01: pausa POR CONVERSA (humano assumiu) — distinta de config.modo, que é por
     // condomínio inteiro. 'pausado' vira 'off' só pra esta conversa.
     const conversaModo = await buscarModoConversa(db, instanceId, remoteJid);
     const modoEfetivo = conversaModo === "pausado" ? "off" : config.modo;
     if (!deveAcionarZe(contexto, modoEfetivo, config.bot_jid)) {
-      await finalizarFila(db, item.id, "skipped", now);
-      return { queueId: item.id, status: "skipped" };
+      // E02-S25 AC-1/AC-2: não foi chamado, mas pode ter que assumir. `handoffAtivo` é a pausa
+      // por conversa — o trigger de desativação do modelo unilateral tem precedência (AC-3).
+      const decisao = await decidirTriggerAutomatico(
+        db,
+        persona,
+        conversaId,
+        modoEfetivo === "off",
+      );
+      if (decisao.tipo === "aguardar") {
+        const reagendado = await reagendarPorInatividade(db, item.id, decisao.minutos);
+        return {
+          queueId: item.id,
+          status: reagendado ? "rescheduled" : "skipped",
+          emMinutos: reagendado ? decisao.minutos : undefined,
+        };
+      }
+      if (decisao.tipo !== "responder") {
+        await finalizarFila(db, item.id, "skipped", now);
+        return { queueId: item.id, status: "skipped" };
+      }
+      acionamentoAutomatico = true;
     }
   }
 
-  const persona = personaId
-    ? await buscarPersonaPorId(db, personaId)
-    : await buscarPersona(db, "chamados");
-  if (!personaDisponivelAgora(persona, new Date())) {
+  if (!acionamentoAutomatico && !personaDisponivelAgora(persona, new Date())) {
     await finalizarFila(db, item.id, "skipped", now);
     return { queueId: item.id, status: "outside_service_window" };
   }
@@ -260,8 +297,18 @@ async function processarChamados(
     ? await buscarConhecimentoRelevante(db, persona.id, contexto)
     : "";
   // E02-S24: alma+resumo SEMPRE buscados pelo `config.client_id` desta conversa — nunca de outro
-  // cliente (AC-4, isolamento). `comporContextoCliente` só concatena o que já veio filtrado.
+  // cliente (AC-4, isolamento). `comporContextoCliente*` só concatena o que já veio filtrado.
   const memoriaCliente = await buscarMemoriaCliente(db, config.client_id);
+  // Caso de borda da spec: contexto maior que o budget prioriza alma + janela crua e trunca o
+  // resumo. Truncar em silêncio é como o contexto fica errado sem ninguém perceber — por isso o log.
+  const { contexto: contextoCliente, resumoTruncado } = comporContextoClienteComOrcamento(
+    memoriaCliente.alma,
+    memoriaCliente.resumo,
+    ORCAMENTO_CONTEXTO_CLIENTE_CHARS,
+  );
+  if (resumoTruncado) {
+    console.warn(JSON.stringify({ ts: new Date().toISOString(), fn: FN, nivel: "warn", msg: "resumo de memória truncado por budget", clienteId: config.client_id }));
+  }
   // E02-S31 AC-2: bloqueia antes de gastar se a quota mensal já estourou.
   if (await quotaIaExcedida()) {
     await finalizarFila(db, item.id, "skipped", now);
@@ -277,7 +324,7 @@ async function processarChamados(
       persona.prompt_sistema,
       persona.base_conhecimento,
       conhecimentoRag,
-      comporContextoCliente(memoriaCliente.alma, memoriaCliente.resumo),
+      contextoCliente,
     ),
     contexto,
     config.client_id,
@@ -635,13 +682,20 @@ async function buscarConfig(db: UntypedSupabaseClient, remoteJid: string) {
   return data as { client_id: string; modo: ModoZe; bot_jid: string | null } | null;
 }
 
+/** E02-S24 AC-2: a "janela crua" é o último mês — o que é mais antigo que isso só chega ao
+ * modelo pelo resumo rolante (`cliente_memoria_resumo`), nunca cru. Antes desta story o corte era
+ * só por quantidade (20 mensagens), então uma conversa parada há meses voltava inteira e crua, e
+ * o resumo ficava sendo pago duas vezes pelo mesmo conteúdo. O limite de 20 continua valendo
+ * dentro da janela, como teto de budget. */
 async function buscarMensagens(db: UntypedSupabaseClient, instanceId: string, remoteJid: string): Promise<WaMessage[]> {
+  const { janelaCruaDesde } = limitesMemoria(new Date());
   const { data, error } = await db
     .schema("atendimento")
     .from("wa_messages")
     .select("id,instance_id,remote_jid,sender_jid,content,received_at")
     .eq("instance_id", instanceId)
     .eq("remote_jid", remoteJid)
+    .gte("received_at", janelaCruaDesde.toISOString())
     .order("received_at", { ascending: false })
     .limit(20);
   if (error) throw error;
@@ -790,7 +844,7 @@ async function buscarPersona(
   const { data, error } = await db
     .schema("atendimento")
     .from("personas")
-    .select("id,tipo,prompt_sistema,base_conhecimento,modelo_llm,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia")
+    .select("id,tipo,prompt_sistema,base_conhecimento,modelo_llm,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia,auto_resposta_ativo,auto_dias,auto_janela_inicio,auto_janela_fim,auto_min_sem_resposta")
     .eq("tipo", tipo)
     .eq("ativo", true)
     .limit(1)
@@ -827,7 +881,7 @@ async function buscarPersonaPorId(
   const { data, error } = await db
     .schema("atendimento")
     .from("personas")
-    .select("id,tipo,prompt_sistema,base_conhecimento,modelo_llm,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia")
+    .select("id,tipo,prompt_sistema,base_conhecimento,modelo_llm,janela_inicio,janela_fim,janela_dias,rag_enabled,limite_diario_mensagens,transferir_apos_n_respostas,palavras_transferencia,auto_resposta_ativo,auto_dias,auto_janela_inicio,auto_janela_fim,auto_min_sem_resposta")
     .eq("id", id)
     .eq("ativo", true)
     .maybeSingle();
@@ -849,6 +903,104 @@ interface PersonaRuntime {
   limite_diario_mensagens: number | null;
   transferir_apos_n_respostas: number | null;
   palavras_transferencia: string[];
+  /** E02-S25 (migration 0158): quando o Zé assume SOZINHO. Distinto de `janela_*`, que é quando
+   * ele PODE ser acionado por menção — aqui a semântica é o oposto (fora do horário humano). */
+  auto_resposta_ativo: boolean;
+  auto_dias: number[];
+  auto_janela_inicio: string | null;
+  auto_janela_fim: string | null;
+  auto_min_sem_resposta: number;
+}
+
+/** E02-S25 task 5 (o que estava bloqueado): junta a config da persona, as janelas por dia
+ * (migration 1881) e o "há quantos minutos um humano respondeu" — e devolve a decisão da matriz
+ * da spec. Três saídas, não duas: além de responder/silenciar existe **aguardar**, porque o AC-2
+ * só acontece de verdade se alguém voltar a olhar a conversa quando os X minutos vencem. */
+async function decidirTriggerAutomatico(
+  db: UntypedSupabaseClient,
+  persona: PersonaRuntime,
+  conversaId: string | null,
+  handoffAtivo: boolean,
+): Promise<{ tipo: "responder" | "silenciar" } | { tipo: "aguardar"; minutos: number }> {
+  if (!persona.auto_resposta_ativo) return { tipo: "silenciar" };
+
+  const { data: janelasData, error: janelasError } = await db
+    .schema("atendimento")
+    .from("persona_janela_automatica")
+    .select("dia_semana,inicio,fim")
+    .eq("persona_id", persona.id);
+  if (janelasError) throw janelasError;
+  const janelas = ((janelasData ?? []) as { dia_semana: number; inicio: string; fim: string }[])
+    .map((j) => ({ dia: j.dia_semana, inicio: j.inicio, fim: j.fim }));
+
+  let minutosSemRespostaHumana: number | null = null;
+  if (conversaId) {
+    const { data, error } = await db
+      .schema("atendimento")
+      .rpc("fn_minutos_sem_resposta_humana", { p_conversa_id: conversaId });
+    if (error) throw error;
+    minutosSemRespostaHumana = typeof data === "number" ? data : null;
+  }
+
+  const config: ConfigTriggerAutomatico = {
+    ativo: persona.auto_resposta_ativo,
+    dias: persona.auto_dias ?? [],
+    janelaInicio: persona.auto_janela_inicio,
+    janelaFim: persona.auto_janela_fim,
+    minMinutosSemResposta: persona.auto_min_sem_resposta ?? 30,
+    janelas,
+  };
+  const estado = { agora: new Date(), minutosSemRespostaHumana, handoffAtivo };
+
+  if (deveResponderAutomaticamente(config, estado)) return { tipo: "responder" };
+  const minutos = minutosAteAssumirPorInatividade(config, estado);
+  return minutos !== null ? { tipo: "aguardar", minutos } : { tipo: "silenciar" };
+}
+
+/** Devolve o item à fila com `wait_until` no instante em que a espera vence — o cron
+ * `process_wa_queue_ze_minutely` (migration 0018) é quem drena. `false` quando o teto de
+ * reagendamentos estourou: espera adiada pra sempre é bot mudo, não bot educado. */
+const TETO_REAGENDAMENTOS = 10;
+
+async function reagendarPorInatividade(
+  db: UntypedSupabaseClient,
+  queueId: string,
+  minutos: number,
+): Promise<boolean> {
+  const { data, error } = await db
+    .schema("atendimento")
+    .from("wa_queue")
+    .select("reagendamentos")
+    .eq("id", queueId)
+    .maybeSingle();
+  if (error) throw error;
+  const anteriores = (data?.reagendamentos as number | undefined) ?? 0;
+  if (anteriores >= TETO_REAGENDAMENTOS) {
+    await db
+      .schema("atendimento")
+      .from("wa_queue")
+      .update({
+        status: "skipped",
+        error_message: `E02-S25: teto de ${TETO_REAGENDAMENTOS} reagendamentos atingido`,
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", queueId);
+    return false;
+  }
+  const quando = new Date(Date.now() + Math.max(minutos, 1) * 60_000).toISOString();
+  const { error: updateError } = await db
+    .schema("atendimento")
+    .from("wa_queue")
+    .update({
+      status: "pending",
+      wait_until: quando,
+      processed_at: null,
+      error_message: null,
+      reagendamentos: anteriores + 1,
+    })
+    .eq("id", queueId);
+  if (updateError) throw updateError;
+  return true;
 }
 
 function personaDisponivelAgora(persona: PersonaRuntime, agora: Date): boolean {

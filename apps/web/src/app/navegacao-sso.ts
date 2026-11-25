@@ -108,6 +108,7 @@ export type PcmView =
   | "laudos-spda"
   | "apontamento-horas"
   | "tipos-inspecao"
+  | "roteiros-entrevista"
   | "sistemas";
 
 export interface NavItem {
@@ -350,6 +351,9 @@ export const PCM_NAV: NavGroup[] = [
       { label: "Grupos de Clientes", icon: Users, view: "cliente-grupos" },
       { label: "Marcações de Cliente", icon: Tag, view: "cliente-marcacoes" },
       { label: "Tipos de Inspeção", icon: CheckCircle2, view: "tipos-inspecao" },
+      // E02-S26 AC-1: o roteiro do agente entrevistador existia só como tabela (migration 0160),
+      // sem nenhuma tela. Este é o caminho nomeado até ele.
+      { label: "Roteiros de Entrevista", icon: ClipboardList, view: "roteiros-entrevista" },
       { label: "Categorias Equip.", icon: Wrench, view: "equipamento-categorias" },
       { label: "Segmentos", icon: LayoutGrid, view: "segmentos" },
       { label: "Grupos de Usuário", icon: UserCog, atalhoConfigGrupos: true },
@@ -620,6 +624,17 @@ export const NAVEGACAO_SSO: readonly EntradaNav[] = [
     exigeNivel: "escrita",
     view: "tipos-inspecao",
     icone: CheckCircle2,
+  },
+  {
+    // E02-S26 AC-1 — mesmo item na navegação por função (E01-S190).
+    id: "admin.roteiros-entrevista",
+    label: "Roteiros de Entrevista",
+    nivel: "administracao",
+    grupo: "CATÁLOGOS",
+    modulo: "pcm",
+    exigeNivel: "escrita",
+    view: "roteiros-entrevista",
+    icone: ClipboardList,
   },
   {
     id: "admin.categorias-equipamento",
