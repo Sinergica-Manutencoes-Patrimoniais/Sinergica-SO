@@ -1,6 +1,6 @@
 # 005 — Filtro e busca não derrubam a lista para vazio
 
-- **Status**: TODO
+- **Status**: PARCIAL (Agenda do Técnico e Monitor; demais pendentes)
 - **Commit**: cc104969
 - **Severity**: MEDIUM
 - **Category**: Percepção

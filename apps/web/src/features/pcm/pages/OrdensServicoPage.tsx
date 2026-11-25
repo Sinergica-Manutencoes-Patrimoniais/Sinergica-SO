@@ -726,7 +726,7 @@ export function OrdensServicoPage({
       {mostrarEsqueleto ? (
         <SkeletonOperacao />
       ) : (
-        <>
+        <div className="anim-conteudo flex flex-col gap-4">
           {visao === "backlog" ? (
             // E01-S151: `ordensFiltradas` é o conjunto geral da página (Lista/Kanban) — sem técnico,
             // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
@@ -1146,7 +1146,7 @@ export function OrdensServicoPage({
               )}
             </>
           )}
-        </>
+        </div>
       )}
       {temProximaPagina && (
         <button

@@ -1,6 +1,6 @@
 # 006 — Polimento: esqueleto com a forma certa e entrada do conteúdo
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: cc104969
 - **Severity**: LOW
 - **Category**: Coesão / Movimento

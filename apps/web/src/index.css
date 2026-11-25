@@ -294,6 +294,22 @@
    (parte de scale 0.96, nunca 0) e a saída espelha a entrada (E00-S19 §7/§8, aplicado cedo).
    Toast (E00-S16) usa keyframe própria — não é centrado, desliza de um lado. */
 @layer utilities {
+  /* E00-S29 — entrada do conteúdo quando ele substitui um esqueleto. Só opacidade: a lista já
+     nasce no lugar certo, e deslocá-la seria movimento sem propósito. Usa os tokens que já
+     existem (--duration-fast = 120ms, --ease-out); a rede de `prefers-reduced-motion` acima
+     zera isto automaticamente, sem override próprio. */
+  @keyframes conteudo-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .anim-conteudo {
+    animation: conteudo-in var(--duration-fast) var(--ease-out);
+  }
+
   @keyframes overlay-in {
     from {
       opacity: 0;
