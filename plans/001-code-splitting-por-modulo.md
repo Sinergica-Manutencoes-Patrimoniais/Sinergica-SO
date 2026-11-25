@@ -1,3 +1,9 @@
+---
+name: plano-001-code-splitting
+description: Plano E00-S29/001 — quebrar o bundle único do apps/web em chunks por módulo e tirar os vendors pesados da entrada.
+alwaysApply: false
+---
+
 # 001 — Quebrar o bundle único em chunks por módulo
 
 - **Status**: DONE

@@ -1,3 +1,9 @@
+---
+name: planos-fluidez-e00-s29
+description: Índice dos planos de fluidez e sensação de carregamento do apps/web (E00-S29), com ordem de execução, dependências e as medições de referência.
+alwaysApply: false
+---
+
 # Planos — fluidez e sensação de carregamento (E00-S29)
 
 Owner E00-S29: Codex — continuação do PR #117 (rebase e CI, 25/11/2026).

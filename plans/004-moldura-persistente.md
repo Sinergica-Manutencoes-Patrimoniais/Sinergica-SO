@@ -1,3 +1,9 @@
+---
+name: plano-004-moldura-persistente
+description: Plano E00-S29/004 — esqueleto só na região de dados; cabeçalho, filtros e abas deixam de sumir a cada carregamento.
+alwaysApply: false
+---
+
 # 004 — Moldura persistente: skeleton na região, nunca na página inteira
 
 - **Status**: DONE (OrdensServicoPage; demais telas pendentes)

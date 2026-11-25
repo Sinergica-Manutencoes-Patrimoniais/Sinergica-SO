@@ -1,3 +1,9 @@
+---
+name: plano-005-filtro-sem-piscar
+description: Plano E00-S29/005 — keepPreviousData nas consultas cujo filtro vive na chave, para a lista não cair para vazio.
+alwaysApply: false
+---
+
 # 005 — Filtro e busca não derrubam a lista para vazio
 
 - **Status**: PARCIAL (Agenda do Técnico e Monitor; demais pendentes)

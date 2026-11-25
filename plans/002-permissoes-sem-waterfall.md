@@ -1,3 +1,9 @@
+---
+name: plano-002-permissoes-sem-waterfall
+description: Plano E00-S29/002 — mover a resolução de permissão para o TanStack Query e acabar com a viagem em série antes de cada tela.
+alwaysApply: false
+---
+
 # 002 — Permissões no TanStack Query e fim do waterfall serial
 
 - **Status**: DONE

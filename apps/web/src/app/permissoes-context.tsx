@@ -16,6 +16,7 @@ import {
 } from "../features/config/application/permissoes-queries";
 import type { ModuloId, NivelAcesso } from "../features/config/domain/modulo";
 import { podeAcessarModulo } from "../features/config/domain/permissao";
+import { supabaseConfigAdapter } from "../features/config/infrastructure/supabase-config-adapter";
 import { useAuth } from "./auth-context";
 
 interface PermissoesCtx {
@@ -47,7 +48,7 @@ export function PermissoesProvider({ children }: { children: React.ReactNode }) 
     cache.removeQueries({ queryKey: permissoesQueryKeys.minhas(undefined, undefined).slice(0, 2) });
   }
 
-  const consulta = useMinhasPermissoes(usuarioId, papel, autenticado);
+  const consulta = useMinhasPermissoes(supabaseConfigAdapter, usuarioId, papel, autenticado);
 
   // Falha ao resolver permissões não pode travar a Home — trata como "sem permissão nenhuma"
   // (mais restritivo, nunca mais permissivo que o real). Em erro, `data` é `undefined` e o `?? []`
