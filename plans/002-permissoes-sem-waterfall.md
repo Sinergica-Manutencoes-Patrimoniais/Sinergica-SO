@@ -1,6 +1,6 @@
 # 002 — Permissões no TanStack Query e fim do waterfall serial
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: cc104969
 - **Severity**: HIGH
 - **Category**: Performance
