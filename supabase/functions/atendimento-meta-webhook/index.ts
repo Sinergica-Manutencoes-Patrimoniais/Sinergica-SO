@@ -278,20 +278,25 @@ async function despachar(
     return linha?.duplicado === true ? "duplicado" : "gravado";
   }
 
-  // Eco: a conta respondeu pelo app do Instagram/Facebook. Mesma RPC do "mensagem do aparelho"
-  // do Evolution (E02-S39/ADR-1688) — grava como saída humana e tira o Zé da conversa.
+  // Eco: a conta respondeu pelo app do Instagram/Facebook. RPC própria da Meta — a do Evolution
+  // (E02-S39) criaria a conversa com `canal='whatsapp'` se o eco chegasse antes da primeira
+  // mensagem do contato.
   if (evento.tipo === "eco") {
-    const { error } = await deps.serviceClient
+    const { data, error } = await deps.serviceClient
       .schema("atendimento")
-      .rpc("fn_registrar_mensagem_do_aparelho", {
+      .rpc("fn_registrar_eco_meta", {
         p_canal_id: canalId,
+        p_event_type: `${evento.canal}.echo`,
+        p_remote_id: evento.remoteId,
         p_instance_id: canalRow.identificador_externo ?? metaRow.conta_externa_id,
         p_remote_jid: evento.remoteJid,
-        p_remote_id: evento.remoteId,
         p_texto: evento.texto,
         p_enviada_em: new Date().toISOString(),
+        p_canal: evento.canal,
       });
-    return error ? "erro" : "gravado";
+    if (error) return "erro";
+    const linha = Array.isArray(data) ? data[0] : data;
+    return linha?.duplicado === true ? "duplicado" : "gravado";
   }
 
   if (evento.tipo === "reacao") {

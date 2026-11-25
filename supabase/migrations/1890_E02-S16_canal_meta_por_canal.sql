@@ -42,7 +42,8 @@ update atendimento.canais_externos
  where tipo in ('instagram', 'messenger')
    and provedor = 'desconhecido';
 
-alter table atendimento.canais_externos validate constraint canais_externos_provedor_valido;
+-- VALIDATE fica na 1892, em transação própria: validar na MESMA transação do ADD bloqueia
+-- leitura da tabela enquanto varre (Squawk: constraint-missing-not-valid).
 
 -- Mapeamento 1:1 determinístico no INSERT (mesma regra da 1845, que já cobria evolution/meta_wa).
 create or replace function atendimento.fn_derivar_provedor_do_tipo()
@@ -101,7 +102,7 @@ update atendimento.canais_externos set verify_token = null where verify_token is
 
 alter table atendimento.canais_externos
   add constraint canais_externos_verify_token_sem_segredo check (verify_token is null) not valid;
-alter table atendimento.canais_externos validate constraint canais_externos_verify_token_sem_segredo;
+-- VALIDATE na 1892 (mesma razão).
 
 comment on column atendimento.canais_externos.verify_token is
   'DESCONTINUADA (ADR-1700). Sempre null: o verify token vive no Vault, apontado por meta_canal.verify_token_ref.';
@@ -175,6 +176,91 @@ begin
   return query select v_inserted_message_id, v_conversa_id, false;
 end;
 $$;
+
+-- Eco da Meta (`is_echo`): a própria conta respondeu pelo app do Instagram/Facebook. NÃO reusa
+-- `fn_registrar_mensagem_do_aparelho` (E02-S39) de propósito: aquela função cria a conversa com os
+-- defaults do Evolution (`canal='whatsapp'`, `provedor='evolution'`), e um eco que chegasse antes
+-- da primeira mensagem do contato carimbaria uma conversa de Instagram como WhatsApp. Aqui o canal
+-- vem explícito. O Zé não atende Direct, então não há agente para tirar da conversa.
+create or replace function atendimento.fn_registrar_eco_meta(
+  p_canal_id uuid,
+  p_event_type text,
+  p_remote_id text,
+  p_instance_id text,
+  p_remote_jid text,
+  p_texto text,
+  p_enviada_em timestamptz,
+  p_canal text
+) returns table (mensagem_id uuid, conversa_id uuid, duplicado boolean)
+language plpgsql
+security definer
+set search_path = atendimento, public
+as $$
+declare
+  v_conversa_id uuid;
+  v_existente uuid;
+  v_mensagem_id uuid;
+begin
+  if p_canal not in ('whatsapp', 'instagram', 'messenger') then
+    raise exception 'canal_invalido' using errcode = '22023';
+  end if;
+
+  insert into atendimento.evolution_inbox (canal_id, event_type, remote_message_id)
+  values (p_canal_id, p_event_type, p_remote_id)
+  on conflict do nothing;
+  if not found then
+    return query select null::uuid, null::uuid, true;
+    return;
+  end if;
+
+  insert into atendimento.conversas (instance_id, remote_jid, canal, provedor, canal_id)
+  values (p_instance_id, p_remote_jid, p_canal, 'meta', p_canal_id)
+  on conflict (instance_id, remote_jid) do update
+  set canal    = excluded.canal,
+      provedor = excluded.provedor,
+      canal_id = coalesce(atendimento.conversas.canal_id, excluded.canal_id)
+  returning id into v_conversa_id;
+
+  -- Eco da NOSSA própria entrega: o envio já gravou este id. Não vira segunda bolha.
+  select id into v_existente
+    from atendimento.mensagens
+   where canal_id = p_canal_id and wa_message_id = p_remote_id
+   limit 1;
+  if v_existente is not null then
+    return query select v_existente, v_conversa_id, false;
+    return;
+  end if;
+
+  insert into atendimento.mensagens (
+    conversa_id, direcao, remetente_tipo, conteudo, wa_message_id, canal_id,
+    status_entrega, origem_envio, created_at
+  ) values (
+    v_conversa_id, 'saida', 'humano', p_texto, p_remote_id, p_canal_id,
+    'enviado', 'celular', coalesce(p_enviada_em, now())
+  )
+  on conflict (wa_message_id) do nothing
+  returning id into v_mensagem_id;
+
+  update atendimento.conversas
+     set ultima_mensagem_preview = left(p_texto, 200),
+         ultima_mensagem_em = coalesce(p_enviada_em, now()),
+         updated_at = now()
+   where id = v_conversa_id;
+
+  return query select v_mensagem_id, v_conversa_id, false;
+end;
+$$;
+
+revoke all on function atendimento.fn_registrar_eco_meta(
+  uuid, text, text, text, text, text, timestamptz, text
+) from public, anon, authenticated;
+grant execute on function atendimento.fn_registrar_eco_meta(
+  uuid, text, text, text, text, text, timestamptz, text
+) to service_role;
+
+comment on function atendimento.fn_registrar_eco_meta(
+  uuid, text, text, text, text, text, timestamptz, text
+) is 'E02-S16/ADR-1700: eco (is_echo) da Meta — resposta dada pelo app, gravada como saída humana no canal certo.';
 
 revoke all on function atendimento.fn_registrar_mensagem_meta(
   uuid, text, text, text, text, text, text, text

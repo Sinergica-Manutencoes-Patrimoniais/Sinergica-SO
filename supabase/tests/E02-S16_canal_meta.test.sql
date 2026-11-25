@@ -1,7 +1,7 @@
 -- E02-S16 / ADR-1700 — canal Meta por canal: credencial no cofre, segredo fora da tabela que
 -- `authenticated` lê, e ingestão idempotente por (canal, evento, id remoto).
 begin;
-select plan(14);
+select plan(17);
 
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
  ('19160000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s16-meta-admin@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now()),
@@ -106,6 +106,20 @@ select is(
   (select canal_id from atendimento.conversas where remote_jid = '123456789'),
   '19160000-0000-4000-8000-00000000000a'::uuid,
   'conversa aponta para o canal resolvido pela ROTA do webhook, nunca pelo corpo do evento'
+);
+
+-- ── eco (is_echo): resposta dada pelo app, no canal CERTO ───────────────────
+select is(
+  (select duplicado from atendimento.fn_registrar_eco_meta(
+     '19160000-0000-4000-8000-00000000000a', 'instagram.echo', 'mid-eco-1',
+     '17841400000000000', '987654321', 'respondi pelo app', now(), 'instagram')),
+  false,
+  'eco da conta grava mensagem de saída'
+);
+select is(
+  (select canal || '/' || provedor from atendimento.conversas where remote_jid = '987654321'),
+  'instagram/meta',
+  'eco que chega ANTES da primeira mensagem do contato não carimba a conversa como WhatsApp'
 );
 
 select throws_ok(
