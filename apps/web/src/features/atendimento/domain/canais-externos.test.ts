@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validarCanalExterno, validarWaTemplate } from "./canais-externos";
+import { validarCanalExterno, validarConexaoMeta, validarWaTemplate } from "./canais-externos";
 
 describe("validarCanalExterno", () => {
   it("rejeita nome vazio", () => {
@@ -9,7 +9,6 @@ describe("validarCanalExterno", () => {
         label: "  ",
         identificadorExterno: "",
         identificadorSecundario: "",
-        verifyToken: "",
       }),
     ).toThrow("Nome do canal é obrigatório.");
   });
@@ -21,14 +20,12 @@ describe("validarCanalExterno", () => {
         label: "Conta principal",
         identificadorExterno: "",
         identificadorSecundario: "",
-        verifyToken: "",
       }),
     ).toEqual({
       tipo: "instagram",
       label: "Conta principal",
       identificadorExterno: null,
       identificadorSecundario: null,
-      verifyToken: null,
     });
   });
 });
@@ -63,5 +60,35 @@ describe("validarWaTemplate", () => {
       validarWaTemplate({ canalId: "c1", nome: "x", idioma: "", categoria: "utility", corpo: "y" })
         .idioma,
     ).toBe("pt_BR");
+  });
+});
+
+describe("validarConexaoMeta", () => {
+  const base = {
+    canalId: "c1",
+    contaExternaId: "17841400000000000",
+    accessToken: "a".repeat(40),
+    appSecret: "b".repeat(32),
+    verifyToken: "c".repeat(16),
+  };
+
+  it("aceita uma conexão completa e normaliza espaços", () => {
+    expect(validarConexaoMeta({ ...base, contaExternaId: " 17841400000000000 " })).toEqual(base);
+  });
+
+  it("recusa ID de conta que não é numérico", () => {
+    expect(() => validarConexaoMeta({ ...base, contaExternaId: "@sinergica" })).toThrow(
+      /só número/,
+    );
+  });
+
+  it("recusa token, app secret e verify token curtos demais", () => {
+    expect(() => validarConexaoMeta({ ...base, accessToken: "curto" })).toThrow(/token de acesso/);
+    expect(() => validarConexaoMeta({ ...base, appSecret: "x" })).toThrow(/app secret/);
+    expect(() => validarConexaoMeta({ ...base, verifyToken: "curto" })).toThrow(/verificação/);
+  });
+
+  it("recusa sem canal selecionado", () => {
+    expect(() => validarConexaoMeta({ ...base, canalId: "" })).toThrow(/Selecione a conexão/);
   });
 });

@@ -7,15 +7,13 @@
 //
 // SÓ LEITURA nesta fatia: reprocessar uma falha é ação (escrita, auditoria, idempotência) e fica
 // para a fatia seguinte — ver tasks.md. Botão que não faz nada seria pior que botão nenhum.
-import { DataTable, Skeleton } from "@sinergica/ui";
-import type { DataTableColumn } from "@sinergica/ui";
+import { DataTable } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { flagLigada } from "../../../config/flags-sso";
 import { operacaoQueryKeys } from "../application/operacao-queries";
 import {
-  type ExcecaoAuvo,
   TIPO_EXCECAO_EXPLICACAO,
   type TipoExcecaoAuvo,
   avisoMonitorExcecoes,
@@ -33,31 +31,6 @@ function formatarInstante(iso: string | null): string {
   const data = new Date(iso);
   return Number.isNaN(data.getTime()) ? "—" : data.toLocaleString("pt-BR");
 }
-
-// Trocada a tabela crua por `<DataTable>` de `@sinergica/ui` (E00-S15): header sticky, scroll
-// contido no wrapper e `tabular-nums` à direita vêm de graça — e o gate `check-primitivas`
-// volta a ficar verde. Ele estava vermelho em `main` desde esta tela (E01-S201), o que barrava
-// qualquer PR seguinte; consertado aqui de carona, sem mudar uma coluna sequer.
-const COLUNAS_DAS_EXCECOES: DataTableColumn<ExcecaoAuvo>[] = [
-  {
-    chave: "excecao",
-    cabecalho: "Exceção",
-    cabecalhoLinha: true,
-    render: (e) => rotuloTipoExcecao(e.tipo),
-  },
-  { chave: "cliente", cabecalho: "Cliente", render: (e) => e.clienteNome },
-  { chave: "os", cabecalho: "OS", render: (e) => e.osNumero },
-  { chave: "visita", cabecalho: "Visita", render: (e) => formatarInstante(e.visitaInicioEm) },
-  {
-    chave: "tarefa",
-    cabecalho: "Tarefa Auvo",
-    // Sem tarefa no Auvo é o achado, não um buraco: o travessão é deliberado.
-    render: (e) => e.taskId ?? "—",
-  },
-  { chave: "tentativas", cabecalho: "Tentativas", numerica: true, render: (e) => e.tentativas },
-  { chave: "erro", cabecalho: "Último erro", render: (e) => rotuloErroExcecao(e.ultimoErro) },
-  { chave: "quando", cabecalho: "Quando", render: (e) => formatarInstante(e.ocorridoEm) },
-];
 
 export function MonitorExcecoesAuvoPage() {
   const { user } = useAuth();
@@ -139,15 +112,56 @@ export function MonitorExcecoesAuvoPage() {
         </output>
       ) : null}
 
-      {ligada && clienteId && excecoes.isPending ? <Skeleton className="h-4 w-48" /> : null}
-
-      {lista.length > 0 ? (
-        <DataTable
-          colunas={COLUNAS_DAS_EXCECOES}
-          itens={lista}
-          chaveLinha={(excecao) => `${excecao.tipo}-${excecao.osId}`}
-          vazio="Nenhuma exceção do Auvo no período."
-        />
+      {lista.length > 0 || (ligada && clienteId && excecoes.isPending) ? (
+        <div className="rounded-lg border border-line">
+          <DataTable
+            carregando={excecoes.isPending}
+            itens={lista}
+            chaveLinha={(excecao) => `${excecao.tipo}-${excecao.osId}`}
+            vazio="Nenhuma exceção do Auvo neste Cliente."
+            colunas={[
+              {
+                chave: "tipo",
+                cabecalho: "Exceção",
+                render: (excecao) => rotuloTipoExcecao(excecao.tipo),
+              },
+              { chave: "cliente", cabecalho: "Cliente", render: (excecao) => excecao.clienteNome },
+              {
+                chave: "os",
+                cabecalho: "OS",
+                cabecalhoLinha: true,
+                render: (excecao) => excecao.osNumero,
+              },
+              {
+                chave: "visita",
+                cabecalho: "Visita",
+                render: (excecao) => formatarInstante(excecao.visitaInicioEm),
+              },
+              {
+                chave: "tarefa",
+                cabecalho: "Tarefa Auvo",
+                // Sem tarefa no Auvo é o achado, não um buraco: o travessão é deliberado.
+                render: (excecao) => excecao.taskId ?? "—",
+              },
+              {
+                chave: "tentativas",
+                cabecalho: "Tentativas",
+                numerica: true,
+                render: (excecao) => excecao.tentativas,
+              },
+              {
+                chave: "erro",
+                cabecalho: "Último erro",
+                render: (excecao) => rotuloErroExcecao(excecao.ultimoErro),
+              },
+              {
+                chave: "quando",
+                cabecalho: "Quando",
+                render: (excecao) => formatarInstante(excecao.ocorridoEm),
+              },
+            ]}
+          />
+        </div>
       ) : null}
     </div>
   );
