@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -31,7 +32,7 @@ export function EscopoDeclarado({
     gcTime: 0,
   });
   const client = useQueryClient();
-  if (q.isPending) return <output>Carregando escopo…</output>;
+  if (q.isPending) return <AvisoCarregando>Carregando escopo…</AvisoCarregando>;
   if (q.isError)
     return (
       <p role="alert">

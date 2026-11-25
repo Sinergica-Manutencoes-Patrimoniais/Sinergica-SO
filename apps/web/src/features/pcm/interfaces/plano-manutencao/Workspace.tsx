@@ -1,4 +1,4 @@
-import { Button } from "@sinergica/ui";
+import { AvisoCarregando, Button } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -91,7 +91,7 @@ function ConteudoPlanoManutencao({
     permissao.data === true && !permissao.isFetching && !permissao.isError,
   );
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos Planos…</output>;
+    return <AvisoCarregando>Verificando acesso aos Planos…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <div role="alert">

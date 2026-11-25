@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
@@ -102,7 +103,7 @@ function MovimentacaoContexto({ userId, clienteId, item, onConcluido }: Moviment
   const dadosLocais = locais.data ?? anteriores.current.locais;
   const dadosPais = pais.data ?? anteriores.current.pais;
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando permissão de movimentação…</output>;
+    return <AvisoCarregando>Verificando permissão de movimentação…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <div role="alert">

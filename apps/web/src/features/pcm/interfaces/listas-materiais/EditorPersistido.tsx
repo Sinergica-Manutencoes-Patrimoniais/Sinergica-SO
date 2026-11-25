@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { supabase } from "../../../../lib/supabase-client";
@@ -140,7 +141,8 @@ function Conteudo({
         </button>
       </div>
     );
-  if (dados.isFetching || dados.isPending) return <output>Consultando linhas…</output>;
+  if (dados.isFetching || dados.isPending)
+    return <AvisoCarregando>Consultando linhas…</AvisoCarregando>;
   if (dados.isError)
     return (
       <p role="alert">

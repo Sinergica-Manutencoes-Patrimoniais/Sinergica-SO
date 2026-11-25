@@ -1,4 +1,5 @@
 import { type RegistrarDespesaVisita, registrarDespesaVisitaSchema } from "@sinergica/shared";
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -71,7 +72,7 @@ export function DespesasVisitaWorkspace({
   });
   if (!habilitado) return null;
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando acesso às despesas…</output>;
+    return <AvisoCarregando>Verificando acesso às despesas…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

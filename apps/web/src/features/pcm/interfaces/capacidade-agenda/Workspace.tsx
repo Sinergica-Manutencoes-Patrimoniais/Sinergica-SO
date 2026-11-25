@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -96,7 +97,7 @@ export function CapacidadeAgendaWorkspace({
     }
   }
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso à capacidade…</output>;
+    return <AvisoCarregando>Verificando acesso à capacidade…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

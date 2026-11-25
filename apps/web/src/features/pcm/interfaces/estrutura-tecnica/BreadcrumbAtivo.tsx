@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -52,7 +53,8 @@ export function BreadcrumbAtivo({
     },
   });
   if (!habilitado) return null;
-  if (consulta.isFetching || consulta.isPending) return <p>Consultando caminho físico…</p>;
+  if (consulta.isFetching || consulta.isPending)
+    return <AvisoCarregando>Consultando caminho físico…</AvisoCarregando>;
   if (consulta.isError)
     return (
       <p role="alert">

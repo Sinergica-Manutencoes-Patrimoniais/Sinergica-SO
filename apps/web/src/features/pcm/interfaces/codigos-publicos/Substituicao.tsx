@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useAuth } from "../../../../app/auth-context";
@@ -136,7 +137,7 @@ export function SubstituicaoCodigoPublico({
   };
   if (user?.id !== userId || user.papel !== "superadmin") return null;
   if (permissao.isFetching || permissao.isPending)
-    return <output>Verificando permissão de substituição…</output>;
+    return <AvisoCarregando>Verificando permissão de substituição…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

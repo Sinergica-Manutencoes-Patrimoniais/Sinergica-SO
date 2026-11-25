@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { listarReferenciasRetorno } from "../../infrastructure/supabase-pendencias-tecnicas-adapter";
@@ -20,7 +21,7 @@ export function ReferenciasRetorno({ userId, clienteId }: { userId: string; clie
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos retornos…</output>;
+    return <AvisoCarregando>Verificando acesso aos retornos…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

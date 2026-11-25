@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -256,7 +257,7 @@ export function SnapshotCapacidade({
       return r;
     },
   });
-  if (q.isPending || q.isFetching) return <output>Carregando snapshot…</output>;
+  if (q.isPending || q.isFetching) return <AvisoCarregando>Carregando snapshot…</AvisoCarregando>;
   if (q.isError)
     return (
       <p role="alert">

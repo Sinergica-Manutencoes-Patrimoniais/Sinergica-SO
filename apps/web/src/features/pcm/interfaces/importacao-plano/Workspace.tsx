@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -253,7 +254,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     }
   }
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso ao cronograma…</output>;
+    return <AvisoCarregando>Verificando acesso ao cronograma…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -828,7 +829,8 @@ function DetalheCronograma({
     },
     gcTime: 0,
   });
-  if (consulta.isFetching || consulta.isPending) return <output>Conferindo linhas…</output>;
+  if (consulta.isFetching || consulta.isPending)
+    return <AvisoCarregando>Conferindo linhas…</AvisoCarregando>;
   if (consulta.isError)
     return (
       <p role="alert">

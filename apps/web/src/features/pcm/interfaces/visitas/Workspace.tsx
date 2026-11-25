@@ -1,4 +1,4 @@
-import { Button } from "@sinergica/ui";
+import { AvisoCarregando, Button } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -100,7 +100,7 @@ function Conteudo({ userId, clienteId, clienteNome }: Props) {
     gcTime: 0,
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso às Visitas…</output>;
+    return <AvisoCarregando>Verificando acesso às Visitas…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

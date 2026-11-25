@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -77,7 +77,7 @@ function Permissao(props: { userId: string; clienteId: string }) {
     refetchOnWindowFocus: true,
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso às pendências…</output>;
+    return <AvisoCarregando>Verificando acesso às pendências…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

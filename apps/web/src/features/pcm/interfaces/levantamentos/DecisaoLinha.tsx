@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -65,7 +65,7 @@ function Consulta({ userId, clienteId, loteId, chave, revisao }: Props) {
     },
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso à decisão…</output>;
+    return <AvisoCarregando>Verificando acesso à decisão…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
@@ -76,7 +76,8 @@ function Consulta({ userId, clienteId, loteId, chave, revisao }: Props) {
       </p>
     );
   if (!permitido) return null;
-  if (decisao.isPending || decisao.isFetching) return <output>Carregando decisão…</output>;
+  if (decisao.isPending || decisao.isFetching)
+    return <AvisoCarregando>Carregando decisão…</AvisoCarregando>;
   if (decisao.isError)
     return (
       <p role="alert">

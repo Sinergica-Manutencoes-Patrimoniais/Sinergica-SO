@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -80,7 +81,8 @@ export function AprovarLote({
     setPendente(p);
     envio.mutate(p);
   };
-  if (permissao.isPending || permissao.isFetching) return <p>Verificando autorização…</p>;
+  if (permissao.isPending || permissao.isFetching)
+    return <AvisoCarregando>Verificando autorização…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

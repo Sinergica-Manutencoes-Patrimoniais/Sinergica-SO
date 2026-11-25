@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
@@ -150,7 +151,7 @@ function Conteudo({ userId, clienteId }: { userId: string; clienteId: string }) 
     },
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando acesso aos códigos…</output>;
+    return <AvisoCarregando>Verificando acesso aos códigos…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">

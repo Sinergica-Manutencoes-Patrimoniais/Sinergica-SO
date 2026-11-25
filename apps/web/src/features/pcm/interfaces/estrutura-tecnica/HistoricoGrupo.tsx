@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
 import { supabaseEstruturaTecnicaAdapter } from "../../infrastructure/supabase-estrutura-tecnica-adapter";
@@ -49,7 +50,8 @@ export function HistoricoGrupo({
     },
     gcTime: 0,
   });
-  if (historico.isPending || historico.isFetching) return <output>Carregando histórico…</output>;
+  if (historico.isPending || historico.isFetching)
+    return <AvisoCarregando>Carregando histórico…</AvisoCarregando>;
   if (historico.isError)
     return (
       <div role="alert">

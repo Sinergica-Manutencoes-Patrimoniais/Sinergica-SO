@@ -1,4 +1,4 @@
-import { RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { z } from "zod";
@@ -72,7 +72,7 @@ function ComPermissao(props: Props) {
     refetchOnWindowFocus: true,
   });
   if (permissao.isPending || permissao.isFetching)
-    return <output>Verificando permissão de incorporação…</output>;
+    return <AvisoCarregando>Verificando permissão de incorporação…</AvisoCarregando>;
   if (permissao.isError)
     return (
       <p role="alert">
