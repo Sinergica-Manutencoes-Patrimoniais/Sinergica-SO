@@ -46,7 +46,7 @@ create table if not exists atendimento.persona_janela_automatica (
   -- 0=domingo .. 6=sábado. Dia SEM linha nenhuma = sem atendimento humano o dia todo, que é
   -- exatamente o "domingo sem janela" do AC-6 — ausência é a forma de dizer isso, não um registro
   -- especial com horário zerado.
-  dia_semana  smallint    not null check (dia_semana between 0 and 6),
+  dia_semana  integer    not null check (dia_semana between 0 and 6),
   inicio      time        not null,
   fim         time        not null,
   created_at  timestamptz not null default now(),
@@ -120,7 +120,7 @@ grant execute on function atendimento.fn_minutos_sem_resposta_humana(uuid) to se
 
 -- ── 3. Teto de reagendamentos da fila ─────────────────────────────────────────────────────────
 alter table atendimento.wa_queue
-  add column if not exists reagendamentos smallint not null default 0;
+  add column if not exists reagendamentos integer not null default 0;
 
 comment on column atendimento.wa_queue.reagendamentos is
   'E02-S25 AC-2: quantas vezes este item foi adiado esperando a inatividade humana vencer. Teto no `pcm-ze-agent` — espera adiada para sempre é bot mudo, não bot educado.';
