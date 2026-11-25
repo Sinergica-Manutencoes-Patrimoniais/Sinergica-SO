@@ -2,6 +2,11 @@
 -- alterar previsão, ratear entre OS, declarar repasse ao Cliente. As três compartilham a mesma
 -- fixture (uma despesa, uma Visita, duas OS) porque contam a mesma história operacional.
 begin;
+-- E00-S30: a migration 1872 abriu estes gates na linha de base do banco. As asserções abaixo
+-- provam o comportamento de gate FECHADO, então o teste declara aqui, dentro da própria
+-- transação, o estado de que precisa (o `rollback` do fim desfaz). Onde o teste reabre o gate
+-- mais adiante, a abertura continua valendo.
+update financeiro.sso_repasse_despesa_gate set habilitado = false where id;
 select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values

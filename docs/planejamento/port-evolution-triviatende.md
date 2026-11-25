@@ -6,6 +6,13 @@ alwaysApply: false
 
 # Port Evolution + visão de conversa — TriviAtende → Sinérgica SO
 
+> **Aviso de sucessão (25/11/2026):** a decisão de 12/11 registrada abaixo — *"só WhatsApp/Evolution
+> (Instagram fica fora)"*, repetida na seção `e.3 Não se aplica` — **foi revertida** pela
+> **ADR-1700** (`docs/adr/1700-instagram-direct-entra-no-atendimento.md`). O Instagram Direct entra
+> completo: webhook da Meta por canal, Direct no Inbox e resposta pela Meta. O texto original fica
+> como está, sem edição: a convenção do projeto é nunca reescrever decisão antiga, e sim registrar
+> a que a sucede.
+
 > **Status:** análise aprovada para virar specs. Não é ADR e não é spec — é o mapa que as specs citam.
 > **Repositório de referência (somente leitura):** `/Users/lucasazevedo/orca/workspaces/Atendimento/rosefish`
 > **Decisões desta rodada (Lucas, 2026-11-12):** porte **híbrido** (UI nova do TriviAtende sobre os dados

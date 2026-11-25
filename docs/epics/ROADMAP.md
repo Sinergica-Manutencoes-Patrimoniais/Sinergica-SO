@@ -29,8 +29,9 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S28_| ID | Título | Owner | Status | Spec |
+_15 concluídas no histórico · maior ID usado: E00-S30_| ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
+| E00-S30 | Destrave do Financeiro e do Comercial — 72 travas de banco abertas e 85 flags declaradas | Claude (sessão Lucas) | Implementada (2026-11-25) — migration 1872, 74 asserções pgTAP. Autorização do Lucas em 25/11 | — (chore, sem spec) |
 | E00-S25 | Workflow enxuto — ROADMAP compacto, Spec Kit, gates só nos afetados | Claude (sessão Lucas) | Em andamento | [spec](../../specs/E00-S25-workflow-enxuto/spec.md) |
 | E00-S09 | Grupos e permissões por módulo — fundação: schema, resolver, hook JWT, Edge Function de g… | Claude (sessão Lucas) | PR #9 aberto — db-tests (pgTAP) achou e… | [spec](../../specs/E00-S09-grupos-permissao-modulo/spec.md) |
 | E00-S10 | Grupos e permissões por módulo — UI administrativa (grupos, usuários) e gating de sidebar | Claude (sessão Lucas) | PR #9 aberto (bundle com E00-S09) — lin… | [spec](../../specs/E00-S10-grupos-permissao-ui/spec.md) |
@@ -160,7 +161,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S182 | Fila A Faturar e efetivação por origem única | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S182-faturaveis-origem/spec.md) |
 | E01-S183 | Portal de materiais, orçamento e cobrança | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S183-portal-operacional/spec.md) |
 | E01-S184 | Proteção imediata de custos no Portal e documentos | Terra | Em andamento — proteção parcial (2026-10-26) | [spec](../../specs/E01-S184-protecao-custos-portal/spec.md) |
-| E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
+| E01-S185 | Reconciliação Auvo, Comercial e Financeiro | Claude (sessão Lucas) | Implementada (82 migrations, 51 telas) — pgTAP de AC-1/AC-2, AC-3/AC-4, AC-5 e AC-6 colocados (122 assertions), bug 42702 que deixava a listagem da fila inalcançável corrigido (1874), travas abertas (1875) e 40 flags declaradas; varredura periódica segue fechada por ADR-1264 (2026-11-25) | [spec](../../specs/E01-S185-reconciliacao-integracoes/spec.md) |
 | E01-S186 | Migração auditável, pilotos por ondas e homologação do programa | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S186-migracao-pilotos-homologacao/spec.md) |
 | E01-S187 | Concorrência e idempotência na composição de proposta (SEC-009/SEC-010, ADR-1686) | Terra | Especificada — implementação não iniciada (2026-11-10) | [spec](../../specs/E01-S187-concorrencia-composicao-proposta/spec.md) |
 | E01-S188 | Ativação governada de jornada: registro de gates/flags/grants, diagnóstico e runbook de retorno | — | Especificada — implementação não iniciada (2026-11-13) | [spec](../../specs/E01-S188-ativacao-governada/spec.md) |
@@ -201,8 +202,8 @@ _6 concluídas no histórico · maior ID usado: E02-S43_
 | E02-S13 | IA | Codex | Implementada localmente — identidade, m… | [spec](../../specs/E02-S13-config-aba-ia/spec.md) |
 | E02-S14 | Operação | Codex | Implementada localmente — regras, limit… | [spec](../../specs/E02-S14-config-aba-operacao/spec.md) |
 | E02-S15 | Conhecimento / Base RAG | Codex | Implementada localmente — CRUD, busca p… | [spec](../../specs/E02-S15-config-conhecimento-rag/spec.md) |
-| E02-S16 | Meta | Codex | Código implementado localmente — conexã… | [spec](../../specs/E02-S16-config-canais-meta/spec.md) |
-| E02-S17 | Coment. IG + Opt-outs | Codex | Implementada localmente — automações IG… | [spec](../../specs/E02-S17-config-automacao-igcomments-optouts/spec.md) |
+| E02-S16 | Meta | Claude (sessão Lucas) | Código implementado localmente — conexã… | [spec](../../specs/E02-S16-config-canais-meta/spec.md) |
+| E02-S17 | Coment. IG + Opt-outs | Claude (sessão Lucas) | Implementada localmente — automações IG… | [spec](../../specs/E02-S17-config-automacao-igcomments-optouts/spec.md) |
 | E02-S18 | Scoring + Clusters | Codex | Implementada localmente — configuração,… | [spec](../../specs/E02-S18-config-scoring-clusters/spec.md) |
 | E02-S19 | Evolution | Codex | Implementada localmente; UAT Evolution… | [spec](../../specs/E02-S19-config-aba-evolution/spec.md) |
 | E02-S20 | Fluxos | Codex | Implementada localmente; pgTAP/UAT pend… | [spec](../../specs/E02-S20-fluxos-node-graph/spec.md) |
@@ -257,11 +258,10 @@ _0 concluídas no histórico · maior ID usado: E07-S00_
 _0 concluídas no histórico · maior ID usado: E08-S00_
 
 ### E09 — Área do Cliente (Portal do Cliente / Portal do Síndico) |
-_10 concluídas no histórico · maior ID usado: E09-S11_
+_10 concluídas no histórico · maior ID usado: E09-S12_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
-| E09-S11 | Deploy separado do portal | Codex | Código/build isolado concluído; deploy… | [spec](../../specs/E09-S11-portal-deploy-separado/design.md) |
 
 ## Como abrir uma nova story
 

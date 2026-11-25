@@ -18,10 +18,21 @@ interface CanalRow {
   label: string;
   identificador_externo: string | null;
   waba_id: string | null;
-  verify_token: string | null;
   webhook_registrado: boolean;
   status_conexao: StatusConexao;
   ativo: boolean;
+}
+
+interface EstadoCanalMetaResposta {
+  estadoConexao?: string;
+  saude?: string;
+  contaExternaId?: string | null;
+  estadoCredencial?: "sem_credencial" | "configurado" | "conectado" | "erro";
+  graphVersion?: string;
+  indicioToken?: string | null;
+  atualizadoEm?: string | null;
+  callbackUrl?: string;
+  detail?: string;
 }
 
 interface TemplateRow {
@@ -36,7 +47,7 @@ interface TemplateRow {
 }
 
 const CANAL_COLUNAS =
-  "id,tipo,label,identificador_externo,waba_id,verify_token,webhook_registrado,status_conexao,ativo";
+  "id,tipo,label,identificador_externo,waba_id,webhook_registrado,status_conexao,ativo";
 const TEMPLATE_COLUNAS = "id,canal_id,nome,idioma,categoria,status,corpo,ativo";
 
 function mapCanal(row: CanalRow): CanalExternoItem {
@@ -46,7 +57,6 @@ function mapCanal(row: CanalRow): CanalExternoItem {
     label: row.label,
     identificadorExterno: row.identificador_externo,
     identificadorSecundario: row.waba_id,
-    verifyToken: row.verify_token,
     webhookRegistrado: row.webhook_registrado,
     statusConexao: row.status_conexao,
     ativo: row.ativo,
@@ -87,29 +97,14 @@ export const supabaseCanaisExternosAdapter: CanaisExternosGateway = {
         label: input.label,
         identificador_externo: input.identificadorExterno,
         waba_id: input.identificadorSecundario,
-        verify_token: input.verifyToken,
         created_by: input.userId,
       })
       .select(CANAL_COLUNAS)
       .single();
     if (error) throw error;
-    const criado = mapCanal(data as CanalRow);
-    if (input.tipo !== "evolution") {
-      const { error: verifyError } = await supabase.functions.invoke("atendimento-meta", {
-        body: { acao: "verificar", canalId: criado.id },
-      });
-      if (verifyError)
-        throw new Error(`Canal salvo, mas a conexão Meta falhou: ${verifyError.message}`);
-      const { data: atualizado, error: reloadError } = await supabase
-        .schema("atendimento")
-        .from("canais_externos")
-        .select(CANAL_COLUNAS)
-        .eq("id", criado.id)
-        .single();
-      if (reloadError) throw reloadError;
-      return mapCanal(atualizado as CanalRow);
-    }
-    return criado;
+    // E02-S16/ADR-1700: criar o canal NÃO o conecta. A verificação só faz sentido depois que a
+    // credencial daquele canal está no Vault — quem conecta é a ação `conectar`.
+    return mapCanal(data as CanalRow);
   },
 
   async editarCanal(input: EditarCanalExternoInput) {
@@ -120,7 +115,6 @@ export const supabaseCanaisExternosAdapter: CanaisExternosGateway = {
         label: input.label,
         identificador_externo: input.identificadorExterno,
         waba_id: input.identificadorSecundario,
-        verify_token: input.verifyToken,
         updated_at: new Date().toISOString(),
         updated_by: input.userId,
       })
@@ -138,6 +132,56 @@ export const supabaseCanaisExternosAdapter: CanaisExternosGateway = {
       .update({ ativo: false, updated_at: new Date().toISOString() })
       .eq("id", id);
     if (error) throw error;
+  },
+
+  async conectarCanalMeta(input) {
+    // Os segredos saem daqui direto para a Edge Function e nunca passam por tabela nem por estado
+    // de componente persistido (ADR-1700).
+    const { data, error } = await supabase.functions.invoke<{
+      ok?: boolean;
+      callbackUrl?: string;
+      detail?: string;
+    }>("atendimento-meta", {
+      body: {
+        acao: "conectar",
+        canalId: input.canalId,
+        contaExternaId: input.contaExternaId,
+        accessToken: input.accessToken,
+        appSecret: input.appSecret,
+        verifyToken: input.verifyToken,
+      },
+    });
+    if (error) throw new Error(data?.detail ?? error.message);
+    if (!data?.callbackUrl) throw new Error(data?.detail ?? "Não foi possível conectar o canal.");
+    return { callbackUrl: data.callbackUrl };
+  },
+
+  async obterEstadoMeta(canalId: string) {
+    const { data, error } = await supabase.functions.invoke<EstadoCanalMetaResposta>(
+      "atendimento-meta",
+      { body: { acao: "obter", canalId } },
+    );
+    if (error) throw new Error(error.message);
+    if (!data?.callbackUrl) throw new Error(data?.detail ?? "Não foi possível ler o estado.");
+    return {
+      estadoConexao: data.estadoConexao ?? "sem_credencial",
+      saude: data.saude ?? "desconhecida",
+      contaExternaId: data.contaExternaId ?? null,
+      estadoCredencial: data.estadoCredencial ?? "sem_credencial",
+      graphVersion: data.graphVersion ?? "v22.0",
+      indicioToken: data.indicioToken ?? null,
+      atualizadoEm: data.atualizadoEm ?? null,
+      callbackUrl: data.callbackUrl,
+    };
+  },
+
+  async verificarCanalMeta(canalId: string) {
+    const { data, error } = await supabase.functions.invoke<{ ok?: boolean; detail?: string }>(
+      "atendimento-meta",
+      { body: { acao: "verificar", canalId } },
+    );
+    if (error) throw new Error(data?.detail ?? error.message);
+    if (!data?.ok) throw new Error(data?.detail ?? "A Meta recusou a credencial.");
   },
 
   async listarTemplates() {

@@ -13,10 +13,52 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getSupabaseServiceKey, HttpError, requireAuth } from "../_shared/auth.ts";
 import { enviarEvolution, responderEvolution } from "../_shared/evolution.ts";
-import { enviarMeta, metaRequest } from "../_shared/meta.ts";
+import { enviarDirectMeta, enviarMeta, MetaGraphError, metaRequest } from "../_shared/meta.ts";
 import type { UntypedSupabaseClient } from "../_shared/supabase.ts";
 
 const FN = "atendimento-whatsapp-envio";
+
+/** E02-S16/ADR-1700 — espelho do domínio `features/atendimento/domain/instagram-direct.ts`.
+ * O teto de bytes do Direct vale no servidor também: o browser não é o guardião do limite. */
+const LIMITE_DE_BYTES_DO_DIRECT = 1000;
+function bytesDoTexto(valor: string): number {
+  return new TextEncoder().encode(valor).length;
+}
+
+interface CredencialMeta {
+  token: string;
+  contaId: string;
+  graphVersion: string;
+}
+
+/** Token da conta DAQUELE canal, do Vault. O service role só entra depois de a RLS do chamador já
+ * ter provado que ele enxerga a conversa. */
+async function credencialMetaDoCanal(canalId: string | null): Promise<CredencialMeta> {
+  if (!canalId) throw new HttpError(409, "Conversa sem canal Meta vinculado");
+  const service = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    getSupabaseServiceKey(),
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { data: meta } = await service
+    .schema("atendimento")
+    .from("meta_canal")
+    .select("token_ref, conta_externa_id, graph_version")
+    .eq("canal_id", canalId)
+    .maybeSingle();
+  if (!meta?.token_ref) throw new HttpError(409, "Canal Meta ainda não conectado");
+  const { data: token } = await service
+    .schema("config")
+    .rpc("fn_ler_segredo_referenciado", { p_ref: meta.token_ref });
+  if (typeof token !== "string" || token.trim() === "") {
+    throw new HttpError(409, "Credencial do canal não está no cofre");
+  }
+  return {
+    token,
+    contaId: String(meta.conta_externa_id),
+    graphVersion: String(meta.graph_version ?? "v22.0"),
+  };
+}
 
 const InputSchema = z.object({
   conversaId: z.string().uuid(),
@@ -63,11 +105,17 @@ serve(async (req) => {
     const { data: conversa, error: conversaError } = await userClient
       .schema("atendimento")
       .from("conversas")
-      .select("id,instance_id,remote_jid,canal,provedor,contato_id")
+      .select("id,instance_id,remote_jid,canal,provedor,contato_id,canal_id")
       .eq("id", input.conversaId)
       .maybeSingle();
     if (conversaError) throw conversaError;
     if (!conversa) throw new HttpError(404, "Conversa não encontrada");
+
+    // E02-S16/ADR-1700: o Direct não aceita anexo, template nem botão por este caminho. Recusar
+    // aqui é melhor que gravar uma bolha que a Meta devolve com erro.
+    if (input.acao === "enviar_rico" && conversa.canal === "instagram") {
+      throw new HttpError(409, "O Direct do Instagram aceita apenas texto.");
+    }
 
     if (input.acao === "assumir") {
       await definirHandoff(userClient, conversa.id as string, "assumir");
@@ -150,9 +198,31 @@ serve(async (req) => {
     // se fosse um envio novo pelo celular pessoal. Canal Meta não tem esse eco (API oficial), fica null.
     let waMessageId: string | null = null;
     try {
-      if (input.acao === "enviar" && conversa.provedor === "meta") {
+      if (
+        input.acao === "enviar" &&
+        conversa.provedor === "meta" &&
+        conversa.canal !== "whatsapp"
+      ) {
+        // E02-S16/ADR-1700 — Instagram Direct e Messenger: token DAQUELE canal, vindo do Vault.
+        // Nenhuma credencial global participa, e o teto de bytes do Direct é conferido aqui
+        // também, não só na tela (o servidor nunca confia no limite do browser).
+        if (conversa.canal === "instagram" && bytesDoTexto(texto) > LIMITE_DE_BYTES_DO_DIRECT) {
+          throw new HttpError(
+            422,
+            `O Direct do Instagram aceita até ${LIMITE_DE_BYTES_DO_DIRECT} bytes — encurte a mensagem.`,
+          );
+        }
+        const credencial = await credencialMetaDoCanal(conversa.canal_id as string | null);
+        waMessageId = await enviarDirectMeta(
+          credencial.token,
+          credencial.contaId,
+          conversa.remote_jid as string,
+          texto,
+          credencial.graphVersion,
+        );
+      } else if (input.acao === "enviar" && conversa.provedor === "meta") {
         await enviarMeta(
-          conversa.canal === "whatsapp" ? "meta_wa" : conversa.canal,
+          "meta_wa",
           conversa.instance_id as string,
           conversa.remote_jid as string,
           texto,
@@ -198,14 +268,25 @@ serve(async (req) => {
         });
       }
     } catch (e) {
+      // E02-S16: a janela de 24 h do Direct é a causa mais comum de recusa da Meta, e o atendente
+      // precisa ler isso em vez de "falha ao enviar" — a mensagem não vai chegar nunca, não é
+      // caso de tentar de novo.
+      const erroLegivel =
+        e instanceof MetaGraphError && e.foraDaJanela
+          ? "A janela de 24 h do Instagram fechou; a mensagem não será entregue."
+          : e instanceof HttpError
+            ? e.message
+            : conversa.provedor === "meta"
+              ? "Falha ao enviar pela Meta"
+              : "Falha ao enviar via Evolution";
       await userClient
         .schema("atendimento")
         .from("mensagens")
-        .update({ status_entrega: "erro", erro_detalhe: (e instanceof Error ? e.message : String(e)).slice(0, 500) })
+        .update({ status_entrega: "erro", erro_detalhe: erroLegivel.slice(0, 500) })
         .eq("id", mensagem.id);
       // Falha de envio não é erro do servidor (a ação humana foi registrada) — 200 com o
       // resultado explícito, a UI decide como exibir a bolha com erro.
-      return json(200, { ok: false, mensagemId: mensagem.id, erro: "Falha ao enviar via Evolution" }, cors);
+      return json(200, { ok: false, mensagemId: mensagem.id, erro: erroLegivel }, cors);
     }
 
     const { error: marcarEnviadoError } = await userClient
