@@ -60,10 +60,12 @@ function Conteudo({
     queryKey: ["listas-materiais", usuario, cliente, ordemServico, "linhas", listaId, revisao],
     queryFn: async ({ signal }) => {
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== usuario || signal.aborted) throw new Error("Sessão alterada.");
+      if (antes.error || antes.data.user?.id !== usuario || signal.aborted)
+        throw new Error("Sessão alterada.");
       const linhas = await supabaseListasMateriaisAdapter.obterLinhas(listaId, revisao, signal);
       const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== usuario || signal.aborted) throw new Error("Sessão alterada.");
+      if (depois.error || depois.data.user?.id !== usuario || signal.aborted)
+        throw new Error("Sessão alterada.");
       return linhas;
     },
     enabled: !pendente && !recuperacao.falhou,
@@ -75,9 +77,14 @@ function Conteudo({
     setOcupado(true);
     setErro("");
     try {
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando)) throw new Error("Operação guardada divergente.");
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
+        throw new Error("Operação guardada divergente.");
       const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== usuario || sessionStorage.getItem(chave) !== JSON.stringify(comando))
+      if (
+        antes.error ||
+        antes.data.user?.id !== usuario ||
+        sessionStorage.getItem(chave) !== JSON.stringify(comando)
+      )
         throw new Error("Sessão ou operação alterada.");
       await supabaseListasMateriaisAdapter.salvarLinhas(comando);
       const depois = await supabase.auth.getUser();
@@ -86,7 +93,11 @@ function Conteudo({
         queryKey: ["listas-materiais", usuario, cliente, ordemServico, "listas"],
       });
       const atual = await supabase.auth.getUser();
-      if (atual.error || atual.data.user?.id !== usuario || sessionStorage.getItem(chave) !== JSON.stringify(comando))
+      if (
+        atual.error ||
+        atual.data.user?.id !== usuario ||
+        sessionStorage.getItem(chave) !== JSON.stringify(comando)
+      )
         throw new Error("Operação guardada divergente.");
       sessionStorage.removeItem(chave);
       setPendente(null);
@@ -141,13 +152,22 @@ function Conteudo({
     );
   const inicial = dados.data === null ? undefined : { textoOriginal, linhas: dados.data };
   return (
-    <><HistoricoVersoes usuario={usuario} cliente={cliente} ordemServico={ordemServico} listaId={listaId} revisao={revisao} /><EditorMateriais
-      contexto={JSON.stringify([listaId, revisao])}
-      textoOriginal={textoOriginal}
-      edicaoInicial={inicial}
-      rascunho={rascunho}
-      onRascunho={onRascunho}
-      salvar={salvar}
-    /></>
+    <>
+      <HistoricoVersoes
+        usuario={usuario}
+        cliente={cliente}
+        ordemServico={ordemServico}
+        listaId={listaId}
+        revisao={revisao}
+      />
+      <EditorMateriais
+        contexto={JSON.stringify([listaId, revisao])}
+        textoOriginal={textoOriginal}
+        edicaoInicial={inicial}
+        rascunho={rascunho}
+        onRascunho={onRascunho}
+        salvar={salvar}
+      />
+    </>
   );
 }

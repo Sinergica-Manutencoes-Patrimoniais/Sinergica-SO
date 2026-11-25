@@ -25,7 +25,12 @@ function useDestinos(
     queryFn: async ({ pageParam, signal }) => {
       await conferirSessao(userId, signal);
       const destinos = await supabaseEstruturaTecnicaAdapter.listarDestinos(
-        clienteId, tipo, 20, pageParam, busca || null, signal,
+        clienteId,
+        tipo,
+        20,
+        pageParam,
+        busca || null,
+        signal,
       );
       await conferirSessao(userId, signal);
       return destinos;
@@ -68,7 +73,10 @@ function MovimentacaoContexto({ userId, clienteId, item, onConcluido }: Moviment
     queryKey: ["estrutura-tecnica", userId, clienteId, "pode-movimentar"],
     queryFn: async ({ signal }) => {
       await conferirSessao(userId, signal);
-      const permitido = await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId);
+      const permitido = await supabaseCapacidadesSsoAdapter.autorizarAcao(
+        "cadastro.gerir",
+        clienteId,
+      );
       await conferirSessao(userId, signal);
       return permitido;
     },
