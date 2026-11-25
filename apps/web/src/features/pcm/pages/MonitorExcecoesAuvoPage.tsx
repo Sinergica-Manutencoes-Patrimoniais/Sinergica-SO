@@ -7,7 +7,7 @@
 //
 // SÓ LEITURA nesta fatia: reprocessar uma falha é ação (escrita, auditoria, idempotência) e fica
 // para a fatia seguinte — ver tasks.md. Botão que não faz nada seria pior que botão nenhum.
-import { Skeleton } from "@sinergica/ui";
+import { DataTable } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -112,56 +112,55 @@ export function MonitorExcecoesAuvoPage() {
         </output>
       ) : null}
 
-      {ligada && clienteId && excecoes.isPending ? <Skeleton className="h-4 w-48" /> : null}
-
-      {lista.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-line">
-          <table className="w-full text-body">
-            <caption className="sr-only">Exceções do Auvo em T−24 do Cliente selecionado</caption>
-            <thead className="bg-card text-ink-3">
-              <tr>
-                <th scope="col" className="p-2 text-left">
-                  Exceção
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Cliente
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  OS
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Visita
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Tarefa Auvo
-                </th>
-                <th scope="col" className="p-2 text-right">
-                  Tentativas
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Último erro
-                </th>
-                <th scope="col" className="p-2 text-left">
-                  Quando
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((excecao) => (
-                <tr key={`${excecao.tipo}-${excecao.osId}`} className="border-line border-t">
-                  <td className="p-2 text-ink">{rotuloTipoExcecao(excecao.tipo)}</td>
-                  <td className="p-2 text-ink-3">{excecao.clienteNome}</td>
-                  <td className="p-2 text-ink">{excecao.osNumero}</td>
-                  <td className="p-2 text-ink-3">{formatarInstante(excecao.visitaInicioEm)}</td>
-                  {/* Sem tarefa no Auvo é o achado, não um buraco: o travessão é deliberado. */}
-                  <td className="p-2 text-ink-3">{excecao.taskId ?? "—"}</td>
-                  <td className="p-2 text-right text-ink-3">{excecao.tentativas}</td>
-                  <td className="p-2 text-ink-3">{rotuloErroExcecao(excecao.ultimoErro)}</td>
-                  <td className="p-2 text-ink-3">{formatarInstante(excecao.ocorridoEm)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {lista.length > 0 || (ligada && clienteId && excecoes.isPending) ? (
+        <div className="rounded-lg border border-line">
+          <DataTable
+            carregando={excecoes.isPending}
+            itens={lista}
+            chaveLinha={(excecao) => `${excecao.tipo}-${excecao.osId}`}
+            vazio="Nenhuma exceção do Auvo neste Cliente."
+            colunas={[
+              {
+                chave: "tipo",
+                cabecalho: "Exceção",
+                render: (excecao) => rotuloTipoExcecao(excecao.tipo),
+              },
+              { chave: "cliente", cabecalho: "Cliente", render: (excecao) => excecao.clienteNome },
+              {
+                chave: "os",
+                cabecalho: "OS",
+                cabecalhoLinha: true,
+                render: (excecao) => excecao.osNumero,
+              },
+              {
+                chave: "visita",
+                cabecalho: "Visita",
+                render: (excecao) => formatarInstante(excecao.visitaInicioEm),
+              },
+              {
+                chave: "tarefa",
+                cabecalho: "Tarefa Auvo",
+                // Sem tarefa no Auvo é o achado, não um buraco: o travessão é deliberado.
+                render: (excecao) => excecao.taskId ?? "—",
+              },
+              {
+                chave: "tentativas",
+                cabecalho: "Tentativas",
+                numerica: true,
+                render: (excecao) => excecao.tentativas,
+              },
+              {
+                chave: "erro",
+                cabecalho: "Último erro",
+                render: (excecao) => rotuloErroExcecao(excecao.ultimoErro),
+              },
+              {
+                chave: "quando",
+                cabecalho: "Quando",
+                render: (excecao) => formatarInstante(excecao.ocorridoEm),
+              },
+            ]}
+          />
         </div>
       ) : null}
     </div>
