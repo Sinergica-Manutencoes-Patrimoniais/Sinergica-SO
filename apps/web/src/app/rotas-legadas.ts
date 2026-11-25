@@ -45,6 +45,7 @@ export const VIEWS_LEGADAS: readonly PcmView[] = [
   "laudos-spda",
   "apontamento-horas",
   "tipos-inspecao",
+  "roteiros-entrevista",
   "sistemas",
 ];
 
@@ -96,6 +97,8 @@ export const ROTAS_LEGADAS: Readonly<Record<PcmView, PcmView>> = {
   "laudos-spda": "laudos-spda",
   "apontamento-horas": "apontamento-horas",
   "tipos-inspecao": "tipos-inspecao",
+  // E02-S26: rota nova desta story — continua em si mesma (nada foi absorvido).
+  "roteiros-entrevista": "roteiros-entrevista",
   sistemas: "sistemas",
 };
 

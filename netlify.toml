@@ -52,6 +52,11 @@
   # esconde a tela (anunciando), e `update atendimento.personas set auto_resposta_ativo = false`
   # para o comportamento em si.
   VITE_SSO_ZE_TRIGGER_AUTOMATICO_ENABLED = "true"
+  # E02-S26: administração do roteiro do agente entrevistador (Administração → Catálogos →
+  # Roteiros de Entrevista). LIGADA em 25/11/2026. Só CRUD de perguntas numa tabela própria do
+  # SO — não conduz entrevista nem escreve cadastro (isso depende da ADR-0016, ainda Proposta).
+  # Procedimento de fechamento: desligar a flag; a tela passa a anunciar que não está ativada.
+  VITE_SSO_ROTEIRO_ENTREVISTA_ENABLED = "true"
 
 # SPA: todas as rotas servem index.html
 [[redirects]]

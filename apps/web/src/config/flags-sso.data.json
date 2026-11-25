@@ -4152,6 +4152,12 @@
     "descricao": "Revogar autorizacao complemento"
   },
   {
+    "nome": "VITE_SSO_ROTEIRO_ENTREVISTA_ENABLED",
+    "padrao": false,
+    "jornada": "administracao",
+    "descricao": "E02-S26: administracao do roteiro de perguntas do agente entrevistador de cadastro (AC-1)."
+  },
+  {
     "nome": "VITE_SSO_SERVICO_EXTRA_ENABLED",
     "padrao": false,
     "jornada": "faturaveis",

@@ -81,6 +81,7 @@ import { PreventivasPage } from "../features/pcm/pages/PreventivasPage";
 import { RelatorioClientePage } from "../features/pcm/pages/RelatorioClientePage";
 import { RelatorioDiarioPage } from "../features/pcm/pages/RelatorioDiarioPage";
 import { RelatorioPlanejamentoPage } from "../features/pcm/pages/RelatorioPlanejamentoPage";
+import { RoteirosEntrevistaPage } from "../features/pcm/pages/RoteirosEntrevistaPage";
 import { SistemasPage } from "../features/pcm/pages/SistemasPage";
 import { TiposInspecaoPage } from "../features/pcm/pages/TiposInspecaoPage";
 import { TiposTarefaPage } from "../features/pcm/pages/TiposTarefaPage";
@@ -929,6 +930,8 @@ export function HomePage() {
                 onAbrirCliente={abrirClienteNoPeriodo}
                 onAbrirTecnico={abrirOrdensDoTecnicoNoPeriodo}
               />
+            ) : pcmView === "roteiros-entrevista" ? (
+              <RoteirosEntrevistaPage />
             ) : pcmView === "tipos-inspecao" ? (
               <TiposInspecaoPage />
             ) : pcmView === "tipos-tarefa" ? (
