@@ -6,6 +6,11 @@ begin;
 -- transação, o estado de que precisa (o `rollback` do fim desfaz). Onde o teste reabre o gate
 -- mais adiante, a abertura continua valendo.
 update comercial.sso_decisao_pcm_orcamento_gate set habilitado = false where id;
+-- `sso_itens_publicos_gate` também: aberta, ela faz o aceite de proposta com origem
+-- operacional exigir snapshot de itens públicos da versão corrente
+-- (`snapshot_itens_publicos_ausente`, 23514). Este teste prova a fronteira entre a decisão
+-- interna do PCM e a decisão do Cliente, não a regra de snapshot — que tem cobertura própria.
+update comercial.sso_itens_publicos_gate set habilitado = false where id;
 select plan(15);
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
  ('18110000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','pcm-181@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now()),
