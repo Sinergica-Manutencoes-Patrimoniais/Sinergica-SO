@@ -7,9 +7,68 @@
     <link rel="icon" href="/logos/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Saira:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- E00-S29 — a folha do Google Fonts era `rel="stylesheet"` puro: render-blocking, uma
+         viagem na frente do primeiro pixel. `preload` + troca de `media` tira do caminho
+         crítico sem perder a fonte. A URL já tem `display=swap`, então o texto aparece na
+         fonte de sistema e troca depois — nunca invisível. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Saira:wght@400;500;600;700;800&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Saira:wght@400;500;600;700;800&display=swap"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Saira:wght@400;500;600;700;800&display=swap"
+      />
+    </noscript>
+    <!-- E00-S29 — shell de primeira pintura. Antes disto o `#root` nascia vazio e a tela ficava
+         branca até o JS baixar e parsear. Cores literais de propósito: os tokens vivem no CSS do
+         bundle, que neste instante ainda não chegou. Os valores são os mesmos de
+         `--color-paper` (claro #f4f2ec, escuro #10131d) para não haver salto de cor quando o app
+         assume. -->
+    <style>
+      #sso-shell {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #f4f2ec;
+      }
+      #sso-shell img {
+        width: 96px;
+        height: auto;
+        opacity: 0.85;
+      }
+      html[data-theme="dark"] #sso-shell {
+        background: #10131d;
+      }
+    </style>
+    <script>
+      // Resolve o tema ANTES da primeira pintura, com a mesma regra do ThemeProvider
+      // (apps/web/src/app/theme-context.tsx): valor salvo primeiro, preferência do sistema
+      // depois. Sem isto o shell nasceria claro para quem usa o tema escuro e piscaria branco.
+      (function () {
+        try {
+          var salvo = window.localStorage.getItem("sinergica-so-theme");
+          var modo =
+            salvo ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", modo);
+        } catch (e) {
+          /* localStorage bloqueado: segue no tema claro, que é o padrão do CSS */
+        }
+      })();
+    </script>
   </head>
   <body>
+    <div id="sso-shell"><img src="/logos/favicon.png" alt="" /></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

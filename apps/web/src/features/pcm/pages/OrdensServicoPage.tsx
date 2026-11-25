@@ -1,4 +1,4 @@
-import { Button, Modal, Skeleton, Tooltip } from "@sinergica/ui";
+import { Button, Modal, Tooltip, useCargaVisivel } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
@@ -197,7 +197,12 @@ export function OrdensServicoPage({
     }),
     [buscaDebounced, filtros, visao, intervaloAgenda],
   );
-  const consultasAtivas = !permissoesCarregando && temLeitura;
+  // E00-S29 — `!permissoesCarregando` saiu daqui de propósito. Ele serializava a tela: nenhuma
+  // consulta de dado partia antes da viagem de permissão terminar. `temLeitura` já é `false`
+  // enquanto a permissão não resolveu (`podeAcessar` devolve `false` sem dado), então o gate
+  // continua igualmente seguro — só deixou de ser sequencial. Com a permissão em cache
+  // (permissoes-queries.ts), na segunda visita as consultas partem no primeiro render.
+  const consultasAtivas = temLeitura;
   const consultaKpis = useMemo(
     () => ({
       busca: consulta.busca,
@@ -300,6 +305,10 @@ export function OrdensServicoPage({
     Boolean(selecionadaId),
   );
   const feedPendente = visao === "kanban" ? feedsKanban.isPending : feed.isPending;
+  // E00-S29 — o mesmo anti-flash que o DataTable já usa: nada aparece antes de 200ms, e o que
+  // apareceu fica no mínimo 400ms. Sem ele, cache quente pinta e apaga o esqueleto no mesmo
+  // piscar de olhos.
+  const mostrarEsqueleto = useCargaVisivel(feedPendente);
   const feedBuscando = visao === "kanban" ? feedsKanban.isFetching : feed.isFetching;
   const feedErro = visao === "kanban" ? feedsKanban.isError : feed.isError;
   const erroFeed = visao === "kanban" ? feedsKanban.error : feed.error;
@@ -567,16 +576,6 @@ export function OrdensServicoPage({
     return onAlterarStatusDe(selecionada.id, status);
   }
 
-  if (permissoesCarregando) {
-    return (
-      <div className="flex flex-col gap-3 p-8">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-full max-w-md" />
-        <Skeleton className="h-4 w-full max-w-sm" />
-      </div>
-    );
-  }
-
   if (!temLeitura) {
     return (
       <div className="p-12 text-center">
@@ -586,10 +585,6 @@ export function OrdensServicoPage({
         </p>
       </div>
     );
-  }
-
-  if (feedPendente) {
-    return <SkeletonOperacao />;
   }
 
   if (feedErro && ordensCarregadas.length === 0) {
@@ -725,381 +720,236 @@ export function OrdensServicoPage({
 
       {/* E01-S118 AC-3: aba Backlog reusa a página priorizada por GUT; as demais abas seguem o
           fluxo de filtros/visões da OS. */}
-      {visao === "backlog" ? (
-        // E01-S151: `ordensFiltradas` é o conjunto geral da página (Lista/Kanban) — sem técnico,
-        // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
-        // filtra por `ehItemBacklog` igual `listarBacklogGut` já faz pro modo não-controlado.
-        <BacklogGutPage
-          ordensControladas={ordensFiltradas.filter(ehItemBacklog)}
-          onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
-          onAtualizarControlado={carregar}
-        />
+      {/* E00-S29 — cabeçalho, filtros e abas acima ficam SEMPRE montados. Só esta região
+          troca, e a troca passa pelo anti-flash: requisição rápida não chega a mostrar
+          esqueleto, e esqueleto exibido fica no mínimo 400ms. */}
+      {mostrarEsqueleto ? (
+        <SkeletonOperacao />
       ) : (
-        <>
-          <div className="grid grid-cols-1 gap-2 rounded-xl border border-line bg-card p-3 md:grid-cols-6">
-            <input
-              className="input md:col-span-2"
-              placeholder="Buscar por número, cliente ou título"
-              value={filtros.busca}
-              onChange={(event) => setFiltros((f) => ({ ...f, busca: event.target.value }))}
+        <div className="anim-conteudo flex flex-col gap-4">
+          {visao === "backlog" ? (
+            // E01-S151: `ordensFiltradas` é o conjunto geral da página (Lista/Kanban) — sem técnico,
+            // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
+            // filtra por `ehItemBacklog` igual `listarBacklogGut` já faz pro modo não-controlado.
+            <BacklogGutPage
+              ordensControladas={ordensFiltradas.filter(ehItemBacklog)}
+              onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
+              onAtualizarControlado={carregar}
             />
-            <select
-              className="input"
-              value={filtros.status}
-              onChange={(event) => setFiltros((f) => ({ ...f, status: event.target.value }))}
-            >
-              <option value="ativos">Ativos</option>
-              <option value="todas">Todos os status</option>
-              {STATUS_OS.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="input"
-              value={filtros.tecnicoFuncionarioId}
-              onChange={(event) =>
-                setFiltros((f) => ({ ...f, tecnicoFuncionarioId: event.target.value }))
-              }
-            >
-              <option value="todos">Todos os técnicos</option>
-              {tecnicosDisponiveis.map((tecnico) => (
-                <option key={tecnico.id} value={tecnico.id}>
-                  {tecnico.nome}
-                </option>
-              ))}
-            </select>
-            {/* E01-S118 AC-5: filtro por Cliente. */}
-            <select
-              className="input"
-              aria-label="Filtrar por cliente"
-              value={filtros.clienteId}
-              onFocus={() => {
-                if (!dadosOs) queryCatalogos.refetch();
-              }}
-              onChange={(event) => setFiltros((f) => ({ ...f, clienteId: event.target.value }))}
-            >
-              <option value="todos">Todos os clientes</option>
-              {(dadosOs?.clientes ?? []).map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome}
-                </option>
-              ))}
-            </select>
-            <select
-              className="input"
-              value={filtros.categoria}
-              onChange={(event) => setFiltros((f) => ({ ...f, categoria: event.target.value }))}
-            >
-              <option value="todas">Todas as categorias</option>
-              {CATEGORIAS_OS.map((categoria) => (
-                <option key={categoria.value} value={categoria.value}>
-                  {categoria.label}
-                </option>
-              ))}
-            </select>
-            <div className="flex items-center gap-1.5">
-              <input
-                type="date"
-                className="input"
-                value={filtros.dataInicio ?? ""}
-                onChange={(event) =>
-                  setFiltros((f) => ({ ...f, dataInicio: event.target.value || null }))
-                }
-                aria-label="Data inicial"
-              />
-              <input
-                type="date"
-                className="input"
-                value={filtros.dataFim ?? ""}
-                onChange={(event) =>
-                  setFiltros((f) => ({ ...f, dataFim: event.target.value || null }))
-                }
-                aria-label="Data final"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={limparFiltros}
-              className="md:col-span-6 justify-self-start text-caption font-semibold text-ink-3 hover:text-orange"
-            >
-              Limpar filtros
-            </button>
-          </div>
-
-          {user && filtros.clienteId !== "todos" && (
-            <CentralMateriaisGlobal
-              usuario={user.id}
-              cliente={filtros.clienteId}
-              onAbrirOs={(os) => {
-                setOrigemCentral({ cliente: filtros.clienteId, os });
-                setSelecionadaId(os);
-                setVisao("lista");
-              }}
-            />
-          )}
-
-          {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-orange bg-orange-soft px-4 py-3">
-              <p className="text-body font-semibold text-warning">
-                {selecionados.size} selecionada{selecionados.size > 1 ? "s" : ""}
-              </p>
-              <select
-                className="input h-8 w-auto text-caption"
-                disabled={salvando}
-                value=""
-                onChange={(event) => {
-                  if (event.target.value)
-                    onAplicarStatusLote(event.target.value as StatusOrdemServico);
-                }}
-              >
-                <option value="">Aplicar status a todas…</option>
-                {STATUS_OS.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setSelecionados(new Set())}
-                className="text-caption font-semibold text-warning hover:underline"
-              >
-                Limpar seleção
-              </button>
-            </div>
-          )}
-
-          {visao !== "lista" && (
-            <div className="bg-card rounded-xl border border-line p-4">
-              {visao === "kanban" &&
-                user &&
-                filtros.clienteId !== "todos" &&
-                flagLigada("VITE_SSO_QUADRO_CHAMADOS_ENABLED") && (
-                  <QuadroGerencial
-                    key={`${user.id}:${filtros.clienteId}`}
-                    usuario={user.id}
-                    cliente={filtros.clienteId}
-                    onAbrirOs={(id) => {
-                      setOrigemCentral({ cliente: filtros.clienteId, os: id });
-                      setSelecionadaId(id);
-                      setVisao("lista");
-                    }}
-                  />
-                )}
-              {visao === "kanban" &&
-                user &&
-                filtros.clienteId !== "todos" &&
-                flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && (
-                  <PainelLateralBacklog
-                    key={`${user.id}:${filtros.clienteId}`}
-                    userId={user.id}
-                    clienteId={filtros.clienteId}
-                  />
-                )}
-              {visao === "kanban" &&
-                user &&
-                filtros.clienteId === "todos" &&
-                flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && (
-                  <p>Selecione um Cliente para consultar seu backlog de escopo.</p>
-                )}
-              {visao === "kanban" && (
-                <OsKanbanView
-                  ordens={ordensFiltradas}
-                  temEscrita={temEscrita}
-                  salvando={salvando}
-                  onAlterarStatus={(id, status) => onAlterarStatusDe(id, status)}
-                  onSelecionar={abrirDetalheCard}
-                  selecionados={selecionados}
-                  onToggleSelecionado={onToggleSelecionado}
-                  colunas={colunasKanban}
-                  onMoverColuna={onMoverColunaKanban}
-                  onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
-                  preventivas={preventivas}
-                  camposAConciliar={
-                    campoAConciliar.isFetching || campoAConciliar.isError
-                      ? undefined
-                      : campoAConciliar.data
-                  }
-                  avisoCampoAConciliar={avisoCampoAConciliar}
-                  resumosChamados={
-                    !salvando &&
-                    !feedBuscando &&
-                    !resumoChamados.isFetching &&
-                    !resumoChamados.isError
-                      ? resumoChamados.data
-                      : undefined
-                  }
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-2 rounded-xl border border-line bg-card p-3 md:grid-cols-6">
+                <input
+                  className="input md:col-span-2"
+                  placeholder="Buscar por número, cliente ou título"
+                  value={filtros.busca}
+                  onChange={(event) => setFiltros((f) => ({ ...f, busca: event.target.value }))}
                 />
-              )}
-              {visao === "timeline" && (
-                <OsTimelineView ordens={ordensFiltradas} onSelecionar={abrirDetalheCard} />
-              )}
-              {visao === "calendario" && (
-                <OsCalendarioView
-                  ordens={ordensFiltradas}
-                  onSelecionar={abrirDetalheCard}
-                  onIntervaloChange={onIntervaloCalendario}
-                />
-              )}
-            </div>
-          )}
-
-          {visao !== "lista" && selecionada && (
-            <section className="bg-card rounded-xl border border-line">
-              <DetalheOs
-                key={selecionada.id}
-                selecionada={selecionada}
-                clienteId={filtros.clienteId !== "todos" ? filtros.clienteId : null}
-                temEscrita={temEscrita}
-                salvando={salvando}
-                onAlterarStatus={onAlterarStatus}
-                onEditar={() => setEditando(true)}
-                dadosOs={dadosOs}
-                onRecarregar={carregar}
-                onAbrirOsVinculada={(cliente, os) => {
-                  setFiltros((atual) => ({ ...atual, clienteId: cliente }));
-                  setOrigemCentral({ cliente, os });
-                  setSelecionadaId(os);
-                  setVisao("lista");
-                }}
-                onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
-                painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
-                aberturaModalSeq={modalDetalheSeq}
-                destinoConversao={
-                  selecionada.chamadoId === conversaoPendente?.chamadoId
-                    ? conversaoPendente.statusDestino
-                    : null
-                }
-                onConversaoFinalizada={() => setConversaoPendente(null)}
-              />
-            </section>
-          )}
-
-          {visao === "lista" && (
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
-              <section className="bg-card rounded-xl border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
-                <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
-                  <div>
-                    <h3 className="text-caption font-semibold text-ink">Fila de ordens</h3>
-                    <p className="text-micro text-ink-3">Selecione uma OS para ver o resumo</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-micro font-semibold text-ink-2">
-                      <input
-                        type="checkbox"
-                        checked={ordenarPorHub}
-                        onChange={(e) => setOrdenarPorHub(e.target.checked)}
-                        className="h-3.5 w-3.5 accent-orange"
-                      />
-                      Ordenar por Hub
-                    </label>
-                    <span className="rounded-full border border-line bg-card px-2 py-0.5 text-micro font-semibold tabular-nums text-ink-2">
-                      {ordensFiltradas.length} de {totalFiltrado}
-                    </span>
-                  </div>
+                <select
+                  className="input"
+                  value={filtros.status}
+                  onChange={(event) => setFiltros((f) => ({ ...f, status: event.target.value }))}
+                >
+                  <option value="ativos">Ativos</option>
+                  <option value="todas">Todos os status</option>
+                  {STATUS_OS.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="input"
+                  value={filtros.tecnicoFuncionarioId}
+                  onChange={(event) =>
+                    setFiltros((f) => ({ ...f, tecnicoFuncionarioId: event.target.value }))
+                  }
+                >
+                  <option value="todos">Todos os técnicos</option>
+                  {tecnicosDisponiveis.map((tecnico) => (
+                    <option key={tecnico.id} value={tecnico.id}>
+                      {tecnico.nome}
+                    </option>
+                  ))}
+                </select>
+                {/* E01-S118 AC-5: filtro por Cliente. */}
+                <select
+                  className="input"
+                  aria-label="Filtrar por cliente"
+                  value={filtros.clienteId}
+                  onFocus={() => {
+                    if (!dadosOs) queryCatalogos.refetch();
+                  }}
+                  onChange={(event) => setFiltros((f) => ({ ...f, clienteId: event.target.value }))}
+                >
+                  <option value="todos">Todos os clientes</option>
+                  {(dadosOs?.clientes ?? []).map((cliente) => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nome}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="input"
+                  value={filtros.categoria}
+                  onChange={(event) => setFiltros((f) => ({ ...f, categoria: event.target.value }))}
+                >
+                  <option value="todas">Todas as categorias</option>
+                  {CATEGORIAS_OS.map((categoria) => (
+                    <option key={categoria.value} value={categoria.value}>
+                      {categoria.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="date"
+                    className="input"
+                    value={filtros.dataInicio ?? ""}
+                    onChange={(event) =>
+                      setFiltros((f) => ({ ...f, dataInicio: event.target.value || null }))
+                    }
+                    aria-label="Data inicial"
+                  />
+                  <input
+                    type="date"
+                    className="input"
+                    value={filtros.dataFim ?? ""}
+                    onChange={(event) =>
+                      setFiltros((f) => ({ ...f, dataFim: event.target.value || null }))
+                    }
+                    aria-label="Data final"
+                  />
                 </div>
-                {ordensFiltradas.length === 0 ? (
-                  // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
-                  <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-body text-ink-3">
-                    {ordensCarregadas.length > 0 ? (
-                      <>
-                        Nenhuma OS para estes filtros.
-                        <Button variant="secondary" size="sm" onClick={limparFiltros}>
-                          Limpar filtros
-                        </Button>
-                      </>
-                    ) : (
-                      "Nenhuma OS cadastrada ainda."
-                    )}
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-caption">
-                      <thead className="sticky top-0 bg-paper text-micro text-ink-3">
-                        <tr className="border-b border-line-soft">
-                          {temEscrita && <th className="w-8 px-2 py-2" />}
-                          <th className="px-2 py-2 text-left font-semibold">Nº</th>
-                          <th className="px-2 py-2 text-left font-semibold">OS</th>
-                          <th className="px-2 py-2 text-left font-semibold">Status</th>
-                          <th className="px-2 py-2 text-left font-semibold">Prioridade</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-line-soft">
-                        {ordensFiltradas.map((ordem) => (
-                          // biome-ignore lint/a11y/useKeyWithClickEvents: mesmo padrão de linha clicável do BacklogGutPage — checkbox interno já é acessível via teclado.
-                          <tr
-                            key={ordem.id}
-                            onClick={() => {
-                              setOrigemCentral(null);
-                              setSelecionadaId(ordem.id);
-                            }}
-                            aria-selected={ordem.id === selecionadaId}
-                            className={`cursor-pointer border-l-2 ${
-                              ordem.id === selecionadaId
-                                ? "border-orange bg-line-soft"
-                                : "border-transparent hover:bg-line-soft"
-                            }`}
-                          >
-                            {temEscrita && (
-                              // biome-ignore lint/a11y/useKeyWithClickEvents: só existe pra impedir o clique no checkbox de também disparar a seleção da linha (checkbox já tem seu próprio onChange).
-                              <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
-                                <input
-                                  type="checkbox"
-                                  checked={selecionados.has(ordem.id)}
-                                  onChange={() => onToggleSelecionado(ordem.id)}
-                                  aria-label={`Selecionar ${ordem.numero}`}
-                                  className="h-4 w-4 accent-orange"
-                                />
-                              </td>
-                            )}
-                            <td className="px-2 py-2 whitespace-nowrap font-brand tabular-nums text-ink-3">
-                              {rotuloNumeroOrdem(ordem)}
-                            </td>
-                            <td className="px-2 py-2">
-                              <Tooltip content={resumoTooltipOrdem(ordem)}>
-                                <div className="min-w-[180px]">
-                                  <p className="truncate font-semibold text-ink">{ordem.titulo}</p>
-                                  <p className="mt-0.5 truncate text-micro text-ink-3">
-                                    {ordem.clienteNome} · {ordem.categoria} ·{" "}
-                                    {ordem.tecnicoNome ?? "sem técnico"}
-                                  </p>
-                                  {ordem.tipoOs && (
-                                    <div className="mt-1">
-                                      <BadgeHubOs
-                                        tipoOs={ordem.tipoOs}
-                                        dataAgendada={ordem.dataAgendada}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </Tooltip>
-                            </td>
-                            <td className="px-2 py-2 whitespace-nowrap">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusOsColor(ordem.status)}`}
-                              >
-                                {rotuloStatusOs(ordem.status)}
-                              </span>
-                            </td>
-                            <td className="px-2 py-2 whitespace-nowrap">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
-                              >
-                                {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
+                <button
+                  type="button"
+                  onClick={limparFiltros}
+                  className="md:col-span-6 justify-self-start text-caption font-semibold text-ink-3 hover:text-orange"
+                >
+                  Limpar filtros
+                </button>
+              </div>
 
-              <section className="rounded-xl border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
-                {selecionada ? (
+              {user && filtros.clienteId !== "todos" && (
+                <CentralMateriaisGlobal
+                  usuario={user.id}
+                  cliente={filtros.clienteId}
+                  onAbrirOs={(os) => {
+                    setOrigemCentral({ cliente: filtros.clienteId, os });
+                    setSelecionadaId(os);
+                    setVisao("lista");
+                  }}
+                />
+              )}
+
+              {temEscrita && selecionados.size > 0 && (visao === "lista" || visao === "kanban") && (
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-orange bg-orange-soft px-4 py-3">
+                  <p className="text-body font-semibold text-warning">
+                    {selecionados.size} selecionada{selecionados.size > 1 ? "s" : ""}
+                  </p>
+                  <select
+                    className="input h-8 w-auto text-caption"
+                    disabled={salvando}
+                    value=""
+                    onChange={(event) => {
+                      if (event.target.value)
+                        onAplicarStatusLote(event.target.value as StatusOrdemServico);
+                    }}
+                  >
+                    <option value="">Aplicar status a todas…</option>
+                    {STATUS_OS.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setSelecionados(new Set())}
+                    className="text-caption font-semibold text-warning hover:underline"
+                  >
+                    Limpar seleção
+                  </button>
+                </div>
+              )}
+
+              {visao !== "lista" && (
+                <div className="bg-card rounded-xl border border-line p-4">
+                  {visao === "kanban" &&
+                    user &&
+                    filtros.clienteId !== "todos" &&
+                    flagLigada("VITE_SSO_QUADRO_CHAMADOS_ENABLED") && (
+                      <QuadroGerencial
+                        key={`${user.id}:${filtros.clienteId}`}
+                        usuario={user.id}
+                        cliente={filtros.clienteId}
+                        onAbrirOs={(id) => {
+                          setOrigemCentral({ cliente: filtros.clienteId, os: id });
+                          setSelecionadaId(id);
+                          setVisao("lista");
+                        }}
+                      />
+                    )}
+                  {visao === "kanban" &&
+                    user &&
+                    filtros.clienteId !== "todos" &&
+                    flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && (
+                      <PainelLateralBacklog
+                        key={`${user.id}:${filtros.clienteId}`}
+                        userId={user.id}
+                        clienteId={filtros.clienteId}
+                      />
+                    )}
+                  {visao === "kanban" &&
+                    user &&
+                    filtros.clienteId === "todos" &&
+                    flagLigada("VITE_SSO_KANBAN_BACKLOG_ESCOPO_ENABLED") && (
+                      <p>Selecione um Cliente para consultar seu backlog de escopo.</p>
+                    )}
+                  {visao === "kanban" && (
+                    <OsKanbanView
+                      ordens={ordensFiltradas}
+                      temEscrita={temEscrita}
+                      salvando={salvando}
+                      onAlterarStatus={(id, status) => onAlterarStatusDe(id, status)}
+                      onSelecionar={abrirDetalheCard}
+                      selecionados={selecionados}
+                      onToggleSelecionado={onToggleSelecionado}
+                      colunas={colunasKanban}
+                      onMoverColuna={onMoverColunaKanban}
+                      onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
+                      preventivas={preventivas}
+                      camposAConciliar={
+                        campoAConciliar.isFetching || campoAConciliar.isError
+                          ? undefined
+                          : campoAConciliar.data
+                      }
+                      avisoCampoAConciliar={avisoCampoAConciliar}
+                      resumosChamados={
+                        !salvando &&
+                        !feedBuscando &&
+                        !resumoChamados.isFetching &&
+                        !resumoChamados.isError
+                          ? resumoChamados.data
+                          : undefined
+                      }
+                    />
+                  )}
+                  {visao === "timeline" && (
+                    <OsTimelineView ordens={ordensFiltradas} onSelecionar={abrirDetalheCard} />
+                  )}
+                  {visao === "calendario" && (
+                    <OsCalendarioView
+                      ordens={ordensFiltradas}
+                      onSelecionar={abrirDetalheCard}
+                      onIntervaloChange={onIntervaloCalendario}
+                    />
+                  )}
+                </div>
+              )}
+
+              {visao !== "lista" && selecionada && (
+                <section className="bg-card rounded-xl border border-line">
                   <DetalheOs
                     key={selecionada.id}
                     selecionada={selecionada}
@@ -1109,10 +959,7 @@ export function OrdensServicoPage({
                     onAlterarStatus={onAlterarStatus}
                     onEditar={() => setEditando(true)}
                     dadosOs={dadosOs}
-                    onRecarregar={async () => {
-                      await carregar();
-                      if (origemCentral) await resumoCentral.refetch();
-                    }}
+                    onRecarregar={carregar}
                     onAbrirOsVinculada={(cliente, os) => {
                       setFiltros((atual) => ({ ...atual, clienteId: cliente }));
                       setOrigemCentral({ cliente, os });
@@ -1121,6 +968,7 @@ export function OrdensServicoPage({
                     }}
                     onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
                     painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
+                    aberturaModalSeq={modalDetalheSeq}
                     destinoConversao={
                       selecionada.chamadoId === conversaoPendente?.chamadoId
                         ? conversaoPendente.statusDestino
@@ -1128,21 +976,178 @@ export function OrdensServicoPage({
                     }
                     onConversaoFinalizada={() => setConversaoPendente(null)}
                   />
-                ) : (
-                  <div className="p-8 text-body text-ink-3">
-                    {origemCentral && resumoCentral.isFetching
-                      ? "Carregando OS…"
-                      : origemCentral && (resumoCentral.isError || resumoCentral.data === null)
-                        ? "OS indisponível neste Cliente."
-                        : "Selecione uma OS."}
-                  </div>
-                )}
-              </section>
-            </div>
-          )}
-        </>
-      )}
+                </section>
+              )}
 
+              {visao === "lista" && (
+                <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
+                  <section className="bg-card rounded-xl border border-line overflow-hidden max-h-[calc(100vh-220px)] overflow-y-auto">
+                    <div className="flex items-center justify-between border-b border-line-soft bg-paper px-4 py-2.5">
+                      <div>
+                        <h3 className="text-caption font-semibold text-ink">Fila de ordens</h3>
+                        <p className="text-micro text-ink-3">Selecione uma OS para ver o resumo</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-1.5 text-micro font-semibold text-ink-2">
+                          <input
+                            type="checkbox"
+                            checked={ordenarPorHub}
+                            onChange={(e) => setOrdenarPorHub(e.target.checked)}
+                            className="h-3.5 w-3.5 accent-orange"
+                          />
+                          Ordenar por Hub
+                        </label>
+                        <span className="rounded-full border border-line bg-card px-2 py-0.5 text-micro font-semibold tabular-nums text-ink-2">
+                          {ordensFiltradas.length} de {totalFiltrado}
+                        </span>
+                      </div>
+                    </div>
+                    {ordensFiltradas.length === 0 ? (
+                      // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
+                      <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-body text-ink-3">
+                        {ordensCarregadas.length > 0 ? (
+                          <>
+                            Nenhuma OS para estes filtros.
+                            <Button variant="secondary" size="sm" onClick={limparFiltros}>
+                              Limpar filtros
+                            </Button>
+                          </>
+                        ) : (
+                          "Nenhuma OS cadastrada ainda."
+                        )}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-caption">
+                          <thead className="sticky top-0 bg-paper text-micro text-ink-3">
+                            <tr className="border-b border-line-soft">
+                              {temEscrita && <th className="w-8 px-2 py-2" />}
+                              <th className="px-2 py-2 text-left font-semibold">Nº</th>
+                              <th className="px-2 py-2 text-left font-semibold">OS</th>
+                              <th className="px-2 py-2 text-left font-semibold">Status</th>
+                              <th className="px-2 py-2 text-left font-semibold">Prioridade</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-line-soft">
+                            {ordensFiltradas.map((ordem) => (
+                              // biome-ignore lint/a11y/useKeyWithClickEvents: mesmo padrão de linha clicável do BacklogGutPage — checkbox interno já é acessível via teclado.
+                              <tr
+                                key={ordem.id}
+                                onClick={() => {
+                                  setOrigemCentral(null);
+                                  setSelecionadaId(ordem.id);
+                                }}
+                                aria-selected={ordem.id === selecionadaId}
+                                className={`cursor-pointer border-l-2 ${
+                                  ordem.id === selecionadaId
+                                    ? "border-orange bg-line-soft"
+                                    : "border-transparent hover:bg-line-soft"
+                                }`}
+                              >
+                                {temEscrita && (
+                                  // biome-ignore lint/a11y/useKeyWithClickEvents: só existe pra impedir o clique no checkbox de também disparar a seleção da linha (checkbox já tem seu próprio onChange).
+                                  <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                      type="checkbox"
+                                      checked={selecionados.has(ordem.id)}
+                                      onChange={() => onToggleSelecionado(ordem.id)}
+                                      aria-label={`Selecionar ${ordem.numero}`}
+                                      className="h-4 w-4 accent-orange"
+                                    />
+                                  </td>
+                                )}
+                                <td className="px-2 py-2 whitespace-nowrap font-brand tabular-nums text-ink-3">
+                                  {rotuloNumeroOrdem(ordem)}
+                                </td>
+                                <td className="px-2 py-2">
+                                  <Tooltip content={resumoTooltipOrdem(ordem)}>
+                                    <div className="min-w-[180px]">
+                                      <p className="truncate font-semibold text-ink">
+                                        {ordem.titulo}
+                                      </p>
+                                      <p className="mt-0.5 truncate text-micro text-ink-3">
+                                        {ordem.clienteNome} · {ordem.categoria} ·{" "}
+                                        {ordem.tecnicoNome ?? "sem técnico"}
+                                      </p>
+                                      {ordem.tipoOs && (
+                                        <div className="mt-1">
+                                          <BadgeHubOs
+                                            tipoOs={ordem.tipoOs}
+                                            dataAgendada={ordem.dataAgendada}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </Tooltip>
+                                </td>
+                                <td className="px-2 py-2 whitespace-nowrap">
+                                  <span
+                                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${statusOsColor(ordem.status)}`}
+                                  >
+                                    {rotuloStatusOs(ordem.status)}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-2 whitespace-nowrap">
+                                  <span
+                                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(ordem.prioridade)}`}
+                                  >
+                                    {PRIORIDADE_LABEL[ordem.prioridade] ?? ordem.prioridade}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-xl border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
+                    {selecionada ? (
+                      <DetalheOs
+                        key={selecionada.id}
+                        selecionada={selecionada}
+                        clienteId={filtros.clienteId !== "todos" ? filtros.clienteId : null}
+                        temEscrita={temEscrita}
+                        salvando={salvando}
+                        onAlterarStatus={onAlterarStatus}
+                        onEditar={() => setEditando(true)}
+                        dadosOs={dadosOs}
+                        onRecarregar={async () => {
+                          await carregar();
+                          if (origemCentral) await resumoCentral.refetch();
+                        }}
+                        onAbrirOsVinculada={(cliente, os) => {
+                          setFiltros((atual) => ({ ...atual, clienteId: cliente }));
+                          setOrigemCentral({ cliente, os });
+                          setSelecionadaId(os);
+                          setVisao("lista");
+                        }}
+                        onAbrirAuvo={(osId) => setAberturaAuvoOsId(osId ?? selecionada.id)}
+                        painelOrcamento={painelOrcamentoOs?.(selecionada.id)}
+                        destinoConversao={
+                          selecionada.chamadoId === conversaoPendente?.chamadoId
+                            ? conversaoPendente.statusDestino
+                            : null
+                        }
+                        onConversaoFinalizada={() => setConversaoPendente(null)}
+                      />
+                    ) : (
+                      <div className="p-8 text-body text-ink-3">
+                        {origemCentral && resumoCentral.isFetching
+                          ? "Carregando OS…"
+                          : origemCentral && (resumoCentral.isError || resumoCentral.data === null)
+                            ? "OS indisponível neste Cliente."
+                            : "Selecione uma OS."}
+                      </div>
+                    )}
+                  </section>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
       {temProximaPagina && (
         <button
           type="button"
@@ -1185,20 +1190,17 @@ export function OrdensServicoPage({
   );
 }
 
+// E00-S29 — este esqueleto cobre SÓ a região da lista/quadro. O cabeçalho, os cartões de KPI, os
+// filtros e as abas agora ficam montados o tempo todo, então desenhar um fantasma deles aqui
+// mostraria a tela duas vezes: a real por cima e a falsa por baixo.
 function SkeletonOperacao() {
   return (
-    <div className="flex flex-col gap-4" aria-label="Carregando chamados">
-      <div className="h-14 animate-pulse rounded-xl bg-line-soft" />
-      <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
-        {["total", "abertas", "planejamento", "execucao", "finalizadas", "criticas"].map((id) => (
-          <div key={id} className="h-16 animate-pulse rounded-lg bg-line-soft" />
-        ))}
-      </div>
-      <div className="h-16 animate-pulse rounded-xl bg-line-soft" />
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]">
-        <div className="h-[480px] animate-pulse rounded-xl bg-line-soft" />
-        <div className="h-[480px] animate-pulse rounded-xl bg-line-soft" />
-      </div>
+    <div
+      className="grid grid-cols-1 gap-3 xl:grid-cols-[360px_1fr]"
+      aria-label="Carregando chamados"
+    >
+      <div className="h-[480px] animate-pulse rounded-xl bg-line-soft" />
+      <div className="h-[480px] animate-pulse rounded-xl bg-line-soft" />
     </div>
   );
 }

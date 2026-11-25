@@ -1,3 +1,4 @@
+import { AvisoCarregando } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -161,7 +162,7 @@ export function VinculoIntervalo({
       setSalvando(false);
     }
   }
-  if (q.isPending) return <output>Carregando vínculo…</output>;
+  if (q.isPending) return <AvisoCarregando>Carregando vínculo…</AvisoCarregando>;
   if (q.isError)
     return (
       <p role="alert">

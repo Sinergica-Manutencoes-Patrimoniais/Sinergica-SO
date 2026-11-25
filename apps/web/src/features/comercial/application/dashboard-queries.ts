@@ -1,7 +1,10 @@
 /** Queries do dashboard comercial (E03-S08), padrão TanStack Query do projeto. Só leitura — sem
  * mutation nesta story. */
 
-import { useQuery } from "@tanstack/react-query";
+// E00-S29 — as seis consultas deste painel são chaveadas pelo período. Trocar o período
+// zerava os seis gráficos ao mesmo tempo antes de encher de novo; `keepPreviousData` mantém o
+// período anterior na tela até o novo chegar.
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { DashboardGateway, PeriodoDashboard } from "./dashboard-gateway";
 
 export const dashboardQueryKeys = {
@@ -25,6 +28,7 @@ export function useConversaoEtapas(
     queryKey: dashboardQueryKeys.conversao(periodo),
     queryFn: () => gateway.conversaoEtapas(periodo),
     enabled: habilitado,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -37,6 +41,7 @@ export function useCicloVenda(
     queryKey: dashboardQueryKeys.ciclo(periodo),
     queryFn: () => gateway.cicloVenda(periodo),
     enabled: habilitado,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -49,6 +54,7 @@ export function useWinLoss(
     queryKey: dashboardQueryKeys.winLoss(periodo),
     queryFn: () => gateway.winLoss(periodo),
     enabled: habilitado,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -61,6 +67,7 @@ export function useTicketMedio(
     queryKey: dashboardQueryKeys.ticket(periodo),
     queryFn: () => gateway.ticketMedio(periodo),
     enabled: habilitado,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -73,6 +80,7 @@ export function useDescontoMedio(
     queryKey: dashboardQueryKeys.desconto(periodo),
     queryFn: () => gateway.descontoMedio(periodo),
     enabled: habilitado,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -85,5 +93,6 @@ export function useOrigemLeads(
     queryKey: dashboardQueryKeys.origem(periodo),
     queryFn: () => gateway.origemLeads(periodo),
     enabled: habilitado,
+    placeholderData: keepPreviousData,
   });
 }
