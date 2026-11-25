@@ -2716,6 +2716,20 @@
     "descricao": "Mapa planos legados"
   },
   {
+    "nome": "VITE_SSO_MARKETING_INDICADORES_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "gate": "marketing.sso_indicadores_meta_gate",
+    "descricao": "E06-S01: tela de indicadores das campanhas da Meta no modulo Marketing (gasto, cliques, leads, custo por lead por campanha/conjunto/anuncio)."
+  },
+  {
+    "nome": "VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "gate": "marketing.sso_indicadores_meta_gate",
+    "descricao": "E06-S01: tela de receita por campanha (anuncio para lead para oportunidade para contrato). Exige permissao no Marketing e no Comercial."
+  },
+  {
     "nome": "VITE_SSO_MATERIAIS_ATUAIS_PORTAL_MEDIADOS_ENABLED",
     "padrao": false,
     "jornada": "portal",

@@ -1,0 +1,118 @@
+{
+  "_comentario": "E06-S01 — conta de demonstração usada enquanto a Meta não está conectada (AC-10). Números plausíveis para manutenção predial: uma campanha de PMOC que converte, uma institucional que gasta e não converte (prova do AC-18) e uma de retrofit no meio. Os valores aqui são a BASE diária; `criarMetaAdsFixture` aplica uma variação determinística por anúncio e dia.",
+  "campanhas": [
+    {
+      "campanhaExternaId": "900000000000001",
+      "nome": "PMOC — Síndicos SP",
+      "objetivo": "OUTCOME_LEADS",
+      "situacao": "ACTIVE"
+    },
+    {
+      "campanhaExternaId": "900000000000002",
+      "nome": "Retrofit elétrico",
+      "objetivo": "OUTCOME_LEADS",
+      "situacao": "ACTIVE"
+    },
+    {
+      "campanhaExternaId": "900000000000003",
+      "nome": "Institucional — marca",
+      "objetivo": "OUTCOME_AWARENESS",
+      "situacao": "PAUSED"
+    }
+  ],
+  "conjuntos": [
+    {
+      "conjuntoExternoId": "800000000000001",
+      "campanhaExternaId": "900000000000001",
+      "nome": "Síndicos profissionais",
+      "situacao": "ACTIVE"
+    },
+    {
+      "conjuntoExternoId": "800000000000002",
+      "campanhaExternaId": "900000000000001",
+      "nome": "Administradoras",
+      "situacao": "ACTIVE"
+    },
+    {
+      "conjuntoExternoId": "800000000000003",
+      "campanhaExternaId": "900000000000002",
+      "nome": "Prédios anos 80",
+      "situacao": "ACTIVE"
+    },
+    {
+      "conjuntoExternoId": "800000000000004",
+      "campanhaExternaId": "900000000000003",
+      "nome": "Público amplo",
+      "situacao": "PAUSED"
+    }
+  ],
+  "anuncios": [
+    {
+      "anuncioExternoId": "700000000000001",
+      "conjuntoExternoId": "800000000000001",
+      "nome": "Carrossel — checklist PMOC",
+      "situacao": "ACTIVE"
+    },
+    {
+      "anuncioExternoId": "700000000000002",
+      "conjuntoExternoId": "800000000000001",
+      "nome": "Vídeo — multa do PMOC",
+      "situacao": "ACTIVE"
+    },
+    {
+      "anuncioExternoId": "700000000000003",
+      "conjuntoExternoId": "800000000000002",
+      "nome": "Imagem — proposta em 24h",
+      "situacao": "ACTIVE"
+    },
+    {
+      "anuncioExternoId": "700000000000004",
+      "conjuntoExternoId": "800000000000003",
+      "nome": "Vídeo — quadro antigo pega fogo",
+      "situacao": "ACTIVE"
+    },
+    {
+      "anuncioExternoId": "700000000000005",
+      "conjuntoExternoId": "800000000000004",
+      "nome": "Institucional — quem somos",
+      "situacao": "ARCHIVED"
+    }
+  ],
+  "numerosPorAnuncio": {
+    "700000000000001": {
+      "gastoCentavos": 4200,
+      "alcance": 1800,
+      "impressoes": 2600,
+      "cliques": 62,
+      "leads": 3
+    },
+    "700000000000002": {
+      "gastoCentavos": 6100,
+      "alcance": 2400,
+      "impressoes": 3900,
+      "cliques": 95,
+      "leads": 5
+    },
+    "700000000000003": {
+      "gastoCentavos": 3300,
+      "alcance": 1200,
+      "impressoes": 1700,
+      "cliques": 28,
+      "leads": 1
+    },
+    "700000000000004": {
+      "gastoCentavos": 2800,
+      "alcance": 900,
+      "impressoes": 1400,
+      "cliques": 21,
+      "leads": 1
+    },
+    "700000000000005": {
+      "gastoCentavos": 1900,
+      "alcance": 3100,
+      "impressoes": 5200,
+      "cliques": 14,
+      "leads": 0
+    }
+  }
+}

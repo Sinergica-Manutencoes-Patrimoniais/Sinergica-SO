@@ -38,6 +38,14 @@
   # deslocamento e as Fontes de Demanda. Declarada aqui pela primeira vez: sem ela, ligar os
   # Trechos não traz a tela, porque o bloco inteiro não renderiza.
   VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
+  # E06-S01: modulo Marketing — indicadores das campanhas da Meta e rastreio ate a venda.
+  # LIGADA em 25/11/2026 para a exploracao (autorizacao do Lucas); gate
+  # marketing.sso_indicadores_meta_gate aberto na propria migration 1900. So LEITURA: nunca
+  # escreve na API da Meta (fora de escopo, ADR-1699).
+  VITE_SSO_MARKETING_INDICADORES_ENABLED = "true"
+  # E06-S01: receita por campanha (anuncio -> lead -> oportunidade -> contrato). LIGADA no mesmo
+  # dia. Exige permissao no Marketing E no Comercial — a RPC recusa no servidor quem nao tem.
+  VITE_SSO_MARKETING_RECEITA_CAMPANHA_ENABLED = "true"
   # E02-S16 (ADR-1700): Instagram Direct no Atendimento — aba de conexão em Atendimento →
   # Configurações → Instagram. LIGADA em 25/11/2026 por decisão do Lucas. Desligar devolve a aba
   # ao aviso de recurso desligado; NÃO derruba canal já conectado (quem autoriza o recebimento é o

@@ -153,5 +153,22 @@ tela ou story antiga, prevalece ele. Fonte:
 | **API de domínio** | Contrato único, autenticado e versionado pelo qual Módulo de Campo e MCP consultam e **propõem** dados. Aplica autenticação, autorização, validação, idempotência e auditoria. Nenhuma interface externa grava direto no cadastro oficial. | Edge Function de propósito específico · SQL genérico (nunca exposto). |
 | **MCP (SSO)** | Camada conversacional controlada sobre a **API de domínio** — nunca sobre o banco. Primeira entrega em leitura; escrita posterior **apenas em staging**, com confirmação. Herda usuário, escopo, permissões e auditoria. | Servidores MCP de ferramentas de desenvolvimento. |
 | **Fator de preço** | Multiplicador sobre o custo. **Fator 1,5 = preço equivalente a 150% do custo, isto é, markup de 50%** — não 1,5%. Tributos e parâmetros são configuráveis, nunca fixos no código. | Margem percentual sobre a venda. |
+
+## Marketing — indicadores da Meta e atribuição (E06-S01, 25/11/2026)
+
+Vocabulário do bounded context Marketing, introduzido pela E06-S01 (ADR-1699). Os quatro
+primeiros termos espelham a hierarquia da plataforma de anúncios; os demais são do SO.
+
+| Termo | Definição | NÃO confundir com |
+|---|---|---|
+| **Conta de anúncios** | A conta da empresa na plataforma (Meta), identificada por `act_<id>`. Guarda nome, moeda e fuso; **nunca** a credencial, que vive no Vault. | Conta comercial (o cliente, `pcm.clientes`) · Conta de usuário. |
+| **Campanha** | Agrupamento de veiculação com um objetivo, dentro de uma Conta de anúncios. Espelho do que a Meta informa — o SO nunca a cria nem altera (escrita na plataforma está fora de escopo, ADR-1699). | Campanha de e-mail · Régua de cobrança (Financeiro). |
+| **Conjunto** | Agrupamento de Anúncios dentro de uma Campanha, onde moram a segmentação e o orçamento. | Conjunto de serviços de uma proposta (Comercial). |
+| **Anúncio** | A peça veiculada, dentro de um Conjunto. É o grão de toda métrica: o desempenho é sempre por Anúncio e dia. | Criativo (a arte em si, que o SO não guarda nesta entrega). |
+| **Métrica diária do anúncio** | Gasto (em centavos), alcance, impressões, cliques e leads de um Anúncio **em um dia**. Única por `(anúncio, dia)` — é essa chave que torna a sincronização idempotente. | Indicador derivado (custo por lead, CTR, CPC, CPM), que é calculado, nunca gravado. |
+| **Link rastreado** | URL publicável associada a um Anúncio, com um token opaco de 12 caracteres que permite reconhecer a origem de quem chega. Desligar é `ativo = false`; link publicado nunca é apagado. | UTM (parâmetro de campanha na URL) · Código público de QR (PCM). |
+| **Entrada por anúncio** | O lead que chegou por um Anúncio. Pode ser **sem origem** quando o token falta ou é desconhecido — estado legítimo, nunca atribuído ao anúncio errado. Vincula-se a no máximo uma Oportunidade do Comercial. | Oportunidade (Comercial) · Conversa (Atendimento). |
+| **Alcance (soma diária)** | A soma dos alcances diários do período. **Não é público único**: alcance é gente distinta, e somar dias conta a mesma pessoa de novo. Exibido sempre com esse rótulo. | Alcance do período (métrica deduplicada da Meta, fora do escopo da E06-S01) · Impressões. |
+| **Janela de reprocessamento** | O número de dias recentes que toda sincronização refaz (padrão 7). Existe porque a Meta revisa números retroativamente; sincronizar só o dia anterior faria o relatório divergir do Gerenciador de Anúncios. | Backfill histórico (carga inicial do passado, fora do escopo da E06-S01). |
 | **Instagram Direct** | Conversa privada da conta profissional do Instagram, recebida pelo webhook da Meta e atendida no **mesmo Inbox** do WhatsApp (ADR-1700). Texto puro, teto de **1000 bytes** por mensagem e **janela de 24 h** desde a última mensagem do contato. Mídia **não** é guardada: entra como aviso (`[imagem]`, `[story]`), e quem precisa ver abre o app do Instagram. | Comentário de post no Instagram (automação de comentário, E02-S17) · Direct respondido pelo Zé — o agente de IA atende só WhatsApp. |
 | **Canal Meta** | Linha de `atendimento.canais_externos` com `provedor` em `meta-instagram`, `meta-messenger` ou `meta-whatsapp`, cujas credenciais (app secret, token da conta, verify token) vivem **no Vault**, uma por canal, apontadas por `atendimento.meta_canal`. O webhook traz o canal **no caminho da URL** e confere a assinatura daquele canal. | Canal Evolution (`provedor = evolution-api`) · Token global de aplicativo — não existe mais como caminho normal. |

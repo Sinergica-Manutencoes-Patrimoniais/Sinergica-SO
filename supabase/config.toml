@@ -15,7 +15,7 @@ port = 55321
 # query a uma tabela fora de `public` falha. O MESMO ajuste precisa ser feito manualmente no
 # projeto hospedado (Dashboard → Settings → API → Exposed schemas) — não é aplicado por
 # migration. Ver spec.md desta story (E00-S05) e o runbook de provisionamento.
-schemas = ["public", "graphql_public", "pcm", "atendimento", "comercial", "relacionamento", "config", "financeiro"]
+schemas = ["public", "graphql_public", "pcm", "atendimento", "comercial", "relacionamento", "config", "financeiro", "marketing"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
@@ -411,6 +411,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.atendimento-metrics]
+verify_jwt = true
+# E06-S01: sincronizacao dos indicadores da Meta. verify_jwt = true — a funcao exige JWT e
+# relê a permissao de escrita no modulo Marketing no servidor (AC-12).
+[functions.marketing-sincronizar-meta]
 verify_jwt = true
 [functions.pcm-cronograma-xlsx-receber]
 verify_jwt = true

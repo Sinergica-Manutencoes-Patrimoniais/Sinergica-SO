@@ -172,6 +172,18 @@ export interface ComercialNavItem {
   view: ComercialView;
 }
 
+// Sub-navegação do Marketing — E06-S01 (specs/E06-S01-indicadores-meta-rastreio/). O módulo
+// deixou de ser placeholder "Em construção" com os indicadores da Meta e o rastreio até a venda.
+// Calendário editorial e geração de conteúdo (descrição do módulo em `modulos.ts`) continuam
+// fora e seguem anunciados como não ativados.
+export type MarketingView = "indicadores" | "receita-campanha";
+
+export interface MarketingNavItem {
+  label: string;
+  icon: LucideIcon;
+  view: MarketingView;
+}
+
 // Sub-navegação do Guia do SO — documentação de onboarding (features/guia/), último item da
 // barra de módulos. Mesmo padrão useState de abas.
 export interface GuiaNavItem {
@@ -276,6 +288,11 @@ export const COMERCIAL_NAV: ComercialNavItem[] = [
   { label: "Contratos", icon: FileSignature, view: "contratos" },
   { label: "Precificação", icon: Calculator, view: "precificacao" },
   { label: "Configuração do funil", icon: SlidersHorizontal, view: "config-funil" },
+];
+
+export const MARKETING_NAV: MarketingNavItem[] = [
+  { label: "Indicadores", icon: TrendingUp, view: "indicadores" },
+  { label: "Receita por campanha", icon: DollarSign, view: "receita-campanha" },
 ];
 
 export const GUIA_NAV: GuiaNavItem[] = [
