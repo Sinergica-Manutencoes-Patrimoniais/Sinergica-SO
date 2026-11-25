@@ -4,7 +4,7 @@
 //
 // A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
 // OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
-import { Button, Skeleton } from "@sinergica/ui";
+import { Button, RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -34,6 +34,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
+import { flagLigada } from "../../../config/flags-sso";
 import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
 import { criarChamado } from "../application/chamados";
 import type {
@@ -46,7 +47,11 @@ import type {
   QualidadeClienteResumo,
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
-import { obterAlma, salvarAlma } from "../application/cliente-alma";
+import {
+  useClienteAlma,
+  useClienteMemoriaResumo,
+  useSalvarClienteAlma,
+} from "../application/cliente-memoria-queries";
 import {
   criarResponsavel,
   editarResponsavel,
@@ -67,7 +72,6 @@ import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
 import { NovoChamadoModal } from "../components/NovoChamadoModal";
 import { OrdemServicoDetalheDrawer } from "../components/OrdemServicoDetalheDrawer";
 import { PainelBacklog } from "../components/PainelBacklog";
-import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { PainelEquipamentos } from "../components/PainelEquipamentos";
 import { PainelFerramentasCliente as PainelFerramentasClienteTab } from "../components/PainelFerramentasCliente";
 import { PainelHistorico } from "../components/PainelHistorico";
@@ -85,11 +89,11 @@ import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-36
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
 import { supabaseClienteResponsaveisAdapter } from "../infrastructure/supabase-cliente-responsaveis-adapter";
 import { CalendarioContratualWorkspace } from "../interfaces/calendario-contratual/Workspace";
+import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { PendenciasTecnicasWorkspace } from "../interfaces/pendencias-tecnicas/Workspace";
 import { PlanoManutencaoWorkspace } from "../interfaces/plano-manutencao/Workspace";
 import { VisitasWorkspace } from "../interfaces/visitas/Workspace";
 import { EstruturaClientePage } from "./EstruturaClientePage";
-import { flagLigada } from "../../../config/flags-sso";
 
 type Estado =
   | { fase: "carregando" }
@@ -497,7 +501,13 @@ export function VisaoClientePage({
 
       {aba === "os" && (
         <div className="flex flex-col gap-3">
-          {user && flagLigada("VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED") && <PainelLateralBacklog key={`${user.id}:${cliente.id}`} userId={user.id} clienteId={cliente.id} />}
+          {user && flagLigada("VITE_SSO_CLIENTE360_BACKLOG_ESCOPO_ENABLED") && (
+            <PainelLateralBacklog
+              key={`${user.id}:${cliente.id}`}
+              userId={user.id}
+              clienteId={cliente.id}
+            />
+          )}
           {periodo && (
             <p className="text-caption text-ink-3">
               Filtrado por período (OS criadas entre{" "}
@@ -537,7 +547,11 @@ export function VisaoClientePage({
             clienteNome={cliente.nome}
             userId={user.id}
           />
-          <PendenciasTecnicasWorkspace key={`pendencias-${user.id}-${cliente.id}`} userId={user.id} clienteId={cliente.id} />
+          <PendenciasTecnicasWorkspace
+            key={`pendencias-${user.id}-${cliente.id}`}
+            userId={user.id}
+            clienteId={cliente.id}
+          />
           <PreventivasWorkspace
             key={cliente.id}
             clienteId={cliente.id}
@@ -577,7 +591,13 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <EstruturaClientePage key={`${user.id}:${cliente.id}`} cliente={cliente} temEscrita={temEscrita} userId={user.id} onAbrirOs={abrirDetalheOs} />
+        <EstruturaClientePage
+          key={`${user.id}:${cliente.id}`}
+          cliente={cliente}
+          temEscrita={temEscrita}
+          userId={user.id}
+          onAbrirOs={abrirDetalheOs}
+        />
       )}
 
       {aba === "sistemas" && user && (
@@ -1615,77 +1635,145 @@ function PainelAlmaCliente({
   clienteId: string;
   temEscrita: boolean;
 }) {
+  // E02-S24: recurso desligado se ANUNCIA — `return null` silencioso é indistinguível de
+  // "não foi feito" (é o que a E00-S28 mediu e cobra).
+  if (!flagLigada("VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED")) {
+    return (
+      <RecursoNaoAtivado
+        recurso="Memória e alma do cliente para o Zé"
+        podeAdministrar={false}
+        faltando={["VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED"]}
+      />
+    );
+  }
+  return <ConteudoMemoriaCliente clienteId={clienteId} temEscrita={temEscrita} />;
+}
+
+/** E02-S24: convertido de `useState`+`useEffect`+`carregar()` para TanStack Query nesta story —
+ * a regra do projeto é que tela antiga converte quando for tocada, e esta foi tocada para ganhar
+ * o resumo rolante ao lado da alma. */
+function ConteudoMemoriaCliente({
+  clienteId,
+  temEscrita,
+}: {
+  clienteId: string;
+  temEscrita: boolean;
+}) {
   const { user } = useAuth();
-  const [conteudo, setConteudo] = useState("");
-  const [editando, setEditando] = useState(false);
-  const [carregando, setCarregando] = useState(true);
-  const [salvando, setSalvando] = useState(false);
+  const alma = useClienteAlma(supabaseClienteAlmaAdapter, clienteId);
+  const salvarMutation = useSalvarClienteAlma(supabaseClienteAlmaAdapter, clienteId);
+  const [rascunho, setRascunho] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
-    obterAlma(supabaseClienteAlmaAdapter, clienteId)
-      .then(setConteudo)
-      .finally(() => setCarregando(false));
-  }, [clienteId]);
+  const editando = rascunho !== null;
+  const conteudo = rascunho ?? alma.data ?? "";
+  const carregando = alma.isPending;
+  const salvando = salvarMutation.isPending;
+
+  function setConteudo(valor: string) {
+    setRascunho(valor);
+  }
+  function setEditando(ligado: boolean) {
+    setRascunho(ligado ? (alma.data ?? "") : null);
+    setErro(null);
+  }
 
   async function salvar() {
-    if (!user) return;
-    setSalvando(true);
+    if (!user || rascunho === null) return;
     setErro(null);
     try {
-      await salvarAlma(supabaseClienteAlmaAdapter, clienteId, conteudo, user.id);
-      setEditando(false);
+      await salvarMutation.mutateAsync({ conteudo: rascunho, userId: user.id });
+      setRascunho(null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
-    } finally {
-      setSalvando(false);
     }
   }
 
   return (
-    <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-body font-semibold text-ink">Alma do cliente</h3>
-          <p className="mt-0.5 text-caption text-ink-3">
-            Particularidades de comunicação que o Zé usa como contexto (ex.: "prefere áudio, é
-            direto")
-          </p>
-        </div>
-        {temEscrita && !editando && (
-          <button type="button" onClick={() => setEditando(true)} className="btn-secondary">
-            Editar
-          </button>
-        )}
-      </div>
-      <div className="mt-3">
-        {carregando ? (
-          <Skeleton className="h-4 w-40" />
-        ) : editando ? (
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={conteudo}
-              onChange={(e) => setConteudo(e.target.value)}
-              className="input min-h-24 w-full resize-y"
-              placeholder="Ex: Síndico prefere áudio a texto, é direto e não gosta de rodeio."
-            />
-            {erro && <p className="text-body text-red-600">{erro}</p>}
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setEditando(false)} className="btn-secondary">
-                Cancelar
-              </button>
-              <button
-                type="button"
-                disabled={salvando}
-                onClick={salvar}
-                className="h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
-              >
-                {salvando ? "Salvando…" : "Salvar"}
-              </button>
-            </div>
+    <>
+      <section className="rounded-lg border border-line bg-card p-4 shadow-raised">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-body font-semibold text-ink">Alma do cliente</h3>
+            <p className="mt-0.5 text-caption text-ink-3">
+              Particularidades de comunicação que o Zé usa como contexto (ex.: "prefere áudio, é
+              direto")
+            </p>
           </div>
+          {temEscrita && !editando && (
+            <button type="button" onClick={() => setEditando(true)} className="btn-secondary">
+              Editar
+            </button>
+          )}
+        </div>
+        <div className="mt-3">
+          {carregando ? (
+            <Skeleton className="h-4 w-40" />
+          ) : editando ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={conteudo}
+                onChange={(e) => setConteudo(e.target.value)}
+                className="input min-h-24 w-full resize-y"
+                placeholder="Ex: Síndico prefere áudio a texto, é direto e não gosta de rodeio."
+              />
+              {erro && <p className="text-body text-red-600">{erro}</p>}
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setEditando(false)} className="btn-secondary">
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={salvando}
+                  onClick={salvar}
+                  className="h-9 rounded-md bg-navy px-3 text-body font-semibold text-white hover:bg-navy-deep disabled:opacity-50"
+                >
+                  {salvando ? "Salvando…" : "Salvar"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-body text-ink-2">{conteudo || "Nenhuma alma cadastrada ainda."}</p>
+          )}
+        </div>
+      </section>
+      <PainelMemoriaResumo clienteId={clienteId} />
+    </>
+  );
+}
+
+/** E02-S24 AC-3: resumo rolante das conversas que já saíram da janela crua (último mês). Gerado
+ * pelo job diário `atendimento-memoria-resumo`; aqui é só leitura — editar à mão divergiria do
+ * que o Zé de fato recebe no prompt. Vazio é estado legítimo e DITO, não escondido: ou ainda não
+ * há conversa antiga o bastante, ou o job ainda não rodou. */
+function PainelMemoriaResumo({ clienteId }: { clienteId: string }) {
+  const resumo = useClienteMemoriaResumo(supabaseClienteAlmaAdapter, clienteId);
+
+  return (
+    <section className="mt-3 rounded-lg border border-line bg-card p-4 shadow-raised">
+      <h3 className="text-body font-semibold text-ink">Memória das conversas antigas</h3>
+      <p className="mt-0.5 text-caption text-ink-3">
+        Resumo automático do que saiu do último mês de conversa — o Zé recebe isto junto com a alma.
+        Atualizado uma vez por dia; somente leitura.
+      </p>
+      <div className="mt-3">
+        {resumo.isPending ? (
+          <Skeleton className="h-4 w-56" />
+        ) : resumo.data ? (
+          <>
+            <p className="whitespace-pre-line text-body text-ink-2">{resumo.data.resumo}</p>
+            <p className="mt-2 text-caption text-ink-3">
+              Período resumido:{" "}
+              {resumo.data.periodoInicio ? formatarData(resumo.data.periodoInicio) : "—"} a{" "}
+              {resumo.data.periodoFim ? formatarData(resumo.data.periodoFim) : "—"} · gerado em{" "}
+              {formatarData(resumo.data.atualizadoEm)}
+            </p>
+          </>
         ) : (
-          <p className="text-body text-ink-2">{conteudo || "Nenhuma alma cadastrada ainda."}</p>
+          <p className="text-body text-ink-2">
+            Ainda não há resumo para este cliente. Ele é gerado quando existe conversa com mais de
+            30 dias — até lá o Zé lê o histórico recente direto.
+          </p>
         )}
       </div>
     </section>

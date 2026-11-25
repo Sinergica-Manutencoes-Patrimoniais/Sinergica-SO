@@ -4481,5 +4481,11 @@
     "padrao": false,
     "jornada": "outra",
     "descricao": "Visibilidade orcamento"
+  },
+  {
+    "nome": "VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED",
+    "padrao": false,
+    "jornada": "outra",
+    "descricao": "E02-S24: alma do cliente + resumo rolante de memoria do Ze na Visao 360 (aba Comunicacao)"
   }
 ]

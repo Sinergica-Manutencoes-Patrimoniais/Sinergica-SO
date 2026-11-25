@@ -21,7 +21,10 @@ import {
   interpretarConfirmacao,
   montarResumoPendentes,
 } from "../_shared/confirmacao-texto.ts";
-import { comporContextoCliente } from "../_shared/memoria-cliente.ts";
+import {
+  comporContextoClienteComOrcamento,
+  limitesMemoria,
+} from "../_shared/memoria-cliente.ts";
 import {
   avaliarMotivoHandoff,
   comporPromptPersona,
@@ -30,6 +33,10 @@ import {
 } from "../_shared/atendimento-runtime.ts";
 
 const FN = "pcm-ze-agent";
+
+/** E02-S24: teto de caracteres que alma+resumo podem ocupar no prompt. A janela crua e o prompt
+ * de sistema têm o resto — se o resumo crescer, quem cede espaço é ele, nunca a alma. */
+const ORCAMENTO_CONTEXTO_CLIENTE_CHARS = 6000;
 
 const InputSchema = z.object({
   queueKey: z.string().optional(),
@@ -260,8 +267,18 @@ async function processarChamados(
     ? await buscarConhecimentoRelevante(db, persona.id, contexto)
     : "";
   // E02-S24: alma+resumo SEMPRE buscados pelo `config.client_id` desta conversa — nunca de outro
-  // cliente (AC-4, isolamento). `comporContextoCliente` só concatena o que já veio filtrado.
+  // cliente (AC-4, isolamento). `comporContextoCliente*` só concatena o que já veio filtrado.
   const memoriaCliente = await buscarMemoriaCliente(db, config.client_id);
+  // Caso de borda da spec: contexto maior que o budget prioriza alma + janela crua e trunca o
+  // resumo. Truncar em silêncio é como o contexto fica errado sem ninguém perceber — por isso o log.
+  const { contexto: contextoCliente, resumoTruncado } = comporContextoClienteComOrcamento(
+    memoriaCliente.alma,
+    memoriaCliente.resumo,
+    ORCAMENTO_CONTEXTO_CLIENTE_CHARS,
+  );
+  if (resumoTruncado) {
+    console.warn(JSON.stringify({ ts: new Date().toISOString(), fn: FN, nivel: "warn", msg: "resumo de memória truncado por budget", clienteId: config.client_id }));
+  }
   // E02-S31 AC-2: bloqueia antes de gastar se a quota mensal já estourou.
   if (await quotaIaExcedida()) {
     await finalizarFila(db, item.id, "skipped", now);
@@ -277,7 +294,7 @@ async function processarChamados(
       persona.prompt_sistema,
       persona.base_conhecimento,
       conhecimentoRag,
-      comporContextoCliente(memoriaCliente.alma, memoriaCliente.resumo),
+      contextoCliente,
     ),
     contexto,
     config.client_id,
@@ -635,13 +652,20 @@ async function buscarConfig(db: UntypedSupabaseClient, remoteJid: string) {
   return data as { client_id: string; modo: ModoZe; bot_jid: string | null } | null;
 }
 
+/** E02-S24 AC-2: a "janela crua" é o último mês — o que é mais antigo que isso só chega ao
+ * modelo pelo resumo rolante (`cliente_memoria_resumo`), nunca cru. Antes desta story o corte era
+ * só por quantidade (20 mensagens), então uma conversa parada há meses voltava inteira e crua, e
+ * o resumo ficava sendo pago duas vezes pelo mesmo conteúdo. O limite de 20 continua valendo
+ * dentro da janela, como teto de budget. */
 async function buscarMensagens(db: UntypedSupabaseClient, instanceId: string, remoteJid: string): Promise<WaMessage[]> {
+  const { janelaCruaDesde } = limitesMemoria(new Date());
   const { data, error } = await db
     .schema("atendimento")
     .from("wa_messages")
     .select("id,instance_id,remote_jid,sender_jid,content,received_at")
     .eq("instance_id", instanceId)
     .eq("remote_jid", remoteJid)
+    .gte("received_at", janelaCruaDesde.toISOString())
     .order("received_at", { ascending: false })
     .limit(20);
   if (error) throw error;

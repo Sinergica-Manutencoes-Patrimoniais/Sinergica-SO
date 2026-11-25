@@ -412,6 +412,10 @@ verify_jwt = false
 
 [functions.atendimento-metrics]
 verify_jwt = true
+# E02-S24: job do resumo rolante de memória por cliente (acionado pelo cron de 1880, com
+# service_role). `verify_jwt = true` + `requireServiceRole` por dentro — nunca chamada do browser.
+[functions.atendimento-memoria-resumo]
+verify_jwt = true
 [functions.pcm-cronograma-xlsx-receber]
 verify_jwt = true
 [functions.pcm-evidencia-material-verificar]

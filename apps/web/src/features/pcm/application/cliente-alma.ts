@@ -13,3 +13,8 @@ export function salvarAlma(
 ) {
   return gateway.salvar(clienteId, validarAlma(conteudo), userId);
 }
+
+/** E02-S24 AC-3: só leitura — quem escreve o resumo rolante é o job `atendimento-memoria-resumo`. */
+export function obterResumoMemoria(gateway: ClienteAlmaGateway, clienteId: string) {
+  return gateway.obterResumo(clienteId);
+}

@@ -38,6 +38,13 @@
   # deslocamento e as Fontes de Demanda. Declarada aqui pela primeira vez: sem ela, ligar os
   # Trechos não traz a tela, porque o bloco inteiro não renderiza.
   VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
+  # E02-S24: alma do cliente + resumo rolante de memória do Zé (Visão 360 → Comunicação).
+  # LIGADA em 25/11/2026 (Lucas autorizou abrir o necessário para explorar). Desligar faz a seção
+  # ANUNCIAR que o recurso não está ativado — não some da tela.
+  # Procedimento de abertura/fechamento: só esta variável. Não há gate de banco novo; o lado
+  # servidor (job de resumo) é controlado pelo cron `atendimento_memoria_resumo_diario`
+  # (`select cron.unschedule('atendimento_memoria_resumo_diario')` para parar de gerar resumo).
+  VITE_SSO_ZE_MEMORIA_CLIENTE_ENABLED = "true"
 
 # SPA: todas as rotas servem index.html
 [[redirects]]
