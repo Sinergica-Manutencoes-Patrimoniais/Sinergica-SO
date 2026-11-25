@@ -1,6 +1,6 @@
 # 003 — Primeira pintura: shell inline e fonte sem bloqueio
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: cc104969
 - **Severity**: HIGH
 - **Category**: Percepção
