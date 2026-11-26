@@ -76,6 +76,9 @@ export function ContratosPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [encerrandoId, setEncerrandoId] = useState<string | null>(null);
   const [motivoEncerramento, setMotivoEncerramento] = useState("");
+  // Mesma causa do DEF-17: hook depois de return condicional derruba a árvore quando o estado
+  // muda e a contagem de hooks diverge entre renders. Todo hook antes de qualquer return.
+  const mostrarEsqueleto = useCargaVisivel(contratosQuery.isPending);
 
   if (!temLeitura) {
     return (
@@ -97,7 +100,6 @@ export function ContratosPage() {
     );
   }
 
-  const mostrarEsqueleto = useCargaVisivel(contratosQuery.isPending);
   const contratos = contratosQuery.data ?? [];
   const nomePorConta = new Map((contasQuery.data ?? []).map((c) => [c.id, c.nome]));
 

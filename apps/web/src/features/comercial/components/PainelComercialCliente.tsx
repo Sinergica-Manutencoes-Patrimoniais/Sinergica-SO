@@ -67,6 +67,12 @@ export function PainelComercialCliente({
     temLeitura,
   );
   const criarLevantamento = useCriarLevantamento(supabaseLevantamentoAdapter);
+  // DEF-17: este hook ficava depois dos returns condicionais abaixo (sem acesso, erro de carga,
+  // e a troca da lista pelo editor de propostas). Abrir uma oportunidade reduzia a contagem de
+  // hooks entre um render e o seguinte — "Rendered fewer hooks than expected" — e, sem error
+  // boundary acima, o React derrubava a árvore e a área da aplicação ficava em branco, sem menu
+  // nem mensagem. Todo hook vem antes de qualquer return.
+  const mostrarEsqueleto = useCargaVisivel(oportunidadesQuery.isPending);
 
   // Sem o módulo, a aba não mostra dado de funil — mas também não finge que a Conta não existe.
   if (!temLeitura) {
@@ -104,7 +110,6 @@ export function PainelComercialCliente({
   }
 
   const levantamentos = levantamentosQuery.data ?? [];
-  const mostrarEsqueleto = useCargaVisivel(oportunidadesQuery.isPending);
 
   return (
     <div className="space-y-3">
