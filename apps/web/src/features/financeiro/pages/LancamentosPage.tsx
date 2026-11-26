@@ -34,7 +34,11 @@ import {
 import { categoriasRaiz, subcategoriasDe } from "../domain/categoria";
 import type { CategoriaItem } from "../domain/categoria";
 import type { ContaBancariaItem } from "../domain/conta-bancaria";
-import { centavosParaReais, reaisParaCentavos } from "../domain/dinheiro";
+import {
+  centavosParaReais,
+  centavosParaReaisComSinal,
+  reaisParaCentavos,
+} from "../domain/dinheiro";
 import { gerarCsvLancamentos } from "../domain/exportacao";
 import { estaConciliado, podeExcluirOuAlterarValor } from "../domain/lancamento";
 import type {
@@ -522,7 +526,9 @@ function LancamentosPageContexto() {
                       Baixar comprovante
                     </Button>
                   )}
-                  {temEscrita && user?.id && <PublicarCobrancaPortal usuario={user.id} lancamento={lancamento} />}
+                  {temEscrita && user?.id && (
+                    <PublicarCobrancaPortal usuario={user.id} lancamento={lancamento} />
+                  )}
                 </div>
               ),
             },
@@ -639,7 +645,7 @@ function Totalizador({
       <p
         className={`mt-1 text-title font-semibold ${tom === "positivo" ? "text-success" : "text-danger"}`}
       >
-        R$ {centavosParaReais(Math.abs(valorCentavos))}
+        R$ {centavosParaReaisComSinal(valorCentavos)}
       </p>
     </div>
   );

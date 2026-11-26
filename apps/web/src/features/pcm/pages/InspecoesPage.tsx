@@ -670,7 +670,10 @@ export function InspecoesPage({
             <button
               type="button"
               onClick={() => setModalAtivo("importar-pdf")}
-              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-navy px-2 text-caption font-semibold text-navy hover:bg-info-soft"
+              // DEF-32: era `border-navy`/`text-navy` — no tema escuro, navy e card ficam quase na
+              // mesma luminância (medido 1.45:1), o botão parece desabilitado mesmo não estando.
+              // `info` é o par já usado no hover (`bg-info-soft`) e passa 4.5:1 nos dois temas.
+              className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-info px-2 text-caption font-semibold text-info hover:bg-info-soft"
             >
               <FileText className="h-4 w-4" />
               PDF
@@ -1035,11 +1038,16 @@ function KpiInspecao({
   tone: "danger" | "warning" | "success" | "muted" | "white";
   className?: string;
 }) {
+  // DEF-32: `text-{tom}-soft`/`-line` são tokens de fundo — no tema escuro eles escurecem junto
+  // com o fundo e, sobre `bg-navy`, a razão de contraste cai pra ~1.2:1 (medido). `text-{tom}` cru
+  // também não serve: sozinho sobre `bg-navy` cai pra ~2.2–2.7:1 no tema claro. A combinação
+  // `bg-{tom}-soft` + `text-{tom}` (mesmo par usado em `resultadoColor`/`statusColor` no resto do
+  // arquivo) já é calibrada pra 4.5:1 nos dois temas — aqui vira selo em vez de texto solto.
   const colors = {
-    danger: "text-danger-soft",
-    warning: "text-warning-soft",
-    success: "text-success-line",
-    muted: "text-white/45",
+    danger: "rounded-md bg-danger-soft px-1.5 text-danger",
+    warning: "rounded-md bg-warning-soft px-1.5 text-warning",
+    success: "rounded-md bg-success-soft px-1.5 text-success",
+    muted: "text-white/65",
     white: "text-white",
   };
   return (

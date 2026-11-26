@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { centavosParaReais, reaisParaCentavos } from "./dinheiro";
+import { centavosParaReais, centavosParaReaisComSinal, reaisParaCentavos } from "./dinheiro";
 
 describe("reaisParaCentavos", () => {
   it("converte formato BR com milhar e centavos", () => {
@@ -26,5 +26,23 @@ describe("centavosParaReais", () => {
 
   it("formata zero", () => {
     expect(centavosParaReais(0)).toBe("0,00");
+  });
+});
+
+describe("centavosParaReaisComSinal", () => {
+  it("mantém o sinal de menos em resultado negativo", () => {
+    expect(centavosParaReaisComSinal(-137)).toBe("-1,37");
+  });
+
+  it("não prefixa sinal em resultado positivo", () => {
+    expect(centavosParaReaisComSinal(137)).toBe("1,37");
+  });
+
+  it("zero não recebe sinal", () => {
+    expect(centavosParaReaisComSinal(0)).toBe("0,00");
+  });
+
+  it("negativo com milhar mantém formato BR", () => {
+    expect(centavosParaReaisComSinal(-123456)).toBe("-1234,56");
   });
 });

@@ -1,4 +1,4 @@
-import { AvisoCarregando, RecursoNaoAtivado } from "@sinergica/ui";
+import { AvisoCarregando, Button, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
@@ -86,11 +86,14 @@ function CentralGlobalConteudo(props: Props) {
     return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (permissao.isError)
     return (
-      <p role="alert">
+      <p
+        role="alert"
+        className="flex flex-wrap items-center gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger"
+      >
         Não foi possível verificar acesso.{" "}
-        <button type="button" onClick={() => void permissao.refetch()}>
+        <Button size="sm" onClick={() => void permissao.refetch()}>
           Tentar novamente
-        </button>
+        </Button>
       </p>
     );
   if (permissao.data !== true) return <p>Sem permissão para consultar materiais deste Cliente.</p>;
@@ -187,8 +190,11 @@ function Conteudo({
   const visiveis =
     estado === "todos" ? carregadas : carregadas.filter((lista) => lista.estado === estado);
   return (
-    <section aria-label="Central de materiais">
-      <h2>Central de materiais</h2>
+    <section
+      aria-label="Central de materiais"
+      className="flex flex-col gap-4 rounded-lg border border-line bg-card p-4 shadow-raised"
+    >
+      <h2 className="text-heading font-semibold text-ink">Central de materiais</h2>
       {flagLigada("VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED") && (
         <SelecionarOs
           usuario={usuario}
@@ -216,14 +222,22 @@ function Conteudo({
           setAberta(null);
           setOrcamentoOs(null);
         }}
+        className="grid grid-cols-1 items-end gap-3 rounded-md border border-line-soft bg-paper/60 p-3 sm:grid-cols-2 lg:grid-cols-4"
       >
-        <label>
-          Identificador da OS{" "}
-          <input value={osDigitada} onChange={(evento) => setOsDigitada(evento.target.value)} />
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-3">
+            Identificador da OS
+          </span>
+          <input
+            className="input w-full"
+            value={osDigitada}
+            onChange={(evento) => setOsDigitada(evento.target.value)}
+          />
         </label>
-        <label>
-          Responsável{" "}
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-3">Responsável</span>
           <select
+            className="input w-full"
             value={responsavel}
             onChange={(evento) => {
               setResponsavel(evento.target.value as Responsavel);
@@ -236,9 +250,12 @@ function Conteudo({
             <option value="sinergica">Sinérgica</option>
           </select>
         </label>
-        <label>
-          {filtroServidor ? "Situação" : "Situação nas páginas carregadas"}{" "}
+        <label className="block">
+          <span className="mb-1 block text-micro font-semibold text-ink-3">
+            {filtroServidor ? "Situação" : "Situação nas páginas carregadas"}
+          </span>
           <select
+            className="input w-full"
             value={estado}
             onChange={(evento) => {
               setEstado(evento.target.value as EstadoLista);
@@ -256,69 +273,93 @@ function Conteudo({
             <option value="concluida">Concluída</option>
           </select>
         </label>
-        <button type="submit">Filtrar OS</button>
+        <Button type="submit" variant="primary">
+          Filtrar OS
+        </Button>
       </form>
-      {erro && <p role="alert">{erro}</p>}
+      {erro && (
+        <p
+          role="alert"
+          className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger"
+        >
+          {erro}
+        </p>
+      )}
       {os && <ExcecoesOs usuario={usuario} cliente={cliente} os={os} />}
-      {listas.isFetching && <output>Consultando listas…</output>}
+      {listas.isFetching && <output className="text-body text-ink-3">Consultando listas…</output>}
       {listas.isError && (
-        <p role="alert">
+        <p
+          role="alert"
+          className="flex flex-wrap items-center gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger"
+        >
           Não foi possível consultar listas.{" "}
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={() =>
               void (listas.isFetchNextPageError ? listas.fetchNextPage() : listas.refetch())
             }
           >
             Tentar novamente
-          </button>
+          </Button>
         </p>
       )}
       {!listas.isFetching && !listas.isError && listas.data?.pages.flat().length === 0 && (
-        <p>Nenhuma lista para estes filtros.</p>
+        <p className="rounded-md border border-line bg-paper/60 px-3 py-6 text-center text-body text-ink-3">
+          Nenhuma lista para estes filtros.
+        </p>
       )}
       {listas.data &&
         !listas.isFetching &&
         (!listas.isError || (listas.isFetchNextPageError && erroTemporario(listas.error))) && (
           <>
-            <p>
+            <p className="text-caption text-ink-3">
               {visiveis.length} lista(s) nas páginas carregadas
               {listas.hasNextPage ? "; carregue mais para ampliar a busca" : ""}.
             </p>
             {carregadas.length > 0 && visiveis.length === 0 && (
-              <p>Nenhuma lista carregada corresponde à situação selecionada.</p>
+              <p className="rounded-md border border-line bg-paper/60 px-3 py-6 text-center text-body text-ink-3">
+                Nenhuma lista carregada corresponde à situação selecionada.
+              </p>
             )}
-            <ul>
+            <ul className="flex flex-col gap-3">
               {visiveis.map((lista) => (
-                <li key={lista.id}>
-                  <p>
+                <li
+                  key={lista.id}
+                  className="flex flex-col gap-2 rounded-lg border border-line bg-paper/40 p-3"
+                >
+                  <p className="text-caption font-semibold text-ink-2">
                     OS {lista.ordem_servico_id} ·{" "}
                     {lista.responsavel === "cliente" ? "Cliente" : "Sinérgica"} ·{" "}
                     {estadosLista[lista.estado] ?? lista.estado} · revisão {lista.revisao}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOsDigitada(lista.ordem_servico_id);
-                      setOs(lista.ordem_servico_id);
-                      setAberta(null);
-                      setOrcamentoOs(null);
-                      setErro("");
-                    }}
-                  >
-                    {flagLigada("VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED")
-                      ? "Filtrar esta OS e consultar exceções"
-                      : "Filtrar esta OS"}
-                  </button>
-                  {onAbrirOs && (
-                    <button type="button" onClick={() => onAbrirOs(lista.ordem_servico_id)}>
-                      Abrir contexto da OS
-                    </button>
-                  )}
-                  <pre>{lista.texto_original}</pre>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setOsDigitada(lista.ordem_servico_id);
+                        setOs(lista.ordem_servico_id);
+                        setAberta(null);
+                        setOrcamentoOs(null);
+                        setErro("");
+                      }}
+                    >
+                      {flagLigada("VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED")
+                        ? "Filtrar esta OS e consultar exceções"
+                        : "Filtrar esta OS"}
+                    </Button>
+                    {onAbrirOs && (
+                      <Button size="sm" onClick={() => onAbrirOs(lista.ordem_servico_id)}>
+                        Abrir contexto da OS
+                      </Button>
+                    )}
+                  </div>
+                  <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-line-soft bg-paper px-3 py-2 text-body-sm text-ink-2">
+                    {lista.texto_original}
+                  </pre>
                   {flagLigada("VITE_SSO_LISTAS_MATERIAIS_ENABLED") && (
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      className="self-start"
                       onClick={() => {
                         if (aberta === lista.id) {
                           setAberta(null);
@@ -327,7 +368,7 @@ function Conteudo({
                       }}
                     >
                       {aberta === lista.id ? "Fechar materiais da OS" : "Abrir materiais da OS"}
-                    </button>
+                    </Button>
                   )}
                   {aberta === lista.id && (
                     <WorkspaceListasMateriais
@@ -339,17 +380,18 @@ function Conteudo({
                   {lista.responsavel === "sinergica" &&
                     flagLigada("VITE_SSO_ORCAMENTO_OPERACIONAL_ENABLED") && (
                       <>
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
+                          className="self-start"
                           onClick={() => setOrcamentoOs(orcamentoOs === lista.id ? null : lista.id)}
                         >
                           {orcamentoOs === lista.id
                             ? "Fechar orçamentos da OS"
                             : "Consultar orçamentos da OS"}
-                        </button>
+                        </Button>
                         {orcamentoOs === lista.id && (
                           <>
-                            <p>
+                            <p className="rounded-md border border-line-soft bg-paper/60 px-3 py-2 text-caption text-ink-3">
                               O orçamento é da OS; confira a lista de materiais e sua revisão na
                               criação. Não gera despesa de Visita ou cobrança automaticamente.
                             </p>
@@ -370,9 +412,9 @@ function Conteudo({
           </>
         )}
       {!listas.isFetching && !listas.isError && listas.hasNextPage && (
-        <button type="button" onClick={() => void listas.fetchNextPage()}>
+        <Button size="sm" className="self-start" onClick={() => void listas.fetchNextPage()}>
           Carregar mais listas
-        </button>
+        </Button>
       )}
     </section>
   );
@@ -408,9 +450,16 @@ function SelecionarOs({
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
   return (
-    <section aria-label="Selecionar OS com materiais">
-      <h3>Selecionar OS</h3>
-      <p>Busca apenas OS deste Cliente que já possuem lista de materiais.</p>
+    <section
+      aria-label="Selecionar OS com materiais"
+      className="flex flex-col gap-3 rounded-md border border-line-soft bg-paper/60 p-3"
+    >
+      <div>
+        <h3 className="text-body font-semibold text-ink">Selecionar OS</h3>
+        <p className="mt-0.5 text-caption text-ink-3">
+          Busca apenas OS deste Cliente que já possuem lista de materiais.
+        </p>
+      </div>
       <form
         onSubmit={(evento) => {
           evento.preventDefault();
@@ -418,45 +467,57 @@ function SelecionarOs({
           if (valor === busca) void consulta.refetch();
           else setBusca(valor);
         }}
+        className="flex flex-wrap items-end gap-2"
       >
-        <label>
-          Número da OS{" "}
+        <label className="block flex-1">
+          <span className="mb-1 block text-micro font-semibold text-ink-3">Número da OS</span>
           <input
+            className="input w-full"
             maxLength={80}
             value={texto}
             onChange={(evento) => setTexto(evento.target.value)}
           />
         </label>
-        <button type="submit">Buscar OS</button>
+        <Button type="submit" size="sm">
+          Buscar OS
+        </Button>
       </form>
-      {consulta.isFetching && <output>Buscando OS…</output>}
+      {consulta.isFetching && <output className="text-body text-ink-3">Buscando OS…</output>}
       {consulta.isError && (
-        <p role="alert">
+        <p
+          role="alert"
+          className="flex flex-wrap items-center gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger"
+        >
           Não foi possível buscar OS.{" "}
-          <button type="button" onClick={() => void consulta.refetch()}>
+          <Button size="sm" onClick={() => void consulta.refetch()}>
             Tentar novamente
-          </button>
+          </Button>
         </p>
       )}
       {!consulta.isFetching && !consulta.isError && consulta.data?.pages.flat().length === 0 && (
-        <p>Nenhuma OS com lista encontrada.</p>
+        <p className="text-body text-ink-3">Nenhuma OS com lista encontrada.</p>
       )}
       {!consulta.isFetching && !consulta.isError && (
-        <ul>
+        <ul className="flex flex-col gap-1.5">
           {consulta.data?.pages.flat().map((item) => (
-            <li key={item.id}>
-              {item.numero} · {item.titulo}{" "}
-              <button type="button" onClick={() => onSelecionar(item.id)}>
+            <li
+              key={item.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-soft bg-card px-3 py-2 text-body-sm text-ink-2"
+            >
+              <span>
+                {item.numero} · {item.titulo}
+              </span>
+              <Button size="sm" onClick={() => onSelecionar(item.id)}>
                 Selecionar {item.numero}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
       )}
       {!consulta.isFetching && !consulta.isError && consulta.hasNextPage && (
-        <button type="button" onClick={() => void consulta.fetchNextPage()}>
+        <Button size="sm" className="self-start" onClick={() => void consulta.fetchNextPage()}>
           Mais OS
-        </button>
+        </Button>
       )}
     </section>
   );

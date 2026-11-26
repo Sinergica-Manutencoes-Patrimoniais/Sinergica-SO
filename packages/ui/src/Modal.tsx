@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 export interface ModalProps {
   open: boolean;
@@ -25,6 +25,26 @@ export function Modal({
   children,
   tamanho = "md",
 }: ModalProps) {
+  // DEF-19: as páginas montam o diálogo só enquanto ele está aberto
+  // (`{modal && <XFormModal open … />}`), então o Radix recebe a desmontagem direta do Root e
+  // a devolução de foco dele não roda — ao fechar por Escape o foco caía no `body` e o Tab
+  // seguinte recomeçava do início do menu. Guardamos o acionador na abertura e o devolvemos
+  // no fechamento, sem roubar o foco de quem já o tenha assumido.
+  const acionador = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    acionador.current = document.activeElement as HTMLElement | null;
+    return () => {
+      const alvo = acionador.current;
+      acionador.current = null;
+      if (!alvo?.isConnected) return;
+      const atual = document.activeElement;
+      const focoJaAssumido = atual !== null && atual !== document.body && atual !== alvo;
+      if (focoJaAssumido) return;
+      alvo.focus();
+    };
+  }, [open]);
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>

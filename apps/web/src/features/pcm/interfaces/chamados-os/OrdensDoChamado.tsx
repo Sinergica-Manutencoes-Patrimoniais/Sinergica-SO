@@ -4,6 +4,7 @@ import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { useOrdensDoChamado } from "../../application/chamados-os-queries";
 import { carregarResumosChamados } from "../../application/resumos-chamados-lote";
+import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
 import { resumirProgressoChamado } from "../../domain/progresso-chamado";
 import { MateriaisDaOrdem } from "./MateriaisDaOrdem";
 import { OrdensChamadoFotografia } from "./OrdensChamadoFotografia";
@@ -144,9 +145,23 @@ export function EntradaOrdensChamado({
   podeAdministrar,
   ...props
 }: Props & { chamadoEsperado: string; podeAdministrar: boolean }) {
-  if (props.chamado !== chamadoEsperado) return null;
-  if (!flagLigada(FLAG_ORDENS_CHAMADO)) {
-    return (
+  const correspondeChamado = props.chamado === chamadoEsperado;
+  const flagDesligada = !flagLigada(FLAG_ORDENS_CHAMADO);
+  const agrupado = useRecursoNaoAtivadoAgrupado(
+    correspondeChamado && flagDesligada
+      ? {
+          recurso: "Ordens de Serviço vinculadas ao Chamado",
+          podeAdministrar,
+          faltando: [
+            FLAG_ORDENS_CHAMADO,
+            FLAGS_SSO.find((f) => f.nome === FLAG_ORDENS_CHAMADO)?.gate,
+          ].filter((v): v is string => Boolean(v)),
+        }
+      : null,
+  );
+  if (!correspondeChamado) return null;
+  if (flagDesligada) {
+    return agrupado ? null : (
       <RecursoNaoAtivado
         recurso="Ordens de Serviço vinculadas ao Chamado"
         podeAdministrar={podeAdministrar}

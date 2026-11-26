@@ -40,6 +40,7 @@ import { EntradaOrdensChamado } from "../interfaces/chamados-os/OrdensDoChamado"
 import { AnotacoesChamado } from "./AnotacoesChamado";
 import { GerarOsModal } from "./GerarOsModal";
 import { HistoricoAtendimentoChamado } from "./HistoricoAtendimentoChamado";
+import { RecursosNaoAtivadosGrupo } from "./recursos-nao-ativados-grupo";
 
 type SubModal =
   | {
@@ -101,6 +102,10 @@ export function ChamadoPainel({
     await consulta.refetch();
   };
 
+  // O corpo não lê nada — as deps SÃO o gatilho. O sub-modal aberto pertence a um Chamado e a
+  // uma sessão; trocar de Chamado ou de usuário tem de fechá-lo, senão o próximo contexto herda
+  // o modal do anterior.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deps como gatilho, ver acima.
   useEffect(() => {
     setSubModal(null);
   }, [user?.id, chamadoId]);
@@ -253,84 +258,90 @@ export function ChamadoPainel({
         onSalvarExecucao={salvarExecucao}
       />
 
-      {user && (
-        <EntradaOrdensChamado
-          usuario={user.id}
-          cliente={chamado.clienteId}
-          chamado={chamado.id}
-          chamadoEsperado={chamadoId}
-          podeAdministrar={podeAdministrar}
-          leitura={supabaseChamadosOsLeituraAdapter}
-          onAbrirOs={
-            onAbrirOsVinculada ? (osId) => onAbrirOsVinculada(chamado.clienteId, osId) : undefined
-          }
-        />
-      )}
+      {/* DEF-30: as 6 sub-telas abaixo são guardadas cada uma pela sua flag/gate — sem
+          agrupamento, cada uma desligada empilhava seu próprio `RecursoNaoAtivado`, poluindo o
+          detalhe do Chamado com avisos repetidos. `RecursosNaoAtivadosGrupo` coleta os avisos das
+          sub-telas desligadas e desenha um único bloco, sem alterar `RecursoNaoAtivado`. */}
+      <RecursosNaoAtivadosGrupo>
+        {user && (
+          <EntradaOrdensChamado
+            usuario={user.id}
+            cliente={chamado.clienteId}
+            chamado={chamado.id}
+            chamadoEsperado={chamadoId}
+            podeAdministrar={podeAdministrar}
+            leitura={supabaseChamadosOsLeituraAdapter}
+            onAbrirOs={
+              onAbrirOsVinculada ? (osId) => onAbrirOsVinculada(chamado.clienteId, osId) : undefined
+            }
+          />
+        )}
 
-      {user && temEscrita && (
-        <CriarOsChamado
-          usuario={user.id}
-          cliente={chamado.clienteId}
-          chamado={chamado.id}
-          chamadoEsperado={chamadoId}
-          podeAdministrar={podeAdministrar}
-          gateway={supabaseChamadosOsComandoAdapter}
-          aoConcluir={() => {
-            void carregarChamado();
-            onMutou();
-          }}
-        />
-      )}
-      {user && temEscrita && chamado.id === chamadoId && (
-        <CanonicalizarVinculoLegado
-          usuario={user.id}
-          cliente={chamado.clienteId}
-          chamado={chamado.id}
-          podeAdministrar={podeAdministrar}
-        />
-      )}
-      {user && temEscrita && (
-        <ConversaoIntegral
-          usuario={user.id}
-          cliente={chamado.clienteId}
-          chamado={chamado.id}
-          chamadoEsperado={chamadoId}
-          chamadoCompleto={chamado}
-          dadosOs={dadosOs}
-          statusHubInicial={destinoConversao}
-          podeAdministrar={podeAdministrar}
-          listarEquipamentos={listarComponentesConversao}
-          consultarRevisao={supabaseChamadosOsComandoAdapter.consultarRevisao}
-          criar={converterChamadoIntegral}
-          aoConcluir={(pedido) => {
-            if (pedido.statusHub === "planejamento") onOsPlanejada?.(pedido.osId);
-            void carregarChamado();
-            onMutou();
-            onConversaoFinalizada?.();
-          }}
-        />
-      )}
-      {destinoConversao && flagLigada("VITE_SSO_CONVERSAO_INTEGRAL_ENABLED") && (
-        <p>Confirme o movimento no formulário de conversão integral acima.</p>
-      )}
-      {user && (
-        <AvaliacaoEscopo
-          usuario={user.id}
-          cliente={chamado.clienteId}
-          chamado={chamado.id}
-          chamadoEsperado={chamadoId}
-          podeAdministrar={podeAdministrar}
-        />
-      )}
-      {user && (
-        <GestaoEscopo
-          usuario={user.id}
-          cliente={chamado.clienteId}
-          chamado={chamado.id}
-          chamadoEsperado={chamadoId}
-          podeAdministrar={podeAdministrar}
-        />
-      )}
+        {user && temEscrita && (
+          <CriarOsChamado
+            usuario={user.id}
+            cliente={chamado.clienteId}
+            chamado={chamado.id}
+            chamadoEsperado={chamadoId}
+            podeAdministrar={podeAdministrar}
+            gateway={supabaseChamadosOsComandoAdapter}
+            aoConcluir={() => {
+              void carregarChamado();
+              onMutou();
+            }}
+          />
+        )}
+        {user && temEscrita && chamado.id === chamadoId && (
+          <CanonicalizarVinculoLegado
+            usuario={user.id}
+            cliente={chamado.clienteId}
+            chamado={chamado.id}
+            podeAdministrar={podeAdministrar}
+          />
+        )}
+        {user && temEscrita && (
+          <ConversaoIntegral
+            usuario={user.id}
+            cliente={chamado.clienteId}
+            chamado={chamado.id}
+            chamadoEsperado={chamadoId}
+            chamadoCompleto={chamado}
+            dadosOs={dadosOs}
+            statusHubInicial={destinoConversao}
+            podeAdministrar={podeAdministrar}
+            listarEquipamentos={listarComponentesConversao}
+            consultarRevisao={supabaseChamadosOsComandoAdapter.consultarRevisao}
+            criar={converterChamadoIntegral}
+            aoConcluir={(pedido) => {
+              if (pedido.statusHub === "planejamento") onOsPlanejada?.(pedido.osId);
+              void carregarChamado();
+              onMutou();
+              onConversaoFinalizada?.();
+            }}
+          />
+        )}
+        {destinoConversao && flagLigada("VITE_SSO_CONVERSAO_INTEGRAL_ENABLED") && (
+          <p>Confirme o movimento no formulário de conversão integral acima.</p>
+        )}
+        {user && (
+          <AvaliacaoEscopo
+            usuario={user.id}
+            cliente={chamado.clienteId}
+            chamado={chamado.id}
+            chamadoEsperado={chamadoId}
+            podeAdministrar={podeAdministrar}
+          />
+        )}
+        {user && (
+          <GestaoEscopo
+            usuario={user.id}
+            cliente={chamado.clienteId}
+            chamado={chamado.id}
+            chamadoEsperado={chamadoId}
+            podeAdministrar={podeAdministrar}
+          />
+        )}
+      </RecursosNaoAtivadosGrupo>
 
       <div className="border-t border-line-soft px-4 py-3">
         <HistoricoAtendimentoChamado gateway={supabaseChamadosAdapter} chamadoId={chamado.id} />

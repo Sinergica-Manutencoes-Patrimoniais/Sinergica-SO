@@ -14,12 +14,16 @@ import { HistoricoGrupo } from "../estrutura-tecnica/HistoricoGrupo";
 import { PlanosDoAlvo } from "../estrutura-tecnica/PlanosDoAlvo";
 import { PendenciasDoAlvo } from "../pendencias-tecnicas/PendenciasDoAlvo";
 
+// DEF-28: "Equipamento" é o nome da entidade no Auvo — ADR-0022/glossário proíbem usá-lo para o
+// ativo do cliente na UI do SO ("use Componente"). pcm.equipamentos.tipo segue 'equipamento' para
+// o Componente raiz (Principal) e 'componente' para o filho legado (mesma rotulagem de
+// EquipamentosPage.tsx: "Principais" / "Subcomponentes (legado)"), nunca "Equipamento" cru.
 const nomes: Record<TipoEstrutura, string> = {
   area: "Área",
   local: "Local",
   sistema: "Sistema",
-  equipamento: "Equipamento",
-  componente: "Componente",
+  equipamento: "Componente (Principal)",
+  componente: "Componente (Subcomponente)",
   grupo_quantitativo: "Grupo Quantitativo",
 };
 type Props = {

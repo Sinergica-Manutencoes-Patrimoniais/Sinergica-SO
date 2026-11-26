@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { z } from "zod";
 import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
+import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
 
 const FLAG = "VITE_SSO_CANONICALIZAR_CHAMADO_ENABLED" as const;
 
@@ -46,8 +47,20 @@ export function CanonicalizarVinculoLegado(props: {
   chamado: string;
   podeAdministrar: boolean;
 }) {
-  if (!flagLigada(FLAG)) {
-    return (
+  const flagDesligada = !flagLigada(FLAG);
+  const agrupado = useRecursoNaoAtivadoAgrupado(
+    flagDesligada
+      ? {
+          recurso: "Canonicalizar vínculo legado do Chamado",
+          podeAdministrar: props.podeAdministrar,
+          faltando: [FLAG, FLAGS_SSO.find((f) => f.nome === FLAG)?.gate].filter((v): v is string =>
+            Boolean(v),
+          ),
+        }
+      : null,
+  );
+  if (flagDesligada) {
+    return agrupado ? null : (
       <RecursoNaoAtivado
         recurso="Canonicalizar vínculo legado do Chamado"
         podeAdministrar={props.podeAdministrar}
@@ -295,7 +308,7 @@ function Formulario({
           </>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output>{aviso}</output>}
     </section>
   );
 }

@@ -4,17 +4,22 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest";
 
 vi.mock("../../../../lib/supabase-client", () => ({
-  supabase: new Proxy({}, {
-    get: () => { throw new Error("Acesso inesperado ao Supabase em teste unitário"); },
-  }),
+  supabase: new Proxy(
+    {},
+    {
+      get: () => {
+        throw new Error("Acesso inesperado ao Supabase em teste unitário");
+      },
+    },
+  ),
   supabaseUrl: "http://127.0.0.1:1",
 }));
 const adapter = vi.hoisted(() => ({ listarHistorico: vi.fn() }));
 vi.mock("../../infrastructure/supabase-estrutura-tecnica-adapter", () => ({
   supabaseEstruturaTecnicaAdapter: adapter,
 }));
-import { HistoricoGrupo } from "./HistoricoGrupo";
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
+import { HistoricoGrupo } from "./HistoricoGrupo";
 
 afterEach(cleanup);
 it("exibe alteração estrutural de Componente usando consulta própria", async () => {
@@ -44,28 +49,110 @@ it("exibe alteração estrutural de Componente usando consulta própria", async 
   );
 });
 it("oculta histórico antigo enquanto acesso é revalidado e após recusa", async () => {
-  adapter.listarHistorico.mockResolvedValueOnce([{ id: "evento", data: "2026-10-27T10:00:00Z", acao: "grupo.criado", atorId: null, antes: null, depois: {} }]);
+  adapter.listarHistorico.mockResolvedValueOnce([
+    {
+      id: "evento",
+      data: "2026-10-27T10:00:00Z",
+      acao: "grupo.criado",
+      atorId: null,
+      antes: null,
+      depois: {},
+    },
+  ]);
   let recusar!: (erro: Error) => void;
-  adapter.listarHistorico.mockReturnValueOnce(new Promise((_, reject) => { recusar = reject; }));
+  adapter.listarHistorico.mockReturnValueOnce(
+    new Promise((_, reject) => {
+      recusar = reject;
+    }),
+  );
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><HistoricoGrupo userId="u" clienteId="c" grupoId="g" /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <HistoricoGrupo userId="u" clienteId="c" grupoId="g" />
+    </QueryClientProvider>,
+  );
   expect(await screen.findByText("Grupo criado")).toBeTruthy();
   void client.invalidateQueries({ queryKey: estruturaTecnicaQueryKeys.historico("u", "c", "g") });
   await screen.findByText("Carregando histórico…");
   expect(screen.queryByText("Grupo criado")).toBeNull();
-  await act(async () => { recusar(new Error("acesso negado")); });
-  expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível carregar o histórico");
+  await act(async () => {
+    recusar(new Error("acesso negado"));
+  });
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Não foi possível carregar o histórico",
+  );
   expect(screen.queryByText("Grupo criado")).toBeNull();
 });
 it("oculta páginas anteriores ao verificar acesso para mais eventos", async () => {
-  adapter.listarHistorico.mockResolvedValueOnce(Array.from({ length: 20 }, (_, i) => ({ id: String(i), data: "2026-10-27T10:00:00Z", acao: "grupo.criado", atorId: null, antes: null, depois: {} })));
+  adapter.listarHistorico.mockResolvedValueOnce(
+    Array.from({ length: 20 }, (_, i) => ({
+      id: String(i),
+      data: "2026-10-27T10:00:00Z",
+      acao: "grupo.criado",
+      atorId: null,
+      antes: null,
+      depois: {},
+    })),
+  );
   let recusar!: (erro: Error) => void;
-  adapter.listarHistorico.mockReturnValueOnce(new Promise((_, reject) => { recusar = reject; }));
+  adapter.listarHistorico.mockReturnValueOnce(
+    new Promise((_, reject) => {
+      recusar = reject;
+    }),
+  );
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><HistoricoGrupo userId="u" clienteId="c" grupoId="g" /></QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <HistoricoGrupo userId="u" clienteId="c" grupoId="g" />
+    </QueryClientProvider>,
+  );
   fireEvent.click(await screen.findByRole("button", { name: "Carregar mais eventos" }));
   await screen.findByText("Carregando histórico…");
   expect(screen.queryByText("Grupo criado")).toBeNull();
-  await act(async () => { recusar(new Error("acesso negado")); });
+  await act(async () => {
+    recusar(new Error("acesso negado"));
+  });
   expect(await screen.findByRole("alert")).toBeTruthy();
+});
+it("mostra nomes de Local, Categoria e Sistema no lugar dos identificadores (DEF-27)", async () => {
+  const localAntes = "11111111-1111-4111-8111-111111111111";
+  const localDepois = "11111111-1111-4111-8111-111111111112";
+  const categoria = "22222222-2222-4222-8222-222222222222";
+  const sistema = "33333333-3333-4333-8333-333333333333";
+  adapter.listarHistorico.mockResolvedValue([
+    {
+      id: "evento",
+      data: "2026-11-25T10:00:00Z",
+      acao: "grupo.atualizado",
+      atorId: null,
+      antes: { local_id: localAntes, categoria_id: null, sistema_id: null },
+      depois: { local_id: localDepois, categoria_id: categoria, sistema_id: sistema },
+    },
+  ]);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <HistoricoGrupo
+        userId="u"
+        clienteId="c"
+        grupoId="g"
+        catalogos={{
+          locais: [
+            { id: localAntes, nome: "Cobertura" },
+            { id: localDepois, nome: "Subsolo" },
+          ],
+          categorias: [{ id: categoria, nome: "Climatização" }],
+          sistemas: [{ id: sistema, nome: "Ar condicionado" }],
+        }}
+      />
+    </QueryClientProvider>,
+  );
+  await screen.findByText("Grupo atualizado");
+  const detalhes = screen.getByText("Detalhes da alteração").closest("details");
+  expect(detalhes?.textContent).toContain("Cobertura para Subsolo");
+  expect(detalhes?.textContent).toContain("Não informado para Climatização");
+  expect(detalhes?.textContent).toContain("Não informado para Ar condicionado");
+  expect(detalhes?.textContent).not.toContain(localAntes);
+  expect(detalhes?.textContent).not.toContain(categoria);
+  expect(detalhes?.textContent).not.toContain(sistema);
 });

@@ -48,7 +48,7 @@ describe("E01-S190 AC-9/AC-10", () => {
     fireEvent.click(screen.getByRole("button", { name: "Voltar ao Cliente" }));
     expect(await screen.findByRole("button", { name: "Navegar em Área Prédio" })).toBeTruthy();
   });
-  it("envia busca global ao servidor e preserva tipo Equipamento", async () => {
+  it("envia busca global ao servidor e preserva tipo equipamento (Principal)", async () => {
     const pesquisar = vi.fn(async (_filtro: FiltroPesquisaEstrutura) => [
       {
         ...local,
@@ -66,7 +66,27 @@ describe("E01-S190 AC-9/AC-10", () => {
     await waitFor(() =>
       expect(pesquisar.mock.calls.some(([filtro]) => filtro.busca === "TAG-01")).toBe(true),
     );
-    expect(screen.getAllByText("Equipamento").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Componente (Principal)").length).toBeGreaterThan(0);
+  });
+  // DEF-28: "Equipamento" é a entidade do Auvo (ADR-0022/glossário); o ativo do cliente com
+  // `tipo` = 'equipamento' nunca pode aparecer rotulado como "Equipamento" cru na pesquisa —
+  // o testador interpretou isso como classificação divergente da exportação (que chama tudo de
+  // "Componentes"), quando na verdade era só o rótulo proibido vazando na UI.
+  it("DEF-28: nunca rotula um ativo do cliente como 'Equipamento' cru", async () => {
+    const pesquisar = vi.fn(async () => [
+      {
+        ...local,
+        chave: "equipamento:e",
+        tipo: "equipamento" as const,
+        id: "e",
+        nome: "Válvula",
+        codigo: "TAG-02",
+      },
+    ]);
+    montar({ pesquisar });
+    await screen.findByText("Válvula");
+    expect(screen.queryByText("Equipamento")).toBeNull();
+    expect(screen.getAllByText("Componente (Principal)").length).toBeGreaterThan(0);
   });
   it("falha de autorização esconde resultados e informa a recusa", async () => {
     montar({
