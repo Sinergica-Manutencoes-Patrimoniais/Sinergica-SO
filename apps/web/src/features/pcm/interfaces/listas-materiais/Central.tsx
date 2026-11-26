@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
+import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { supabase } from "../../../../lib/supabase-client";
 import { OrcamentosDaOs } from "../../../comercial/interfaces/orcamento-operacional/OrcamentosDaOs";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -189,6 +190,8 @@ function Conteudo({
   const carregadas = listas.data?.pages.flat() ?? [];
   const visiveis =
     estado === "todos" ? carregadas : carregadas.filter((lista) => lista.estado === estado);
+  // 403/42501 não melhora repetindo: o aviso explica em vez de oferecer o botão.
+  const negacaoListas = mensagemFalhaAtivacao(listas.error);
   return (
     <section
       aria-label="Central de materiais"
@@ -292,15 +295,21 @@ function Conteudo({
           role="alert"
           className="flex flex-wrap items-center gap-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger"
         >
-          Não foi possível consultar listas.{" "}
-          <Button
-            size="sm"
-            onClick={() =>
-              void (listas.isFetchNextPageError ? listas.fetchNextPage() : listas.refetch())
-            }
-          >
-            Tentar novamente
-          </Button>
+          {negacaoListas ? (
+            TEXTO_FALHA_ATIVACAO[negacaoListas]
+          ) : (
+            <>
+              Não foi possível consultar listas.{" "}
+              <Button
+                size="sm"
+                onClick={() =>
+                  void (listas.isFetchNextPageError ? listas.fetchNextPage() : listas.refetch())
+                }
+              >
+                Tentar novamente
+              </Button>
+            </>
+          )}
         </p>
       )}
       {!listas.isFetching && !listas.isError && listas.data?.pages.flat().length === 0 && (
