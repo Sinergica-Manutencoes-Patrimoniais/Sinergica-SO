@@ -54,6 +54,7 @@ import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
 import type { ChamadoFormData } from "../domain/chamados";
+import { montarOpcoesTecnico } from "../domain/filtro-tecnicos";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
 import {
   COLUNAS_KANBAN_PADRAO,
@@ -411,17 +412,18 @@ export function OrdensServicoPage({
     });
   }, [ordensCarregadas, filtros, buscaDebounced, ordenarPorHub]);
 
-  const tecnicosDisponiveis = useMemo(() => {
-    const porId = new Map<string, string>();
-    for (const ordem of ordensCarregadas) {
-      if (ordem.tecnicoFuncionarioId) {
-        porId.set(ordem.tecnicoFuncionarioId, ordem.tecnicoNome ?? "Técnico");
-      }
-    }
-    return [...porId.entries()]
-      .map(([id, nome]) => ({ id, nome }))
-      .sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [ordensCarregadas]);
+  // DEF-33: regra em domain/filtro-tecnicos.ts — o técnico selecionado continua na lista
+  // mesmo quando o recorte atual não tem OS dele.
+  const nomesTecnicosVistos = useRef(new Map<string, string>());
+  const tecnicosDisponiveis = useMemo(
+    () =>
+      montarOpcoesTecnico(
+        ordensCarregadas,
+        filtros.tecnicoFuncionarioId,
+        nomesTecnicosVistos.current,
+      ),
+    [ordensCarregadas, filtros.tecnicoFuncionarioId],
+  );
 
   const resumoCentral = useQuery({
     queryKey: ["operacao", "resumo-central", user?.id, origemCentral?.cliente, origemCentral?.os],
