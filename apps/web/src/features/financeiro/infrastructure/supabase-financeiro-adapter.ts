@@ -977,7 +977,7 @@ export const supabaseFinanceiroAdapter: FinanceiroGateway = {
         data: string;
         tecnico_funcionario_id: string | null;
         horas: number;
-        custo_hora_reais: number | null;
+        custo_hora_centavos: number | null;
         custo_mo_centavos: number;
         despesa_centavos: number;
         valorado: boolean;
@@ -988,7 +988,7 @@ export const supabaseFinanceiroAdapter: FinanceiroGateway = {
       data: row.data,
       tecnicoFuncionarioId: row.tecnico_funcionario_id,
       horas: Number(row.horas),
-      custoHoraReais: row.custo_hora_reais,
+      custoHoraCentavos: row.custo_hora_centavos,
       custoMoCentavos: row.custo_mo_centavos,
       despesaCentavos: row.despesa_centavos,
       valorado: row.valorado,
