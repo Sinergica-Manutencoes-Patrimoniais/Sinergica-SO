@@ -102,6 +102,10 @@ export function ChamadoPainel({
     await consulta.refetch();
   };
 
+  // O corpo não lê nada — as deps SÃO o gatilho. O sub-modal aberto pertence a um Chamado e a
+  // uma sessão; trocar de Chamado ou de usuário tem de fechá-lo, senão o próximo contexto herda
+  // o modal do anterior.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deps como gatilho, ver acima.
   useEffect(() => {
     setSubModal(null);
   }, [user?.id, chamadoId]);

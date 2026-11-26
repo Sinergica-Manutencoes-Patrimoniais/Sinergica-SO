@@ -17,6 +17,7 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -79,20 +80,23 @@ export function useRecursoNaoAtivadoAgrupado(info: RecursoNaoAtivadoProps | null
   const ctx = useContext(GrupoContext);
   const id = useId();
   // Chave estável por conteúdo: evita registrar/remover a cada render só porque o chamador cria
-  // um novo objeto `info` (literal inline) com o mesmo conteúdo.
+  // um novo objeto `info` (literal inline) com o mesmo conteúdo. O objeto em si fica numa ref,
+  // para o efeito depender da chave e não da identidade do literal.
   const chave = info
     ? `${info.recurso}|${info.podeAdministrar}|${(info.faltando ?? []).join(",")}|${info.runbook ?? ""}`
     : null;
+  const infoAtual = useRef(info);
+  infoAtual.current = info;
 
   useEffect(() => {
     if (!ctx) return;
-    if (!info) {
+    const registro = chave === null ? null : infoAtual.current;
+    if (!registro) {
       ctx.remover(id);
       return undefined;
     }
-    ctx.registrar(id, info);
+    ctx.registrar(id, registro);
     return () => ctx.remover(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `chave` resume o conteúdo de `info`.
   }, [ctx, id, chave]);
 
   return ctx !== null;

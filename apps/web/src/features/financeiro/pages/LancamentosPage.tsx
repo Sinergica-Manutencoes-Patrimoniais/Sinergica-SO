@@ -526,7 +526,9 @@ function LancamentosPageContexto() {
                       Baixar comprovante
                     </Button>
                   )}
-                  {temEscrita && user?.id && <PublicarCobrancaPortal usuario={user.id} lancamento={lancamento} />}
+                  {temEscrita && user?.id && (
+                    <PublicarCobrancaPortal usuario={user.id} lancamento={lancamento} />
+                  )}
                 </div>
               ),
             },

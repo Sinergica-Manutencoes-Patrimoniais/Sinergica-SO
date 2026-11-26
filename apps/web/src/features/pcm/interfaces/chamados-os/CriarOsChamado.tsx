@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import {
+  type CriarOsChamado as ComandoCriarOsChamado,
   type CriacaoOsChamadoGateway,
-  type CriarOsChamado,
   criarOsChamadoSchema,
 } from "../../application/chamados-os-comando";
 import { chamadosOsQueryKeys } from "../../application/chamados-os-queries";
@@ -74,7 +74,7 @@ function Formulario({ usuario, cliente, chamado, gateway, aoConcluir }: Props) {
       return { comando: null, falhou: true };
     }
   });
-  const [pendente, setPendente] = useState<CriarOsChamado | null>(recuperacao.comando);
+  const [pendente, setPendente] = useState<ComandoCriarOsChamado | null>(recuperacao.comando);
   const trava = useRef(false);
   const [erro, setErro] = useState("");
   const [reconciliando, setReconciliando] = useState(false);
@@ -100,12 +100,14 @@ function Formulario({ usuario, cliente, chamado, gateway, aoConcluir }: Props) {
     !permissao.isFetching &&
     !permissao.isError &&
     permissao.data !== undefined;
-  const salvar = useMutation({ mutationFn: (comando: CriarOsChamado) => gateway.criar(comando) });
+  const salvar = useMutation({
+    mutationFn: (comando: ComandoCriarOsChamado) => gateway.criar(comando),
+  });
   async function conferirSessao() {
     const atual = await supabase.auth.getUser();
     if (atual.error || atual.data.user?.id !== usuario) throw new Error("Sessão alterada.");
   }
-  function tentativaAtualConfere(comando: CriarOsChamado) {
+  function tentativaAtualConfere(comando: ComandoCriarOsChamado) {
     const armazenado = sessionStorage.getItem(chave);
     if (!armazenado) return false;
     const atual = criarOsChamadoSchema.safeParse(JSON.parse(armazenado));
@@ -114,7 +116,7 @@ function Formulario({ usuario, cliente, chamado, gateway, aoConcluir }: Props) {
       JSON.stringify(atual.data) === JSON.stringify(criarOsChamadoSchema.parse(comando))
     );
   }
-  async function enviar(comando: CriarOsChamado) {
+  async function enviar(comando: ComandoCriarOsChamado) {
     if (trava.current) return;
     trava.current = true;
     setErro("");
@@ -153,7 +155,7 @@ function Formulario({ usuario, cliente, chamado, gateway, aoConcluir }: Props) {
       trava.current = false;
     }
   }
-  async function reconciliar(comando: CriarOsChamado) {
+  async function reconciliar(comando: ComandoCriarOsChamado) {
     if (trava.current || !gateway.reconciliar) return;
     trava.current = true;
     setReconciliando(true);

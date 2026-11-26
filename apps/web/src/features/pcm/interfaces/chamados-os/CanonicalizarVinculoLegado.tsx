@@ -308,7 +308,7 @@ function Formulario({
           </>
         )
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <output>{aviso}</output>}
     </section>
   );
 }

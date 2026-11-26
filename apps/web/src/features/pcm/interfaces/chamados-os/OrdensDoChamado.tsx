@@ -4,8 +4,8 @@ import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { useOrdensDoChamado } from "../../application/chamados-os-queries";
 import { carregarResumosChamados } from "../../application/resumos-chamados-lote";
-import { resumirProgressoChamado } from "../../domain/progresso-chamado";
 import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
+import { resumirProgressoChamado } from "../../domain/progresso-chamado";
 import { MateriaisDaOrdem } from "./MateriaisDaOrdem";
 import { OrdensChamadoFotografia } from "./OrdensChamadoFotografia";
 

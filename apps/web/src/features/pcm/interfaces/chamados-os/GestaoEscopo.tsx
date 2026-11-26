@@ -558,7 +558,7 @@ function Conteudo({
           antes de continuar.
         </p>
       )}
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && <output>{mensagem}</output>}
     </section>
   );
 }
