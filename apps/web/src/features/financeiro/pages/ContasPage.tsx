@@ -3,6 +3,7 @@ import { ArrowLeftRight, Building2, Pencil, Plus, RefreshCw, Trash2 } from "luci
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { formatarDataBr } from "../../../lib/data-br";
 import { criarConta, desativarConta, editarConta, listarContas } from "../application/contas";
 import { criarTransferencia } from "../application/robustez";
 import type { ContaBancariaFormData, ContaBancariaItem } from "../domain/conta-bancaria";
@@ -172,7 +173,7 @@ export function ContasPage() {
               </p>
               <p className="mt-1 text-caption text-ink-3">
                 Saldo inicial R$ {centavosParaReais(conta.saldoInicialCentavos)} em{" "}
-                {new Date(conta.saldoInicialEm).toLocaleDateString("pt-BR")}
+                {formatarDataBr(conta.saldoInicialEm)}
               </p>
               <div className="mt-4 flex justify-end gap-2">
                 {temEscrita && (
