@@ -169,3 +169,11 @@ jobs:
         # código do front — por isso este script roda aqui, sem dependência além do Node da
         # imagem padrão do runner, com o Supabase local já de pé.
         run: node scripts/check-jornadas-flags.mjs
+      - name: DEF-24 — ACOES_SSO do front espelha config.sso_acoes
+        # O banco é a fonte de verdade das capacidades. Ação criada por migration e ausente da
+        # lista do front derruba a consulta de concessões inteira (z.enum + z.array(...).parse),
+        # e divergência em exige_concessao_individual faz a prévia prometer o que o servidor
+        # recusa. Roda aqui porque precisa do Supabase local de pé.
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: node scripts/check-acoes-sso.mjs

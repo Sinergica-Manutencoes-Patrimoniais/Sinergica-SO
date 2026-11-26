@@ -24,15 +24,31 @@ export const ACOES_SSO = [
   "orcamento.excecao_preco",
   "anexo_os.publicar",
   "backlog.promover",
+  // DEF-24: migration 1863 (E01-S196) criou esta ação em `config.sso_acoes` e a lista daqui
+  // ficou para trás. Como `concessaoSchema.acao` é `z.enum(ACOES_SSO)` e a listagem faz
+  // `z.array(schema).parse`, UMA concessão desta ação derrubava a consulta inteira de
+  // concessões — o que a tela mostrava como "falha ao consultar", repetível no botão de
+  // recuperação. `scripts/check-acoes-sso.mjs` passa a travar essa divergência no CI.
+  "execucao.contingencia_auvo",
 ] as const;
 
 export type AcaoSso = (typeof ACOES_SSO)[number];
+// Espelha `config.sso_acoes.exige_concessao_individual`. A lista estava com 5 das 10 ações que
+// o banco marca como individuais: para `cadastro.aprovar`, `chamado.encerrar`, `custo.ler`,
+// `visita.cancelar` e `execucao.contingencia_auvo` a prévia da interface aceitava concessão por
+// perfil, enquanto `config.sso_autorizar_acao` exige concessão individual — a tela prometia o
+// que o servidor recusa. Mesma divergência de origem do DEF-24, travada pelo mesmo gate.
 export const ACOES_INDIVIDUAIS: readonly AcaoSso[] = [
-  "plano.gerir",
-  "orcamento.dispensar",
-  "orcamento.excecao_preco",
   "anexo_os.publicar",
   "backlog.promover",
+  "cadastro.aprovar",
+  "chamado.encerrar",
+  "custo.ler",
+  "execucao.contingencia_auvo",
+  "orcamento.dispensar",
+  "orcamento.excecao_preco",
+  "plano.gerir",
+  "visita.cancelar",
 ];
 export interface ConcessaoEfetiva {
   acao: AcaoSso;
