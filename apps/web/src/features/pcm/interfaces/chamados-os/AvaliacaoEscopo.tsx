@@ -1,6 +1,7 @@
 import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
+import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
 import { supabaseChamadosOsEncerramentoAdapter } from "../../infrastructure/supabase-chamados-os-encerramento-adapter";
 
 const FLAG = "VITE_SSO_ESCOPO_CHAMADO_ENABLED" as const;
@@ -19,9 +20,22 @@ export function AvaliacaoEscopo({
   chamadoEsperado: string;
   podeAdministrar: boolean;
 }) {
-  if (chamado !== chamadoEsperado) return null;
-  if (!flagLigada(FLAG)) {
-    return (
+  const correspondeChamado = chamado === chamadoEsperado;
+  const flagDesligada = !flagLigada(FLAG);
+  const agrupado = useRecursoNaoAtivadoAgrupado(
+    correspondeChamado && flagDesligada
+      ? {
+          recurso: "Conferência de escopo do Chamado",
+          podeAdministrar,
+          faltando: [FLAG, FLAGS_SSO.find((f) => f.nome === FLAG)?.gate].filter((v): v is string =>
+            Boolean(v),
+          ),
+        }
+      : null,
+  );
+  if (!correspondeChamado) return null;
+  if (flagDesligada) {
+    return agrupado ? null : (
       <RecursoNaoAtivado
         recurso="Conferência de escopo do Chamado"
         podeAdministrar={podeAdministrar}

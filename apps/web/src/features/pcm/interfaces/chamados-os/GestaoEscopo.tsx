@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { FLAGS_SSO, flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
+import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
 import { AtribuirParcela } from "../pendencias-tecnicas/AtribuirParcela";
 import { AprovarContinuacaoParcela } from "./AprovarContinuacaoParcela";
 import { CancelarChamadoConservador } from "./CancelarChamadoConservador";
@@ -78,17 +79,15 @@ async function enviar(p: Pedido) {
     throw new Error("Pedido legado de encerramento bloqueado; procure suporte.");
   const chamada =
     p.acao === "aprovar_continuacao"
-      ? supabase
-          .schema("pcm")
-          .rpc("sso_aprovar_continuacao_chamado", {
-            p_request_id: p.requestId,
-            p_request_criar_id: p.criarRequestId,
-            p_cliente_id: p.clienteId,
-            p_chamado_id: p.chamadoId,
-            p_expected_revision: p.revision,
-            p_proposta_id: p.itemId,
-            p_nova_os_id: p.novaOsId,
-          })
+      ? supabase.schema("pcm").rpc("sso_aprovar_continuacao_chamado", {
+          p_request_id: p.requestId,
+          p_request_criar_id: p.criarRequestId,
+          p_cliente_id: p.clienteId,
+          p_chamado_id: p.chamadoId,
+          p_expected_revision: p.revision,
+          p_proposta_id: p.itemId,
+          p_nova_os_id: p.novaOsId,
+        })
       : p.acao === "revisar_continuacao"
         ? supabase.schema("pcm").rpc("sso_revisar_continuacao_chamado", {
             p_request_id: p.requestId,
@@ -99,19 +98,17 @@ async function enviar(p: Pedido) {
             p_descricao: p.descricao,
             p_minutos: p.minutos,
           })
-        : supabase
-            .schema("pcm")
-            .rpc("sso_comando_escopo_chamado", {
-              p_request_id: p.requestId,
-              p_cliente_id: p.clienteId,
-              p_chamado_id: p.chamadoId,
-              p_expected_revision: p.revision,
-              p_acao: p.acao,
-              p_item_id: p.itemId,
-              p_descricao: p.descricao,
-              p_os_id: p.osId,
-              p_minutos: p.minutos,
-            });
+        : supabase.schema("pcm").rpc("sso_comando_escopo_chamado", {
+            p_request_id: p.requestId,
+            p_cliente_id: p.clienteId,
+            p_chamado_id: p.chamadoId,
+            p_expected_revision: p.revision,
+            p_acao: p.acao,
+            p_item_id: p.itemId,
+            p_descricao: p.descricao,
+            p_os_id: p.osId,
+            p_minutos: p.minutos,
+          });
   const { data, error } = await chamada;
   if (error) throw error;
   if (!data || data.requestId !== p.requestId || !Number.isSafeInteger(data.revision))
@@ -131,9 +128,23 @@ export function GestaoEscopo({
   chamadoEsperado: string;
   podeAdministrar: boolean;
 }) {
-  if (chamado !== chamadoEsperado) return null;
-  if (!flagLigada(FLAG_GESTAO_ESCOPO)) {
-    return (
+  const correspondeChamado = chamado === chamadoEsperado;
+  const flagDesligada = !flagLigada(FLAG_GESTAO_ESCOPO);
+  const agrupado = useRecursoNaoAtivadoAgrupado(
+    correspondeChamado && flagDesligada
+      ? {
+          recurso: "Gestão de escopo do Chamado",
+          podeAdministrar,
+          faltando: [
+            FLAG_GESTAO_ESCOPO,
+            FLAGS_SSO.find((f) => f.nome === FLAG_GESTAO_ESCOPO)?.gate,
+          ].filter((v): v is string => Boolean(v)),
+        }
+      : null,
+  );
+  if (!correspondeChamado) return null;
+  if (flagDesligada) {
+    return agrupado ? null : (
       <RecursoNaoAtivado
         recurso="Gestão de escopo do Chamado"
         podeAdministrar={podeAdministrar}

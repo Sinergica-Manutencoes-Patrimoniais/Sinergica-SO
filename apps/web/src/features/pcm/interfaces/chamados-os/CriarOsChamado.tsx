@@ -9,6 +9,7 @@ import {
   criarOsChamadoSchema,
 } from "../../application/chamados-os-comando";
 import { chamadosOsQueryKeys } from "../../application/chamados-os-queries";
+import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
 
 const FLAG_CRIAR_OS = "VITE_SSO_CRIAR_OS_CHAMADO_ENABLED" as const;
 const FLAG_RECONCILIAR = "VITE_SSO_RECONCILIAR_REQUEST_OS_ENABLED" as const;
@@ -28,10 +29,21 @@ type Props = {
 // Chamado 1:N já fechado em produção (migration 1842), zero botão alcançável. Agora o estado
 // desligado é visível e, para quem administra, nomeia o que falta (flag + gate correspondente).
 export function CriarOsChamado(props: Props) {
-  if (props.chamado !== props.chamadoEsperado) return null; // contexto errado, não é "desativado"
-  if (!flagLigada(FLAG_CRIAR_OS)) {
-    const flag = FLAGS_SSO.find((f) => f.nome === FLAG_CRIAR_OS);
-    return (
+  const correspondeChamado = props.chamado === props.chamadoEsperado;
+  const flagDesligada = !flagLigada(FLAG_CRIAR_OS);
+  const flag = FLAGS_SSO.find((f) => f.nome === FLAG_CRIAR_OS);
+  const agrupado = useRecursoNaoAtivadoAgrupado(
+    correspondeChamado && flagDesligada
+      ? {
+          recurso: "Criar OS neste Chamado",
+          podeAdministrar: props.podeAdministrar,
+          faltando: [FLAG_CRIAR_OS, flag?.gate].filter((v): v is string => Boolean(v)),
+        }
+      : null,
+  );
+  if (!correspondeChamado) return null; // contexto errado, não é "desativado"
+  if (flagDesligada) {
+    return agrupado ? null : (
       <RecursoNaoAtivado
         recurso="Criar OS neste Chamado"
         podeAdministrar={props.podeAdministrar}

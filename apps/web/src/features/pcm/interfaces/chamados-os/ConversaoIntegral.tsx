@@ -11,6 +11,7 @@ import type {
   EquipamentoAlvoOpcao,
 } from "../../application/ordem-servico-gateway";
 import { GerarOsModal } from "../../components/GerarOsModal";
+import { useRecursoNaoAtivadoAgrupado } from "../../components/recursos-nao-ativados-grupo";
 import type { Chamado } from "../../domain/chamados";
 import type { StatusOrdemServico } from "../../domain/ordens-servico";
 import {
@@ -97,9 +98,23 @@ type Props = {
 };
 
 export function ConversaoIntegral(props: Props) {
-  if (props.chamado !== props.chamadoEsperado) return null;
-  if (!flagLigada(FLAG_CONVERSAO_INTEGRAL)) {
-    return (
+  const correspondeChamado = props.chamado === props.chamadoEsperado;
+  const flagDesligada = !flagLigada(FLAG_CONVERSAO_INTEGRAL);
+  const agrupado = useRecursoNaoAtivadoAgrupado(
+    correspondeChamado && flagDesligada
+      ? {
+          recurso: "Conversão integral do Chamado",
+          podeAdministrar: props.podeAdministrar,
+          faltando: [
+            FLAG_CONVERSAO_INTEGRAL,
+            FLAGS_SSO.find((f) => f.nome === FLAG_CONVERSAO_INTEGRAL)?.gate,
+          ].filter((v): v is string => Boolean(v)),
+        }
+      : null,
+  );
+  if (!correspondeChamado) return null;
+  if (flagDesligada) {
+    return agrupado ? null : (
       <RecursoNaoAtivado
         recurso="Conversão integral do Chamado"
         podeAdministrar={props.podeAdministrar}
