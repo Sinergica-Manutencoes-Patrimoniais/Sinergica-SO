@@ -1,6 +1,11 @@
 import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { estruturaTecnicaQueryKeys } from "../../application/estrutura-tecnica-queries";
+import {
+  type CatalogosHistorico,
+  descreverCampoHistorico,
+  descreverValor,
+} from "../../domain/historico-estrutura";
 import { supabaseEstruturaTecnicaAdapter } from "../../infrastructure/supabase-estrutura-tecnica-adapter";
 import { MotivoEventoGrupo } from "./MotivoEventoGrupo";
 
@@ -15,18 +20,6 @@ const nomesCampos: Record<string, string> = {
   caracteristicas: "Características",
   ativo: "Ativo",
 };
-function descrever(valor: unknown): string {
-  if (valor == null) return "Não informado";
-  if (typeof valor === "object")
-    return (
-      Object.entries(valor)
-        .map(([nome, dado]) => `${nome}: ${String(dado)}`)
-        .join(", ") || "Nenhuma"
-    );
-  if (typeof valor === "boolean") return valor ? "Sim" : "Não";
-  return String(valor);
-}
-
 function atributos(valor: unknown): Record<string, unknown> {
   return valor !== null && typeof valor === "object" && !Array.isArray(valor)
     ? (valor as Record<string, unknown>)
@@ -38,7 +31,16 @@ export function HistoricoGrupo({
   clienteId,
   grupoId,
   tipo = "grupo",
-}: { userId: string; clienteId: string; grupoId: string; tipo?: "grupo" | "componente" }) {
+  // DEF-27: sem os catálogos o histórico só tem o identificador para mostrar. Quem renderiza
+  // já os carregou para o cartão do grupo; passá-los adiante evita uma segunda consulta.
+  catalogos,
+}: {
+  userId: string;
+  clienteId: string;
+  grupoId: string;
+  tipo?: "grupo" | "componente";
+  catalogos?: CatalogosHistorico;
+}) {
   const historico = useInfiniteQuery({
     queryKey: [...estruturaTecnicaQueryKeys.historico(userId, clienteId, grupoId), tipo],
     initialPageParam: null as { data: string; id: string } | null,
@@ -107,7 +109,8 @@ export function HistoricoGrupo({
                     <div key={campo}>
                       <dt>{rotulo}</dt>
                       <dd>
-                        {descrever(evento.antes?.[campo])} para {descrever(evento.depois[campo])}
+                        {descreverCampoHistorico(campo, evento.antes?.[campo], catalogos)} para{" "}
+                        {descreverCampoHistorico(campo, evento.depois[campo], catalogos)}
                       </dd>
                     </div>
                   ))}
@@ -133,8 +136,8 @@ export function HistoricoGrupo({
                         <div key={nome}>
                           <dt>{nome}</dt>
                           <dd>
-                            {descrever(atributos(evento.antes?.caracteristicas)[nome])} para{" "}
-                            {descrever(atributos(evento.depois.caracteristicas)[nome])}
+                            {descreverValor(atributos(evento.antes?.caracteristicas)[nome])} para{" "}
+                            {descreverValor(atributos(evento.depois.caracteristicas)[nome])}
                           </dd>
                         </div>
                       ))}

@@ -69,3 +69,45 @@ it("oculta páginas anteriores ao verificar acesso para mais eventos", async () 
   await act(async () => { recusar(new Error("acesso negado")); });
   expect(await screen.findByRole("alert")).toBeTruthy();
 });
+it("mostra nomes de Local, Categoria e Sistema no lugar dos identificadores (DEF-27)", async () => {
+  const localAntes = "11111111-1111-4111-8111-111111111111";
+  const localDepois = "11111111-1111-4111-8111-111111111112";
+  const categoria = "22222222-2222-4222-8222-222222222222";
+  const sistema = "33333333-3333-4333-8333-333333333333";
+  adapter.listarHistorico.mockResolvedValue([
+    {
+      id: "evento",
+      data: "2026-11-25T10:00:00Z",
+      acao: "grupo.atualizado",
+      atorId: null,
+      antes: { local_id: localAntes, categoria_id: null, sistema_id: null },
+      depois: { local_id: localDepois, categoria_id: categoria, sistema_id: sistema },
+    },
+  ]);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <HistoricoGrupo
+        userId="u"
+        clienteId="c"
+        grupoId="g"
+        catalogos={{
+          locais: [
+            { id: localAntes, nome: "Cobertura" },
+            { id: localDepois, nome: "Subsolo" },
+          ],
+          categorias: [{ id: categoria, nome: "Climatização" }],
+          sistemas: [{ id: sistema, nome: "Ar condicionado" }],
+        }}
+      />
+    </QueryClientProvider>,
+  );
+  await screen.findByText("Grupo atualizado");
+  const detalhes = screen.getByText("Detalhes da alteração").closest("details");
+  expect(detalhes?.textContent).toContain("Cobertura para Subsolo");
+  expect(detalhes?.textContent).toContain("Não informado para Climatização");
+  expect(detalhes?.textContent).toContain("Não informado para Ar condicionado");
+  expect(detalhes?.textContent).not.toContain(localAntes);
+  expect(detalhes?.textContent).not.toContain(categoria);
+  expect(detalhes?.textContent).not.toContain(sistema);
+});

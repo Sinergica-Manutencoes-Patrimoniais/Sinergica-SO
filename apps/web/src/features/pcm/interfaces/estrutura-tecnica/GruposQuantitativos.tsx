@@ -643,7 +643,12 @@ function GruposQuantitativosContexto({
                     Histórico
                   </button>
                   {historicoId === grupo.id && (
-                    <HistoricoGrupo userId={userId} clienteId={clienteId} grupoId={grupo.id} />
+                    <HistoricoGrupo
+                      userId={userId}
+                      clienteId={clienteId}
+                      grupoId={grupo.id}
+                      catalogos={{ locais, categorias, sistemas }}
+                    />
                   )}
                   {correspondeFiltro(grupo) && !grupos.isFetching && (
                     <ResultadosDoAlvo
