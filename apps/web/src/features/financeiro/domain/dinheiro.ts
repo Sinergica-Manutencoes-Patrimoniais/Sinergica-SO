@@ -12,3 +12,11 @@ export function reaisParaCentavos(value: string): number {
 export function centavosParaReais(value: number): string {
   return (value / 100).toFixed(2).replace(".", ",");
 }
+
+// DEF-47: o resultado (entradas − saídas) é um valor com sinal. Exibi-lo pelo módulo,
+// deixando a cor como único indicador de negativo, esconde o sinal de quem não distingue
+// cor e faz o cartão "Resultado" parecer um saldo positivo. O sinal vai no texto.
+export function centavosParaReaisComSinal(value: number): string {
+  const sinal = value < 0 ? "-" : "";
+  return `${sinal}${centavosParaReais(Math.abs(value))}`;
+}
