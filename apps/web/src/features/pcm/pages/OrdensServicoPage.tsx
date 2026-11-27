@@ -240,7 +240,7 @@ export function OrdensServicoPage({
   const queryCatalogos = useQuery({
     queryKey: [...operacaoQueryKeys.catalogos(), "abertura-os"],
     queryFn: () => carregarDadosAberturaOs(supabaseOrdemServicoAdapter),
-    enabled: consultasAtivas && visao === "backlog",
+    enabled: consultasAtivas && (visao === "backlog" || visao === "kanban" || visao === "lista"),
     staleTime: OPERACAO_CATALOGO_STALE_TIME,
   });
   const dadosOs: DadosAberturaOs | null = queryCatalogos.data ?? null;
