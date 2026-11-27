@@ -17,8 +17,17 @@ describe("inspecoes-laudos", () => {
         { resultado: "nao_conforme" },
         { resultado: "atencao" },
         { resultado: "nao_avaliado" },
+        { resultado: "nao_avaliado" },
+        { resultado: "nao_aplicavel" },
       ]),
-    ).toEqual({ total: 4, conformes: 1, naoConformes: 1, atencao: 1 });
+    ).toEqual({
+      total: 6,
+      conformes: 1,
+      naoConformes: 1,
+      atencao: 1,
+      naoAvaliados: 2,
+      naoAplicaveis: 1,
+    });
   });
 
   it("classifica ponto SPDA pela resistência medida", () => {
