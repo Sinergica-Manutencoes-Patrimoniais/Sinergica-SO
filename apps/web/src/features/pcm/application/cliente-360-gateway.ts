@@ -1,6 +1,7 @@
 // Porta (interface) que a infrastructure implementa. A application só conhece este contrato —
 // nunca importa @supabase/supabase-js diretamente (ver docs/ARCHITECTURE.md — application/).
 // Read-model DTOs da Visão 360 (E01-S12): já em camelCase, desacoplados do snake_case do banco.
+import type { InspecaoStatus } from "../domain/inspecoes-laudos";
 
 /** E01-S91 AC-4: marcação de status vigente do cliente — `null` quando nenhuma foi definida. */
 export interface MarcacaoClienteResumo {
@@ -146,7 +147,7 @@ export interface QualidadeClienteResumo {
   inspecoes: Array<{
     id: string;
     titulo: string;
-    status: string;
+    status: InspecaoStatus;
     dataInspecao: string;
     totalItens: number;
     itensNaoConformes: number;

@@ -301,7 +301,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
             )}
             {oportunidades.data?.pages.flat().map((o) => (
               <option key={o.id} value={o.id}>
-                {o.titulo} · {o.id}
+                {o.titulo.trim() || "Oportunidade sem título"}
               </option>
             ))}
           </select>
@@ -314,7 +314,7 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
               <option key={l.id} value={l.id}>
                 {l.texto_original.trim().replace(/\s+/g, " ").slice(0, 100) ||
                   "Lista sem descrição"}{" "}
-                · revisão {l.revisao} · {l.id}
+                · revisão {l.revisao}
               </option>
             ))}
           </select>

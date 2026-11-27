@@ -1,9 +1,3 @@
-// Página da Visão 360 do Cliente (E01-S12) — sub-tela read-only do PCM.
-// Recebe `clienteId` por prop (o app ainda não tem roteamento por id — ver OPEN-QUESTION #3 em
-// tasks.md; a página é testável/integrável isoladamente). Orquestra o gate AC-1 + o caso de uso.
-//
-// A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
-// OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
 import { Button, RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -85,6 +79,13 @@ import {
   type PreferenciaContato,
   type ResponsavelCliente,
 } from "../domain/cliente-responsaveis";
+// Página da Visão 360 do Cliente (E01-S12) — sub-tela read-only do PCM.
+// Recebe `clienteId` por prop (o app ainda não tem roteamento por id — ver OPEN-QUESTION #3 em
+// tasks.md; a página é testável/integrável isoladamente). Orquestra o gate AC-1 + o caso de uso.
+//
+// A tela não grava cadastro nem operação localmente: dados de cliente são governados pelo Auvo e
+// OS/qualidade continuam nas telas de origem. A ação de edição só leva o usuário para o alvo.
+import { INSPECAO_STATUS_LABEL } from "../domain/inspecoes-laudos";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
 import { supabaseClienteAlmaAdapter } from "../infrastructure/supabase-cliente-alma-adapter";
@@ -1492,8 +1493,8 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
                   </span>
                 </div>
                 <p className="mt-1 text-caption text-ink-3">
-                  {inspecao.status} · {inspecao.totalItens} itens · {inspecao.itensNaoConformes} não
-                  conformes
+                  {INSPECAO_STATUS_LABEL[inspecao.status] ?? "Situação indisponível"} ·{" "}
+                  {inspecao.totalItens} itens · {inspecao.itensNaoConformes} não conformes
                 </p>
               </div>
             ))}
