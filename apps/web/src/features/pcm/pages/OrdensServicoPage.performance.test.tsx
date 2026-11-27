@@ -122,6 +122,7 @@ function QuadroMovel() {
   return (
     <TooltipProvider>
       <OsKanbanView
+        onTriarCampo={() => {}}
         ordens={dadosFeedParaOrdens(quadro.pages)}
         temEscrita
         salvando={movimento.isPending}

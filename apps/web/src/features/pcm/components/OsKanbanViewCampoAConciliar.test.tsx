@@ -4,7 +4,7 @@
 //  1. a coluna existe e mostra o que o PCM precisa pra decidir sem abrir a OS;
 //  2. gate fechado/flag desligada se ANUNCIA — não vira "Nada a conciliar", que é a mentira que
 //     a regra de alcance no front (E00-S28 AC-F3) existe pra impedir;
-//  3. clicar no cartão abre a OS (é OS de verdade, com status próprio).
+//  3. clicar no cartão abre a triagem da tarefa Auvo.
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -32,6 +32,7 @@ function montar(extra: Partial<Parameters<typeof OsKanbanView>[0]> = {}) {
       salvando={false}
       onAlterarStatus={() => {}}
       onSelecionar={() => {}}
+      onTriarCampo={() => {}}
       colunas={COLUNAS_KANBAN_PADRAO}
       onMoverColuna={() => {}}
       onAlternarVisibilidadeColuna={() => {}}
@@ -79,11 +80,13 @@ describe("OsKanbanView — Campo a conciliar (E01-S199)", () => {
     ).toBeInTheDocument();
   });
 
-  it("clicar no cartão abre a OS correspondente", async () => {
+  it("clicar no cartão da fila abre a triagem com o contexto da tarefa", async () => {
     const onSelecionar = vi.fn();
-    montar({ camposAConciliar: [ITEM], onSelecionar });
+    const onTriarCampo = vi.fn();
+    montar({ camposAConciliar: [ITEM], onSelecionar, onTriarCampo });
     await userEvent.click(screen.getByText("Bomba parada no barrilete"));
-    expect(onSelecionar).toHaveBeenCalledWith(ITEM.osId);
+    expect(onTriarCampo).toHaveBeenCalledWith(ITEM);
+    expect(onSelecionar).not.toHaveBeenCalled();
   });
 
   it("motivo desconhecido não some da tela — cai num rótulo legível", () => {

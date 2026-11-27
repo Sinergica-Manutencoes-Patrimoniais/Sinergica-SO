@@ -59,6 +59,7 @@ function montar(
   return render(
     <TooltipProvider>
       <OsKanbanView
+        onTriarCampo={() => {}}
         ordens={ordens}
         temEscrita
         salvando={false}

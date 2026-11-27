@@ -3,10 +3,9 @@
 --
 -- A regra que esta prova fixa: só entra na fila a OS que chegou do campo SEM Chamado (provisória,
 -- migration 1420) e que o PCM ainda NÃO conciliou (sem decisão de triagem, migration 1428).
--- Conciliada, unida a outro Chamado ou com o Chamado encerrado, ela SAI da fila — senão a coluna
--- viraria um depósito que nunca esvazia.
+-- Conciliada, unida a outro Chamado ou com o Chamado encerrado ou cancelado, ela SAI da fila.
 begin;
-select plan(13);
+select plan(21);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
  ('19900000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 's199-pcm@test.local', crypt('x', gen_salt('bf')), '{}', '{}', now(), now()),
@@ -30,7 +29,7 @@ insert into pcm.sso_contratos_origem_campo (id, integracao, versao, habilitado, 
    "fuso": "America/Sao_Paulo"
  }'::jsonb);
 
--- Quatro cenários, um por linha de processamento provisório.
+-- Cenários de processamento de origem de campo.
 insert into pcm.origem_campo_inbox (id, integracao, task_id, chave_evento, cliente_externo_id, payload) values
  ('19900000-0000-4000-8000-000000000030', 'auvo', 1990201, 'evt-s199-a', '1990101', '{"taskId":"1990201","clienteId":"1990101","titulo":"OS vinda do campo A","status":"aberta","ordem":"1"}'::jsonb),
  ('19900000-0000-4000-8000-000000000031', 'auvo', 1990202, 'evt-s199-b', '1990101', '{"taskId":"1990202","clienteId":"1990101","titulo":"OS vinda do campo B","status":"aberta","ordem":"1"}'::jsonb),
@@ -42,7 +41,9 @@ insert into pcm.origem_campo_inbox (id, integracao, task_id, chave_evento, clien
 insert into pcm.chamados (id, numero, cliente_id, titulo, created_by) values
  ('19900000-0000-4000-8000-000000000040', 'CH-S199-A', '19900000-0000-4000-8000-000000000010', 'Chamado provisório do campo A', '19900000-0000-4000-8000-000000000001');
 insert into pcm.ordens_servico (id, client_id, chamado_id, numero, titulo, categoria, status, auvo_task_id, created_by) values
- ('19900000-0000-4000-8000-000000000041', '19900000-0000-4000-8000-000000000010', '19900000-0000-4000-8000-000000000040', 'OS-S199-A', 'OS vinda do campo A', 'corretiva', 'em_execucao', 1990201, '19900000-0000-4000-8000-000000000001');
+ ('19900000-0000-4000-8000-000000000041', '19900000-0000-4000-8000-000000000010', '19900000-0000-4000-8000-000000000040', 'OS-S199-A', 'OS vinda do campo A', 'corretiva', 'planejamento', 1990201, '19900000-0000-4000-8000-000000000001');
+update pcm.chamados set ordem_servico_id = '19900000-0000-4000-8000-000000000041'
+  where id = '19900000-0000-4000-8000-000000000040';
 
 -- (B) provisória mas JÁ conciliada (decisão de triagem registrada) → sai da fila.
 insert into pcm.chamados (id, numero, cliente_id, titulo, created_by) values
@@ -88,7 +89,8 @@ reset request.jwt.claims;
 -- deliberadamente sem ela, para provar o caminho negado.
 insert into config.sso_concessoes(usuario_id, acao, cliente_id) values
  ('19900000-0000-4000-8000-000000000001', 'execucao.validar', '19900000-0000-4000-8000-000000000010'),
- ('19900000-0000-4000-8000-000000000001', 'execucao.validar', '19900000-0000-4000-8000-000000000011');
+ ('19900000-0000-4000-8000-000000000001', 'execucao.validar', '19900000-0000-4000-8000-000000000011'),
+ ('19900000-0000-4000-8000-000000000001', 'chamado.encerrar', '19900000-0000-4000-8000-000000000010');
 
 -- (B) ganhou decisão de triagem — é o que a tira da fila.
 insert into pcm.sso_triagem_chamado_campo_decisoes (request_id, cliente_id, chamado_id, os_id, revisao, ator_id, acao, motivo, payload, resultado) values
@@ -176,6 +178,72 @@ set local request.jwt.claims = '{"sub":"19900000-0000-4000-8000-000000000002","r
 select throws_ok(
   $$ select * from pcm.sso_listar_campo_a_conciliar('19900000-0000-4000-8000-000000000002','19900000-0000-4000-8000-000000000010',50) $$,
   '42501', 'sem_acesso', 'sem a capacidade execucao.validar, a fila é negada'
+);
+
+-- AC-11: o cancelamento de 1430 preserva a OS em Planejamento e retira o cartão da fila.
+set local role postgres;
+update pcm.sso_cancelamento_campo_gate set habilitado = true where id;
+create temporary table s199_descarte as
+  select c.id as chamado_id, c.sso_revisao, o.id as os_id, o.updated_at,
+    o.client_id, o.auvo_task_id, to_jsonb(o) as retrato_os
+  from pcm.chamados c join pcm.ordens_servico o on o.id = c.ordem_servico_id
+  where c.id = '19900000-0000-4000-8000-000000000040';
+grant select on s199_descarte to authenticated;
+set local role authenticated;
+
+select throws_ok(
+  $$ select pcm.sso_cancelar_chamado_campo_preservado(
+    '19900000-0000-4000-8000-000000000002', client_id, '19900000-0000-4000-8000-000000000060',
+    os_id, chamado_id, sso_revisao, updated_at, auvo_task_id, 'Tarefa sem demanda')
+    from s199_descarte $$,
+  '42501', 'sem_acesso', 'operador sem capacidade não pode descartar'
+);
+
+set local request.jwt.claims = '{"sub":"19900000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+select throws_ok(
+  $$ select pcm.sso_cancelar_chamado_campo_preservado(
+    '19900000-0000-4000-8000-000000000001', client_id, '19900000-0000-4000-8000-000000000060',
+    os_id, chamado_id, sso_revisao, updated_at, auvo_task_id, ' ')
+    from s199_descarte $$,
+  '22023', 'parametros_invalidos', 'descarte exige motivo não vazio'
+);
+
+select is(
+  (select pcm.sso_cancelar_chamado_campo_preservado(
+    '19900000-0000-4000-8000-000000000001', client_id, '19900000-0000-4000-8000-000000000060',
+    os_id, chamado_id, sso_revisao, updated_at, auvo_task_id, 'Tarefa sem demanda')->>'estado'
+    from s199_descarte),
+  'cancelado', 'descarte cancela o Chamado provisório associado à OS em Planejamento'
+);
+select is(
+  (select count(*) from pcm.sso_listar_campo_a_conciliar(
+    '19900000-0000-4000-8000-000000000001', '19900000-0000-4000-8000-000000000010', 1)),
+  0::bigint, 'Chamado provisório cancelado sai da fila mesmo sem encerramento'
+);
+select is(
+  (select pcm.sso_cancelar_chamado_campo_preservado(
+    '19900000-0000-4000-8000-000000000001', client_id, '19900000-0000-4000-8000-000000000060',
+    os_id, chamado_id, sso_revisao, updated_at, auvo_task_id, 'Tarefa sem demanda')->>'estado'
+    from s199_descarte),
+  'cancelado', 'repetir o mesmo pedido devolve o recibo'
+);
+
+set local role postgres;
+select is(
+  (select to_jsonb(o) from pcm.ordens_servico o join s199_descarte d on o.id = d.os_id),
+  (select retrato_os from s199_descarte),
+  'OS permanece integralmente igual, inclusive fase, Chamado histórico e tarefa Auvo'
+);
+select ok(
+  exists(select 1 from pcm.chamados c join s199_descarte d on c.id = d.chamado_id
+    where c.status = 'cancelado' and c.sso_encerrado_em is null),
+  'cancelamento preservado grava o status de Chamado e não o marca como encerrado'
+);
+select is(
+  (select count(*) from audit.events e join s199_descarte d on e.entity_id = d.chamado_id
+    where e.action = 'origem_campo.chamado_cancelado_preservado'
+      and e.payload->>'motivo' = 'Tarefa sem demanda'),
+  1::bigint, 'motivo fica registrado uma única vez na auditoria'
 );
 
 select * from finish();

@@ -53,6 +53,7 @@ export function OsKanbanView({
   salvando,
   onAlterarStatus,
   onSelecionar,
+  onTriarCampo,
   selecionados,
   onToggleSelecionado,
   colunas,
@@ -68,6 +69,7 @@ export function OsKanbanView({
   salvando: boolean;
   onAlterarStatus: (id: string, status: StatusOrdemServico) => void;
   onSelecionar: (id: string) => void;
+  onTriarCampo: (item: ItemCampoAConciliar) => void;
   selecionados?: Set<string>;
   onToggleSelecionado?: (id: string) => void;
   colunas: ColunaKanbanPreferencia[];
@@ -232,7 +234,7 @@ export function OsKanbanView({
                         <button
                           key={item.osId}
                           type="button"
-                          onClick={() => onSelecionar(item.osId)}
+                          onClick={() => onTriarCampo(item)}
                           className="w-full rounded-md border border-line bg-card p-3 text-left hover:border-orange"
                         >
                           <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-semibold text-warning">
