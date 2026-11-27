@@ -7,12 +7,14 @@
 // Estes testes travam a regra geral, não o caso específico: nenhuma OS desaparece do Kanban por
 // ter um status que o fluxo aprovado não prevê.
 import { TooltipProvider } from "@sinergica/ui";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { COLUNAS_KANBAN_PADRAO, statusSemColuna } from "../domain/kanban-colunas";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import { OsKanbanView } from "./OsKanbanView";
+
+afterEach(() => vi.unstubAllGlobals());
 
 function os(parcial: Partial<OrdemServicoOperacional>): OrdemServicoOperacional {
   return {
@@ -49,14 +51,18 @@ function os(parcial: Partial<OrdemServicoOperacional>): OrdemServicoOperacional 
   } as OrdemServicoOperacional;
 }
 
-function montar(ordens: OrdemServicoOperacional[], onSelecionar = () => {}) {
+function montar(
+  ordens: OrdemServicoOperacional[],
+  onSelecionar = () => {},
+  onAlterarStatus = vi.fn(),
+) {
   return render(
     <TooltipProvider>
       <OsKanbanView
         ordens={ordens}
         temEscrita
         salvando={false}
-        onAlterarStatus={() => {}}
+        onAlterarStatus={onAlterarStatus}
         onSelecionar={onSelecionar}
         colunas={COLUNAS_KANBAN_PADRAO}
         onMoverColuna={() => {}}
@@ -122,5 +128,48 @@ describe("OsKanbanView — OS fora do fluxo (regressão de produção)", () => {
   it("o aviso usa plural quando há mais de uma", () => {
     montar([os({}), os({ id: "os-3", numero: "OS-0068" })]);
     expect(screen.getByText(/2 OS estão em status fora do fluxo aprovado/)).toBeInTheDocument();
+  });
+});
+
+describe("transições manuais no Kanban", () => {
+  it.each([
+    ["planejamento", "finalizado", "Finalizado", /só é finalizada depois da validação do PCM/],
+    ["finalizado", "planejamento", "Planejamento", /reabertura é um fluxo próprio/],
+    ["planejamento", "validacao_pcm", "Validação PCM", /não faz parte do fluxo aprovado/],
+  ] as const)("recusa %s → %s pelo seletor e pelo arraste", (origem, destino, coluna, motivo) => {
+    const alterar = vi.fn();
+    const { unmount: desmontar } = montar([os({ status: origem })], undefined, alterar);
+    const seletor = screen.getByRole("combobox", { name: /Mover .* para outra fase/ });
+    expect(seletor.querySelector(`option[value="${destino}"]`)).toBeDisabled();
+    fireEvent.change(seletor, { target: { value: destino } });
+    expect(screen.getByText(motivo)).toBeInTheDocument();
+    // Remonta para que a mensagem do seletor não mascare uma recusa ausente no drop.
+    desmontar();
+    montar([os({ status: origem })], undefined, alterar);
+    const alvo = screen.getByRole("button", { name: `Ocultar coluna ${coluna}` }).parentElement
+      ?.parentElement;
+    if (!alvo) throw new Error("Coluna de destino ausente");
+    fireEvent.drop(alvo, { dataTransfer: { getData: () => "os-1" } });
+    expect(screen.getByText(motivo)).toBeInTheDocument();
+    expect(alterar).not.toHaveBeenCalled();
+  });
+
+  it("mantém o seletor focalizável para a finalização após a validação", async () => {
+    const alterar = vi.fn();
+    montar([os({ status: "validacao_pcm" })], undefined, alterar);
+    const seletor = screen.getByRole("combobox", { name: /Mover .* para outra fase/ });
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+    screen.getByRole("button", { name: /Vistoria técnica/ }).focus();
+    await userEvent.tab();
+    expect(seletor).toHaveFocus();
+    await userEvent.selectOptions(seletor, "finalizado");
+    expect(alterar).toHaveBeenCalledExactlyOnceWith("os-1", "finalizado");
   });
 });

@@ -14,7 +14,6 @@ import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/orde
 import {
   PRIORIDADE_LABEL,
   STATUS_OS,
-  deveAlterarStatusPorDrop,
   prioridadeColor,
   resumoTooltipOrdem,
   rotuloNumeroOrdem,
@@ -92,23 +91,36 @@ export function OsKanbanView({
     .map((status) => STATUS_OS.find((s) => s.value === status)?.label ?? status)
     .join(", ");
 
+  function regraMovimento(ordem: OrdemServicoOperacional, destino: StatusOrdemServico) {
+    const origem = ordem.status as StatusOrdemServico;
+    if (
+      matrizLigada ||
+      origem === "finalizado" ||
+      destino === "finalizado" ||
+      (origem === "planejamento" && destino === "validacao_pcm")
+    ) {
+      return transicaoPermitida(origem, destino);
+    }
+    return { permitida: true, motivo: "" };
+  }
+
+  function moverOrdem(ordem: OrdemServicoOperacional, destino: StatusOrdemServico) {
+    if (!temEscrita || salvando || ordem.status === destino) return;
+    const veredito = regraMovimento(ordem, destino);
+    if (!veredito.permitida) {
+      setRecusa(veredito.motivo);
+      return;
+    }
+    setRecusa(null);
+    onAlterarStatus(ordem.id, destino);
+  }
+
   function onDropNaColuna(destino: StatusOrdemServico, event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setColunaAlvo(null);
     const id = event.dataTransfer.getData(DRAG_MIME);
     const ordem = ordens.find((item) => item.id === id);
-    if (!ordem || !deveAlterarStatusPorDrop(ordem.status, destino)) return;
-    // E01-S200 (BL 007 AC-7): arrastar respeita as transições do fluxo aprovado. A recusa aparece
-    // na tela — soltar o cartão e nada acontecer, sem explicação, é pior que não poder arrastar.
-    if (matrizLigada) {
-      const veredito = transicaoPermitida(ordem.status as StatusOrdemServico, destino);
-      if (!veredito.permitida) {
-        setRecusa(veredito.motivo);
-        return;
-      }
-    }
-    setRecusa(null);
-    onAlterarStatus(id, destino);
+    if (ordem) moverOrdem(ordem, destino);
   }
 
   const colunasOcultas = colunas.filter((coluna) => !coluna.visivel);
@@ -352,13 +364,17 @@ export function OsKanbanView({
                             value={ordem.status}
                             disabled={salvando}
                             onChange={(event) =>
-                              onAlterarStatus(ordem.id, event.target.value as StatusOrdemServico)
+                              moverOrdem(ordem, event.target.value as StatusOrdemServico)
                             }
                             aria-label={`Mover ${rotuloNumeroOrdem(ordem)} para outra fase`}
                             className="mt-2 h-7 w-full rounded-md border border-line-soft bg-paper px-1.5 text-micro font-semibold text-ink-2"
                           >
                             {STATUS_OS.map((status) => (
-                              <option key={status.value} value={status.value}>
+                              <option
+                                key={status.value}
+                                value={status.value}
+                                disabled={!regraMovimento(ordem, status.value).permitida}
+                              >
                                 {status.label}
                               </option>
                             ))}
