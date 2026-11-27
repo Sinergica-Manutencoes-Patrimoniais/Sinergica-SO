@@ -1,6 +1,6 @@
 import { AvisoCarregando, Button, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
@@ -20,7 +20,7 @@ type Props = {
   onRascunhoAlterado?: (temRascunho: boolean) => void;
 };
 type PesquisaOs = { texto: string; termo: string };
-type ControlePesquisa = ReturnType<typeof useState<PesquisaOs>>;
+type ControlePesquisa = [PesquisaOs, Dispatch<SetStateAction<PesquisaOs>>];
 type PropsComPesquisa = Props & { pesquisa: ControlePesquisa };
 type Responsavel = "cliente" | "sinergica" | "todos";
 type EstadoLista =
