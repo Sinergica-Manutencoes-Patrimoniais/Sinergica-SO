@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -90,6 +90,8 @@ describe("configuração de capacidades", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
+    onlineManager.setOnline(true);
   });
 
   async function iniciarConcessao() {
@@ -100,6 +102,102 @@ describe("configuração de capacidades", () => {
     fireEvent.change(screen.getByLabelText("Escopo"), { target: { value: cliente } });
     fireEvent.click(screen.getByRole("button", { name: "Conceder ação" }));
   }
+
+  async function prepararVinculo() {
+    montar();
+    await screen.findByRole("option", { name: "Operador" });
+    await screen.findByRole("option", { name: "Equipe PCM" });
+    fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "Teste" } });
+    fireEvent.change(screen.getByLabelText("Usuário"), { target: { value: usuario } });
+    fireEvent.change(screen.getByLabelText("Perfil"), { target: { value: perfil } });
+  }
+
+  it("DEF-57: repete o mesmo vínculo quando a sessão responde e a fila de rede está pausada", async () => {
+    sessionStorage.setItem(
+      `sso-capacidades-pendente:${usuario}`,
+      JSON.stringify({
+        chave: "novo-vinculo",
+        id: request,
+        payload: {
+          expectedRevision: 0,
+          usuarioId: usuario,
+          perfilId: perfil,
+          ativo: true,
+          motivo: "Teste",
+        },
+      }),
+    );
+    await prepararVinculo();
+    act(() => onlineManager.setOnline(false));
+    fireEvent.click(screen.getByRole("button", { name: "Repetir alteração pendente" }));
+    await screen.findByText("Alteração registrada.");
+    expect(gateway.definirVinculoPerfil).toHaveBeenCalledWith(
+      expect.objectContaining({ requestId: request }),
+    );
+    expect(sessionStorage.getItem(`sso-capacidades-pendente:${usuario}`)).toBeNull();
+  });
+
+  it.each(["revisao_obsoleta", "could not serialize access"])(
+    "DEF-57: só libera a revisão no replay quando o servidor confirma %s",
+    async (message) => {
+      const chave = `sso-capacidades-pendente:${usuario}`;
+      sessionStorage.setItem(
+        chave,
+        JSON.stringify({
+          chave: "novo-vinculo",
+          id: request,
+          payload: {
+            expectedRevision: 0,
+            usuarioId: usuario,
+            perfilId: perfil,
+            ativo: true,
+            motivo: "Teste",
+          },
+        }),
+      );
+      gateway.definirVinculoPerfil.mockRejectedValueOnce({ code: "40001", message });
+      await prepararVinculo();
+      fireEvent.click(screen.getByRole("button", { name: "Repetir alteração pendente" }));
+      const aviso = await screen.findByRole("alert");
+      if (message === "revisao_obsoleta") {
+        expect(aviso).toHaveTextContent(/vínculo mudou.*nenhuma alteração foi aplicada/i);
+        expect(sessionStorage.getItem(chave)).toBeNull();
+      } else {
+        expect(aviso).toHaveTextContent(/tentativa foi preservada/i);
+        expect(sessionStorage.getItem(chave)).not.toBeNull();
+      }
+    },
+  );
+
+  it("DEF-57: encerra a espera da sessão sem registrar nem enviar uma nova tentativa", async () => {
+    await prepararVinculo();
+    const atribuir = screen.getByRole("button", { name: "Atribuir perfil ao usuário" });
+    vi.useFakeTimers();
+    servico.getUser.mockImplementationOnce(() => new Promise(() => {}));
+    fireEvent.click(atribuir);
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(screen.getByRole("alert")).toHaveTextContent(/sessão.*nenhuma alteração foi enviada/i);
+    expect(atribuir).toBeEnabled();
+    expect(gateway.definirVinculoPerfil).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(`sso-capacidades-pendente:${usuario}`)).toBeNull();
+  });
+
+  it("DEF-57: orienta a reativação quando o par Usuário e Perfil já existe inativo", async () => {
+    gateway.listarVinculos.mockResolvedValue([
+      { id: "vinculo-ficticio", usuarioId: usuario, perfilId: perfil, ativo: false, revisao: 2 },
+    ]);
+    await prepararVinculo();
+    await screen.findByRole("button", { name: "Reativar" });
+    fireEvent.click(screen.getByRole("button", { name: "Atribuir perfil ao usuário" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/vínculo inativo.*reativar/i);
+    expect(gateway.definirVinculoPerfil).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(`sso-capacidades-pendente:${usuario}`)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Reativar" }));
+    await screen.findByText("Alteração registrada.");
+    expect(gateway.definirVinculoPerfil).toHaveBeenCalledWith(
+      expect.objectContaining({ expectedRevision: 2, ativo: true }),
+    );
+  });
 
   it("DEF-48: mostra processamento enquanto o vínculo ativo aguarda confirmação local", async () => {
     let confirmarSessao = () => {};

@@ -3,6 +3,7 @@ import { AlertCircle, Pencil, Plus, RefreshCw, Wallet, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { listarCategorias } from "../application/categorias";
 import { listarContas } from "../application/contas";
 import {
@@ -101,7 +102,7 @@ export function ContasPagarPage() {
       setErroAcao(null);
       await baixarLancamento(supabaseFinanceiroAdapter, {
         id: pagavel.lancamentoId,
-        dataPagamento: new Date().toISOString().slice(0, 10),
+        dataPagamento: dataIsoLocal(),
         userId: user.id,
       });
       await carregar();

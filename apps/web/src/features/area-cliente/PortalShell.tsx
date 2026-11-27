@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useId, useState } from "react";
 import { useAuth } from "../../app/auth-context";
 import { flagLigada } from "../../config/flags-sso";
+import { dataIsoLocal } from "../../lib/data-br";
 // E03-S06: o portal reusa a regra de expiração de proposta do Comercial,
 // mesmo padrão já estabelecido de `formatarTextoRelatorioCliente` (E01-S135, importado do PCM
 // logo abaixo) — o portal é o ponto de composição entre módulos, não os módulos entre si.
@@ -125,7 +126,7 @@ export function PortalShell() {
 
 function Painel({ data, onNavegar }: { data: PortalSnapshot; onNavegar: (secao: Secao) => void }) {
   const proximas = data.visitas
-    .filter((v) => v.data >= new Date().toISOString().slice(0, 10) && v.status !== "cancelado")
+    .filter((v) => v.data >= dataIsoLocal() && v.status !== "cancelado")
     .slice(0, 3);
   const abertos = data.chamados.filter((c) => !["cancelado", "convertido_os"].includes(c.status));
   const osAbertas = data.os.filter((os) => !["concluida", "cancelada"].includes(os.status));

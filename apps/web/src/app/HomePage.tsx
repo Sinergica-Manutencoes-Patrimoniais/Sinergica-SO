@@ -16,6 +16,7 @@ import type { ModuloId as ModuloNegocioId } from "../features/config/domain/modu
 import type { FinanceiroView } from "../features/financeiro/mock/FinanceiroMockRouter";
 import type { GuiaView } from "../features/guia/GuiaRouter";
 import { NovaOrdemServicoModal } from "../features/pcm/components/NovaOrdemServicoModal";
+import { dataIsoLocal } from "../lib/data-br";
 import { DashboardGeral } from "./DashboardGeral";
 import { useAuth } from "./auth-context";
 import { MODULOS, isModuloNegocio } from "./modulos";
@@ -473,7 +474,7 @@ export function HomePage() {
   }
 
   function abrirOrdensHoje() {
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = dataIsoLocal();
     setOrdensFiltrosPreset({ tecnicoFuncionarioId: "", dataInicio: hoje, dataFim: hoje });
     setPcmView("ordens");
   }

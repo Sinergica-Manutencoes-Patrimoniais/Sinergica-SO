@@ -12,6 +12,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { listarCategorias } from "../application/categorias";
 import { listarContas } from "../application/contas";
 import type { ClienteOpcao, FiltroLancamentos } from "../application/financeiro-gateway";
@@ -276,7 +277,7 @@ function LancamentosPageContexto() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `lancamentos-financeiro-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `lancamentos-financeiro-${dataIsoLocal()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -801,12 +802,10 @@ function LancamentoModal({
   const [status, setStatus] = useState<LancamentoStatus>(lancamento?.status ?? "realizado");
   const [valor, setValor] = useState(lancamento ? centavosParaReais(lancamento.valorCentavos) : "");
   const [dataCompetencia, setDataCompetencia] = useState(
-    lancamento?.dataCompetencia ?? new Date().toISOString().slice(0, 10),
+    lancamento?.dataCompetencia ?? dataIsoLocal(),
   );
   const [dataVencimento, setDataVencimento] = useState(lancamento?.dataVencimento ?? "");
-  const [dataPagamento, setDataPagamento] = useState(
-    lancamento?.dataPagamento ?? new Date().toISOString().slice(0, 10),
-  );
+  const [dataPagamento, setDataPagamento] = useState(lancamento?.dataPagamento ?? dataIsoLocal());
   const [categoriaId, setCategoriaId] = useState(lancamento?.categoriaId ?? "");
   const [contaId, setContaId] = useState(lancamento?.contaId ?? "");
   const [clienteId, setClienteId] = useState(lancamento?.clienteId ?? "");
@@ -1010,7 +1009,7 @@ function BaixaModal({
   onCancel: () => void;
   onConfirmar: (lancamento: LancamentoItem, dataPagamento: string) => Promise<void>;
 }) {
-  const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().slice(0, 10));
+  const [dataPagamento, setDataPagamento] = useState(dataIsoLocal());
   const [confirmando, setConfirmando] = useState(false);
 
   async function confirmar() {

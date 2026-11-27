@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { dataIsoLocal } from "../../../lib/data-br";
 import {
   buscarValorHoraTecnico,
   obterApontamentoHoras,
@@ -58,11 +59,7 @@ type Aba = "periodo" | "dia";
 
 function inicioDoMes(): string {
   const agora = new Date();
-  return new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString().slice(0, 10);
-}
-
-function hoje(): string {
-  return new Date().toISOString().slice(0, 10);
+  return dataIsoLocal(new Date(agora.getFullYear(), agora.getMonth(), 1));
 }
 
 export function ApontamentoHorasPage({
@@ -79,7 +76,7 @@ export function ApontamentoHorasPage({
   const { user } = useAuth();
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [inicio, setInicio] = useState(inicioDoMes());
-  const [fim, setFim] = useState(hoje());
+  const [fim, setFim] = useState(dataIsoLocal);
   const [tecnicoFuncionarioId, setTecnicoFuncionarioId] = useState("");
   const [clienteId, setClienteId] = useState("");
   const [custosPorTecnico, setCustosPorTecnico] = useState<Map<string, number | null>>(new Map());

@@ -3,6 +3,7 @@ import { AlertCircle, Copy, QrCode, RefreshCw, TrendingUp, Wallet } from "lucide
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { emitirCobranca, listarCobrancasPorLancamento } from "../application/cobranca";
 import { listarAgingRecebiveis } from "../application/contratos";
 import type { ClienteOpcao } from "../application/financeiro-gateway";
@@ -130,6 +131,7 @@ export function ContasReceberPage() {
             <Button
               variant={visao === "faixa" ? "accent" : "ghost"}
               size="sm"
+              aria-pressed={visao === "faixa"}
               onClick={() => setVisao("faixa")}
             >
               Por faixa
@@ -137,6 +139,7 @@ export function ContasReceberPage() {
             <Button
               variant={visao === "cliente" ? "accent" : "ghost"}
               size="sm"
+              aria-pressed={visao === "cliente"}
               onClick={() => setVisao("cliente")}
             >
               Por cliente
@@ -311,7 +314,7 @@ function BaixaModal({
   onCancel: () => void;
   onConfirmar: (recebivel: RecebivelAging, dataPagamento: string) => Promise<void>;
 }) {
-  const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().slice(0, 10));
+  const [dataPagamento, setDataPagamento] = useState(dataIsoLocal());
   const [confirmando, setConfirmando] = useState(false);
 
   async function confirmar() {

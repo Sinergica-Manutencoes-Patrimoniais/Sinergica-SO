@@ -43,3 +43,7 @@ describe("VisaoClientePage — E01-S53 AC-8", () => {
 it("DEF-44: usa formatação de data civil na linha de inspeção do 360", () => {
   expect(fonte).toContain("formatarDataBr(inspecao.dataInspecao)");
 });
+
+it("DEF-55: usa o rótulo compartilhado para o estado da inspeção", () => {
+  expect(fonte).toContain("INSPECAO_STATUS_LABEL[inspecao.status]");
+});

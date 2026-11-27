@@ -1,3 +1,4 @@
+import { dataIsoLocal } from "../../../lib/data-br";
 import { classificarMicrobio, validarTransicaoStatusNc } from "../domain/pmoc";
 import type { PmocStatusNc, PmocTipoManutencao } from "../domain/pmoc";
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
@@ -146,10 +147,7 @@ export async function avancarStatusNc(
   input: AtualizarStatusNcInput,
 ) {
   validarTransicaoStatusNc(atual, input.status);
-  const completedAt =
-    input.status === "fechado"
-      ? (input.completedAt ?? new Date().toISOString().slice(0, 10))
-      : null;
+  const completedAt = input.status === "fechado" ? (input.completedAt ?? dataIsoLocal()) : null;
   return gateway.atualizarStatusNc({ ...input, completedAt });
 }
 

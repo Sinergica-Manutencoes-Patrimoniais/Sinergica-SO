@@ -10,6 +10,8 @@ import { criarRegistroRequisicoes } from "../../application/requisicoes-capacida
 import { ACOES_INDIVIDUAIS, ACOES_SSO, type AcaoSso } from "../../domain/capacidades-sso";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 
+const LIMITE_CONFERENCIA_SESSAO_MS = 10_000;
+
 const LABELS: Record<AcaoSso, string> = {
   "cadastro.ler": "Consultar estrutura técnica",
   "cadastro.gerir": "Gerir estrutura técnica",
@@ -178,8 +180,20 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const ocupado =
     registrando || api.perfil.isPending || api.vinculo.isPending || api.concessao.isPending;
   async function conferirSessao() {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
+    let prazo: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const limite = new Promise<never>((_, rejeitar) => {
+        prazo = setTimeout(
+          () => rejeitar(new Error("Tempo de conferência da sessão excedido.")),
+          LIMITE_CONFERENCIA_SESSAO_MS,
+        );
+      });
+      const { data, error } = await Promise.race([supabase.auth.getUser(), limite]);
+      if (error || data.user?.id !== userId || !montado.current)
+        throw new Error("Sessão alterada.");
+    } finally {
+      clearTimeout(prazo);
+    }
   }
   let pendente: ReturnType<typeof registro.pendente> = null;
   let armazenamentoIndisponivel = false;
@@ -282,6 +296,14 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
       setErro("Confira os dados da alteração antes de enviar.");
       return false;
     }
+    try {
+      await conferirSessao();
+    } catch {
+      setErro(
+        "Não foi possível conferir a sessão. Nenhuma alteração foi enviada nesta tentativa. Confira a conexão e tente novamente.",
+      );
+      return false;
+    }
     let requestId: string;
     try {
       requestId = registro.obter(chave, payload);
@@ -293,7 +315,6 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
       return false;
     }
     try {
-      await conferirSessao();
       const atual = registro.pendente();
       if (
         !atual ||
@@ -327,6 +348,29 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
           "Outra alteração de permissões está em andamento. A tentativa foi preservada; confira o estado e repita a mesma operação quando a alteração concorrente terminar.",
         );
         return false;
+      }
+      if (
+        (chave === "novo-vinculo" || chave.startsWith("vinculo-")) &&
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "40001" &&
+        "message" in error &&
+        error.message === "revisao_obsoleta"
+      ) {
+        // A RPC serializa por requestId e retorna o recibo antes de checar a revisão.
+        // Este erro específico confirma que não há recibo e a escrita não foi aplicada.
+        const liberado = await conferirSessao()
+          .then(() => registro.concluir(chave, requestId, payload))
+          .catch(() => false);
+        if (liberado) {
+          atualizarPendente((n) => n + 1);
+          setErro(
+            "O vínculo mudou e nenhuma alteração foi aplicada. Confira o vínculo atualizado na seção Vínculos.",
+          );
+          void api.vinculos.refetch();
+          return false;
+        }
       }
       // Uma recusa em uma repetição não comprova que tentativa anterior não
       // tenha sido confirmada. Preserve o mesmo pedido até reconciliação.
@@ -399,6 +443,20 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   }
   async function vincular() {
     if (!usuarioConfirmado || !perfilConfirmado) return;
+    const vinculoExistente = api.vinculos.isError
+      ? undefined
+      : api.vinculos.data?.pages
+          .flat()
+          .find((v) => v.usuarioId === usuarioId && v.perfilId === perfilId);
+    if (vinculoExistente) {
+      setMensagem(null);
+      setErro(
+        vinculoExistente.ativo
+          ? "Este usuário já tem este perfil ativo."
+          : "Já existe um vínculo inativo para este usuário e perfil. Use Reativar na seção Vínculos.",
+      );
+      return;
+    }
     const dados = { expectedRevision: 0, usuarioId, perfilId, ativo: true, motivo };
     await executar("novo-vinculo", dados, (requestId) =>
       api.vinculo.mutateAsync({ ...dados, requestId }),

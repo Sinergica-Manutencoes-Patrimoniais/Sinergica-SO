@@ -19,6 +19,8 @@ import type {
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
 import { STATUS_HISTORICO } from "../domain/cliente-360";
+
+import type { InspecaoStatus } from "../domain/inspecoes-laudos";
 import { ehOsRegistroVisita } from "../domain/ordens-servico";
 
 // Linha de OS como vem do PostgREST (snake_case). Mapeada para OrdemServicoResumo (camelCase).
@@ -84,7 +86,7 @@ interface GrupoClienteRow {
 interface InspecaoEventoRow {
   id: string;
   titulo: string;
-  status: string;
+  status: InspecaoStatus;
   data_inspecao: string;
   created_at: string;
   total_itens: number;

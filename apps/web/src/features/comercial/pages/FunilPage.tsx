@@ -55,6 +55,7 @@ export function FunilPage({
 
   const [colunaAlvo, setColunaAlvo] = useState<string | null>(null);
   const [pendente, setPendente] = useState<MovimentoPendente | null>(null);
+  const [confirmacao, setConfirmacao] = useState("");
   const [erro, setErro] = useState<string | null>(null);
 
   const etapas = etapasQuery.data ?? [];
@@ -68,6 +69,7 @@ export function FunilPage({
     motivoPerdaId?: string,
   ) {
     setErro(null);
+    setConfirmacao("");
     // AC-5: card só sai visualmente da origem se a escrita der certo — `onSuccess`/`onError` do
     // TanStack cuidam disso: sem atualização otimista aqui, a lista só reflete o servidor.
     try {
@@ -76,6 +78,7 @@ export function FunilPage({
         etapaDestinoId: destino.id,
         motivoPerdaId: motivoPerdaId ?? null,
       });
+      setConfirmacao(`${oportunidade.titulo} movida para ${destino.nome}.`);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao mover a oportunidade.");
     }
@@ -139,6 +142,8 @@ export function FunilPage({
           Atualizar
         </Button>
       </header>
+
+      <output className={confirmacao ? "text-body text-ink-2" : "sr-only"}>{confirmacao}</output>
 
       {erro && (
         <Card>

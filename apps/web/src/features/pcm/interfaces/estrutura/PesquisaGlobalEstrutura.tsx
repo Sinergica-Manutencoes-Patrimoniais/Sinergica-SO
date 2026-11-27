@@ -5,7 +5,10 @@ import type {
   ResultadoEstrutura,
   TipoEstrutura,
 } from "../../application/pesquisa-estrutura-gateway";
-import { usePesquisaEstrutura } from "../../application/pesquisa-estrutura-queries";
+import {
+  usePesquisaEstrutura,
+  useResumoGrupoEstrutura,
+} from "../../application/pesquisa-estrutura-queries";
 import { DrawerDetalheAtivo } from "../../components/DrawerDetalheAtivo";
 import { DrawerDetalheSistema } from "../../components/DrawerDetalheSistema";
 import { supabasePesquisaEstruturaAdapter } from "../../infrastructure/supabase-pesquisa-estrutura-adapter";
@@ -47,6 +50,12 @@ function Conteudo({
   const [caminho, setCaminho] = useState<ResultadoEstrutura[]>([]);
   const [detalhe, setDetalhe] = useState<ResultadoEstrutura | null>(null);
   const contexto = caminho.at(-1) ?? null;
+  const resumoGrupo = useResumoGrupoEstrutura(
+    gateway,
+    usuario,
+    clienteId,
+    detalhe?.tipo === "grupo_quantitativo" ? detalhe.id : null,
+  );
   const consulta = usePesquisaEstrutura(gateway, { usuario, clienteId, busca, tipo, contexto });
   const indisponivel = consulta.isError || (consulta.isFetching && !consulta.isFetchingNextPage);
   const itens = indisponivel ? [] : (consulta.data?.pages.flat() ?? []);
@@ -90,8 +99,10 @@ function Conteudo({
         }}
       >
         <label className="flex flex-col gap-1 text-body">
-          Nome, código ou TAG
+          Pesquisar estrutura
           <input
+            name="buscaEstrutura"
+            placeholder="Nome, código ou TAG"
             className="input"
             maxLength={200}
             value={entrada}
@@ -217,6 +228,32 @@ function Conteudo({
             )}
             {detalhe.tipo === "grupo_quantitativo" && (
               <>
+                {resumoGrupo.isPending ? (
+                  <p>Carregando dados do grupo…</p>
+                ) : resumoGrupo.isError || !resumoGrupo.data ? (
+                  <p role="alert">Os dados do grupo estão indisponíveis.</p>
+                ) : (
+                  <dl className="grid gap-2">
+                    <div>
+                      <dt>Quantidade</dt>
+                      <dd>
+                        {resumoGrupo.data.quantidade}{" "}
+                        {resumoGrupo.data.quantidade === 1 ? "unidade" : "unidades"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Local</dt>
+                      <dd>{resumoGrupo.data.local ?? "Indisponível"}</dd>
+                    </div>
+                    <div>
+                      <dt>Sistema</dt>
+                      <dd>
+                        {resumoGrupo.data.sistema ??
+                          (resumoGrupo.data.temSistema ? "Indisponível" : "Não vinculado")}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
                 <HistoricoGrupo userId={usuario} clienteId={clienteId} grupoId={detalhe.id} />
                 <PlanosDoAlvo userId={usuario} clienteId={clienteId} tipo="grupo" id={detalhe.id} />
                 <PendenciasDoAlvo
