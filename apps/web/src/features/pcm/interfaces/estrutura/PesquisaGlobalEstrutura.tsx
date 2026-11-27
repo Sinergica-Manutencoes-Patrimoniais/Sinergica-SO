@@ -90,8 +90,10 @@ function Conteudo({
         }}
       >
         <label className="flex flex-col gap-1 text-body">
-          Nome, código ou TAG
+          Pesquisar estrutura
           <input
+            name="buscaEstrutura"
+            placeholder="Nome, código ou TAG"
             className="input"
             maxLength={200}
             value={entrada}

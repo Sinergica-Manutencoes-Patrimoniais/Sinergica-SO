@@ -18,6 +18,8 @@ it("mostra um estado vazio próprio na visão por faixa", async () => {
   render(<ContasReceberPage />);
   const vazio = await screen.findByText("Nenhuma conta a receber em aberto.");
   expect(vazio).toBeVisible();
-  fireEvent.click(screen.getByRole("button", { name: "Por cliente" }));
+  expect(screen.getByRole("button", { name: "Por faixa", pressed: true })).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Por cliente", pressed: false }));
+  expect(screen.getByRole("button", { name: "Por cliente", pressed: true })).toBeVisible();
   expect(vazio).not.toBeInTheDocument();
 });

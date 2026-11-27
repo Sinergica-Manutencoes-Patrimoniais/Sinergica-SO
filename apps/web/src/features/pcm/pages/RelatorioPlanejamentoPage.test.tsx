@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { RelatorioPlanejamentoPage } from "./RelatorioPlanejamentoPage";
 
@@ -23,6 +23,9 @@ it("consulta a data local vigente a cada abertura do relatório", async () => {
   await act(async () => {});
   expect(screen.getByLabelText("Data")).toHaveValue("2026-11-26");
   await waitFor(() => expect(listarSemana).toHaveBeenLastCalledWith("2026-11-26", "2026-11-26"));
+  expect(screen.getByRole("button", { name: "Planejamento", pressed: true })).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Execução", pressed: false }));
+  expect(screen.getByRole("button", { name: "Execução", pressed: true })).toBeVisible();
   primeiro.unmount();
 
   vi.setSystemTime(new Date(2026, 10, 27, 0, 1));

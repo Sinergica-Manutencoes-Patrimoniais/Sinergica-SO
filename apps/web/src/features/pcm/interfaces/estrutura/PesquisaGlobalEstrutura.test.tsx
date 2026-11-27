@@ -8,6 +8,7 @@ import type {
   ResultadoEstrutura,
 } from "../../application/pesquisa-estrutura-gateway";
 import { PesquisaGlobalEstrutura } from "./PesquisaGlobalEstrutura";
+vi.mock("../../../../lib/supabase-client", () => ({ supabase: {} }));
 
 const area: ResultadoEstrutura = {
   chave: "area:a",
@@ -61,7 +62,9 @@ describe("E01-S190 AC-9/AC-10", () => {
     ]);
     montar({ pesquisar });
     await screen.findByText("Bomba");
-    fireEvent.change(screen.getByLabelText("Nome, código ou TAG"), { target: { value: "TAG-01" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Pesquisar estrutura" }), {
+      target: { value: "TAG-01" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Pesquisar estrutura" }));
     await waitFor(() =>
       expect(pesquisar.mock.calls.some(([filtro]) => filtro.busca === "TAG-01")).toBe(true),

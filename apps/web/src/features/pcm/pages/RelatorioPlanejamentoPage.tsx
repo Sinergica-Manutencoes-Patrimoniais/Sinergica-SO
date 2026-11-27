@@ -124,6 +124,7 @@ export function RelatorioPlanejamentoPage() {
         </select>
         <button
           type="button"
+          aria-pressed={modo === "planejamento"}
           onClick={() => setModo("planejamento")}
           className={modo === "planejamento" ? "btn-primary" : "btn-secondary"}
         >
@@ -131,6 +132,7 @@ export function RelatorioPlanejamentoPage() {
         </button>
         <button
           type="button"
+          aria-pressed={modo === "execucao"}
           onClick={() => setModo("execucao")}
           className={modo === "execucao" ? "btn-primary" : "btn-secondary"}
         >
