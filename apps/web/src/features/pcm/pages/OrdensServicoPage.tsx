@@ -84,6 +84,7 @@ import {
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
+import { transicaoManualOrdem } from "../domain/transicoes-os";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
 import {
@@ -522,12 +523,26 @@ export function OrdensServicoPage({
   }
 
   async function onAplicarStatusLote(status: StatusOrdemServico) {
-    if (!user || selecionados.size === 0) return;
+    if (!user || !temEscrita || salvando || selecionados.size === 0) return;
     setSalvando(true);
     setErroAcao(null);
     try {
-      const resultado = await mutacaoStatus.mutateAsync({ ids: [...selecionados], status });
-      const falhas = resultado.filter((item) => !item.sucesso);
+      const ids: string[] = [];
+      const falhas: { id: string; erro: string | null }[] = [];
+      for (const id of selecionados) {
+        const ordem = ordensCarregadas.find((item) => item.id === id);
+        const regra = ordem && transicaoManualOrdem(ordem, status);
+        if (regra?.permitida) ids.push(id);
+        else
+          falhas.push({
+            id,
+            erro: regra?.motivo ?? "Atualize a lista e selecione a OS novamente.",
+          });
+      }
+      if (ids.length > 0) {
+        const resultado = await mutacaoStatus.mutateAsync({ ids, status });
+        falhas.push(...resultado.filter((item) => !item.sucesso));
+      }
       if (falhas.length > 0) {
         setSelecionados(new Set(falhas.map((f) => f.id)));
         setErroAcao(
@@ -548,7 +563,16 @@ export function OrdensServicoPage({
   }
 
   async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
-    if (!user) return;
+    if (!user || !temEscrita || salvando) return;
+    const atual =
+      ordensCarregadas.find((ordem) => ordem.id === id) ??
+      (selecionada?.id === id ? selecionada : null);
+    if (!atual || atual.status === status) return;
+    const regra = transicaoManualOrdem(atual, status);
+    if (!regra.permitida) {
+      setErroAcao(regra.motivo);
+      return;
+    }
     if (ehCardChamadoAberto(id)) {
       if (status === "solicitacao") return;
       const chamadoId = id.replace("chamado-aberto:", "");
@@ -564,9 +588,6 @@ export function OrdensServicoPage({
       if (!resultado?.sucesso) throw new Error(resultado?.erro ?? "Status não atualizado.");
       // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
       // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
-      const atual =
-        ordensCarregadas.find((ordem) => ordem.id === id) ??
-        (selecionada?.id === id ? selecionada : null);
       if (origemCentral?.os === id) await resumoCentral.refetch();
       if (status === "planejamento" && atual && atual.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
@@ -657,7 +678,10 @@ export function OrdensServicoPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
+        <div
+          role="alert"
+          className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger"
+        >
           {erroAcao}
         </div>
       )}
@@ -858,6 +882,7 @@ export function OrdensServicoPage({
                   </p>
                   <select
                     className="input h-8 w-auto text-caption"
+                    aria-label="Aplicar status às OS selecionadas"
                     disabled={salvando}
                     value=""
                     onChange={(event) => {
@@ -1288,6 +1313,7 @@ function DetalheOs({
   // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
   // com folga. Fecha por Esc, clique fora, ou no X.
   const [expandido, setExpandido] = useState(false);
+  const [recusaStatus, setRecusaStatus] = useState("");
 
   // E01-S118 AC-6: abre o modal quando o pai sinaliza um clique de card (seq > 0).
   useEffect(() => {
@@ -1464,7 +1490,12 @@ function DetalheOs({
                   className="input flex-1"
                   value={selecionada.status}
                   disabled={salvando}
-                  onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
+                  onChange={(event) => {
+                    const destino = event.target.value as StatusOrdemServico;
+                    const regra = transicaoManualOrdem(selecionada, destino);
+                    setRecusaStatus(regra.motivo);
+                    if (regra.permitida) onAlterarStatus(destino);
+                  }}
                 >
                   {STATUS_OS.map((status) => (
                     <option key={status.value} value={status.value}>
@@ -1473,6 +1504,11 @@ function DetalheOs({
                   ))}
                 </select>
               </div>
+              {recusaStatus && (
+                <p role="alert" className="mt-2 text-caption text-danger">
+                  {recusaStatus}
+                </p>
+              )}
               <p className="mt-2 text-caption text-ink-3">
                 Planejamento não abre task automaticamente. Confirme pelo botão Auvo.
               </p>

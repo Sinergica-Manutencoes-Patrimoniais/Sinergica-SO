@@ -1,7 +1,6 @@
 import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { type DragEvent, useState } from "react";
-import { flagLigada } from "../../../config/flags-sso";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import { type ItemCampoAConciliar, rotuloMotivoCampo } from "../domain/campo-a-conciliar";
 import {
@@ -22,7 +21,7 @@ import {
 } from "../domain/ordens-servico";
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
 import type { ResumoChamadoCard } from "../domain/progresso-chamado";
-import { transicaoPermitida } from "../domain/transicoes-os";
+import { transicaoManualOrdem } from "../domain/transicoes-os";
 import { ProgressoChamadoCard } from "./ProgressoChamadoCard";
 
 const DRAG_MIME = "application/x-sinergica-os-id";
@@ -81,7 +80,6 @@ export function OsKanbanView({
 }) {
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
   const [recusa, setRecusa] = useState<string | null>(null);
-  const matrizLigada = flagLigada("VITE_SSO_MATRIZ_TRANSICOES_ENABLED");
   const ordens = ordensRecebidas.filter(
     (ordem) => !(ordem.origemInspecaoItemId && ehItemPreTriagem(ordem) && ehItemBacklog(ordem)),
   );
@@ -96,22 +94,9 @@ export function OsKanbanView({
     .map((status) => STATUS_OS.find((s) => s.value === status)?.label ?? status)
     .join(", ");
 
-  function regraMovimento(ordem: OrdemServicoOperacional, destino: StatusOrdemServico) {
-    const origem = ordem.status as StatusOrdemServico;
-    if (
-      matrizLigada ||
-      origem === "finalizado" ||
-      destino === "finalizado" ||
-      (origem === "planejamento" && destino === "validacao_pcm")
-    ) {
-      return transicaoPermitida(origem, destino);
-    }
-    return { permitida: true, motivo: "" };
-  }
-
   function moverOrdem(ordem: OrdemServicoOperacional, destino: StatusOrdemServico) {
     if (!temEscrita || salvando || ordem.status === destino) return;
-    const veredito = regraMovimento(ordem, destino);
+    const veredito = transicaoManualOrdem(ordem, destino);
     if (!veredito.permitida) {
       setRecusa(veredito.motivo);
       return;
@@ -133,9 +118,12 @@ export function OsKanbanView({
   return (
     <div className="flex flex-col gap-2">
       {recusa && (
-        <output className="block rounded-md border border-danger bg-danger-soft px-3 py-2 text-caption text-danger">
+        <p
+          role="alert"
+          className="block rounded-md border border-danger bg-danger-soft px-3 py-2 text-caption text-danger"
+        >
           {recusa}
-        </output>
+        </p>
       )}
 
       {colunasOcultas.length > 0 && (
@@ -375,11 +363,7 @@ export function OsKanbanView({
                             className="mt-2 h-7 w-full rounded-md border border-line-soft bg-paper px-1.5 text-micro font-semibold text-ink-2"
                           >
                             {STATUS_OS.map((status) => (
-                              <option
-                                key={status.value}
-                                value={status.value}
-                                disabled={!regraMovimento(ordem, status.value).permitida}
-                              >
+                              <option key={status.value} value={status.value}>
                                 {status.label}
                               </option>
                             ))}

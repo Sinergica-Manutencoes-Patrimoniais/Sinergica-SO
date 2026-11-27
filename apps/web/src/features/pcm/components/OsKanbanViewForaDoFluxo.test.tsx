@@ -136,11 +136,12 @@ describe("transições manuais no Kanban", () => {
     ["planejamento", "finalizado", "Finalizado", /só é finalizada depois da validação do PCM/],
     ["finalizado", "planejamento", "Planejamento", /reabertura é um fluxo próprio/],
     ["planejamento", "validacao_pcm", "Validação PCM", /não faz parte do fluxo aprovado/],
+    ["solicitacao", "validacao_pcm", "Validação PCM", /não faz parte do fluxo aprovado/],
   ] as const)("recusa %s → %s pelo seletor e pelo arraste", (origem, destino, coluna, motivo) => {
     const alterar = vi.fn();
     const { unmount: desmontar } = montar([os({ status: origem })], undefined, alterar);
     const seletor = screen.getByRole("combobox", { name: /Mover .* para outra fase/ });
-    expect(seletor.querySelector(`option[value="${destino}"]`)).toBeDisabled();
+    expect(seletor.querySelector(`option[value="${destino}"]`)).not.toBeDisabled();
     fireEvent.change(seletor, { target: { value: destino } });
     expect(screen.getByText(motivo)).toBeInTheDocument();
     // Remonta para que a mensagem do seletor não mascare uma recusa ausente no drop.

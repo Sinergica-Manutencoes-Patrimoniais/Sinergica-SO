@@ -16,7 +16,11 @@
 // Aplicar a matriz a esses caminhos travaria operação legítima — o campo não pede licença ao
 // quadro para avançar. Por isso a regra vive aqui, na borda manual, e não num gatilho de banco.
 
-import type { StatusOrdemServico } from "./ordens-servico";
+import {
+  type OrdemServicoOperacional,
+  type StatusOrdemServico,
+  ehCardChamadoAberto,
+} from "./ordens-servico";
 
 /** Status que o fluxo aprovado prevê como etapa de tratamento da OS. "demanda" é estado do
  * Chamado, não da OS, e por isso não aparece como destino aqui. */
@@ -61,10 +65,7 @@ export interface ResultadoTransicao {
 
 const PERMITIDA: ResultadoTransicao = { permitida: true, motivo: "" };
 
-export function transicaoPermitida(
-  de: StatusOrdemServico,
-  para: StatusOrdemServico,
-): ResultadoTransicao {
+export function transicaoPermitida(de: string, para: StatusOrdemServico): ResultadoTransicao {
   if (de === para) return PERMITIDA;
 
   if (LEGADOS.includes(para))
@@ -73,7 +74,7 @@ export function transicaoPermitida(
       motivo: `"${rotulo(para)}" é um status antigo, fora do fluxo aprovado — não é possível mover uma OS para ele.`,
     };
 
-  const destinos = DESTINOS[de];
+  const destinos = Object.hasOwn(DESTINOS, de) ? DESTINOS[de] : undefined;
   if (destinos === undefined)
     return {
       permitida: false,
@@ -104,6 +105,16 @@ export function transicaoPermitida(
   };
 }
 
+/** Cards sintéticos de demanda podem abrir a conversão, antes de existir uma OS. */
+export function transicaoManualOrdem(
+  ordem: Pick<OrdemServicoOperacional, "id" | "status">,
+  destino: StatusOrdemServico,
+): ResultadoTransicao {
+  if (ehCardChamadoAberto(ordem.id) && ordem.status === "demanda" && destino === "planejamento")
+    return PERMITIDA;
+  return transicaoPermitida(ordem.status, destino);
+}
+
 /** Destinos manuais de um status — usado para montar o seletor só com o que é possível, em vez de
  * deixar o operador escolher algo que será recusado depois. */
 export function destinosPermitidos(de: StatusOrdemServico): StatusOrdemServico[] {
@@ -118,7 +129,7 @@ export function ehStatusDoFluxoAprovado(status: string): boolean {
   return FLUXO_APROVADO.includes(status as StatusOrdemServico);
 }
 
-function rotulo(status: StatusOrdemServico): string {
+function rotulo(status: string): string {
   const mapa: Record<string, string> = {
     solicitacao: "Solicitação",
     planejamento: "Planejamento",
