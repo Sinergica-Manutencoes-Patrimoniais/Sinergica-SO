@@ -22,7 +22,7 @@ alwaysApply: false
 | **Área efetiva** | `area_id ?? (Área do local_id)`. Linhas legadas têm `local_id` sem `area_id` (não há backfill), então toda leitura que precisa da Área usa a Área efetiva. | Área diretamente gravada quando o ativo está em um Local | PCM |
 | **Auvo** | App móvel de gestão de campo usado pelos técnicos (check-in GPS, fotos, checklist, assinatura offline). Não é substituível para execução. | PCM (o sistema de decisão) | Todos |
 | **Auvo Task** | Tarefa no Auvo — a representação de campo de uma OS do PCM. Criada via API quando OS entra no status `planejamento`. | OS (a entidade de decisão no PCM) | PCM |
-| **Backlog** | Lista de itens de manutenção pendentes de um condomínio, priorizados por score GUT. | Lista de chamados (OS abertas) | PCM |
+| **Backlog** | Lista de itens de manutenção pendentes de um condomínio, priorizados por score GUT. **Como contagem** (E01-S204): ver "Contagens operacionais" abaixo. | Lista de chamados (OS abertas) | PCM |
 | **Baixa** | Transição `previsto → realizado` de um lançamento (recebimento/pagamento confirmado), com data de pagamento. Pode ocorrer manualmente ou via conciliação. | Conciliação (exige transação de extrato) | Financeiro |
 | **Board de ativos** | Visualização em colunas por Local (nível-1 da Área, sub-locais agrupados em subgrupos) dos ativos de um cliente — aba "Board" da Visão do Cliente; clicar num ativo abre o drawer de detalhe (breadcrumb, sistemas, componentes, histórico de OS). Fase 1 do "mapa do andar" (E01-S78; fase 2 = planta com pins). | Estrutura (árvore de cadastro Área>Local) | PCM |
 | **BTU/h** | British Thermal Unit por hora — unidade de capacidade de refrigeração dos equipamentos de AR. 12.000 BTU/h = 1 TR (Tonelada de Refrigeração). | kW (potência elétrica consumida) | PCM/PMOC |
@@ -153,6 +153,21 @@ tela ou story antiga, prevalece ele. Fonte:
 | **API de domínio** | Contrato único, autenticado e versionado pelo qual Módulo de Campo e MCP consultam e **propõem** dados. Aplica autenticação, autorização, validação, idempotência e auditoria. Nenhuma interface externa grava direto no cadastro oficial. | Edge Function de propósito específico · SQL genérico (nunca exposto). |
 | **MCP (SSO)** | Camada conversacional controlada sobre a **API de domínio** — nunca sobre o banco. Primeira entrega em leitura; escrita posterior **apenas em staging**, com confirmação. Herda usuário, escopo, permissões e auditoria. | Servidores MCP de ferramentas de desenvolvimento. |
 | **Fator de preço** | Multiplicador sobre o custo. **Fator 1,5 = preço equivalente a 150% do custo, isto é, markup de 50%** — não 1,5%. Tributos e parâmetros são configuráveis, nunca fixos no código. | Margem percentual sobre a venda. |
+
+## Contagens operacionais — definição única (E01-S204, decidida pelo dono em 27/11/2026)
+
+Toda tela que mostra um destes números lê a mesma classificação no banco
+(`pcm.fn_classificar_item_operacao`, migration `1913`), via `pcm.fn_demanda_em_aberto` ou
+`pcm.fn_contagem_operacional_por_cliente`. Origem: DEF-40/DEF-49 do caderno e ponto C do reteste.
+
+| Termo | Definição | NÃO confundir com |
+|---|---|---|
+| **OS aberta** | OS não excluída, **com Chamado**, fora de `finalizado`/`cancelado` (Validação PCM conta) e que não é ponto de visita (INÍCIO/FIM VISITA). | Pré-chamado · Chamado aberto · "Chamados e OS abertos" (rótulo antigo da soma). |
+| **Pré-chamado** | OS **sem Chamado** (número `PRE-`), aguardando "Confirmar chamado". Contado à parte, nunca dentro de OS aberta. | OS aberta · Chamado. |
+| **Chamado aberto** | Chamado em `aberto` ou `demanda` que ainda não tem OS. | Chamado com OS (conta como a OS). |
+| **Backlog** (contagem) | OS aberta ainda não planejada: sem data, sem técnico e sem tarefa Auvo. Subconjunto de OS aberta. | Status `backlog` da OS · Item de Backlog (E01-S193, escopo de Pendências). |
+| **Demanda em aberto** | OS abertas + pré-chamados + chamados abertos, com as três parcelas escritas na tela (Chamados). | OS aberta. |
+| **OS criadas no dia** | OS com `created_at` no dia do Relatório Diário, qualquer status. | OS aberta (o cartão chamava-se "OS abertas" até E01-S204). |
 
 ## Marketing — indicadores da Meta e atribuição (E06-S01, 25/11/2026)
 
