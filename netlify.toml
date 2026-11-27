@@ -180,6 +180,11 @@
   # A autoridade é o gate de banco, não a flag: as varreduras periódicas (pcm.sso_varredura_fila_
   # gate, sso_varredura_os_gate, sso_varredura_origens_gate) continuam FECHADAS por ADR-1264, então
   # as telas que dependem do que a varredura escreveria aparecem vazias — por desenho, não por bug.
+  # Contêiner da jornada de reconciliação (Visão 360 → Estrutura, CT-10). Sem esta flag as 51 flags
+  # abaixo estão ligadas mas o bloco inteiro não renderiza. Gate de banco
+  # pcm.reconciliacao_outbox_gate aberto pela migration 1875. A RPC exige a permissão
+  # 'integracao.reconciliar' no Cliente. Desligar: trocar para "false" e redeployar — a seção some.
+  VITE_SSO_RECONCILIACAO_ENABLED = "true"
   VITE_SSO_ACOES_LOCAIS_FILA_ENABLED = "true"
   VITE_SSO_AVALIACAO_EVIDENCIA_OS_ENABLED = "true"
   VITE_SSO_COINCIDENCIAS_FILA_ENABLED = "true"
