@@ -26,12 +26,41 @@ const resultado = z
     sistemaId: r.sistema_id,
     parentId: r.parent_id,
   }));
+const resumoGrupo = z
+  .object({
+    quantidade: z.number().int().positive().safe(),
+    sistema_id: uuid.nullable(),
+    local: z.object({ nome: z.string() }).nullable(),
+    sistema: z.object({ nome: z.string() }).nullable(),
+  })
+  .transform((r) => ({
+    quantidade: r.quantidade,
+    local: r.local?.nome ?? null,
+    sistema: r.sistema?.nome ?? null,
+    temSistema: r.sistema_id !== null,
+  }));
 async function conferirSessao(usuario: string, signal?: AbortSignal) {
   const atual = await supabase.auth.getUser();
   if (atual.error || atual.data.user?.id !== usuario || signal?.aborted)
     throw new Error("Sessão alterada.");
 }
 export const supabasePesquisaEstruturaAdapter: PesquisaEstruturaGateway = {
+  async obterResumoGrupo(usuario, clienteId, grupoId, signal) {
+    await conferirSessao(usuario, signal);
+    const { data, error } = await supabase
+      .schema("pcm")
+      .from("grupos_quantitativos")
+      .select("quantidade,sistema_id,local:locais(nome),sistema:sistemas(nome)")
+      .eq("cliente_id", clienteId)
+      .eq("id", grupoId)
+      .eq("ativo", true)
+      .is("deleted_at", null)
+      .abortSignal(signal)
+      .maybeSingle();
+    await conferirSessao(usuario, signal);
+    if (error) throw error;
+    return resumoGrupo.nullable().parse(data);
+  },
   async pesquisar(filtro, signal) {
     await conferirSessao(filtro.usuario, signal);
     const consulta = supabase.schema("pcm").rpc("sso_pesquisar_estrutura", {

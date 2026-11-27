@@ -24,6 +24,18 @@ export type FiltroPesquisaEstrutura = {
   contexto: Pick<ResultadoEstrutura, "tipo" | "id"> | null;
   apos: string | null;
 };
+export type ResumoGrupoEstrutura = {
+  quantidade: number;
+  local: string | null;
+  sistema: string | null;
+  temSistema: boolean;
+};
 export interface PesquisaEstruturaGateway {
+  obterResumoGrupo(
+    usuario: string,
+    clienteId: string,
+    grupoId: string,
+    signal: AbortSignal,
+  ): Promise<ResumoGrupoEstrutura | null>;
   pesquisar(filtro: FiltroPesquisaEstrutura, signal?: AbortSignal): Promise<ResultadoEstrutura[]>;
 }

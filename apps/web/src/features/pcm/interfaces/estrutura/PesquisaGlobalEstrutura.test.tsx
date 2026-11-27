@@ -29,18 +29,26 @@ const local: ResultadoEstrutura = {
   nome: "Sala técnica",
   localId: "l",
 };
-function montar(gateway: PesquisaEstruturaGateway, clienteId = "cliente-a") {
+function montar(
+  gateway: Pick<PesquisaEstruturaGateway, "pesquisar"> & Partial<PesquisaEstruturaGateway>,
+  clienteId = "cliente-a",
+) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <PesquisaGlobalEstrutura usuario="usuario" clienteId={clienteId} gateway={gateway} />
+      <PesquisaGlobalEstrutura
+        usuario="usuario"
+        clienteId={clienteId}
+        gateway={{ obterResumoGrupo: async () => null, ...gateway }}
+      />
     </QueryClientProvider>,
   );
 }
 describe("E01-S190 AC-9/AC-10", () => {
   it("identifica tipos e navega Área → Local preservando retorno", async () => {
-    const gateway: PesquisaEstruturaGateway = {
-      pesquisar: async (filtro) => (filtro.contexto?.id === "a" ? [local] : [area]),
+    const gateway = {
+      pesquisar: async (filtro: FiltroPesquisaEstrutura) =>
+        filtro.contexto?.id === "a" ? [local] : [area],
     };
     montar(gateway);
     await screen.findByRole("button", { name: "Navegar em Área Prédio" });
@@ -100,4 +108,28 @@ describe("E01-S190 AC-9/AC-10", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Sem permissão");
     expect(screen.queryByText("Sala técnica")).toBeNull();
   });
+});
+
+it("mostra quantidade, Local e Sistema no detalhe do Grupo Quantitativo", async () => {
+  const grupo: ResultadoEstrutura = {
+    ...local,
+    chave: "grupo_quantitativo:g",
+    tipo: "grupo_quantitativo",
+    id: "g",
+    nome: "Bombas",
+  };
+  const gateway = {
+    pesquisar: async () => [grupo],
+    obterResumoGrupo: vi.fn(async () => ({
+      quantidade: 3,
+      local: "Sala técnica",
+      sistema: "Hidráulica",
+      temSistema: true,
+    })),
+  };
+  montar(gateway);
+  fireEvent.click(await screen.findByRole("button", { name: "Ver Grupo Quantitativo Bombas" }));
+  expect(await screen.findByText("3 unidades")).toBeVisible();
+  expect(screen.getByText("Sala técnica")).toBeVisible();
+  expect(screen.getByText("Hidráulica")).toBeVisible();
 });
