@@ -187,6 +187,7 @@ export function InspecoesPage({
   const [revisaoBacklog, setRevisaoBacklog] = useState<{
     itens: ItemClassificado[];
     correlacionou: boolean;
+    origens: OrigemRevisaoBacklog[];
   } | null>(null);
   const [confirmandoBacklog, setConfirmandoBacklog] = useState(false);
 
@@ -413,7 +414,7 @@ export function InspecoesPage({
           descricao: item.descricao,
         })),
       );
-      setRevisaoBacklog(resultado);
+      setRevisaoBacklog({ ...resultado, origens: selecionados });
     } catch (error) {
       setErroAcao(
         error instanceof Error ? error.message : "Não foi possível classificar os itens.",
@@ -978,6 +979,7 @@ export function InspecoesPage({
       {revisaoBacklog && (
         <RevisaoBacklogModal
           itens={revisaoBacklog.itens}
+          origens={revisaoBacklog.origens}
           correlacionou={revisaoBacklog.correlacionou}
           confirmando={confirmandoBacklog}
           onClose={() => setRevisaoBacklog(null)}
@@ -1311,16 +1313,20 @@ function ItemInspecaoCard({
   );
 }
 
+type OrigemRevisaoBacklog = Pick<InspecaoItem, "id" | "descricao" | "sistema" | "localizacao">;
+
 // E01-S143 AC-4/AC-5: revisão editável do que a IA calculou antes de confirmar o backlog — mesmo
 // princípio do `ImportarRelatorioModal` (IA é copiloto, humano confirma antes de gravar).
-function RevisaoBacklogModal({
+export function RevisaoBacklogModal({
   itens,
+  origens,
   correlacionou,
   confirmando,
   onClose,
   onConfirmar,
 }: {
   itens: ItemClassificado[];
+  origens: readonly OrigemRevisaoBacklog[];
   correlacionou: boolean;
   confirmando: boolean;
   onClose: () => void;
@@ -1352,6 +1358,7 @@ function RevisaoBacklogModal({
         )}
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {edicoes.map((item) => {
+            const origem = origens.find((origem) => origem.id === item.itemId);
             // GUTd (E01-S82): média ponderada dos quatro fatores na escala 1..5 — não o produto
             // G×U×T de 1..125, que é o critério antigo.
             const score = calcularScoreGutd(
@@ -1362,7 +1369,20 @@ function RevisaoBacklogModal({
               PESOS_GUTD_PADRAO,
             );
             return (
-              <div key={item.itemId} className="rounded-md border border-line-soft p-3">
+              <fieldset
+                key={item.itemId}
+                className="min-w-0 rounded-md border border-line-soft p-3"
+              >
+                <legend className="px-1 text-body font-semibold text-ink">
+                  {origem?.descricao || item.itemId}
+                </legend>
+                {origem && (
+                  <p className="mb-2 text-caption text-ink-3">
+                    {[rotuloSistema(origem.sistema), origem.localizacao]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
                 <div className="mb-2 flex items-center justify-between">
                   <span
                     className={`rounded-full px-2 py-0.5 text-micro font-semibold ${prioridadeColor(classificarPrioridadeGutd(score))}`}
@@ -1432,7 +1452,7 @@ function RevisaoBacklogModal({
                     placeholder="Ex.: NBR 17240:2010 item 5.4.3"
                   />
                 </label>
-              </div>
+              </fieldset>
             );
           })}
         </div>
