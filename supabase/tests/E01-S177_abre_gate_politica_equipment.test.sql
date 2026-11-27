@@ -1,4 +1,4 @@
--- pgTAP da migration 1909: abre pcm.sso_politica_equipment_gate. Prova: aberta; os gates dos
+-- pgTAP da migration 1910: abre pcm.sso_politica_equipment_gate. Prova: aberta; os gates dos
 -- produtores T-24 (que enfileiram no Auvo) seguem FECHADOS; só superadmin lista e grava; idempotência
 -- e revisão otimista; audit.events; permitido e negado.
 begin;
@@ -11,7 +11,7 @@ insert into config.usuarios(user_id,papel,nome,ativo) values
  ('17709000-0000-4000-8000-000000000002','colaborador','Colaborador sintético',true);
 insert into pcm.equipamento_categorias(id,nome) values ('17709000-0000-4000-8000-000000000005','Categoria sintética 177');
 
-select is((select habilitado from pcm.sso_politica_equipment_gate where id), true, 'gate de política aberto pela 1909');
+select is((select habilitado from pcm.sso_politica_equipment_gate where id), true, 'gate de política aberto pela 1910');
 select is((select habilitado from pcm.sso_t24_contrato_corretiva_gate where id), false, 'produtor T-24 corretivo segue FECHADO');
 select is((select count(*) from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
   where n.nspname='pcm' and c.relname='sso_politica_equipment_gate' and c.relrowsecurity and c.relforcerowsecurity), 1::bigint, 'trava segue com RLS enable + force');

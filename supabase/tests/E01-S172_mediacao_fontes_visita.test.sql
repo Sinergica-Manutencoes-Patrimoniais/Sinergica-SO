@@ -1,6 +1,6 @@
 begin;
 \ir E01-S172_snapshot_capacidade_fixture.sql
--- A migration 1908 abre estas duas travas em produção; o teste precisa do estado FECHADO para provar
+-- A migration 1909 abre estas duas travas em produção; o teste precisa do estado FECHADO para provar
 -- a recusa nomeada, então fecha dentro da transação (rollback ao fim).
 update pcm.capacidade_fontes_mediacao_gate set habilitado=false where id;
 update pcm.capacidade_demanda_gate set habilitado=false where id;

@@ -1,11 +1,11 @@
--- pgTAP da migration 1908: abre só as duas travas do caminho de demanda (Fontes de Demanda).
+-- pgTAP da migration 1909: abre só as duas travas do caminho de demanda (Fontes de Demanda).
 -- Prova: abertas; esforço e obrigações preparadas seguem FECHADAS; RLS força; permitido e negado.
 begin;
 \ir E01-S172_snapshot_capacidade_fixture.sql
 select plan(10);
 
-select is((select habilitado from pcm.capacidade_fontes_mediacao_gate where id), true, 'mediação de fontes aberta pela 1908');
-select is((select habilitado from pcm.capacidade_demanda_gate where id), true, 'demanda aberta pela 1908');
+select is((select habilitado from pcm.capacidade_fontes_mediacao_gate where id), true, 'mediação de fontes aberta pela 1909');
+select is((select habilitado from pcm.capacidade_demanda_gate where id), true, 'demanda aberta pela 1909');
 select is((select habilitado from pcm.capacidade_esforco_declarado_gate where id), false, 'esforço declarado segue FECHADA');
 select is((select habilitado from pcm.sso_fila_obrigacoes_preparadas_gate where id), false, 'obrigações preparadas (compartilhada com S166) segue FECHADA');
 select is((select count(*) from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
@@ -32,7 +32,7 @@ reset role;
 update pcm.capacidade_demanda_gate set habilitado=false where id;
 set local role authenticated;
 select throws_ok($$select * from pcm.sso_fontes_demanda_autorizadas('16896000-0000-4000-8000-000000000002','2026-10-26',null,50)$$,
-  '55000','demanda_capacidade_bloqueada','reverso da 1908 devolve a recusa nomeada');
+  '55000','demanda_capacidade_bloqueada','reverso da 1909 devolve a recusa nomeada');
 reset role;
 select * from finish();
 rollback;
