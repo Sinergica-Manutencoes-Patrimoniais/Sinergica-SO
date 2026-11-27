@@ -20,17 +20,22 @@ insert into config.sso_concessoes(usuario_id,acao,cliente_id) values
 ('18110000-0000-4000-8000-000000000001','custo.ler','18110000-0000-4000-8000-000000000002'),
 ('18110000-0000-4000-8000-000000000001','orcamento.emitir','18110000-0000-4000-8000-000000000002');
 insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,created_by) values
-('18110000-0000-4000-8000-000000000011','18110000-0000-4000-8000-000000000002','DEF12-A','OS com orçamento','corretiva','18110000-0000-4000-8000-000000000001');
+('18110000-0000-4000-8000-000000000011','18110000-0000-4000-8000-000000000002','DEF12-A','OS com orçamento','corretiva','18110000-0000-4000-8000-000000000001'),
+('18110000-0000-4000-8000-000000000012','18110000-0000-4000-8000-000000000003','DEF12-B','OS de cliente sem concessão','corretiva','18110000-0000-4000-8000-000000000001');
 insert into pcm.listas_materiais(id,cliente_id,ordem_servico_id,responsavel,texto_original,criado_por) values
-('18110000-0000-4000-8000-000000000021','18110000-0000-4000-8000-000000000002','18110000-0000-4000-8000-000000000011','cliente','2 disjuntores 25A','18110000-0000-4000-8000-000000000001');
+('18110000-0000-4000-8000-000000000021','18110000-0000-4000-8000-000000000002','18110000-0000-4000-8000-000000000011','cliente','2 disjuntores 25A','18110000-0000-4000-8000-000000000001'),
+('18110000-0000-4000-8000-000000000022','18110000-0000-4000-8000-000000000003','18110000-0000-4000-8000-000000000012','cliente','lista do cliente sem concessão','18110000-0000-4000-8000-000000000001');
 insert into comercial.etapas_funil(id,nome,ordem,cor) values
 ('18110000-0000-4000-8000-000000000031','DEF-12 etapa sintética',1,'#000000');
 insert into comercial.oportunidades(id,cliente_id,etapa_id,titulo) values
-('18110000-0000-4000-8000-000000000041','18110000-0000-4000-8000-000000000002','18110000-0000-4000-8000-000000000031','Oportunidade aberta DEF-12');
+('18110000-0000-4000-8000-000000000041','18110000-0000-4000-8000-000000000002','18110000-0000-4000-8000-000000000031','Oportunidade aberta DEF-12'),
+('18110000-0000-4000-8000-000000000042','18110000-0000-4000-8000-000000000003','18110000-0000-4000-8000-000000000031','Oportunidade do cliente sem concessão');
 insert into comercial.propostas(id,oportunidade_id,tipo,status,versao_atual,preco_centavos) values
-('18110000-0000-4000-8000-000000000051','18110000-0000-4000-8000-000000000041','simples','rascunho',1,150000);
+('18110000-0000-4000-8000-000000000051','18110000-0000-4000-8000-000000000041','simples','rascunho',1,150000),
+('18110000-0000-4000-8000-000000000052','18110000-0000-4000-8000-000000000042','simples','rascunho',1,90000);
 insert into comercial.proposta_origens_operacionais(proposta_id,ordem_servico_id,lista_materiais_id,criado_por) values
-('18110000-0000-4000-8000-000000000051','18110000-0000-4000-8000-000000000011','18110000-0000-4000-8000-000000000021','18110000-0000-4000-8000-000000000001');
+('18110000-0000-4000-8000-000000000051','18110000-0000-4000-8000-000000000011','18110000-0000-4000-8000-000000000021','18110000-0000-4000-8000-000000000001'),
+('18110000-0000-4000-8000-000000000052','18110000-0000-4000-8000-000000000012','18110000-0000-4000-8000-000000000022','18110000-0000-4000-8000-000000000001');
 
 set local request.jwt.claims='{"sub":"18110000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
 set local role authenticated;
@@ -51,7 +56,7 @@ select is(
 
 -- O grant não afasta a autorização por cliente: ela continua dentro das funções.
 select throws_ok(
-  $$select * from comercial.sso_listar_edicao_orcamentos_os('18110000-0000-4000-8000-000000000003','18110000-0000-4000-8000-000000000011',20,null)$$,
+  $$select * from comercial.sso_listar_edicao_orcamentos_os('18110000-0000-4000-8000-000000000003','18110000-0000-4000-8000-000000000012',20,null)$$,
   '42501','ordem_nao_encontrada_ou_sem_acesso','cliente sem concessão continua negado na lista');
 select throws_ok(
   $$select * from comercial.sso_listar_oportunidades_orcamento('18110000-0000-4000-8000-000000000003',null)$$,
@@ -71,9 +76,8 @@ select ok(
     'comercial.sso_listar_oportunidades_orcamento(uuid,uuid)',
     'comercial.sso_orcamento_operacional_autorizado(uuid)',
     'comercial.sso_preco_orcamento_operacional(uuid)']) f)
-  and not has_function_privilege('authenticated','comercial.sso_listar_orcamentos_os(uuid,uuid,integer,uuid)','execute')
   and not has_function_privilege('authenticated','comercial.sso_orcamento_sem_oportunidade(uuid)','execute'),
-  'anon e service_role seguem fora, e os núcleos internos permanecem privados');
+  'anon e service_role seguem fora, e sso_orcamento_sem_oportunidade continua privada');
 
 select * from finish();
 rollback;

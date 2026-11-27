@@ -265,7 +265,15 @@ function Conteudo({ usuario, cliente, ordemServico, listaInicialId }: Props) {
         </output>
       )}
       {(oportunidades.isError || listas.isError) && (
-        <p role="alert">Não foi possível consultar oportunidades ou listas autorizadas.</p>
+        <p role="alert">
+          {mensagemFalhaAtivacao(oportunidades.error ?? listas.error)
+            ? TEXTO_FALHA_ATIVACAO[
+                mensagemFalhaAtivacao(oportunidades.error ?? listas.error) as
+                  | "indisponivel"
+                  | "sem_permissao"
+              ]
+            : "Não foi possível consultar oportunidades ou listas autorizadas."}
+        </p>
       )}
       {oportunidades.data?.pages.flat().length === 0 && !oportunidades.hasNextPage && (
         <p>Não há oportunidade aberta disponível; não será criada oportunidade automática.</p>

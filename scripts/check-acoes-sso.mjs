@@ -9,7 +9,8 @@
 // `config.sso_autorizar_acao` recusa.
 //
 // Roda no job `db-tests`, com o Supabase local de pé (mesmo padrão de check-jornadas-flags.mjs):
-// o banco é a fonte de verdade, o front é o espelho.
+// o banco é a fonte de verdade, o front é o espelho. A porta padrão é a de `supabase/config.toml`
+// ([db] port = 55322), não a 54322 do Supabase CLI — este projeto mudou a porta.
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
@@ -18,7 +19,7 @@ import { fileURLToPath } from "node:url";
 const raiz = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const arquivo = resolve(raiz, "apps/web/src/features/pcm/domain/capacidades-sso.ts");
 const URL_BANCO =
-  process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+  process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:55322/postgres";
 
 function listaDoFront(fonte, nome) {
   const bloco = new RegExp(`${nome}[^=]*=\\s*\\[([\\s\\S]*?)\\]`).exec(fonte);
