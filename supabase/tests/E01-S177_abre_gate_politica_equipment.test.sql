@@ -2,7 +2,7 @@
 -- produtores T-24 (que enfileiram no Auvo) seguem FECHADOS; só superadmin lista e grava; idempotência
 -- e revisão otimista; audit.events; permitido e negado.
 begin;
-select plan(13);
+select plan(12);
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
  ('17709000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s177-super@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now()),
  ('17709000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s177-colab@example.test',crypt('x',gen_salt('bf')),'{}','{}',now(),now());
