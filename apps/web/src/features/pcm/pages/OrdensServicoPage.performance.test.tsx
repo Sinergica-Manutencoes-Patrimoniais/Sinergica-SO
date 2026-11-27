@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
+import { TooltipProvider } from "@sinergica/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -15,7 +16,12 @@ import {
   useAlterarStatusOperacao,
   useDetalheOperacao,
   useFeedOperacao,
+  useFeedsKanban,
+  useKpisOperacao,
 } from "../application/operacao-queries";
+
+import { OsKanbanView } from "../components/OsKanbanView";
+import { COLUNAS_KANBAN_PADRAO } from "../domain/kanban-colunas";
 
 const mocks = vi.hoisted(() => ({
   listarPagina: vi.fn(),
@@ -89,6 +95,54 @@ function Feed({ busca }: { busca: string }) {
   );
 }
 
+function FeedPorCliente({ clienteId, kanban }: { clienteId: string; kanban: boolean }) {
+  const filtro = { clienteId, status: "ativos" as const };
+  const lista = useFeedOperacao(gateway, { ...filtro, ordem: "recentes", limite: 50 }, !kanban);
+  const quadro = useFeedsKanban(gateway, filtro, kanban);
+  const kpis = useKpisOperacao(gateway, { clienteId });
+  const feed = kanban ? quadro : { ...lista, pages: lista.data?.pages };
+  return (
+    <>
+      {kpis.data && <p>Total {kpis.data.total}</p>}
+      {dadosFeedParaOrdens(feed.pages).map((ordem) => (
+        <p key={ordem.id}>{ordem.titulo}</p>
+      ))}
+      {feed.hasNextPage && (
+        <button type="button" onClick={() => void feed.fetchNextPage()}>
+          Mais
+        </button>
+      )}
+    </>
+  );
+}
+
+function QuadroMovel() {
+  const quadro = useFeedsKanban(gateway, { status: "ativos" });
+  const movimento = useAlterarStatusOperacao(gateway);
+  return (
+    <TooltipProvider>
+      <OsKanbanView
+        ordens={dadosFeedParaOrdens(quadro.pages)}
+        temEscrita
+        salvando={movimento.isPending}
+        onAlterarStatus={(id, status) => movimento.mutate({ ids: [id], status })}
+        onSelecionar={() => {}}
+        colunas={COLUNAS_KANBAN_PADRAO}
+        onMoverColuna={() => {}}
+        onAlternarVisibilidadeColuna={() => {}}
+        preventivas={[]}
+      />
+    </TooltipProvider>
+  );
+}
+
+function colunaKanban(rotulo: string) {
+  const coluna = screen.getByRole("button", { name: `Ocultar coluna ${rotulo}` }).parentElement
+    ?.parentElement?.parentElement;
+  if (!coluna) throw new Error(`Coluna ${rotulo} não encontrada`);
+  return within(coluna);
+}
+
 function Detalhe({ id }: { id: string | null }) {
   const query = useDetalheOperacao(gateway, id);
   return <span>{query.data?.descricao ?? "sem detalhe"}</span>;
@@ -105,6 +159,91 @@ function BotaoStatus({ ids = ["1"] }: { ids?: string[] }) {
 
 describe("fluidez do feed de Chamados", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("reconsulta Validação PCM e Execução após persistir os dois movimentos e carrega Demanda", async () => {
+    let status = "em_execucao";
+    mocks.listarPagina.mockImplementation(async ({ status: fase }) =>
+      fase === status
+        ? pagina({ ...item("1", "OS fictícia"), status })
+        : fase === "demanda"
+          ? pagina({
+              ...item("chamado-aberto:2", "Chamado fictício"),
+              tipo: "chamado_aberto",
+              ordemServicoId: null,
+              status: "demanda",
+            })
+          : pagina(),
+    );
+    mocks.alterarStatusLote.mockImplementation(async (_ids, destino) => {
+      status = destino;
+      return [{ id: "1", sucesso: true, erro: null }];
+    });
+    render(<QuadroMovel />, { wrapper: Wrapper });
+    await colunaKanban("Em execução").findByText("OS fictícia");
+    const seletorDaOs = (coluna: string) =>
+      colunaKanban(coluna).getByRole("combobox", { name: /Mover .* para outra fase/ });
+    fireEvent.change(seletorDaOs("Em execução"), { target: { value: "validacao_pcm" } });
+    await waitFor(() => expect(seletorDaOs("Validação PCM")).toBeEnabled());
+    expect(colunaKanban("Validação PCM").getByText("OS fictícia")).toBeTruthy();
+    expect(screen.getAllByText("OS fictícia")).toHaveLength(1);
+    expect(
+      mocks.listarPagina.mock.calls.filter(([filtro]) => filtro.status === "validacao_pcm"),
+    ).toHaveLength(2);
+    fireEvent.change(seletorDaOs("Validação PCM"), { target: { value: "em_execucao" } });
+    await waitFor(() => expect(seletorDaOs("Em execução")).toBeEnabled());
+    expect(colunaKanban("Em execução").getByText("OS fictícia")).toBeTruthy();
+    expect(colunaKanban("Validação PCM").queryByText("OS fictícia")).toBeNull();
+    expect(colunaKanban("Demanda").getByText("Chamado fictício")).toBeTruthy();
+    expect(seletorDaOs("Demanda")).toHaveValue("demanda");
+    expect(screen.getAllByText("OS fictícia")).toHaveLength(1);
+  });
+
+  it.each([false, true])("isola páginas e cursor ao trocar Cliente (kanban %s)", async (kanban) => {
+    let resolverB!: (pagina: PaginaOperacao) => void;
+    mocks.contarKpis.mockImplementation(({ clienteId }) =>
+      clienteId === "a" ? Promise.resolve({ total: 11 }) : new Promise(() => {}),
+    );
+    mocks.listarPagina.mockImplementation(({ clienteId, status, cursor }) => {
+      if (kanban && status !== "solicitacao") return Promise.resolve(pagina());
+      if (clienteId === "a")
+        return Promise.resolve({
+          ...pagina({ ...item("1", "OS de A"), clienteId }),
+          proximoCursor: { ordem: "recentes", createdAt: "2026-08-10T12:00:00Z", id: "1" },
+        });
+      if (cursor) return Promise.resolve(pagina({ ...item("3", "Segunda de B"), clienteId }));
+      return new Promise<PaginaOperacao>((resolve) => {
+        resolverB = resolve;
+      });
+    });
+    const view = render(<FeedPorCliente clienteId="a" kanban={kanban} />, { wrapper: Wrapper });
+    await screen.findByText("OS de A");
+    await screen.findByText("Total 11");
+    expect(screen.getByRole("button", { name: "Mais" })).toBeTruthy();
+    view.rerender(<FeedPorCliente clienteId="b" kanban={kanban} />);
+    expect(screen.queryByText("OS de A")).toBeNull();
+    expect(screen.queryByText("Total 11")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Mais" })).toBeNull();
+    await act(async () =>
+      resolverB({
+        ...pagina({ ...item("2", "OS de B"), clienteId: "b" }),
+        proximoCursor: { ordem: "recentes", createdAt: "2026-08-10T12:00:00Z", id: "2" },
+      }),
+    );
+    await screen.findByText("OS de B");
+    fireEvent.click(screen.getByRole("button", { name: "Mais" }));
+    await screen.findByText("Segunda de B");
+    expect(mocks.listarPagina).toHaveBeenLastCalledWith(
+      expect.objectContaining({ clienteId: "b", cursor: expect.objectContaining({ id: "2" }) }),
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("mantém o identificador de Cliente de cada OS para filtrar o backlog", () => {
+    const primeira = item("1", "Inspeção");
+    const segunda = { ...item("2", "Vistoria"), clienteId: "outro-cliente" };
+    const ordens = dadosFeedParaOrdens([pagina(primeira, segunda)]);
+    expect(ordens.map((ordem) => ordem.clienteId)).toEqual(["cliente", "outro-cliente"]);
+  });
 
   it("mantém dados anteriores durante troca de filtro", async () => {
     let resolverNova: ((value: PaginaOperacao) => void) | undefined;

@@ -101,6 +101,7 @@ interface LaudoEventoRow {
 }
 
 interface OsClienteListaRow {
+  id: string;
   client_id: string;
   status: string;
   score_pcm: number;
@@ -253,6 +254,28 @@ async function funcionariosPorId(): Promise<Map<string, string>> {
   );
 }
 
+async function listarOrdensDaCarteira() {
+  const tamanhoPagina = 500;
+  const ordens: OsClienteListaRow[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    let consulta = supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("id,client_id,status,score_pcm,created_at,auvo_synced_at")
+      .is("deleted_at", null)
+      .order("id", { ascending: true })
+      .limit(tamanhoPagina);
+    if (cursor) consulta = consulta.gt("id", cursor);
+    const { data, error } = await consulta;
+    if (error) return { data: null, error };
+    const pagina = (data ?? []) as OsClienteListaRow[];
+    ordens.push(...pagina);
+    if (pagina.length < tamanhoPagina) return { data: ordens, error: null };
+    cursor = pagina.at(-1)?.id;
+  }
+}
+
 function erroColunaAusente(error: { code?: string; message?: string } | null): boolean {
   return (
     error?.code === "PGRST204" ||
@@ -356,11 +379,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         // só operação, nunca exibe quem ainda não é cliente de verdade.
         .neq("tipo", "lead")
         .order("nome", { ascending: true }),
-      supabase
-        .schema("pcm")
-        .from("ordens_servico")
-        .select("client_id,status,score_pcm,created_at,auvo_synced_at")
-        .is("deleted_at", null),
+      listarOrdensDaCarteira(),
       supabase.schema("pcm").from("equipamentos").select("auvo_customer_id,ativo,updated_at"),
       marcacoesClientePorId(),
     ]);
@@ -391,7 +410,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       string,
       { abertas: number; maiorScore: number; ultimaAtividadeEm: string | null }
     >();
-    for (const ordem of (ordens.data ?? []) as OsClienteListaRow[]) {
+    for (const ordem of ordens.data ?? []) {
       const atual = ordensPorCliente.get(ordem.client_id) ?? {
         abertas: 0,
         maiorScore: 0,
@@ -508,10 +527,11 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
   },
 
   async listarBacklogCliente(id): Promise<OrdemServicoResumo[]> {
-    // AC-3: OS em aberto (status NOT IN histórico), ordenadas por score_pcm desc no servidor,
-    // desempate determinístico por created_at desc. Sem sort no client.
-    const [{ data, error }, funcionarios] = await Promise.all([
-      supabase
+    const funcionarios = await funcionariosPorId();
+    const tamanhoPagina = 500;
+    const ordens: OrdemServicoRow[] = [];
+    for (let inicio = 0; ; inicio += tamanhoPagina) {
+      const { data, error } = await supabase
         .schema("pcm")
         .from("ordens_servico")
         .select(COLUNAS_OS)
@@ -519,11 +539,15 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .is("deleted_at", null)
         .not("status", "in", STATUS_HISTORICO_LISTA)
         .order("score_pcm", { ascending: false })
-        .order("created_at", { ascending: false }),
-      funcionariosPorId(),
-    ]);
-    if (error) throw error;
-    return (data ?? []).map((row) => mapearOs(row as OrdemServicoRow, funcionarios));
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(inicio, inicio + tamanhoPagina - 1);
+      if (error) throw error;
+      const pagina = (data ?? []) as OrdemServicoRow[];
+      ordens.push(...pagina);
+      if (pagina.length < tamanhoPagina) break;
+    }
+    return ordens.map((row) => mapearOs(row, funcionarios));
   },
 
   async listarHistoricoCliente(id): Promise<OrdemServicoResumo[]> {
@@ -684,6 +708,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .schema("pcm")
         .from("equipamentos")
         .select("auvo_equipment_id,updated_at")
+        .not("auvo_equipment_id", "is", null)
         .eq("auvo_customer_id", auvoId)
         .eq("ativo", true)
         .order("updated_at", { ascending: false })

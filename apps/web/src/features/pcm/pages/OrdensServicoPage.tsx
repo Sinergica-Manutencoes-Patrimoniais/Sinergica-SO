@@ -76,7 +76,6 @@ import {
   calcularKpisOrdens,
   calcularMetricasOperacao,
   ehCardChamadoAberto,
-  ehItemBacklog,
   filtrarOrdens,
   prioridadeColor,
   resumoTooltipOrdem,
@@ -85,6 +84,7 @@ import {
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
+import { transicaoManualOrdem } from "../domain/transicoes-os";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
 import {
@@ -161,6 +161,7 @@ export function OrdensServicoPage({
     status: "ativos",
     ...filtrosIniciais,
   }));
+  const [prioridadeBacklog, setPrioridadeBacklog] = useState("todas");
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
@@ -177,10 +178,19 @@ export function OrdensServicoPage({
   const consulta = useMemo<ConsultaOperacao>(
     () => ({
       busca: buscaDebounced || undefined,
-      status: filtros.status === "todas" ? "todos" : (filtros.status as ConsultaOperacao["status"]),
+      status:
+        visao === "backlog"
+          ? "ativos"
+          : filtros.status === "todas"
+            ? "todos"
+            : (filtros.status as ConsultaOperacao["status"]),
       tecnicoFuncionarioId:
         filtros.tecnicoFuncionarioId !== "todos" ? filtros.tecnicoFuncionarioId : undefined,
       clienteId: filtros.clienteId !== "todos" ? filtros.clienteId : undefined,
+      somenteBacklog: visao === "backlog" || undefined,
+      prioridade:
+        visao === "backlog" && prioridadeBacklog !== "todas" ? prioridadeBacklog : undefined,
+      ocultarTriagemInspecao: visao === "lista" || undefined,
       categoria: filtros.categoria !== "todas" ? filtros.categoria : undefined,
       dataInicio:
         filtros.dataInicio ??
@@ -196,7 +206,7 @@ export function OrdensServicoPage({
             : "recentes",
       limite: visao === "timeline" || visao === "calendario" ? 200 : visao === "kanban" ? 210 : 50,
     }),
-    [buscaDebounced, filtros, visao, intervaloAgenda],
+    [buscaDebounced, filtros, visao, intervaloAgenda, prioridadeBacklog],
   );
   // E00-S29 — `!permissoesCarregando` saiu daqui de propósito. Ele serializava a tela: nenhuma
   // consulta de dado partia antes da viagem de permissão terminar. `temLeitura` já é `false`
@@ -222,14 +232,14 @@ export function OrdensServicoPage({
   );
   const feedsKanban = useFeedsKanban(
     supabaseOperacaoAdapter,
-    { ...consultaKpis, status: consulta.status },
+    { ...consultaKpis, status: consulta.status, ocultarTriagemInspecao: true },
     consultasAtivas && visao === "kanban",
   );
   const queryKpis = useKpisOperacao(supabaseOperacaoAdapter, consultaKpis, consultasAtivas);
   const queryCatalogos = useQuery({
     queryKey: [...operacaoQueryKeys.catalogos(), "abertura-os"],
     queryFn: () => carregarDadosAberturaOs(supabaseOrdemServicoAdapter),
-    enabled: false,
+    enabled: consultasAtivas && visao === "backlog",
     staleTime: OPERACAO_CATALOGO_STALE_TIME,
   });
   const dadosOs: DadosAberturaOs | null = queryCatalogos.data ?? null;
@@ -313,7 +323,8 @@ export function OrdensServicoPage({
   const feedBuscando = visao === "kanban" ? feedsKanban.isFetching : feed.isFetching;
   const feedErro = visao === "kanban" ? feedsKanban.isError : feed.isError;
   const erroFeed = visao === "kanban" ? feedsKanban.error : feed.error;
-  const temProximaPagina = visao === "kanban" ? feedsKanban.hasNextPage : feed.hasNextPage;
+  const temProximaPagina =
+    visao === "kanban" ? feedsKanban.hasNextPage : !feed.isPlaceholderData && feed.hasNextPage;
   const buscandoProximaPagina =
     visao === "kanban" ? feedsKanban.isFetchingNextPage : feed.isFetchingNextPage;
   const recarregando = feedBuscando || queryKpis.isFetching;
@@ -484,6 +495,13 @@ export function OrdensServicoPage({
     setFiltros({ ...FILTROS_ORDENS_VAZIO, status: "ativos" });
   }
 
+  function onMudarClienteFiltro(clienteId: string) {
+    setFiltros((atuais) => ({ ...atuais, clienteId }));
+    setSelecionados(new Set());
+    setSelecionadaId(null);
+    setOrigemCentral(null);
+  }
+
   function onMudarVisao(proxima: Visao) {
     setVisao(proxima);
     setSelecionados(new Set());
@@ -517,12 +535,26 @@ export function OrdensServicoPage({
   }
 
   async function onAplicarStatusLote(status: StatusOrdemServico) {
-    if (!user || selecionados.size === 0) return;
+    if (!user || !temEscrita || salvando || selecionados.size === 0) return;
     setSalvando(true);
     setErroAcao(null);
     try {
-      const resultado = await mutacaoStatus.mutateAsync({ ids: [...selecionados], status });
-      const falhas = resultado.filter((item) => !item.sucesso);
+      const ids: string[] = [];
+      const falhas: { id: string; erro: string | null }[] = [];
+      for (const id of selecionados) {
+        const ordem = ordensCarregadas.find((item) => item.id === id);
+        const regra = ordem && transicaoManualOrdem(ordem, status);
+        if (regra?.permitida) ids.push(id);
+        else
+          falhas.push({
+            id,
+            erro: regra?.motivo ?? "Atualize a lista e selecione a OS novamente.",
+          });
+      }
+      if (ids.length > 0) {
+        const resultado = await mutacaoStatus.mutateAsync({ ids, status });
+        falhas.push(...resultado.filter((item) => !item.sucesso));
+      }
       if (falhas.length > 0) {
         setSelecionados(new Set(falhas.map((f) => f.id)));
         setErroAcao(
@@ -543,7 +575,16 @@ export function OrdensServicoPage({
   }
 
   async function onAlterarStatusDe(id: string, status: StatusOrdemServico) {
-    if (!user) return;
+    if (!user || !temEscrita || salvando) return;
+    const atual =
+      ordensCarregadas.find((ordem) => ordem.id === id) ??
+      (selecionada?.id === id ? selecionada : null);
+    if (!atual || atual.status === status) return;
+    const regra = transicaoManualOrdem(atual, status);
+    if (!regra.permitida) {
+      setErroAcao(regra.motivo);
+      return;
+    }
     if (ehCardChamadoAberto(id)) {
       if (status === "solicitacao") return;
       const chamadoId = id.replace("chamado-aberto:", "");
@@ -559,9 +600,6 @@ export function OrdensServicoPage({
       if (!resultado?.sucesso) throw new Error(resultado?.erro ?? "Status não atualizado.");
       // E01-S125: status persiste primeiro; criação Auvo nunca é efeito colateral. Só a
       // transição individual abre a confirmação (lote fica manual, por OS, no detalhe).
-      const atual =
-        ordensCarregadas.find((ordem) => ordem.id === id) ??
-        (selecionada?.id === id ? selecionada : null);
       if (origemCentral?.os === id) await resumoCentral.refetch();
       if (status === "planejamento" && atual && atual.auvoTaskId == null) setAberturaAuvoOsId(id);
     } catch (error) {
@@ -652,7 +690,10 @@ export function OrdensServicoPage({
       </div>
 
       {erroAcao && (
-        <div className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger">
+        <div
+          role="alert"
+          className="rounded-md border border-danger-line bg-danger-soft px-4 py-2 text-body text-danger"
+        >
           {erroAcao}
         </div>
       )}
@@ -669,7 +710,7 @@ export function OrdensServicoPage({
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
           {[
             ["Total", kpis.total],
-            ["Abertas", kpis.abertas],
+            ["Chamados e OS abertos", kpis.abertas],
             ["Planejamento", kpis.emPlanejamento],
             ["Execução", kpis.emExecucao],
             ["Finalizadas", kpis.finalizadas],
@@ -730,11 +771,28 @@ export function OrdensServicoPage({
       ) : (
         <div className="anim-conteudo flex flex-col gap-4">
           {visao === "backlog" ? (
-            // E01-S151: `ordensFiltradas` é o conjunto geral da página (Lista/Kanban) — sem técnico,
-            // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
-            // filtra por `ehItemBacklog` igual `listarBacklogGut` já faz pro modo não-controlado.
             <BacklogGutPage
-              ordensControladas={ordensFiltradas.filter(ehItemBacklog)}
+              clienteControladoId={clienteSelecionadoId ?? "todos"}
+              clientesControlados={dadosOs?.clientes}
+              carregandoControlado={
+                feed.isPending || feed.isPlaceholderData || filtros.busca !== buscaDebounced
+              }
+              filtrosControlados={{
+                busca: filtros.busca,
+                categoria: filtros.categoria,
+                prioridade: prioridadeBacklog,
+              }}
+              onAlterarFiltros={(novos) => {
+                setFiltros((atuais) => ({
+                  ...atuais,
+                  busca: novos.busca,
+                  categoria: novos.categoria,
+                }));
+                setPrioridadeBacklog(novos.prioridade);
+              }}
+              onAlterarCliente={onMudarClienteFiltro}
+              ordensControladas={feed.isPlaceholderData ? [] : ordensCarregadas}
+              totalControlado={feed.isPlaceholderData ? undefined : totalFiltrado}
               onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
               onAtualizarControlado={carregar}
             />
@@ -782,7 +840,7 @@ export function OrdensServicoPage({
                   onFocus={() => {
                     if (!dadosOs) queryCatalogos.refetch();
                   }}
-                  onChange={(event) => setFiltros((f) => ({ ...f, clienteId: event.target.value }))}
+                  onChange={(event) => onMudarClienteFiltro(event.target.value)}
                 >
                   <option value="todos">Todos os clientes</option>
                   {(dadosOs?.clientes ?? []).map((cliente) => (
@@ -851,6 +909,7 @@ export function OrdensServicoPage({
                   </p>
                   <select
                     className="input h-8 w-auto text-caption"
+                    aria-label="Aplicar status às OS selecionadas"
                     disabled={salvando}
                     value=""
                     onChange={(event) => {
@@ -1281,6 +1340,7 @@ function DetalheOs({
   // modal grande — o painel inline continua compacto (master-detail), o modal é onde dá pra ler
   // com folga. Fecha por Esc, clique fora, ou no X.
   const [expandido, setExpandido] = useState(false);
+  const [recusaStatus, setRecusaStatus] = useState("");
 
   // E01-S118 AC-6: abre o modal quando o pai sinaliza um clique de card (seq > 0).
   useEffect(() => {
@@ -1457,7 +1517,12 @@ function DetalheOs({
                   className="input flex-1"
                   value={selecionada.status}
                   disabled={salvando}
-                  onChange={(event) => onAlterarStatus(event.target.value as StatusOrdemServico)}
+                  onChange={(event) => {
+                    const destino = event.target.value as StatusOrdemServico;
+                    const regra = transicaoManualOrdem(selecionada, destino);
+                    setRecusaStatus(regra.motivo);
+                    if (regra.permitida) onAlterarStatus(destino);
+                  }}
                 >
                   {STATUS_OS.map((status) => (
                     <option key={status.value} value={status.value}>
@@ -1466,6 +1531,11 @@ function DetalheOs({
                   ))}
                 </select>
               </div>
+              {recusaStatus && (
+                <p role="alert" className="mt-2 text-caption text-danger">
+                  {recusaStatus}
+                </p>
+              )}
               <p className="mt-2 text-caption text-ink-3">
                 Planejamento não abre task automaticamente. Confirme pelo botão Auvo.
               </p>

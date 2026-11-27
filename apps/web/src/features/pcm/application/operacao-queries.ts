@@ -1,10 +1,4 @@
-import {
-  keepPreviousData,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TipoOsHub } from "../domain/hub-os";
 import type {
   KpisOrdensServico,
@@ -47,6 +41,7 @@ export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacion
     numero: item.numero,
     titulo: item.titulo,
     descricao: null,
+    clienteId: item.clienteId,
     clienteNome: item.clienteNome,
     categoria: item.categoria,
     status: item.status,
@@ -97,7 +92,15 @@ export function useFeedOperacao(gateway: OperacaoGateway, input: ConsultaOperaca
     initialPageParam: null as CursorOperacao | null,
     getNextPageParam: (pagina) => pagina.proximoCursor ?? undefined,
     enabled,
-    placeholderData: keepPreviousData,
+    placeholderData: (anterior, consultaAnterior) => {
+      const filtrosAnteriores = consultaAnterior?.queryKey[2];
+      if (
+        filtrosAnteriores?.clienteId === input.clienteId &&
+        filtrosAnteriores?.status === input.status
+      )
+        return anterior;
+      return undefined;
+    },
   });
 }
 
@@ -108,7 +111,7 @@ export function useFeedsKanban(
 ) {
   const { status: filtroStatus, ...filtros } = input;
   const base = { ...filtros, ordem: "recentes" as const, limite: 30 };
-  const permitido = (status: StatusOrdemServico) =>
+  const permitido = (status: StatusOrdemServico | "demanda") =>
     !filtroStatus ||
     filtroStatus === "todos" ||
     (filtroStatus === "ativos" && status !== "finalizado" && status !== "cancelado") ||
@@ -128,6 +131,11 @@ export function useFeedsKanban(
     { ...base, status: "backlog" },
     enabled && permitido("backlog"),
   );
+  const demanda = useFeedOperacao(
+    gateway,
+    { ...base, status: "demanda" },
+    enabled && permitido("demanda"),
+  );
   const planejamento = useFeedOperacao(
     gateway,
     { ...base, status: "planejamento" },
@@ -137,6 +145,11 @@ export function useFeedsKanban(
     gateway,
     { ...base, status: "em_execucao" },
     enabled && permitido("em_execucao"),
+  );
+  const validacao = useFeedOperacao(
+    gateway,
+    { ...base, status: "validacao_pcm" },
+    enabled && permitido("validacao_pcm"),
   );
   const finalizado = useFeedOperacao(
     gateway,
@@ -152,8 +165,10 @@ export function useFeedsKanban(
     [solicitacao, permitido("solicitacao")],
     [corretiva, permitido("corretiva")],
     [backlog, permitido("backlog")],
+    [demanda, permitido("demanda")],
     [planejamento, permitido("planejamento")],
     [execucao, permitido("em_execucao")],
+    [validacao, permitido("validacao_pcm")],
     [finalizado, permitido("finalizado")],
     [cancelado, permitido("cancelado")],
   ]
@@ -167,11 +182,13 @@ export function useFeedsKanban(
     isFetchingNextPage: consultas.some((query) => query.isFetchingNextPage),
     isError: consultas.some((query) => query.isError),
     error: consultas.find((query) => query.error)?.error ?? null,
-    hasNextPage: consultas.some((query) => query.hasNextPage),
+    hasNextPage: consultas.some((query) => !query.isPlaceholderData && query.hasNextPage),
     refetch: () => Promise.all(consultas.map((query) => query.refetch())),
     fetchNextPage: () =>
       Promise.all(
-        consultas.filter((query) => query.hasNextPage).map((query) => query.fetchNextPage()),
+        consultas
+          .filter((query) => !query.isPlaceholderData && query.hasNextPage)
+          .map((query) => query.fetchNextPage()),
       ),
   };
 }
@@ -185,7 +202,8 @@ export function useKpisOperacao(
     queryKey: operacaoQueryKeys.kpis(input),
     queryFn: ({ signal }) => gateway.contarKpis(input, signal),
     enabled,
-    placeholderData: keepPreviousData,
+    placeholderData: (anterior, consultaAnterior) =>
+      consultaAnterior?.queryKey[2].clienteId === input.clienteId ? anterior : undefined,
   });
 }
 

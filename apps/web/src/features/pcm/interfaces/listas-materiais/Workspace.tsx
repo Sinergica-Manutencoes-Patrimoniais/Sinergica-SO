@@ -1,6 +1,6 @@
 import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -19,14 +19,41 @@ import { ExcecoesOs } from "./ExcecoesOs";
 import { PublicarPortal } from "./PublicarPortal";
 import { VisibilidadePortal } from "./VisibilidadePortal";
 
-type Props = { usuario: string; cliente: string; ordemServico: string };
+export type RascunhoNovaLista = {
+  texto: string;
+  responsavel: "cliente" | "sinergica";
+};
+
+const RASCUNHO_NOVA_LISTA_INICIAL: RascunhoNovaLista = {
+  texto: "",
+  responsavel: "cliente",
+};
+
+type EstadoEnvio =
+  | { fase: "enviando" | "incerto"; comando: CriarListaMateriais }
+  | { fase: "confirmado"; limpezaFalhou: boolean };
+
+const enviosEmCurso = new Set<string>();
+const eventosEnvio = new EventTarget();
+
+function publicarEnvio(chave: string, estado: EstadoEnvio) {
+  eventosEnvio.dispatchEvent(new CustomEvent(chave, { detail: estado }));
+}
+
+type Props = {
+  usuario: string;
+  cliente: string;
+  ordemServico: string;
+  rascunho?: RascunhoNovaLista;
+  onAlterarRascunho?: (rascunho: RascunhoNovaLista) => void;
+};
 /** Integração condicionada a rollout e validação da migration, sem efeito sobre OS/Auvo. */
 export function WorkspaceListasMateriais(props: Props) {
   return (
     <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />
   );
 }
-function Conteudo({ usuario, cliente, ordemServico }: Props) {
+function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho }: Props) {
   const chave = `sso-lista-materiais:${usuario}:${cliente}:${ordemServico}`;
   const [recuperacao] = useState(() => {
     try {
@@ -39,15 +66,49 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     }
   });
   const [pendente, setPendente] = useState(recuperacao.comando);
-  const [texto, setTexto] = useState("");
-  const [responsavel, setResponsavel] = useState<"cliente" | "sinergica">("cliente");
+  const [rascunhoLocal, setRascunhoLocal] = useState(RASCUNHO_NOVA_LISTA_INICIAL);
+  const { texto, responsavel } = rascunho ?? rascunhoLocal;
+  const alterarRascunho = onAlterarRascunho ?? setRascunhoLocal;
   const [erro, setErro] = useState("");
-  const [ocupado, setOcupado] = useState(false);
+  const [ocupado, setOcupado] = useState(() => enviosEmCurso.has(chave));
+  const [limpezaFalhou, setLimpezaFalhou] = useState(false);
   const [listaAberta, setListaAberta] = useState<string | null>(null);
   const [excecoesAbertas, setExcecoesAbertas] = useState(false);
   const rascunhos = useRef(new Map<string, RascunhoEditorMateriais>());
   const rascunhosInformacao = useRef(new Map<string, RascunhoInformacaoMaterial>());
-  const emEnvio = useRef(false);
+  useEffect(() => {
+    function receber(evento: Event) {
+      const estado = (evento as CustomEvent<EstadoEnvio>).detail;
+      setOcupado(estado.fase === "enviando");
+      if (estado.fase === "confirmado") {
+        setPendente(null);
+        if (!onAlterarRascunho) setRascunhoLocal({ texto: "", responsavel });
+        setLimpezaFalhou(estado.limpezaFalhou);
+        setErro(
+          estado.limpezaFalhou
+            ? "Lista salva. Não foi possível limpar a tentativa local. Consulte o suporte."
+            : "",
+        );
+      } else {
+        setPendente(estado.comando);
+        setErro(
+          estado.fase === "incerto"
+            ? "Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados."
+            : "",
+        );
+      }
+    }
+    eventosEnvio.addEventListener(chave, receber);
+    if (!enviosEmCurso.has(chave)) {
+      setOcupado(false);
+      try {
+        if (sessionStorage.getItem(chave) === null) setPendente(null);
+      } catch {
+        setErro("Não foi possível consultar a tentativa local.");
+      }
+    }
+    return () => eventosEnvio.removeEventListener(chave, receber);
+  }, [chave, onAlterarRascunho, responsavel]);
   const queryClient = useQueryClient();
   const raiz = ["listas-materiais", usuario, cliente, ordemServico] as const;
   const conferirSessao = async (signal?: AbortSignal) => {
@@ -90,7 +151,7 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
   async function enviar(comando: CriarListaMateriais) {
-    if (emEnvio.current || !permitido) return;
+    if (enviosEmCurso.has(chave) || !permitido) return;
     try {
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
         throw new Error("Operação guardada divergente.");
@@ -98,9 +159,8 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
       setErro("Operação pendente indisponível ou alterada. Consulte suporte.");
       return;
     }
-    emEnvio.current = true;
-    setOcupado(true);
-    setErro("");
+    enviosEmCurso.add(chave);
+    publicarEnvio(chave, { fase: "enviando", comando });
     try {
       await conferirSessao();
       if (
@@ -109,26 +169,30 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
       )
         throw new Error("Operação alterada.");
       await supabaseListasMateriaisAdapter.criar(comando);
-      await conferirSessao();
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [...raiz, "listas"] }),
-        queryClient.invalidateQueries({ queryKey: ["listas-materiais-central", usuario, cliente] }),
-      ]);
-      await conferirSessao();
+    } catch {
+      enviosEmCurso.delete(chave);
+      publicarEnvio(chave, { fase: "incerto", comando });
+      return;
+    }
+    let limpezaFalhou = false;
+    try {
       if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
         throw new Error("Operação guardada divergente.");
       sessionStorage.removeItem(chave);
-      setPendente(null);
-      setTexto("");
     } catch {
-      setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
-    } finally {
-      emEnvio.current = false;
-      setOcupado(false);
+      limpezaFalhou = true;
     }
+    enviosEmCurso.delete(chave);
+    publicarEnvio(chave, { fase: "confirmado", limpezaFalhou });
+    onAlterarRascunho?.({ texto: "", responsavel });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: [...raiz, "listas"] }),
+      queryClient.invalidateQueries({ queryKey: ["listas-materiais-central", usuario, cliente] }),
+    ]);
   }
   function iniciar() {
-    if (emEnvio.current || pendente || recuperacao.falhou || !permitido) return;
+    if (enviosEmCurso.has(chave) || pendente || recuperacao.falhou || limpezaFalhou || !permitido)
+      return;
     try {
       const comando = validarCriarListaMateriais({
         requestId: crypto.randomUUID(),
@@ -186,12 +250,16 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
         </p>
       )}
       {erro && <p role="alert">{erro}</p>}
-      {pendente && (
-        <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>
+      {pendente && !ocupado && !erro && (
+        <p role="alert">Há um salvamento pendente nesta sessão. Confira e repita a tentativa.</p>
+      )}
+      {ocupado && <output>Salvando lista…</output>}
+      {pendente && !ocupado && (
+        <button type="button" onClick={() => void enviar(pendente)}>
           Tentar salvar novamente
         </button>
       )}
-      {!pendente && !recuperacao.falhou && (
+      {!pendente && !recuperacao.falhou && !limpezaFalhou && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -202,7 +270,12 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
             Responsável pelo material{" "}
             <select
               value={responsavel}
-              onChange={(e) => setResponsavel(e.target.value as "cliente" | "sinergica")}
+              onChange={(e) =>
+                alterarRascunho({
+                  texto,
+                  responsavel: e.target.value as RascunhoNovaLista["responsavel"],
+                })
+              }
             >
               <option value="cliente">Cliente</option>
               <option value="sinergica">Sinérgica</option>
@@ -210,7 +283,11 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
           </label>
           <label>
             Texto original{" "}
-            <textarea required value={texto} onChange={(e) => setTexto(e.target.value)} />
+            <textarea
+              required
+              value={texto}
+              onChange={(e) => alterarRascunho({ texto: e.target.value, responsavel })}
+            />
           </label>
           <button type="submit" disabled={ocupado}>
             Registrar lista

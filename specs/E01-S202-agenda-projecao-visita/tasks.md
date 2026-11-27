@@ -36,3 +36,26 @@ Detalhe técnico em `plan.md`.
 
 Lista literal para a auditoria (`eval:spec`), que não expande faixa: AC-1, AC-2, AC-3, AC-4, AC-5,
 AC-6, AC-7, AC-8, AC-9, AC-F1, AC-F2, AC-F3, AC-F4, AC-F5.
+
+## DEF-03 — Conferência local de turno e horário
+
+Na projeção E01-S202, as visões Por dia e Por técnico agrupam o mesmo resultado de
+`sso_listar_agenda_tecnico_projetada` (migration 1870). O período usa o fuso da
+Visita. A regra atribui manhã quando o fim local é até 12h, tarde quando o início
+local é a partir de 12h e dia inteiro nos demais casos. Com a flag de projeção
+desligada, a página lê as alocações do cadastro manual.
+
+No Monitor E01-S201, a linha Visita não confirmada lê `pcm.visitas.inicio_em`
+da Visita vinculada à OS (migration 1867). O navegador formata esse instante
+no próprio fuso.
+
+Em PostgreSQL 17 isolado, as duas funções originais receberam uma Visita
+planejada fictícia com início às 20:42:27 UTC, fuso America/Sao_Paulo e uma
+OS vinculada. As consultas devolveram o mesmo ID e instante. A Agenda
+retornou `tarde` (17:42:27 no fuso da Visita), e um navegador em UTC
+exibiria 20:42:27. O exemplo mostra que as duas apresentações são compatíveis
+com a regra atual.
+
+O CT-18 registrou o cabeçalho da projeção e a OS vinculada. No reteste,
+confirme o ID da Visita em cada consulta e os fusos da Visita e do navegador. A evidência recuperada admite
+o comportamento especificado, por isso a regra e a apresentação foram mantidas.

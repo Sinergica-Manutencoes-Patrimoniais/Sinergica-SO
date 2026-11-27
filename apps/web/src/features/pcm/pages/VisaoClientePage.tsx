@@ -35,6 +35,7 @@ import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { useFormularioSujo } from "../../../app/use-formulario-sujo";
 import { flagLigada } from "../../../config/flags-sso";
+import { formatarDataBr } from "../../../lib/data-br";
 import { supabaseConfigAdapter } from "../../config/infrastructure/supabase-config-adapter";
 import { criarChamado } from "../application/chamados";
 import type {
@@ -1487,7 +1488,7 @@ function PainelQualidade({ qualidade }: { qualidade: QualidadeClienteResumo }) {
                 <div className="flex items-center justify-between gap-3">
                   <p className="truncate text-body font-medium text-ink">{inspecao.titulo}</p>
                   <span className="text-caption tabular-nums text-ink-3">
-                    {formatarData(inspecao.dataInspecao)}
+                    {formatarDataBr(inspecao.dataInspecao)}
                   </span>
                 </div>
                 <p className="mt-1 text-caption text-ink-3">

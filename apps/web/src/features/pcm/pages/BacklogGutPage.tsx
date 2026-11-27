@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { confirmarChamadoBacklog } from "../application/abrir-ordem-servico";
-import { RecuperarConfirmacaoOs } from "../interfaces/chamados-os/RecuperarConfirmacaoOs";
 import {
   alterarStatusOrdemServico,
   listarBacklogGut,
@@ -12,6 +11,7 @@ import {
 } from "../application/hub-os";
 import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
+import { CATEGORIAS_OS } from "../domain/abertura-os";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
@@ -23,22 +23,37 @@ import {
 } from "../domain/ordens-servico";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { RecuperarConfirmacaoOs } from "../interfaces/chamados-os/RecuperarConfirmacaoOs";
 
 type Estado =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; ordens: OrdemServicoOperacional[] };
 
+type FiltrosFila = { busca: string; categoria: string; prioridade: string };
+
 export function BacklogGutPage({
   ordensControladas,
   onPlanejarControlado,
   onAtualizarControlado,
   totalControlado,
+  clienteControladoId,
+  clientesControlados,
+  carregandoControlado = false,
+  onAlterarCliente,
+  filtrosControlados,
+  onAlterarFiltros,
 }: {
   ordensControladas?: OrdemServicoOperacional[];
   onPlanejarControlado?: (ordem: OrdemServicoOperacional) => Promise<void> | void;
   onAtualizarControlado?: () => Promise<void> | void;
   totalControlado?: number;
+  clienteControladoId?: string;
+  clientesControlados?: { id: string; nome: string }[];
+  carregandoControlado?: boolean;
+  onAlterarCliente?: (clienteId: string) => void;
+  filtrosControlados?: FiltrosFila;
+  onAlterarFiltros?: (filtros: FiltrosFila) => void;
 } = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -51,10 +66,17 @@ export function BacklogGutPage({
   const [ordemParaDescartar, setOrdemParaDescartar] = useState<OrdemServicoOperacional | null>(
     null,
   );
-  const [busca, setBusca] = useState("");
-  const [clienteFiltro, setClienteFiltro] = useState("todos");
-  const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
-  const [prioridadeFiltro, setPrioridadeFiltro] = useState("todas");
+  const [filtrosLocais, setFiltrosLocais] = useState<FiltrosFila>({
+    busca: "",
+    categoria: "todas",
+    prioridade: "todas",
+  });
+  const filtrosFila = filtrosControlados ?? filtrosLocais;
+  const { busca, categoria: categoriaFiltro, prioridade: prioridadeFiltro } = filtrosFila;
+  const alterarFiltros = onAlterarFiltros ?? setFiltrosLocais;
+  const [clienteLocal, setClienteLocal] = useState("todos");
+  const clienteFiltro = clienteControladoId ?? clienteLocal;
+  const setClienteFiltro = onAlterarCliente ?? setClienteLocal;
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -87,20 +109,35 @@ export function BacklogGutPage({
     };
   }, [ordens, totalControlado]);
 
-  const clientesDisponiveis = useMemo(
-    () => Array.from(new Set(ordens.map((ordem) => ordem.clienteNome))).sort(),
-    [ordens],
-  );
+  const clientesDisponiveis = useMemo(() => {
+    const clientes = new Map(
+      ordens.flatMap((ordem) =>
+        ordem.clienteId ? [[ordem.clienteId, ordem.clienteNome] as const] : [],
+      ),
+    );
+    for (const cliente of clientesControlados ?? []) clientes.set(cliente.id, cliente.nome);
+    return [...clientes].sort(([, a], [, b]) => a.localeCompare(b));
+  }, [clientesControlados, ordens]);
   const categoriasDisponiveis = useMemo(
-    () => Array.from(new Set(ordens.map((ordem) => ordem.categoria))).sort(),
+    () =>
+      [
+        ...new Set([
+          ...CATEGORIAS_OS.map((item) => item.value),
+          ...ordens.map((ordem) => ordem.categoria),
+        ]),
+      ].sort(),
     [ordens],
   );
   const prioridadesDisponiveis = useMemo(
-    () => Array.from(new Set(ordens.map((ordem) => ordem.prioridade))).sort(),
+    () =>
+      [
+        ...new Set([...Object.keys(PRIORIDADE_LABEL), ...ordens.map((ordem) => ordem.prioridade)]),
+      ].sort(),
     [ordens],
   );
 
   const ordensFiltradas = useMemo(() => {
+    if (filtrosControlados) return ordens;
     const termo = busca.trim().toLowerCase();
     return ordens.filter((ordem) => {
       const passaBusca =
@@ -108,12 +145,12 @@ export function BacklogGutPage({
         ordem.numero.toLowerCase().includes(termo) ||
         ordem.titulo.toLowerCase().includes(termo) ||
         ordem.clienteNome.toLowerCase().includes(termo);
-      const passaCliente = clienteFiltro === "todos" || ordem.clienteNome === clienteFiltro;
+      const passaCliente = clienteFiltro === "todos" || ordem.clienteId === clienteFiltro;
       const passaCategoria = categoriaFiltro === "todas" || ordem.categoria === categoriaFiltro;
       const passaPrioridade = prioridadeFiltro === "todas" || ordem.prioridade === prioridadeFiltro;
       return passaBusca && passaCliente && passaCategoria && passaPrioridade;
     });
-  }, [ordens, busca, clienteFiltro, categoriaFiltro, prioridadeFiltro]);
+  }, [ordens, filtrosControlados, busca, clienteFiltro, categoriaFiltro, prioridadeFiltro]);
 
   const filtrosAtivos =
     busca.trim() !== "" ||
@@ -122,10 +159,8 @@ export function BacklogGutPage({
     prioridadeFiltro !== "todas";
 
   function limparFiltros() {
-    setBusca("");
     setClienteFiltro("todos");
-    setCategoriaFiltro("todas");
-    setPrioridadeFiltro("todas");
+    alterarFiltros({ busca: "", categoria: "todas", prioridade: "todas" });
   }
 
   async function onPlanejar(ordem: OrdemServicoOperacional) {
@@ -161,7 +196,9 @@ export function BacklogGutPage({
         if (onAtualizarControlado) await onAtualizarControlado();
         else await carregar();
       } catch {
-        setErroAcao(`Chamado ${confirmado.numero} confirmado, mas o quadro não foi atualizado. Atualize a tela antes de continuar.`);
+        setErroAcao(
+          `Chamado ${confirmado.numero} confirmado, mas o quadro não foi atualizado. Atualize a tela antes de continuar.`,
+        );
       }
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível confirmar o chamado.");
@@ -237,13 +274,19 @@ export function BacklogGutPage({
 
   return (
     <div className="flex flex-col gap-4">
-      {user && <RecuperarConfirmacaoOs key={user.id} usuario={user.id} revisaoTela={salvandoId}
-        aoConcluir={() => onAtualizarControlado ? onAtualizarControlado() : carregar()} />}
+      {user && (
+        <RecuperarConfirmacaoOs
+          key={user.id}
+          usuario={user.id}
+          revisaoTela={salvandoId}
+          aoConcluir={() => (onAtualizarControlado ? onAtualizarControlado() : carregar())}
+        />
+      )}
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>
           <p className="text-body text-ink-3">
-            OS abertas priorizadas por gravidade, urgência e tendência
+            OS em aberto sem técnico, sem data prevista e sem tarefa no Auvo
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -254,7 +297,7 @@ export function BacklogGutPage({
               className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep"
             >
               <Plus className="h-3.5 w-3.5" />
-              Novo item de backlog
+              Cadastrar OS para o backlog
             </button>
           )}
           <button
@@ -274,11 +317,11 @@ export function BacklogGutPage({
         </div>
       )}
 
-      {resumo && (
+      {!carregandoControlado && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Resumo label="OS abertas" valor={resumo.total} />
-          <Resumo label="Críticas" valor={resumo.criticas} />
-          <Resumo label="Maior score" valor={resumo.maiorScore} />
+          <Resumo label="Itens de backlog" valor={resumo.total} />
+          <Resumo label="Críticas carregadas" valor={resumo.criticas} />
+          <Resumo label="Maior score carregado" valor={resumo.maiorScore} />
         </div>
       )}
 
@@ -293,7 +336,7 @@ export function BacklogGutPage({
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
             <input
               value={busca}
-              onChange={(event) => setBusca(event.target.value)}
+              onChange={(event) => alterarFiltros({ ...filtrosFila, busca: event.target.value })}
               placeholder="Buscar por número, cliente ou título"
               className="input w-full"
               style={{ paddingLeft: "2rem" }}
@@ -302,19 +345,20 @@ export function BacklogGutPage({
           <select
             className="input w-auto"
             value={clienteFiltro}
+            aria-label="Filtrar backlog por Cliente"
             onChange={(event) => setClienteFiltro(event.target.value)}
           >
             <option value="todos">Todos os clientes</option>
-            {clientesDisponiveis.map((cliente) => (
-              <option key={cliente} value={cliente}>
-                {cliente}
+            {clientesDisponiveis.map(([id, nome]) => (
+              <option key={id} value={id}>
+                {nome}
               </option>
             ))}
           </select>
           <select
             className="input w-auto"
             value={categoriaFiltro}
-            onChange={(event) => setCategoriaFiltro(event.target.value)}
+            onChange={(event) => alterarFiltros({ ...filtrosFila, categoria: event.target.value })}
           >
             <option value="todas">Todas as categorias</option>
             {categoriasDisponiveis.map((categoria) => (
@@ -326,7 +370,7 @@ export function BacklogGutPage({
           <select
             className="input w-auto"
             value={prioridadeFiltro}
-            onChange={(event) => setPrioridadeFiltro(event.target.value)}
+            onChange={(event) => alterarFiltros({ ...filtrosFila, prioridade: event.target.value })}
           >
             <option value="todas">Todas as prioridades</option>
             {prioridadesDisponiveis.map((prioridade) => (
@@ -345,12 +389,19 @@ export function BacklogGutPage({
             </button>
           )}
           <span className="ml-auto text-caption text-ink-3">
-            {ordensFiltradas.length} de {ordens.length}
+            {!carregandoControlado && (
+              <>
+                {ordensFiltradas.length} de{" "}
+                {filtrosControlados ? resumo.total : `${ordens.length} carregados`}
+              </>
+            )}
           </span>
         </div>
 
         <div className="divide-y divide-line-soft">
-          {ordens.length === 0 ? (
+          {carregandoControlado ? (
+            <output className="block p-5 text-body text-ink-3">Consultando backlog…</output>
+          ) : ordens.length === 0 ? (
             <div className="px-5 py-8 text-body text-ink-3">Nenhuma OS aberta no backlog.</div>
           ) : ordensFiltradas.length === 0 ? (
             <div className="px-5 py-8 text-center text-body text-ink-3">
@@ -488,6 +539,7 @@ export function BacklogGutPage({
       {criando && (
         <NovaOrdemServicoModal
           aberto={criando}
+          clienteInicialId={clienteFiltro === "todos" ? undefined : clienteFiltro}
           onFechar={() => setCriando(false)}
           onCriada={() => {
             setCriando(false);
