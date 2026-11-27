@@ -19,6 +19,7 @@ import { supabase } from "../../../lib/supabase-client";
 import { useDebouncedValue } from "../../../lib/use-debounced-value";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import { criarChamado } from "../application/chamados";
+import { useDemandaEmAberto } from "../application/contagem-operacional-queries";
 import { obterPreferenciaColunas, salvarPreferenciaColunas } from "../application/kanban-colunas";
 import type { ConsultaOperacao } from "../application/operacao-gateway";
 import {
@@ -55,6 +56,7 @@ import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
 import { type ItemCampoAConciliar, rotuloMotivoCampo } from "../domain/campo-a-conciliar";
 import type { ChamadoFormData } from "../domain/chamados";
+import { CONTAGEM_OPERACIONAL_VAZIA } from "../domain/contagem-operacional";
 import { montarOpcoesTecnico } from "../domain/filtro-tecnicos";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
 import {
@@ -88,6 +90,7 @@ import {
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
 import { transicaoManualOrdem } from "../domain/transicoes-os";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
+import { supabaseContagemOperacionalAdapter } from "../infrastructure/supabase-contagem-operacional-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
 import {
   listarCampoAConciliar,
@@ -245,6 +248,13 @@ export function OrdensServicoPage({
     consultasAtivas && visao === "kanban",
   );
   const queryKpis = useKpisOperacao(supabaseOperacaoAdapter, consultaKpis, consultasAtivas);
+  // E01-S204: Demanda em aberto (três parcelas) e Backlog vêm da contagem oficial do servidor,
+  // com os mesmos filtros dos KPIs — não do recorte já carregado na página.
+  const queryDemanda = useDemandaEmAberto(
+    supabaseContagemOperacionalAdapter,
+    consultaKpis,
+    consultasAtivas,
+  );
   const queryCatalogos = useQuery({
     queryKey: [...operacaoQueryKeys.catalogos(), "abertura-os"],
     queryFn: () => carregarDadosAberturaOs(supabaseOrdemServicoAdapter),
@@ -336,12 +346,13 @@ export function OrdensServicoPage({
     visao === "kanban" ? feedsKanban.hasNextPage : !feed.isPlaceholderData && feed.hasNextPage;
   const buscandoProximaPagina =
     visao === "kanban" ? feedsKanban.isFetchingNextPage : feed.isFetchingNextPage;
-  const recarregando = feedBuscando || queryKpis.isFetching;
+  const recarregando = feedBuscando || queryKpis.isFetching || queryDemanda.isFetching;
   const carregar = useCallback(async () => {
     setErroAcao(null);
     await Promise.all([
       visao === "kanban" ? feedsKanban.refetch() : feed.refetch(),
       queryKpis.refetch(),
+      queryDemanda.refetch(),
       ...(flagLigada("VITE_SSO_RESUMO_CHAMADOS_ENABLED") && chamadosParaResumo.length
         ? [resumoChamados.refetch()]
         : []),
@@ -351,6 +362,7 @@ export function OrdensServicoPage({
     feedsKanban.refetch,
     feed.refetch,
     queryKpis.refetch,
+    queryDemanda.refetch,
     chamadosParaResumo.length,
     resumoChamados.refetch,
   ]);
@@ -525,6 +537,7 @@ export function OrdensServicoPage({
   ]);
 
   const kpis = queryKpis.data ?? OPERACAO_KPI_VAZIO;
+  const demanda = queryDemanda.data ?? CONTAGEM_OPERACIONAL_VAZIA;
   const totalFiltrado = visao === "kanban" ? feedsKanban.total : (feed.data?.pages[0]?.total ?? 0);
 
   // E01-S118 AC-4: métricas operacionais acionáveis, sobre o conjunto filtrado visível.
@@ -751,7 +764,7 @@ export function OrdensServicoPage({
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
           {[
             ["Total", kpis.total],
-            ["Chamados e OS abertos", kpis.abertas],
+            ["Demanda em aberto", demanda.demandaEmAberto],
             ["Planejamento", kpis.emPlanejamento],
             ["Execução", kpis.emExecucao],
             ["Finalizadas", kpis.finalizadas],
@@ -764,13 +777,21 @@ export function OrdensServicoPage({
               <p className="mt-0.5 text-title font-bold leading-none text-ink">{valor}</p>
             </div>
           ))}
+          {/* E01-S204 (D4): as três parcelas que somam a Demanda em aberto, escritas na tela. */}
+          <p
+            className="col-span-full text-caption text-ink-3"
+            data-testid="parcelas-demanda-em-aberto"
+          >
+            Demanda em aberto = {demanda.osAbertas} OS abertas + {demanda.preChamados} pré-chamados
+            + {demanda.chamadosAbertos} chamados sem OS
+          </p>
         </div>
       )}
 
       {/* E01-S118 AC-4: métricas operacionais acionáveis (gargalos), abaixo dos KPIs de status. */}
       <div className="flex flex-wrap gap-2">
         {[
-          ["Backlog", metricasExtra.backlog, "text-info"],
+          ["Backlog", demanda.backlog, "text-info"],
           ["Sem técnico", metricasExtra.semTecnico, "text-warning"],
           ["Sync Auvo c/ erro", metricasExtra.syncAuvoErro, "text-danger"],
         ].map(([label, valor, cor]) => (

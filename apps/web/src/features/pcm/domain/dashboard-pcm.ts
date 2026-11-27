@@ -1,6 +1,7 @@
 import type { InspecaoResumo } from "../application/qualidade-gateway";
 import type { AlocacaoTecnico } from "./agenda-tecnico";
 import type { Chamado } from "./chamados";
+import { ehOsAbertaContavel } from "./contagem-operacional";
 import type { OrdemServicoOperacional } from "./ordens-servico";
 import { filtrarBacklogGut } from "./ordens-servico";
 
@@ -303,7 +304,8 @@ export function montarDashboardPcm(
   auvo: DashboardPcmAuvoResumo | null = null,
 ): DashboardPcmResumo {
   const backlog = filtrarBacklogGut(ordens);
-  const abertas = backlog.length;
+  // E01-S204: "OS Abertas" segue o glossário (sem pré-chamado), igual ao servidor.
+  const abertas = backlog.filter(ehOsAbertaContavel).length;
   const emExecucao = ordens.filter((ordem) => ordem.status === "em_execucao").length;
   const emPlanejamento = ordens.filter((ordem) => ordem.status === "planejamento").length;
   const criticas = ordens.filter((ordem) => ordem.prioridade === "critica").length;

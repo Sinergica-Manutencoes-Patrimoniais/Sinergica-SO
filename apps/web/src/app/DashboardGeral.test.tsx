@@ -10,12 +10,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   contarKpis: vi.fn(),
+  contarDemandaEmAberto: vi.fn(),
   obterSnapshot: vi.fn(),
   obterResumoCaixa: vi.fn(),
 }));
 
 vi.mock("../features/pcm/infrastructure/supabase-hub-os-adapter", () => ({
   supabaseHubOsAdapter: { contarKpis: mocks.contarKpis },
+}));
+vi.mock("../features/pcm/infrastructure/supabase-contagem-operacional-adapter", () => ({
+  supabaseContagemOperacionalAdapter: {
+    contarDemandaEmAberto: mocks.contarDemandaEmAberto,
+    contarPorCliente: vi.fn(),
+  },
 }));
 vi.mock("../features/atendimento/infrastructure/supabase-dashboard-atendimento-adapter", () => ({
   supabaseDashboardAtendimentoAdapter: { obterSnapshot: mocks.obterSnapshot },
@@ -65,6 +72,15 @@ const KPIS_PCM = {
   criticas: 6,
 };
 
+// E01-S204: a contagem oficial difere do "abertas" antigo (5, que somava pré-chamados).
+const CONTAGEM_PCM = {
+  osAbertas: 4,
+  backlog: 2,
+  preChamados: 1,
+  chamadosAbertos: 3,
+  demandaEmAberto: 8,
+};
+
 function Wrapper({ children }: { children: ReactNode }) {
   const [client] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
@@ -81,6 +97,8 @@ function renderDashboard(moduloIds: ModuloId[], onSelect = vi.fn()) {
 
 beforeEach(() => {
   mocks.contarKpis.mockReset();
+  mocks.contarDemandaEmAberto.mockReset();
+  mocks.contarDemandaEmAberto.mockResolvedValue(CONTAGEM_PCM);
   mocks.obterSnapshot.mockReset();
   mocks.obterResumoCaixa.mockReset();
 });
@@ -97,7 +115,8 @@ describe("DashboardGeral — E01-S147", () => {
 
     renderDashboard(["pcm", "atendimento", "financeiro"]);
 
-    await waitFor(() => expect(screen.getByText("5")).toBeInTheDocument()); // OS Abertas
+    await waitFor(() => expect(screen.getByText("4")).toBeInTheDocument()); // OS Abertas (E01-S204)
+    expect(screen.queryByText("5")).not.toBeInTheDocument(); // "abertas" antigo, com pré-chamado
     expect(screen.getByText("9")).toBeInTheDocument(); // Em Execução
     expect(screen.getByText("Fila sem atendente")).toBeInTheDocument();
     expect(screen.getByText("R$ 789,00")).toBeInTheDocument(); // Resultado do mês

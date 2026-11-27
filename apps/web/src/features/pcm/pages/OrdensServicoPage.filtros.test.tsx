@@ -29,6 +29,19 @@ vi.mock("../application/kanban-colunas", () => ({
 vi.mock("../infrastructure/supabase-operacao-adapter", () => ({
   supabaseOperacaoAdapter: { listarPagina, contarKpis: async () => OPERACAO_KPI_VAZIO },
 }));
+// E01-S204: a página também lê a Demanda em aberto; sem este mock a consulta cai no supabase vazio.
+vi.mock("../infrastructure/supabase-contagem-operacional-adapter", () => ({
+  supabaseContagemOperacionalAdapter: {
+    contarDemandaEmAberto: async () => ({
+      osAbertas: 0,
+      backlog: 0,
+      preChamados: 0,
+      chamadosAbertos: 0,
+      demandaEmAberto: 0,
+    }),
+    contarPorCliente: async () => new Map(),
+  },
+}));
 vi.mock("../infrastructure/supabase-ordem-servico-adapter", () => ({
   supabaseOrdemServicoAdapter: { carregarDadosAbertura },
 }));

@@ -1,3 +1,4 @@
+import type { ContagemOperacional } from "../domain/contagem-operacional";
 import { ehOsRegistroVisita } from "../domain/ordens-servico";
 // Caso de uso principal da Visão 360 (E01-S12) — orquestra o gateway, sem I/O direto.
 import type {
@@ -53,16 +54,25 @@ export async function obterVisaoCliente(
   const cliente = await gateway.buscarCliente(clienteId);
   if (cliente === null) return { tipo: "nao_encontrado" };
 
-  const [backlogBruto, historicoBruto, equipamentos, eventos, qualidade, grupos, assessment] =
-    await Promise.all([
-      gateway.listarBacklogCliente(clienteId),
-      gateway.listarHistoricoCliente(clienteId),
-      carregarEquipamentos(gateway, clienteId, cliente.auvoId),
-      carregarEventos(gateway, clienteId),
-      carregarQualidade(gateway, clienteId),
-      carregarGrupos(gateway, clienteId),
-      carregarAssessment(gateway, clienteId),
-    ]);
+  const [
+    backlogBruto,
+    historicoBruto,
+    equipamentos,
+    eventos,
+    qualidade,
+    grupos,
+    assessment,
+    contagem,
+  ] = await Promise.all([
+    gateway.listarBacklogCliente(clienteId),
+    gateway.listarHistoricoCliente(clienteId),
+    carregarEquipamentos(gateway, clienteId, cliente.auvoId),
+    carregarEventos(gateway, clienteId),
+    carregarQualidade(gateway, clienteId),
+    carregarGrupos(gateway, clienteId),
+    carregarAssessment(gateway, clienteId),
+    gateway.contarOperacaoCliente(clienteId),
+  ]);
 
   // E01-S163 AC-9: apontamentos de jornada do técnico são linhas legítimas da origem, mas não
   // são trabalho de manutenção. A regra de domínio é a mesma do hub global; aplicar aqui evita
@@ -73,7 +83,7 @@ export async function obterVisaoCliente(
   return {
     tipo: "ok",
     cliente,
-    metricas: montarMetricas(backlog, historico, equipamentos, eventos),
+    metricas: montarMetricas(backlog, historico, equipamentos, eventos, contagem),
     eventos,
     backlog,
     historico,
@@ -155,6 +165,7 @@ function montarMetricas(
   historico: OrdemServicoResumo[],
   equipamentos: ResultadoEquipamentos,
   eventos: Cliente360Evento[],
+  contagem: ContagemOperacional,
 ): Cliente360Metricas {
   const todas = [...backlog, ...historico];
   const sincronizadas = todas.filter((ordem) => ordem.auvoSyncStatus === "synced").length;
@@ -168,8 +179,12 @@ function montarMetricas(
     null;
 
   return {
-    osAbertas: backlog.length,
-    backlogTotal: backlog.length,
+    // E01-S204: mesmos números da carteira e do Início (antes: tamanho da lista, que mistura
+    // pré-chamados e OS já planejadas — por isso "OS abertas" e "Backlog" eram sempre iguais).
+    osAbertas: contagem.osAbertas,
+    backlogTotal: contagem.backlog,
+    preChamados: contagem.preChamados,
+    chamadosAbertos: contagem.chamadosAbertos,
     slaPercentual: comSinalAuvo > 0 ? Math.round((sincronizadas / comSinalAuvo) * 100) : null,
     equipamentosAtivos: equipamentos === "indisponivel" ? null : equipamentos.length,
     ultimaAtividadeEm,

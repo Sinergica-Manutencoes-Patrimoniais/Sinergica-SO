@@ -89,11 +89,31 @@ describe("dashboard-pcm", () => {
     );
   });
 
+  it("E01-S204 (D1/D5): OS Abertas exclui pré-chamado e ponto de visita", () => {
+    const dashboard = montarDashboardPcm(
+      [
+        ordem({ id: "a", chamadoId: "ch-a" }),
+        ordem({ id: "p", numero: "PRE-0001" }),
+        ordem({ id: "v", chamadoId: "ch-v", titulo: "INÍCIO VISITA " }),
+      ],
+      [],
+      new Date("2026-07-04T15:00:00Z"),
+    );
+    expect(dashboard.kpis.find((kpi) => kpi.label === "OS Abertas")?.valor).toBe("1");
+  });
+
   it("monta KPIs e listas a partir de OS/inspeções reais", () => {
     const dashboard = montarDashboardPcm(
       [
-        ordem({ id: "a", numero: "OS-0001", scorePcm: 20, createdAt: "2026-07-03T10:00:00Z" }),
         ordem({
+          id: "a",
+          numero: "OS-0001",
+          scorePcm: 20,
+          createdAt: "2026-07-03T10:00:00Z",
+          chamadoId: "ch-a",
+        }),
+        ordem({
+          chamadoId: "ch-b",
           id: "b",
           numero: "OS-0002",
           scorePcm: 125,

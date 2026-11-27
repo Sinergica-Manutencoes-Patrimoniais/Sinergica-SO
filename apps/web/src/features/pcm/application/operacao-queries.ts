@@ -5,6 +5,7 @@ import type {
   OrdemServicoOperacional,
   StatusOrdemServico,
 } from "../domain/ordens-servico";
+import { contagemOperacionalQueryKeys } from "./contagem-operacional-queries";
 import type {
   ConsultaOperacao,
   CursorOperacao,
@@ -301,6 +302,8 @@ export function useAlterarStatusOperacao(gateway: OperacaoGateway) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: operacaoQueryKeys.feeds() }),
         queryClient.invalidateQueries({ queryKey: ["operacao", "kpis"] }),
+        // E01-S204: mudar status move a OS entre OS aberta, backlog e histórico.
+        queryClient.invalidateQueries({ queryKey: contagemOperacionalQueryKeys.todas() }),
         ...input.ids.map((id) =>
           queryClient.invalidateQueries({ queryKey: operacaoQueryKeys.detalhe(id) }),
         ),
