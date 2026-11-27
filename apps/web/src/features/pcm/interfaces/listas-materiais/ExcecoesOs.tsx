@@ -3,6 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
+import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { supabase } from "../../../../lib/supabase-client";
 import { motivosExcecaoMaterial } from "./DetalheEvento";
 import { ImpedimentoMaterialOs } from "./ImpedimentoMaterialOs";
@@ -46,6 +47,7 @@ function Conteudo({ usuario, cliente, os }: { usuario: string; cliente: string; 
   const consulta = useInfiniteQuery({
     queryKey: ["listas-materiais", usuario, cliente, os, "excecoes-os"],
     gcTime: 0,
+    retry: (falhas, erro) => !mensagemFalhaAtivacao(erro) && falhas < 3,
     initialPageParam: null as { lista: string; revisao: number } | null,
     queryFn: async ({ pageParam, signal }) => {
       const antes = await supabase.auth.getUser();
@@ -86,6 +88,7 @@ function Conteudo({ usuario, cliente, os }: { usuario: string; cliente: string; 
         : undefined;
     },
   });
+  const falhaAtivacao = mensagemFalhaAtivacao(consulta.error);
   const excecoes =
     !consulta.isFetching && !consulta.isError ? (consulta.data?.pages.flat() ?? []) : [];
   const selecionada = excecoes.find((e) => `${e.lista_id}:${e.revisao}` === referencia);
@@ -98,10 +101,16 @@ function Conteudo({ usuario, cliente, os }: { usuario: string; cliente: string; 
         {consulta.isPending && <output>Consultando exceções…</output>}
         {consulta.isError && (
           <p role="alert">
-            Não foi possível consultar exceções.{" "}
-            <button type="button" onClick={() => void consulta.refetch()}>
-              Tentar novamente
-            </button>
+            {falhaAtivacao ? (
+              TEXTO_FALHA_ATIVACAO[falhaAtivacao]
+            ) : (
+              <>
+                Não foi possível consultar exceções.{" "}
+                <button type="button" onClick={() => void consulta.refetch()}>
+                  Tentar novamente
+                </button>
+              </>
+            )}
           </p>
         )}
         {!consulta.isFetching && !consulta.isError && consulta.data?.pages.flat().length === 0 && (
@@ -121,7 +130,7 @@ function Conteudo({ usuario, cliente, os }: { usuario: string; cliente: string; 
             ))}
           </ul>
         )}
-        {consulta.hasNextPage && (
+        {!consulta.isError && consulta.hasNextPage && (
           <button
             type="button"
             disabled={consulta.isFetchingNextPage}

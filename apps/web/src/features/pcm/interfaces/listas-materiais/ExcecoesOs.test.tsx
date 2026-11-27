@@ -25,12 +25,15 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-function montar(podeRegistrar: boolean) {
+function montar(podeRegistrar: boolean, erroPrimeiraLeitura?: "42501" | "55000") {
   vi.stubEnv("VITE_SSO_EXCECOES_MATERIAIS_OS_ENABLED", "true");
   vi.stubEnv("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED", "true");
-  rpc.mockImplementation((nome: string) => ({
+  rpc.mockImplementation((nome: string, escopo: { p_cliente_id: string; p_os_id: string }) => ({
     abortSignal: async () => {
+      if (escopo.p_cliente_id !== cliente || escopo.p_os_id !== os)
+        return { data: null, error: { code: "42501" } };
       if (nome === "sso_listar_excecoes_materiais_os") {
+        if (erroPrimeiraLeitura) return { data: null, error: { code: erroPrimeiraLeitura } };
         return {
           data: [
             {
@@ -79,6 +82,13 @@ it.each([true, false])(
     montar(permitido);
     const historico = within(screen.getByRole("region", { name: "Histórico de exceções da OS" }));
     expect(await historico.findByText(/Fusível ausente/)).toBeVisible();
+    expect(rpc).toHaveBeenCalledWith("sso_listar_excecoes_materiais_os", {
+      p_cliente_id: cliente,
+      p_os_id: os,
+      p_apos_lista: null,
+      p_apos_revisao: null,
+      p_limite: 20,
+    });
     expect(
       historico.queryByRole("button", { name: /impedimento|intenção/i }),
     ).not.toBeInTheDocument();
@@ -99,5 +109,21 @@ it.each([true, false])(
       expect(await acao.findByRole("alert")).toHaveTextContent("Histórico indisponível");
       expect(acao.queryByRole("button", { name: "Registrar intenção" })).not.toBeInTheDocument();
     }
+  },
+);
+
+it.each([
+  ["42501", /não tem permissão/i],
+  ["55000", /ainda não foi liberada/i],
+] as const)(
+  "oculta a ação e a repetição se a primeira leitura retorna %s",
+  async (codigo, mensagem) => {
+    montar(true, codigo);
+    expect(await screen.findByRole("alert")).toHaveTextContent(mensagem);
+    expect(
+      screen.queryByRole("region", { name: "Ação da OS: intenção de impedimento" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tentar novamente" })).not.toBeInTheDocument();
+    expect(rpc).toHaveBeenCalledTimes(1);
   },
 );
