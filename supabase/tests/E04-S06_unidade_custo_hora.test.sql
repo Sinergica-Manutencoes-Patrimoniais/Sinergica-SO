@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path=extensions,public;
-select plan(7);
+select plan(11);
 
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values ('23000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','def23-custohora@test.local',crypt('x',gen_salt('bf')),now(),'{}','{}',now(),now());
@@ -23,8 +23,6 @@ insert into financeiro.custos_funcionario(funcionario_id,custo_mensal_centavos,h
 insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,prioridade,origem,created_by,data_agendada,tecnico_funcionario_id,auvo_detalhes)
 values ('23000000-0000-4000-8000-000000000004','23000000-0000-4000-8000-000000000002','DEF23-1','OS de 2 horas','corretiva','finalizado','normal','manual','23000000-0000-4000-8000-000000000001',current_date,'23000000-0000-4000-8000-000000000003','{"duracaoHoras":"2"}'::jsonb);
 
-select set_config('request.jwt.claims','{"sub":"23000000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}',true);
-
 -- O cálculo ponto-no-tempo, sozinho: 500000 / 200 = 2500 centavos/hora (R$ 25,00).
 select is(financeiro._fn_custo_hora_centavos_funcionario('23000000-0000-4000-8000-000000000003',current_date),
   2500::numeric,'R$ 5.000/mês em 200h dá 2500 centavos/hora (R$ 25,00)');
@@ -33,6 +31,17 @@ select is(financeiro._fn_custo_hora_centavos_funcionario('23000000-0000-4000-800
 -- O nome antigo, que era lido como reais, não existe mais.
 select is(to_regprocedure('financeiro._fn_custo_hora_funcionario(uuid,date)'),null,
   'o nome antigo sai de circulação');
+select ok(not has_function_privilege('anon','financeiro._fn_custo_hora_centavos_funcionario(uuid,date)','EXECUTE'),
+  'anon não tem EXECUTE no helper interno');
+select ok(not has_function_privilege('service_role','financeiro._fn_custo_hora_centavos_funcionario(uuid,date)','EXECUTE'),
+  'service_role não tem EXECUTE no helper interno');
+
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"23000000-0000-4000-8000-000000000001","role":"authenticated","user_modulos":{"financeiro":"leitura"}}',true);
+select throws_ok(
+  $$select financeiro._fn_custo_hora_centavos_funcionario('23000000-0000-4000-8000-000000000003',current_date)$$,
+  '42501','permission denied for function _fn_custo_hora_centavos_funcionario',
+  'authenticated com leitura financeira usa as RPCs, sem acesso direto ao helper');
 
 -- Agregado da tela: 2 h × R$ 25,00 = R$ 50,00 = 5000 centavos. Antes do fix: 500000.
 select is(
@@ -53,6 +62,10 @@ select is(
   (select custo_hora_centavos from financeiro.fn_custo_os_por_cliente_mes('23000000-0000-4000-8000-000000000002',current_date)
     where os_id='23000000-0000-4000-8000-000000000004'),
   2500::numeric,'drill-down expõe custo_hora_centavos com o valor em centavos');
+
+select set_config('request.jwt.claims','{"sub":"23000000-0000-4000-8000-000000000001","role":"authenticated","user_modulos":{"comercial":"leitura"}}',true);
+select is(financeiro.fn_custo_hora_medio_por_cargo('tecnico-def23'),2500::numeric,
+  'leitura comercial continua recebendo média em centavos por hora pela RPC');
 
 select * from finish();
 rollback;

@@ -6,7 +6,7 @@
 -- por 100 para "converter em centavos". O custo de mão de obra saía 100 vezes maior do que o real.
 --
 -- R$ 5.000/mês com 200 h base = R$ 25,00/hora. A função devolve 2500 (centavos). Uma OS de 2 h
--- custa R$ 50,00 = 5000 centavos; a conta antiga gravava 500000 centavos, R$ 5.000,00.
+-- custa R$ 50,00 = 5000 centavos; a conta antiga retornava 500000 centavos, R$ 5.000,00.
 --
 -- Corrigido na origem, não no consumo, e em centavos do começo ao fim — sem conversão no meio:
 --   * o cálculo ponto-no-tempo passa a se chamar `financeiro._fn_custo_hora_centavos_funcionario`,
@@ -17,14 +17,22 @@
 --   * `fn_custo_hora_medio_por_cargo` (E03-S03, o terceiro consumidor, que já tratava o valor
 --     como centavos e portanto já estava certo) é reemitida só para apontar ao novo nome.
 --
--- Efeito na tela: em Financeiro > Rentabilidade, o custo de mão de obra e o custo por OS passam a
--- aparecer 100 vezes MENORES, e a margem, maior. O número novo é o certo; o antigo estava inflado.
--- Nenhum dado gravado muda — as duas funções são de leitura e nada é persistido a partir delas.
+-- No agregado e no drill-down, a mão de obra deixa de ser inflada pelo fator 100.
+-- Mantém o arredondamento da 1901: após a soma no agregado e por OS no drill-down.
+-- Receita e despesas seguem a mesma regra. As RPCs são de leitura.
 --
--- Reverso: reaplicar as definições de 1901 (rentabilidade e drill-down) e de 0181
---   (fn_custo_hora_medio_por_cargo), recriar `financeiro._fn_custo_hora_funcionario` como em 0115
---   e
---   drop function if exists financeiro._fn_custo_hora_centavos_funcionario(uuid, date);
+-- Reverso, em uma transação executada pelo mesmo papel de migrations:
+-- 1. Recriar somente financeiro._fn_custo_hora_funcionario(uuid, date) com o CREATE da 0115.
+--    A função antiga recupera os privilégios padrão do seu owner, como na 0115.
+-- 2. DROP FUNCTION financeiro.fn_custo_os_por_cliente_mes(uuid, date);
+--    O DROP é necessário para restaurar a coluna de saída custo_hora_reais.
+-- 3. Reaplicar a 1901 inteira, incluindo seus REVOKE/GRANT. Restaurar o COMMENT do
+--    drill-down da 0115. O agregado preserva a assinatura e o drill-down volta a
+--    conceder EXECUTE a authenticated, com REVOKE de PUBLIC.
+-- 4. Reaplicar somente o CREATE OR REPLACE de fn_custo_hora_medio_por_cargo(text) da
+--    0181 e seus REVOKE/GRANT (PUBLIC e authenticated, respectivamente).
+-- 5. DROP FUNCTION financeiro._fn_custo_hora_centavos_funcionario(uuid, date);
+-- Fazer COMMIT só depois de verificar a assinatura, os grants e as três RPCs.
 
 -- Centavos/hora vigentes numa data: maior vigente_desde <= data. NULL = funcionário sem custo
 -- cadastrado (as horas dele entram como "não valoradas", nunca custo 0 silencioso — AC-6).
@@ -42,6 +50,11 @@ as $$
   order by cf.vigente_desde desc
   limit 1;
 $$;
+
+-- Só o owner precisa executar o helper: as três RPCs chamadoras são SECURITY DEFINER
+-- e têm o mesmo owner. Os papéis da API usam as RPCs com suas guardas de módulo.
+revoke all on function financeiro._fn_custo_hora_centavos_funcionario(uuid, date)
+  from public, anon, authenticated, service_role;
 
 comment on function financeiro._fn_custo_hora_centavos_funcionario(uuid, date) is
   'DEF-23: custo por hora do funcionário em CENTAVOS na data (custo_mensal_centavos / horas_mes_base). Substitui _fn_custo_hora_funcionario, cujo retorno era lido como reais.';
@@ -244,8 +257,6 @@ $$;
 -- O nome antigo sai de circulação: nenhuma função do repositório o chama mais.
 drop function if exists financeiro._fn_custo_hora_funcionario(uuid, date);
 
-revoke all on function financeiro._fn_custo_hora_centavos_funcionario(uuid, date) from public;
-grant execute on function financeiro._fn_custo_hora_centavos_funcionario(uuid, date) to authenticated, service_role;
 revoke all on function financeiro.fn_custo_os_por_cliente_mes(uuid, date) from public;
 grant execute on function financeiro.fn_custo_os_por_cliente_mes(uuid, date) to authenticated;
 revoke all on function financeiro.fn_custo_hora_medio_por_cargo(text) from public;
