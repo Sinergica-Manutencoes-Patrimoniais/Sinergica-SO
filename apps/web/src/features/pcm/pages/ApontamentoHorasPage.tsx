@@ -8,7 +8,7 @@ import {
   RefreshCw,
   TrendingUp,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import {
@@ -44,6 +44,7 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | {
       fase: "pronto";
+      usuarioId: string;
       itens: ApontamentoHorasItem[];
       clientes: ClienteOpcaoHoras[];
       tecnicos: TecnicoOpcaoHoras[];
@@ -85,10 +86,14 @@ export function ApontamentoHorasPage({
   const [aba, setAba] = useState<Aba>("periodo");
   const [salvandoParametros, setSalvandoParametros] = useState(false);
 
+  const ultimoCarregamento = useRef(0);
+  const usuarioId = user?.id;
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
 
   const carregar = useCallback(async () => {
+    if (!usuarioId || !temLeitura) return;
+    const carregamento = ++ultimoCarregamento.current;
     setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
     try {
       const resultado = await obterApontamentoHoras(supabaseApontamentoHorasAdapter, {
@@ -97,7 +102,15 @@ export function ApontamentoHorasPage({
         tecnicoFuncionarioId: tecnicoFuncionarioId || null,
         clienteId: clienteId || null,
       });
-      setEstado({ fase: "pronto", ...resultado });
+      if (carregamento !== ultimoCarregamento.current) return;
+      if (
+        tecnicoFuncionarioId &&
+        !resultado.tecnicos.some(({ id }) => id === tecnicoFuncionarioId)
+      ) {
+        setTecnicoFuncionarioId("");
+        return;
+      }
+      setEstado({ fase: "pronto", usuarioId, ...resultado });
       const custos = await Promise.all(
         resultado.porTecnico
           .filter((item) => item.chave !== "sem-vinculo")
@@ -109,17 +122,21 @@ export function ApontamentoHorasPage({
               ] as const,
           ),
       );
-      setCustosPorTecnico(new Map(custos));
+      if (carregamento === ultimoCarregamento.current) setCustosPorTecnico(new Map(custos));
     } catch (error) {
+      if (carregamento !== ultimoCarregamento.current) return;
       setEstado({
         fase: "erro",
         mensagem: error instanceof Error ? error.message : "Não foi possível carregar apontamento.",
       });
     }
-  }, [inicio, fim, tecnicoFuncionarioId, clienteId]);
+  }, [inicio, fim, tecnicoFuncionarioId, clienteId, temLeitura, usuarioId]);
 
   useEffect(() => {
-    if (!permissoesCarregando && temLeitura) carregar();
+    if (!permissoesCarregando && temLeitura) void carregar();
+    return () => {
+      ultimoCarregamento.current += 1;
+    };
   }, [permissoesCarregando, temLeitura, carregar]);
 
   const temAlgumCusto = useMemo(
@@ -145,7 +162,10 @@ export function ApontamentoHorasPage({
       </div>
     );
   }
-  if (estado.fase === "carregando") {
+  if (
+    estado.fase === "carregando" ||
+    (estado.fase === "pronto" && estado.usuarioId !== usuarioId)
+  ) {
     return (
       <div className="flex flex-col gap-3 p-8">
         <Skeleton className="h-6 w-48" />

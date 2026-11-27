@@ -130,7 +130,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S127 | Guia SO atualizado (todos os módulos) | Codex | Implementado localmente (2026-08-06). P… | [spec](../../specs/E01-S127-guia-so-atualizado/spec.md) |
 | E01-S129 | Release do PCM para produção (checklist/hardening) | Claude (sessão Lucas) | Produção aplicada (2026-08-06). Migrati… | [spec](../../specs/E01-S129-release-pcm-producao/spec.md) |
 | E01-S131 | Ferramenta: cadastro item-cêntrico | Codex | Implementado localmente (2026-08-06). U… | [spec](../../specs/E01-S131-ferramenta-cadastro-item-centrico/spec.md) |
-| E01-S133 | Redesign do relatório de apontamento de horas | Codex | Implementado localmente (2026-08-06). R… | [spec](../../specs/E01-S133-apontamento-horas-redesign/spec.md) |
+| E01-S133 | Redesign do relatório de apontamento de horas | Codex (Onda 6) | Implementado localmente (2026-08-06). R… | [spec](../../specs/E01-S133-apontamento-horas-redesign/spec.md) |
 | E01-S134 | Relatório diário da operação (Fabricio) | Codex | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S134-relatorio-diario-operacao/spec.md) |
 | E01-S135 | Relatório do cliente (HTML + PDF + Portal) | Codex | Implementado localmente (2026-08-06). O… | [spec](../../specs/E01-S135-relatorio-cliente-html-pdf-portal/spec.md) |
 | E01-S136 | Dashboard PCM vira cockpit "bom dia" | Codex | Implementado localmente (2026-08-06). B… | [spec](../../specs/E01-S136-dashboard-cockpit-bom-dia/spec.md) |
