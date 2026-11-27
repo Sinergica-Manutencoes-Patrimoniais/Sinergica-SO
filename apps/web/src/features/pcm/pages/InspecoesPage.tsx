@@ -665,7 +665,7 @@ export function InspecoesPage({
               className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-success px-2 text-caption font-semibold text-success hover:bg-success-soft"
             >
               <Sheet className="h-4 w-4" />
-              XLS
+              Importar XLS
             </button>
             <button
               type="button"
@@ -676,7 +676,7 @@ export function InspecoesPage({
               className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-info px-2 text-caption font-semibold text-info hover:bg-info-soft"
             >
               <FileText className="h-4 w-4" />
-              PDF
+              Importar PDF
             </button>
             <button
               type="button"
