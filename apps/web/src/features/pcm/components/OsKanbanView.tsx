@@ -14,6 +14,8 @@ import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/orde
 import {
   PRIORIDADE_LABEL,
   STATUS_OS,
+  ehItemBacklog,
+  ehItemPreTriagem,
   prioridadeColor,
   resumoTooltipOrdem,
   rotuloNumeroOrdem,
@@ -47,7 +49,7 @@ function orientacaoDoCard(detalhes: Record<string, unknown> | null): string | nu
  * e sair dela é decisão de triagem (`sso_consultar_triagem_chamado_campo`, E01-S175), não
  * mudança de status — arrastar daqui fingiria um caminho que não existe. */
 export function OsKanbanView({
-  ordens,
+  ordens: ordensRecebidas,
   temEscrita,
   salvando,
   onAlterarStatus,
@@ -80,6 +82,9 @@ export function OsKanbanView({
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
   const [recusa, setRecusa] = useState<string | null>(null);
   const matrizLigada = flagLigada("VITE_SSO_MATRIZ_TRANSICOES_ENABLED");
+  const ordens = ordensRecebidas.filter(
+    (ordem) => !(ordem.origemInspecaoItemId && ehItemPreTriagem(ordem) && ehItemBacklog(ordem)),
+  );
 
   // Nenhuma OS pode sumir do quadro por ter um status sem coluna (ver `statusSemColuna`).
   const statusOrfaos = statusSemColuna(

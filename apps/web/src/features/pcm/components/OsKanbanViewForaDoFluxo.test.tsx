@@ -173,3 +173,32 @@ describe("transições manuais no Kanban", () => {
     expect(alterar).toHaveBeenCalledExactlyOnceWith("os-1", "finalizado");
   });
 });
+
+it("DEF-21: só coloca a pendência de inspeção em Solicitação após confirmar o Chamado", () => {
+  montar([
+    os({
+      id: "pendente",
+      titulo: "Fiação pendente",
+      status: "solicitacao",
+      origemInspecaoItemId: "item-1",
+      auvoTaskId: null,
+    }),
+    os({
+      id: "confirmada",
+      titulo: "Forro confirmado",
+      status: "solicitacao",
+      origemInspecaoItemId: "item-2",
+      chamadoId: "ch-2",
+      auvoTaskId: null,
+    }),
+    os({
+      id: "campo",
+      titulo: "Execução com referência externa",
+      status: "planejamento",
+      origemInspecaoItemId: "item-3",
+    }),
+  ]);
+  expect(screen.queryByText("Fiação pendente")).toBeNull();
+  expect(screen.getByText("Forro confirmado")).toBeInTheDocument();
+  expect(screen.getByText("Execução com referência externa")).toBeInTheDocument();
+});
