@@ -42,6 +42,18 @@
   # deslocamento e as Fontes de Demanda. Declarada aqui pela primeira vez: sem ela, ligar os
   # Trechos não traz a tela, porque o bloco inteiro não renderiza.
   VITE_SSO_CAPACIDADE_AGENDA_ENABLED = "true"
+  # E01-S172: seção "Fontes de Demanda" (Trechos) na aba Capacidade e Agenda. LIGADA em 27/11/2026,
+  # junto da migration 1908 (abre pcm.capacidade_fontes_mediacao_gate e pcm.capacidade_demanda_gate).
+  # Só leitura; exige 'capacidade.gerir' no Cliente. As duas pontas andam juntas, sempre: sem a
+  # migration a tela volta recusada pelo banco. Desligar: "false" aqui (a seção some) e, se quiser,
+  # `update pcm.capacidade_demanda_gate set habilitado = false where id`.
+  VITE_SSO_FONTES_DEMANDA_ENABLED = "true"
+  # E01-S177: Política de Equipment por categoria (Visão 360 → Estrutura, só superadmin). LIGADA em
+  # 27/11/2026, junto da migration 1909 (abre pcm.sso_politica_equipment_gate). A política é global
+  # e só REGISTRA a escolha: não altera a fila do Auvo nem envia Equipment (os produtores T-24
+  # seguem com gates próprios fechados). Desligar: "false" aqui — a tela passa a anunciar que não
+  # está ativada.
+  VITE_SSO_POLITICA_EQUIPMENT_ENABLED = "true"
   # E02-S24: alma do cliente + resumo rolante de memória do Zé (Visão 360 → Comunicação).
   # LIGADA em 25/11/2026 (Lucas autorizou abrir o necessário para explorar). Desligar faz a seção
   # ANUNCIAR que o recurso não está ativado — não some da tela.
