@@ -1,3 +1,4 @@
+import { flagLigada } from "../../../config/flags-sso";
 import { supabase } from "../../../lib/supabase-client";
 import type {
   CriarOrdemServicoInput,
@@ -8,7 +9,6 @@ import type {
 } from "../application/ordem-servico-gateway";
 import { PESOS_GUTD_PADRAO } from "../domain/priorizacao-backlog";
 import type { PesosGutd } from "../domain/priorizacao-backlog";
-import { flagLigada } from "../../../config/flags-sso";
 
 function montarDescricao(input: CriarOrdemServicoInput): string | null {
   const blocos = [input.descricao?.trim()].filter(Boolean);
@@ -83,14 +83,21 @@ async function marcarChamadoAutomaticoComOs(
     .select("id")
     .maybeSingle();
   if (error) throw error;
-  if (!data) throw new Error("Chamado indisponível ou vínculo legado divergente; reconcilie antes de continuar.");
+  if (!data)
+    throw new Error(
+      "Chamado indisponível ou vínculo legado divergente; reconcilie antes de continuar.",
+    );
   await supabase
     .schema("pcm")
     .from("chamados_eventos")
     .insert({ chamado_id: chamadoId, tipo: "os_gerada", metadata: { ordemServicoId } });
 }
 
-async function confirmarChamadoAtomico(input: { ordemId: string; userId: string; somenteRepetir?: boolean }): Promise<{ numero: string }> {
+async function confirmarChamadoAtomico(input: {
+  ordemId: string;
+  userId: string;
+  somenteRepetir?: boolean;
+}): Promise<{ numero: string }> {
   const chave = `sso-confirmar-chamado-os:${JSON.stringify([input.userId, input.ordemId])}`;
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuid.test(input.ordemId) || !uuid.test(input.userId)) throw new Error("Contexto inválido.");
@@ -102,7 +109,8 @@ async function confirmarChamadoAtomico(input: { ordemId: string; userId: string;
   let requestId: string;
   const anterior = sessionStorage.getItem(chave);
   if (anterior === null) {
-    if (input.somenteRepetir) throw new Error("Tentativa não encontrada; nenhuma operação enviada.");
+    if (input.somenteRepetir)
+      throw new Error("Tentativa não encontrada; nenhuma operação enviada.");
     requestId = crypto.randomUUID();
     sessionStorage.setItem(chave, requestId);
   } else {
@@ -111,15 +119,24 @@ async function confirmarChamadoAtomico(input: { ordemId: string; userId: string;
   }
   if (sessionStorage.getItem(chave) !== requestId) throw new Error("Tentativa alterada.");
   const { data, error } = await supabase.schema("pcm").rpc("sso_confirmar_chamado_os_atomico", {
-    p_request_id: requestId, p_os_id: input.ordemId,
+    p_request_id: requestId,
+    p_os_id: input.ordemId,
   });
   if (error) throw error;
-  if (!data || data.requestId !== requestId || data.osId !== input.ordemId ||
-    typeof data.chamadoId !== "string" || !uuid.test(data.chamadoId) ||
-    typeof data.numero !== "string" || !data.numero.trim() || typeof data.numeroOs !== "string")
+  if (
+    !data ||
+    data.requestId !== requestId ||
+    data.osId !== input.ordemId ||
+    typeof data.chamadoId !== "string" ||
+    !uuid.test(data.chamadoId) ||
+    typeof data.numero !== "string" ||
+    !data.numero.trim() ||
+    typeof data.numeroOs !== "string"
+  )
     throw new Error("Resposta divergente; mantenha a tentativa e procure suporte.");
   await sessao();
-  if (sessionStorage.getItem(chave) !== requestId) throw new Error("Tentativa alterada; procure suporte.");
+  if (sessionStorage.getItem(chave) !== requestId)
+    throw new Error("Tentativa alterada; procure suporte.");
   sessionStorage.removeItem(chave);
   return { numero: data.numero };
 }
@@ -129,15 +146,28 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
     const itens: { id: string; nome: string }[] = [];
     let cursor: string | null = null;
     for (let pagina = 0; pagina < 1000; pagina++) {
-      let consulta = supabase.schema("pcm").from("equipamentos").select("id,nome")
-        .eq("client_id", clienteId).is("deleted_at", null).order("id", { ascending: true }).limit(100);
+      let consulta = supabase
+        .schema("pcm")
+        .from("equipamentos")
+        .select("id,nome")
+        .eq("client_id", clienteId)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .limit(100);
       if (cursor) consulta = consulta.gt("id", cursor);
       const { data, error } = await consulta;
       if (error) throw error;
       const linhas = data ?? [];
-      if (linhas.length === 0) return itens.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR") || a.id.localeCompare(b.id));
+      if (linhas.length === 0)
+        return itens.sort(
+          (a, b) => a.nome.localeCompare(b.nome, "pt-BR") || a.id.localeCompare(b.id),
+        );
       for (const row of linhas) {
-        if (typeof row.id !== "string" || typeof row.nome !== "string" || (cursor && row.id <= cursor)) {
+        if (
+          typeof row.id !== "string" ||
+          typeof row.nome !== "string" ||
+          (cursor && row.id <= cursor)
+        ) {
           throw new Error("Paginação de Componentes inválida.");
         }
         cursor = row.id;
@@ -214,10 +244,20 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       chamadoId = chamadoAutomatico.id;
       numeroChamado = chamadoAutomatico.numero;
     } else if (chamadoId) {
-      const { data: chamado, error: chamadoError } = await supabase.schema("pcm").from("chamados")
-        .select("numero,cliente_id").eq("id", chamadoId).is("deleted_at", null).single();
+      const { data: chamado, error: chamadoError } = await supabase
+        .schema("pcm")
+        .from("chamados")
+        .select("numero,cliente_id")
+        .eq("id", chamadoId)
+        .is("deleted_at", null)
+        .single();
       if (chamadoError) throw chamadoError;
-      if (!chamado || chamado.cliente_id !== input.clientId || typeof chamado.numero !== "string" || !chamado.numero.trim()) {
+      if (
+        !chamado ||
+        chamado.cliente_id !== input.clientId ||
+        typeof chamado.numero !== "string" ||
+        !chamado.numero.trim()
+      ) {
         throw new Error("Chamado incompatível com Cliente.");
       }
       numeroChamado = chamado.numero;
@@ -281,7 +321,11 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
   async confirmarChamado(input): Promise<{ numero: string }> {
     // Uma tentativa atômica incerta nunca pode cair no fluxo legado se a flag mudar.
     const chaveAtomica = `sso-confirmar-chamado-os:${JSON.stringify([input.userId, input.ordemId])}`;
-    if (input.somenteRepetir || flagLigada("VITE_SSO_CONFIRMAR_CHAMADO_OS_ATOMICO_ENABLED") || sessionStorage.getItem(chaveAtomica) !== null) {
+    if (
+      input.somenteRepetir ||
+      flagLigada("VITE_SSO_CONFIRMAR_CHAMADO_OS_ATOMICO_ENABLED") ||
+      sessionStorage.getItem(chaveAtomica) !== null
+    ) {
       return confirmarChamadoAtomico(input);
     }
     const { data: ordem, error: ordemError } = await supabase
@@ -293,7 +337,9 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       .single();
     if (ordemError) throw ordemError;
     if (ordem.chamado_id !== null) {
-      throw new Error("Esta OS já possui Chamado. Consulte o vínculo existente antes de continuar.");
+      throw new Error(
+        "Esta OS já possui Chamado. Consulte o vínculo existente antes de continuar.",
+      );
     }
 
     const chamadoAutomatico = await criarChamadoAutomatico({
@@ -315,7 +361,10 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       .select("id")
       .maybeSingle();
     if (error) throw error;
-    if (!atualizada) throw new Error("A OS mudou durante a confirmação. Consulte o vínculo e reconcilie o Chamado criado antes de repetir.");
+    if (!atualizada)
+      throw new Error(
+        "A OS mudou durante a confirmação. Consulte o vínculo e reconcilie o Chamado criado antes de repetir.",
+      );
     await marcarChamadoAutomaticoComOs(chamadoAutomatico.id, input.ordemId, input.userId);
     return { numero: chamadoAutomatico.numero };
   },
@@ -330,7 +379,9 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
       .limit(2);
     if (error) throw error;
     if ((data?.length ?? 0) > 1) {
-      throw new Error("Este Chamado possui mais de uma OS; consulte as Ordens vinculadas antes de continuar.");
+      throw new Error(
+        "Este Chamado possui mais de uma OS; consulte as Ordens vinculadas antes de continuar.",
+      );
     }
     const unica = data?.[0];
     return unica ? { id: unica.id as string, numero: unica.numero as string } : null;
@@ -344,7 +395,7 @@ export const supabaseOrdemServicoAdapter: OrdemServicoGateway = {
         titulo: input.titulo,
         descricao: input.descricao,
         categoria: input.categoria,
-        prioridade: input.prioridade,
+        ...(input.prioridade !== undefined && { prioridade: input.prioridade }),
         gravidade: input.gravidade,
         urgencia: input.urgencia,
         tendencia: input.tendencia,

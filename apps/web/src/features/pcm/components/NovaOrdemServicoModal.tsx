@@ -36,7 +36,7 @@ interface FormState {
   titulo: string;
   descricao: string;
   categoria: CategoriaOs;
-  prioridade: PrioridadeFormulario;
+  prioridade: PrioridadeFormulario | null;
   tipoTarefaId: string;
   origem: OrigemOs;
   tecnicoId: string;
@@ -76,14 +76,14 @@ const FORM_INICIAL: FormState = {
   observacao: "",
 };
 
-function prioridadeParaForm(prioridade: string): PrioridadeFormulario {
+function prioridadeParaForm(prioridade: string): PrioridadeFormulario | null {
   return prioridade === "normal" ||
     prioridade === "baixa" ||
     prioridade === "media" ||
     prioridade === "alta" ||
     prioridade === "critica"
     ? prioridade
-    : "media";
+    : null;
 }
 
 export function NovaOrdemServicoModal({
@@ -243,7 +243,7 @@ export function NovaOrdemServicoModal({
           titulo: form.titulo,
           descricao: form.descricao || null,
           categoria: form.categoria,
-          prioridade: form.prioridade,
+          prioridade: form.prioridade ?? undefined,
           gravidade: form.gravidade,
           urgencia: form.urgencia,
           tendencia: form.tendencia,
@@ -261,7 +261,7 @@ export function NovaOrdemServicoModal({
           titulo: form.titulo,
           descricao: form.descricao || null,
           categoria: form.categoria,
-          prioridade: form.prioridade,
+          prioridade: form.prioridade ?? prioridadeSugerida,
           gravidade: form.gravidade,
           urgencia: form.urgencia,
           tendencia: form.tendencia,
@@ -433,13 +433,18 @@ export function NovaOrdemServicoModal({
 
           <Field label="Prioridade">
             <select
-              value={form.prioridade}
+              value={form.prioridade ?? ordem?.prioridade ?? ""}
               onChange={(e) => {
                 setPrioridadeManual(true);
                 setForm((f) => ({ ...f, prioridade: e.target.value as PrioridadeFormulario }));
               }}
               className="input"
             >
+              {ordem && form.prioridade === null && (
+                <option value={ordem.prioridade} disabled>
+                  {ordem.prioridade || "Sem prioridade"}
+                </option>
+              )}
               {editando && <option value="normal">Normal</option>}
               {PRIORIDADES.map((prioridade) => (
                 <option key={prioridade.value} value={prioridade.value}>
