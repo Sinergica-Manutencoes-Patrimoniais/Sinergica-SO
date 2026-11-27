@@ -84,6 +84,7 @@ import {
   rotuloStatusOs,
   statusOsColor,
 } from "../domain/ordens-servico";
+import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
 import { transicaoManualOrdem } from "../domain/transicoes-os";
 import { supabaseChamadosAdapter } from "../infrastructure/supabase-chamados-adapter";
 import { supabaseKanbanColunasAdapter } from "../infrastructure/supabase-kanban-colunas-adapter";
@@ -412,16 +413,46 @@ export function OrdensServicoPage({
   // tipoOs (melhoria/outro, fora do Hub) fica sempre por último, sem sumir da lista.
   const [ordenarPorHub, setOrdenarPorHub] = useState(false);
 
+  const temFiltros =
+    Boolean(filtros.busca.trim() || filtros.dataInicio || filtros.dataFim) ||
+    filtros.clienteId !== "todos" ||
+    filtros.tecnicoFuncionarioId !== "todos" ||
+    filtros.categoria !== "todas" ||
+    filtros.status !== "ativos";
+  const preventivasFiltradas = preventivas.filter((item) => {
+    const termo = buscaDebounced.trim().toLowerCase();
+    const data = item.scheduledDate.slice(0, 10);
+    return (
+      (filtros.clienteId === "todos" || item.clienteId === filtros.clienteId) &&
+      filtros.tecnicoFuncionarioId === "todos" &&
+      (filtros.categoria === "todas" || filtros.categoria === "preventiva") &&
+      (filtros.status === "ativos" || filtros.status === "todas") &&
+      (!filtros.dataInicio || data >= filtros.dataInicio) &&
+      (!filtros.dataFim || data <= filtros.dataFim) &&
+      [item.clienteNome, item.imovelNome, TIPO_MANUTENCAO_LABEL[item.maintenanceType]].some(
+        (texto) => texto.toLowerCase().includes(termo),
+      )
+    );
+  });
   const ordensFiltradas = useMemo(() => {
     const filtrosAplicados = { ...filtros, busca: buscaDebounced };
-    const filtradas = filtrarOrdens(ordensCarregadas, filtrosAplicados);
+    const solicitacoesKanban = visao === "kanban" && filtros.status === "solicitacao";
+    const ordens = solicitacoesKanban
+      ? ordensCarregadas.filter(
+          (ordem) => ordem.status === "solicitacao" || ordem.status === "aberto",
+        )
+      : ordensCarregadas;
+    const filtradas = filtrarOrdens(ordens, {
+      ...filtrosAplicados,
+      status: solicitacoesKanban ? "ativos" : filtrosAplicados.status,
+    });
     if (!ordenarPorHub) return filtradas;
     return [...filtradas].sort((a, b) => {
       const prioA = calcularPrioridadeHub(a.tipoOs, a.dataAgendada) ?? Number.POSITIVE_INFINITY;
       const prioB = calcularPrioridadeHub(b.tipoOs, b.dataAgendada) ?? Number.POSITIVE_INFINITY;
       return prioA - prioB;
     });
-  }, [ordensCarregadas, filtros, buscaDebounced, ordenarPorHub]);
+  }, [ordensCarregadas, filtros, buscaDebounced, ordenarPorHub, visao]);
 
   // DEF-33: regra em domain/filtro-tecnicos.ts — o técnico selecionado continua na lista
   // mesmo quando o recorte atual não tem OS dele.
@@ -979,7 +1010,7 @@ export function OrdensServicoPage({
                       colunas={colunasKanban}
                       onMoverColuna={onMoverColunaKanban}
                       onAlternarVisibilidadeColuna={onAlternarVisibilidadeColunaKanban}
-                      preventivas={preventivas}
+                      preventivas={preventivasFiltradas}
                       camposAConciliar={
                         campoAConciliar.isFetching || campoAConciliar.isError
                           ? undefined
@@ -1066,7 +1097,7 @@ export function OrdensServicoPage({
                     {ordensFiltradas.length === 0 ? (
                       // E00-S17 AC-6 — "nunca houve" e "filtro zerou" não podem parecer a mesma tela.
                       <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-body text-ink-3">
-                        {ordensCarregadas.length > 0 ? (
+                        {temFiltros || ordensCarregadas.length > 0 ? (
                           <>
                             Nenhuma OS para estes filtros.
                             <Button variant="secondary" size="sm" onClick={limparFiltros}>

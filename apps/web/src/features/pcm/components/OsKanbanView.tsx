@@ -86,16 +86,18 @@ export function OsKanbanView({
 
   // Nenhuma OS pode sumir do quadro por ter um status sem coluna (ver `statusSemColuna`).
   const statusOrfaos = statusSemColuna(
-    ordens.map((ordem) => ordem.status),
+    ordens.map((ordem) => (ordem.status === "aberto" ? "solicitacao" : ordem.status)),
     colunas,
   );
-  const orfas = ordens.filter((ordem) => statusOrfaos.includes(ordem.status));
+  const orfas = ordens.filter((ordem) =>
+    statusOrfaos.includes(ordem.status === "aberto" ? "solicitacao" : ordem.status),
+  );
   const rotuloStatusOrfaos = statusOrfaos
     .map((status) => STATUS_OS.find((s) => s.value === status)?.label ?? status)
     .join(", ");
 
   function moverOrdem(ordem: OrdemServicoOperacional, destino: StatusOrdemServico) {
-    if (!temEscrita || salvando || ordem.status === destino) return;
+    if (!temEscrita || salvando || ordem.status === "aberto" || ordem.status === destino) return;
     const veredito = transicaoManualOrdem(ordem, destino);
     if (!veredito.permitida) {
       setRecusa(veredito.motivo);
@@ -251,7 +253,11 @@ export function OsKanbanView({
               );
             }
 
-            const ordensDaColuna = ordens.filter((ordem) => ordem.status === coluna.id);
+            const ordensDaColuna = ordens.filter(
+              (ordem) =>
+                ordem.status === coluna.id ||
+                (coluna.id === "solicitacao" && ordem.status === "aberto"),
+            );
             return (
               <div
                 key={coluna.id}
@@ -284,16 +290,18 @@ export function OsKanbanView({
                     ordensDaColuna.map((ordem) => (
                       <div
                         key={ordem.id}
-                        draggable={temEscrita && !salvando}
+                        draggable={temEscrita && !salvando && ordem.status !== "aberto"}
                         onDragStart={(event) => {
                           event.dataTransfer.setData(DRAG_MIME, ordem.id);
                           event.dataTransfer.effectAllowed = "move";
                         }}
                         className={`rounded-md border border-line bg-card p-3 hover:border-ink-3 ${
-                          temEscrita && !salvando ? "cursor-grab active:cursor-grabbing" : ""
+                          temEscrita && !salvando && ordem.status !== "aberto"
+                            ? "cursor-grab active:cursor-grabbing"
+                            : ""
                         }`}
                       >
-                        {temEscrita && onToggleSelecionado && (
+                        {temEscrita && ordem.status !== "aberto" && onToggleSelecionado && (
                           <input
                             type="checkbox"
                             checked={selecionados?.has(ordem.id) ?? false}
@@ -352,7 +360,7 @@ export function OsKanbanView({
                         {/* E01-S150: mover via clique — arrastar (nativo HTML5) é frágil em
                          * trackpad, então todo card tem também um jeito confiável de trocar de
                          * fase sem depender do gesto de drag. */}
-                        {temEscrita && (
+                        {temEscrita && ordem.status !== "aberto" && (
                           <select
                             value={ordem.status}
                             disabled={salvando}

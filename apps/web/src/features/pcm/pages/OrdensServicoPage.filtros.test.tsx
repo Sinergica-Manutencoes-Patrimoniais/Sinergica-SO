@@ -59,12 +59,12 @@ it("a página mostra o vazio de cadastro quando a Lista não tem busca (DEF-34)"
   expect(await screen.findByText("Nenhuma OS cadastrada ainda.")).toBeVisible();
 });
 
-it.fails("distingue feed vazio com busca ativa de ausência de cadastro (DEF-34)", async () => {
+it("distingue feed vazio com busca ativa de ausência de cadastro (DEF-34)", async () => {
   montar({ filtrosIniciais: { busca: "CH-FICTICIO" } });
   expect(await screen.findByText("Nenhuma OS para estes filtros.")).toBeVisible();
 });
 
-it.fails("aplica o cliente selecionado também à coluna de Preventivas (DEF-01)", async () => {
+it("aplica o cliente selecionado também à coluna de Preventivas (DEF-01)", async () => {
   listarProximasPreventivas.mockResolvedValue(
     ["cliente-a", "cliente-b"].map((clienteId) => ({
       id: clienteId,
@@ -82,7 +82,7 @@ it.fails("aplica o cliente selecionado também à coluna de Preventivas (DEF-01)
   expect(screen.queryByText("Imóvel cliente-b")).not.toBeInTheDocument();
 });
 
-it("localiza por que o chamado aberto sem OS some ao alternar para Kanban (DEF-02)", async () => {
+it("mantém o chamado aberto sem OS ao alternar para Kanban (DEF-02)", async () => {
   const chamado: ItemOperacaoResumo = {
     id: "chamado-aberto:ch-ficticio",
     tipo: "chamado_aberto",
@@ -118,14 +118,14 @@ it("localiza por que o chamado aberto sem OS some ao alternar para Kanban (DEF-0
   };
   listarPagina.mockImplementation(async ({ status }: ConsultaOperacao) => {
     // operacao_itens preserva status aberto. O adaptador compara por igualdade em recortes de fase.
-    const itens = status === "ativos" || status === "todos" ? [chamado] : [];
+    const itens = status === "ativos" || status === "todos" || status === "aberto" ? [chamado] : [];
     return { itens, proximoCursor: null, total: itens.length };
   });
   montar({ filtrosIniciais: { busca: chamado.numero } });
   expect(await screen.findByText(chamado.titulo)).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "Kanban" }));
   expect(await screen.findByRole("button", { name: "Ocultar coluna Preventiva" })).toBeVisible();
-  expect(screen.queryByText(chamado.titulo)).not.toBeInTheDocument();
+  expect(await screen.findByText(chamado.titulo)).toBeVisible();
   expect(listarPagina.mock.calls.some(([consulta]) => consulta.status === "solicitacao")).toBe(
     true,
   );
