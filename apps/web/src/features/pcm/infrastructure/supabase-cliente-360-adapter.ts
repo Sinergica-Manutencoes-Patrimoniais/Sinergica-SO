@@ -101,6 +101,7 @@ interface LaudoEventoRow {
 }
 
 interface OsClienteListaRow {
+  id: string;
   client_id: string;
   status: string;
   score_pcm: number;
@@ -253,6 +254,28 @@ async function funcionariosPorId(): Promise<Map<string, string>> {
   );
 }
 
+async function listarOrdensDaCarteira() {
+  const tamanhoPagina = 500;
+  const ordens: OsClienteListaRow[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    let consulta = supabase
+      .schema("pcm")
+      .from("ordens_servico")
+      .select("id,client_id,status,score_pcm,created_at,auvo_synced_at")
+      .is("deleted_at", null)
+      .order("id", { ascending: true })
+      .limit(tamanhoPagina);
+    if (cursor) consulta = consulta.gt("id", cursor);
+    const { data, error } = await consulta;
+    if (error) return { data: null, error };
+    const pagina = (data ?? []) as OsClienteListaRow[];
+    ordens.push(...pagina);
+    if (pagina.length < tamanhoPagina) return { data: ordens, error: null };
+    cursor = pagina.at(-1)?.id;
+  }
+}
+
 function erroColunaAusente(error: { code?: string; message?: string } | null): boolean {
   return (
     error?.code === "PGRST204" ||
@@ -356,11 +379,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         // só operação, nunca exibe quem ainda não é cliente de verdade.
         .neq("tipo", "lead")
         .order("nome", { ascending: true }),
-      supabase
-        .schema("pcm")
-        .from("ordens_servico")
-        .select("client_id,status,score_pcm,created_at,auvo_synced_at")
-        .is("deleted_at", null),
+      listarOrdensDaCarteira(),
       supabase.schema("pcm").from("equipamentos").select("auvo_customer_id,ativo,updated_at"),
       marcacoesClientePorId(),
     ]);
@@ -391,7 +410,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       string,
       { abertas: number; maiorScore: number; ultimaAtividadeEm: string | null }
     >();
-    for (const ordem of (ordens.data ?? []) as OsClienteListaRow[]) {
+    for (const ordem of ordens.data ?? []) {
       const atual = ordensPorCliente.get(ordem.client_id) ?? {
         abertas: 0,
         maiorScore: 0,
