@@ -45,6 +45,7 @@ export function RelatorioClientePage() {
   const [publicado, setPublicado] = useState(false);
 
   const erroPeriodo = erroPeriodoRelatorioCliente({ inicio, fim });
+  const precisaGerar = Boolean(clienteId && !erroPeriodo && !relatorio && !gerando);
   const carregando = consultaClientes.isLoading || gerando;
 
   function alterarFiltro(setValor: (valor: string) => void, valor: string) {
@@ -182,6 +183,7 @@ export function RelatorioClientePage() {
           className="btn-secondary"
           onClick={() => void baixarPdf()}
           disabled={!relatorio || baixando}
+          aria-describedby={precisaGerar ? "relatorio-cliente-acoes-ajuda" : undefined}
         >
           <Download className="h-4 w-4" /> {baixando ? "Gerando PDF…" : "Exportar PDF"}
         </button>
@@ -190,11 +192,17 @@ export function RelatorioClientePage() {
           className="btn-secondary"
           onClick={() => void publicar()}
           disabled={!relatorio || publicando || publicado}
+          aria-describedby={precisaGerar ? "relatorio-cliente-acoes-ajuda" : undefined}
         >
           <Send className="h-4 w-4" />{" "}
           {publicado ? "Publicado" : publicando ? "Publicando…" : "Publicar no Portal"}
         </button>
       </div>
+      {precisaGerar && (
+        <p id="relatorio-cliente-acoes-ajuda" className="text-body text-ink-3">
+          Gere o relatório com os filtros atuais para exportar ou publicar.
+        </p>
+      )}
       {erroPeriodo || erro || consultaClientes.error ? (
         <p
           role="alert"

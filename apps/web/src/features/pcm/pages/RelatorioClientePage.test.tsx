@@ -156,6 +156,9 @@ describe("Relatório do Cliente", () => {
     expect(screen.queryByRole("article")).toBeNull();
     expect(botao("Exportar PDF")).toBeDisabled();
     expect(botao("Publicar no Portal")).toBeDisabled();
+    expect(
+      screen.getByText("Gere o relatório com os filtros atuais para exportar ou publicar."),
+    ).toBeVisible();
     fireEvent.click(botao("Gerar relatório"));
     await screen.findByText(/Inspecao antiga/);
     expect(screen.queryByText(/Inspecao recente/)).toBeNull();
