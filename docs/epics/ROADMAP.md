@@ -100,7 +100,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S101 | Tela de abertura de chamado com campos da OS + 3 datas | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S101-abertura-chamado-campos-os/spec.md) |
 | E01-S102 | Filtro por cliente na tela de Chamados | Claude (sessão Lucas) | Implementado localmente (2026-07-28). t… | [spec](../../specs/E01-S102-filtro-cliente-chamados/spec.md) |
 | E01-S103 | Responsável pelo cliente no cadastro | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S103-responsavel-cliente/spec.md) |
-| E01-S104 | Board semanal de agenda do técnico | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S104-agenda-tecnico-board/spec.md) |
+| E01-S104 | Board semanal de agenda do técnico | Codex (Onda 6) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S104-agenda-tecnico-board/spec.md) |
 | E01-S106 | Ferramenta alocável em um cliente | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S106-ferramenta-alocavel-cliente/spec.md) |
 | E01-S107 | Local do Chamado/OS: seleção da lista do cliente + "Outro" | Claude (sessão Lucas) | Implementado localmente (2026-07-29). S… | [spec](../../specs/E01-S107-local-selecao-lista-cliente/spec.md) |
 | E01-S108 | Fix: modal perde dados ao trocar de aba/tela do PCM | Claude (sessão Lucas) | Implementado localmente (2026-07-29). N… | [spec](../../specs/E01-S108-fix-modal-perde-dados-troca-aba/spec.md) |
