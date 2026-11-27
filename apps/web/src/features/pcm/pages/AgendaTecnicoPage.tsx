@@ -456,7 +456,7 @@ function ProjecaoDaVisita({
   );
 }
 
-/** Cartão da alocação projetada: técnico, cliente, período e as OS vinculadas da Visita — a união
+/** Cartão da alocação projetada: técnico, cliente, horário ou período e as OS vinculadas da Visita — a união
  * de Agenda e OS acontece na origem, não numa deduplicação posterior. */
 function CartaoVisita(alocacao: AlocacaoProjetada) {
   return (
@@ -466,11 +466,11 @@ function CartaoVisita(alocacao: AlocacaoProjetada) {
           className="h-2 w-2 shrink-0 rounded-full"
           style={{ backgroundColor: corDoTecnico(alocacao.funcionarioId) }}
         />
-        <p className="truncate text-caption font-semibold text-ink">
-          {alocacao.funcionarioNome}
-          <span className="ml-1 font-normal text-ink-3">{ROTULO_PERIODO[alocacao.periodo]}</span>
-        </p>
+        <p className="truncate text-caption font-semibold text-ink">{alocacao.funcionarioNome}</p>
       </div>
+      <p className="mt-0.5 pl-3.5 text-caption text-ink-3">
+        {alocacao.horariosAuvo.join(", ") || ROTULO_PERIODO[alocacao.periodo]}
+      </p>
       <p className="mt-0.5 truncate pl-3.5 text-caption text-ink-3">{alocacao.clienteNome}</p>
       <p className="truncate pl-3.5 text-micro text-ink-4">
         {alocacao.papel} · Visita {alocacao.estado}

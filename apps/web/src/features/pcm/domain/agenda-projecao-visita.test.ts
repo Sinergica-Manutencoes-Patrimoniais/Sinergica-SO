@@ -19,6 +19,7 @@ function alocacao(parcial: Partial<AlocacaoProjetada>): AlocacaoProjetada {
     papel: "Técnica",
     data: "2026-11-23",
     periodo: "manha",
+    horariosAuvo: [],
     estado: "planejada",
     natureza: "regular",
     osNumeros: [],
