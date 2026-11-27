@@ -7,7 +7,8 @@ import type { ConsultaOperacao, ItemOperacaoResumo } from "../application/operac
 import { OPERACAO_KPI_VAZIO } from "../application/operacao-queries";
 import { OrdensServicoPage } from "./OrdensServicoPage";
 
-const { listarPagina, listarProximasPreventivas } = vi.hoisted(() => ({
+const { carregarDadosAbertura, listarPagina, listarProximasPreventivas } = vi.hoisted(() => ({
+  carregarDadosAbertura: vi.fn(),
   listarPagina: vi.fn(),
   listarProximasPreventivas: vi.fn(),
 }));
@@ -28,6 +29,9 @@ vi.mock("../application/kanban-colunas", () => ({
 vi.mock("../infrastructure/supabase-operacao-adapter", () => ({
   supabaseOperacaoAdapter: { listarPagina, contarKpis: async () => OPERACAO_KPI_VAZIO },
 }));
+vi.mock("../infrastructure/supabase-ordem-servico-adapter", () => ({
+  supabaseOrdemServicoAdapter: { carregarDadosAbertura },
+}));
 vi.mock("../interfaces/listas-materiais/Central", () => ({ CentralMateriaisGlobal: () => null }));
 
 afterEach(() => {
@@ -38,6 +42,11 @@ afterEach(() => {
 function montar(
   props: Pick<Parameters<typeof OrdensServicoPage>[0], "filtrosIniciais" | "abaInicial">,
 ) {
+  carregarDadosAbertura.mockResolvedValue({
+    clientes: [{ id: "cliente-a", nome: "Cliente A" }],
+    tecnicos: [],
+    tiposTarefa: [],
+  });
   if (!listarPagina.getMockImplementation()) {
     listarPagina.mockResolvedValue({ itens: [], proximoCursor: null, total: 0 });
   }
@@ -53,6 +62,15 @@ function montar(
     </QueryClientProvider>,
   );
 }
+
+it.each(["kanban", "lista"] as const)(
+  "carrega Clientes na visão %s antes do foco",
+  async (abaInicial) => {
+    montar({ abaInicial });
+    expect(await screen.findByRole("option", { name: "Cliente A" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Filtrar por cliente")).not.toHaveFocus();
+  },
+);
 
 it("a página mostra o vazio de cadastro quando a Lista não tem busca (DEF-34)", async () => {
   montar({});
