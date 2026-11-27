@@ -39,16 +39,21 @@ export function useConfiguracaoCapacidades(gateway: CapacidadesSsoGateway, userI
   const queryClient = useQueryClient();
   const atualizar = () =>
     queryClient.invalidateQueries({ queryKey: capacidadesSsoQueryKeys.raiz(userId) });
+  // A sessão já foi conferida pelo workspace. Deixe o RPC responder mesmo
+  // quando o estado de rede do TanStack estiver desatualizado.
   const perfil = useMutation({
     mutationFn: (c: DefinirPerfilCommand) => definirPerfil(gateway, c),
+    networkMode: "always",
     onSuccess: atualizar,
   });
   const vinculo = useMutation({
     mutationFn: (c: DefinirVinculoPerfilCommand) => definirVinculoPerfil(gateway, c),
+    networkMode: "always",
     onSuccess: atualizar,
   });
   const concessao = useMutation({
     mutationFn: (c: DefinirConcessaoCommand) => definirConcessao(gateway, c),
+    networkMode: "always",
     onSuccess: atualizar,
   });
   return { perfis, vinculos, concessoes, usuarios, clientes, perfil, vinculo, concessao };
