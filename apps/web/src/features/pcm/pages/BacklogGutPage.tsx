@@ -277,7 +277,7 @@ export function BacklogGutPage({
               className="inline-flex h-9 items-center gap-1.5 rounded-md bg-navy px-3 text-caption font-semibold text-white hover:bg-navy-deep"
             >
               <Plus className="h-3.5 w-3.5" />
-              Novo item de backlog
+              Cadastrar OS para o backlog
             </button>
           )}
           <button
@@ -524,9 +524,7 @@ export function BacklogGutPage({
       {criando && (
         <NovaOrdemServicoModal
           aberto={criando}
-          clienteInicialId={
-            clienteControladoId ?? (clienteFiltro === "todos" ? undefined : clienteFiltro)
-          }
+          clienteInicialId={clienteFiltro === "todos" ? undefined : clienteFiltro}
           onFechar={() => setCriando(false)}
           onCriada={() => {
             setCriando(false);
