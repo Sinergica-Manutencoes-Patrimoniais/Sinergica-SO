@@ -1,6 +1,7 @@
 // Porta (interface) que a infrastructure implementa. A application só conhece este contrato —
 // nunca importa @supabase/supabase-js diretamente (ver docs/ARCHITECTURE.md — application/).
 // Read-model DTOs da Visão 360 (E01-S12): já em camelCase, desacoplados do snake_case do banco.
+import type { ContagemOperacional } from "../domain/contagem-operacional";
 import type { InspecaoStatus } from "../domain/inspecoes-laudos";
 
 /** E01-S91 AC-4: marcação de status vigente do cliente — `null` quando nenhuma foi definida. */
@@ -115,8 +116,12 @@ export interface EquipamentoResumo {
 export type ResultadoEquipamentos = EquipamentoResumo[] | "indisponivel";
 
 export interface Cliente360Metricas {
+  /** E01-S204: contagem oficial do servidor (glossário "OS aberta"; sem pré-chamados). */
   osAbertas: number;
+  /** E01-S204: OS aberta sem data, técnico e tarefa Auvo (glossário "Backlog"). */
   backlogTotal: number;
+  preChamados: number;
+  chamadosAbertos: number;
   slaPercentual: number | null;
   equipamentosAtivos: number | null;
   ultimaAtividadeEm: string | null;
@@ -198,6 +203,8 @@ export interface Cliente360Gateway {
   /** Cabeçalho do cliente (`deleted_at IS NULL`); `null` quando não existe/soft-deleted (AC-8). */
   buscarCliente(id: string): Promise<ClienteHeader | null>;
   /** OS em aberto, já ordenadas por `score_pcm` desc no servidor (AC-3). */
+  /** E01-S204: contagem oficial (OS abertas, backlog, pré-chamados, chamados sem OS) do Cliente. */
+  contarOperacaoCliente(id: string): Promise<ContagemOperacional>;
   listarBacklogCliente(id: string): Promise<OrdemServicoResumo[]>;
   /** OS finalizadas/canceladas, ordenadas por `auvo_synced_at` desc, fallback `created_at` (AC-4). */
   listarHistoricoCliente(id: string): Promise<OrdemServicoResumo[]>;

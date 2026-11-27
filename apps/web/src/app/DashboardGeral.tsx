@@ -12,7 +12,9 @@ import { supabaseDashboardAtendimentoAdapter } from "../features/atendimento/inf
 import { useFinanceiroResumoInicio } from "../features/financeiro/application/resumo-inicio-queries";
 import { centavosParaReais } from "../features/financeiro/domain/dinheiro";
 import { supabaseFinanceiroAdapter } from "../features/financeiro/infrastructure/supabase-financeiro-adapter";
+import { useDemandaEmAberto } from "../features/pcm/application/contagem-operacional-queries";
 import { usePcmResumoInicio } from "../features/pcm/application/resumo-inicio-queries";
+import { supabaseContagemOperacionalAdapter } from "../features/pcm/infrastructure/supabase-contagem-operacional-adapter";
 import { supabaseHubOsAdapter } from "../features/pcm/infrastructure/supabase-hub-os-adapter";
 import { MODULOS } from "./modulos";
 import type { ModuloId } from "./modulos";
@@ -90,16 +92,24 @@ function SkeletonKpis() {
 
 function CardPcm({ onSelect }: { onSelect: (id: ModuloId) => void }) {
   const query = usePcmResumoInicio(supabaseHubOsAdapter);
+  // E01-S204: "OS Abertas" é a contagem oficial (mesma da carteira e da Visão 360), não o
+  // "abertas" de fn_kpis_ordens_servico, que inclui pré-chamados.
+  const demanda = useDemandaEmAberto(supabaseContagemOperacionalAdapter);
   return (
     <CardModuloChrome moduloId="pcm" onSelect={onSelect}>
-      {query.isSuccess ? (
+      {query.isSuccess && demanda.isSuccess ? (
         <>
-          <KpiLinha label="OS Abertas" valor={String(query.data.abertas)} />
+          <KpiLinha label="OS Abertas" valor={String(demanda.data.osAbertas)} />
           <KpiLinha label="Em Execução" valor={String(query.data.emExecucao)} />
           <KpiLinha label="Críticas" valor={String(query.data.criticas)} />
         </>
-      ) : query.isError ? (
-        <ErroCard onTentarDeNovo={() => query.refetch()} />
+      ) : query.isError || demanda.isError ? (
+        <ErroCard
+          onTentarDeNovo={() => {
+            void query.refetch();
+            void demanda.refetch();
+          }}
+        />
       ) : (
         <SkeletonKpis />
       )}

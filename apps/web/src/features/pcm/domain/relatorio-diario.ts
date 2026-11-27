@@ -1,6 +1,7 @@
 import type { ApontamentoHorasItem } from "./apontamento-horas";
 import { diaLocal } from "./apontamento-horas";
 import type { Chamado } from "./chamados";
+import { ehOsAbertaContavel } from "./contagem-operacional";
 import { type OrdemServicoOperacional, ehItemBacklog } from "./ordens-servico";
 
 export interface SaudeSyncRelatorioDiario {
@@ -99,7 +100,9 @@ export function montarResumoRelatorioDiario(
     ordensFinalizadas: ordensFinalizadas.length,
     chamadosNovos: chamadosNovos.length,
     horasApontadas,
-    itensBacklog: dados.ordens.filter(ehItemBacklog).length,
+    // E01-S204: Backlog do glossário — OS aberta (sem pré-chamado nem ponto) ainda não planejada.
+    itensBacklog: dados.ordens.filter((ordem) => ehOsAbertaContavel(ordem) && ehItemBacklog(ordem))
+      .length,
     emergenciais: ordensAbertas.filter((ordem) => ordem.tipoOs === "C1").length,
     percentualPlanejadoExecutado:
       planejadas.length === 0
@@ -129,7 +132,7 @@ export function montarResumoRelatorioDiario(
 export function formatarTextoRelatorioDiario(resumo: ResumoRelatorioDiario): string {
   const linhas = [
     `RELATÓRIO DO DIA — ${resumo.dia}`,
-    `OS abertas: ${resumo.ordensAbertas} | finalizadas: ${resumo.ordensFinalizadas}`,
+    `OS criadas no dia: ${resumo.ordensAbertas} | finalizadas: ${resumo.ordensFinalizadas}`,
     `Chamados novos: ${resumo.chamadosNovos} | horas apontadas: ${resumo.horasApontadas}h`,
     `Backlog atual: ${resumo.itensBacklog} | emergenciais C1 abertas: ${resumo.emergenciais}`,
     `Planejado x executado: ${resumo.percentualPlanejadoExecutado == null ? "Sem OS planejada" : `${resumo.percentualPlanejadoExecutado}%`}`,

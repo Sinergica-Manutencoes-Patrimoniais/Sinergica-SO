@@ -33,7 +33,7 @@ export function PainelBacklog({
   return (
     <div className="bg-card rounded-xl border border-line">
       <div className="px-5 py-4 border-b border-line-soft">
-        <h3 className="text-body font-semibold text-ink">Backlog (OS em aberto)</h3>
+        <h3 className="text-body font-semibold text-ink">OS abertas e pré-chamados</h3>
         <p className="text-caption text-ink-3 mt-0.5">Priorizadas por score GUT</p>
       </div>
 

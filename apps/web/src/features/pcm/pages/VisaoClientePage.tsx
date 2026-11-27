@@ -815,6 +815,11 @@ function Resumo360({
           value={metricas.equipamentosAtivos === null ? "—" : String(metricas.equipamentosAtivos)}
         />
       </div>
+      {/* E01-S204: critério escrito na tela (DEF-49). */}
+      <p className="text-caption text-ink-3" data-testid="criterio-os-abertas">
+        OS abertas exclui pré-chamados ({metricas.preChamados}) e chamados ainda sem OS (
+        {metricas.chamadosAbertos}). Backlog = OS aberta sem data, técnico e tarefa Auvo.
+      </p>
 
       {/* E01-S51: "liga alguém, quem é essa pessoa" — contatos múltiplos + grupos, hoje só o
        * contato principal aparecia (em Comunicação) e grupos não apareciam em lugar nenhum. */}

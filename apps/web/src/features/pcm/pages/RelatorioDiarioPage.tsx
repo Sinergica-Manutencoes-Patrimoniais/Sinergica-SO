@@ -144,7 +144,7 @@ export function RelatorioDiarioPage({ dataInicial }: { dataInicial?: string }) {
           ) : null}
 
           <section aria-label="Resumo do dia" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <CardResumo label="OS abertas" valor={resumo.ordensAbertas} />
+            <CardResumo label="OS criadas no dia" valor={resumo.ordensAbertas} />
             <CardResumo label="OS finalizadas" valor={resumo.ordensFinalizadas} />
             <CardResumo label="Chamados novos" valor={resumo.chamadosNovos} />
             <CardResumo

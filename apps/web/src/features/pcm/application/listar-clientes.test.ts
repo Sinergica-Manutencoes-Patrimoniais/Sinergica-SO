@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CONTAGEM_OPERACIONAL_VAZIA } from "../domain/contagem-operacional";
 import type { Cliente360Gateway, ClienteResumo } from "./cliente-360-gateway";
 import { listarClientes } from "./listar-clientes";
 
@@ -13,6 +14,7 @@ function gatewayMock(overrides: Partial<Cliente360Gateway> = {}): Cliente360Gate
   return {
     listarClientes: vi.fn(async () => CLIENTES),
     buscarCliente: vi.fn(async () => null),
+    contarOperacaoCliente: vi.fn(async () => CONTAGEM_OPERACIONAL_VAZIA),
     listarBacklogCliente: vi.fn(async () => []),
     listarHistoricoCliente: vi.fn(async () => []),
     listarEquipamentosCliente: vi.fn(async () => "indisponivel" as const),

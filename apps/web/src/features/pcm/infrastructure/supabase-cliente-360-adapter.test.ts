@@ -3,10 +3,17 @@ import { supabaseCliente360Adapter } from "./supabase-cliente-360-adapter";
 
 const banco = vi.hoisted(() => ({
   ordens: [] as Record<string, unknown>[],
+  contagens: [] as Record<string, unknown>[],
+  rpcs: [] as { nome: string; params: unknown }[],
 }));
 vi.mock("../../../lib/supabase-client", () => ({
   supabase: {
     schema: () => ({
+      rpc: (nome: string, params: unknown) => {
+        banco.rpcs.push({ nome, params });
+        const resposta = { data: banco.contagens, error: null };
+        return { ...resposta, abortSignal: () => resposta };
+      },
       from: (tabela: string) => {
         const equipamentos = [
           {
@@ -86,17 +93,41 @@ it("DEF-29: ignora o ativo local mais recente ao buscar a atualização Auvo", a
   ]);
 });
 
-it("DEF-40: conta as OS em todas as páginas da carteira e exclui estados históricos", async () => {
+it("E01-S204: OS abertas da carteira vêm da contagem oficial; score segue lendo todas as páginas", async () => {
   banco.ordens = Array.from({ length: 503 }, (_, indice) => ({
     id: String(indice).padStart(4, "0"),
     client_id: indice < 500 ? "outro-cliente" : "cliente-ficticio",
     status: indice === 502 ? "finalizado" : "planejamento",
-    score_pcm: 3,
+    score_pcm: indice === 501 ? 77 : 3,
     created_at: "2026-11-25T00:00:00Z",
     auvo_synced_at: null,
   }));
+  // As duas OS não históricas do cliente na listagem (uma delas pré-chamado ou ponto de visita)
+  // não decidem mais a contagem: vale o que o servidor classifica.
+  banco.contagens = [
+    {
+      cliente_id: "cliente-ficticio",
+      os_abertas: 1,
+      backlog: 1,
+      pre_chamados: 1,
+      chamados_abertos: 0,
+      demanda_em_aberto: 2,
+    },
+  ];
+  banco.rpcs = [];
   expect(await supabaseCliente360Adapter.listarClientes()).toEqual([
-    expect.objectContaining({ id: "cliente-ficticio", osAbertas: 2 }),
+    expect.objectContaining({ id: "cliente-ficticio", osAbertas: 1, maiorScorePcm: 77 }),
+  ]);
+  expect(banco.rpcs).toEqual([
+    { nome: "fn_contagem_operacional_por_cliente", params: { p_cliente_id: null } },
+  ]);
+});
+
+it("E01-S204: Cliente sem linha na contagem tem zero OS abertas", async () => {
+  banco.ordens = [];
+  banco.contagens = [];
+  expect(await supabaseCliente360Adapter.listarClientes()).toEqual([
+    expect.objectContaining({ id: "cliente-ficticio", osAbertas: 0 }),
   ]);
 });
 

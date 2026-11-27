@@ -19,6 +19,8 @@ import type {
   ResultadoEquipamentos,
 } from "../application/cliente-360-gateway";
 import { STATUS_HISTORICO } from "../domain/cliente-360";
+import { CONTAGEM_OPERACIONAL_VAZIA } from "../domain/contagem-operacional";
+import { contarPorCliente } from "./supabase-contagem-operacional-adapter";
 
 import type { InspecaoStatus } from "../domain/inspecoes-laudos";
 import { ehOsRegistroVisita } from "../domain/ordens-servico";
@@ -369,7 +371,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
   async listarClientes(): Promise<ClienteResumo[]> {
     // A lista virou um cockpit de carteira: além do cadastro Auvo, cruza ativos e OS para permitir
     // filtro operacional sem novas tabelas nem mutação local.
-    const [clientes, ordens, equipamentos, marcacoes] = await Promise.all([
+    const [clientes, ordens, equipamentos, marcacoes, contagens] = await Promise.all([
       supabase
         .schema("pcm")
         .from("clientes")
@@ -384,6 +386,9 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
       listarOrdensDaCarteira(),
       supabase.schema("pcm").from("equipamentos").select("auvo_customer_id,ativo,updated_at"),
       marcacoesClientePorId(),
+      // E01-S204: "OS abertas" da carteira é a contagem oficial do servidor (mesma da Visão 360 e
+      // do Início). As OS acima seguem só para maior score e última atividade.
+      contarPorCliente(),
     ]);
     const { data, error } = clientes;
     if (error && erroColunaAusente(error)) {
@@ -410,17 +415,13 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
 
     const ordensPorCliente = new Map<
       string,
-      { abertas: number; maiorScore: number; ultimaAtividadeEm: string | null }
+      { maiorScore: number; ultimaAtividadeEm: string | null }
     >();
     for (const ordem of ordens.data ?? []) {
       const atual = ordensPorCliente.get(ordem.client_id) ?? {
-        abertas: 0,
         maiorScore: 0,
         ultimaAtividadeEm: null,
       };
-      if (!STATUS_HISTORICO.includes(ordem.status as (typeof STATUS_HISTORICO)[number])) {
-        atual.abertas += 1;
-      }
       atual.maiorScore = Math.max(atual.maiorScore, ordem.score_pcm ?? 0);
       const dataAtividade = ordem.auvo_synced_at ?? ordem.created_at;
       if (dataAtividade && (!atual.ultimaAtividadeEm || dataAtividade > atual.ultimaAtividadeEm)) {
@@ -477,7 +478,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         contatoEmail: row.contato_email,
         observacoes: row.observacoes,
         equipamentosAtivos: eqResumo?.total ?? 0,
-        osAbertas: osResumo?.abertas ?? 0,
+        osAbertas: contagens.get(row.id)?.osAbertas ?? 0,
         maiorScorePcm: osResumo?.maiorScore ?? 0,
         ultimaAtividadeEm,
         cadastroCompleto: Boolean(
@@ -526,6 +527,10 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
 
     const marcacoes = await marcacoesClientePorId();
     return mapearCliente(data as ClienteRow, marcacoes);
+  },
+
+  async contarOperacaoCliente(id) {
+    return (await contarPorCliente(id)).get(id) ?? CONTAGEM_OPERACIONAL_VAZIA;
   },
 
   async listarBacklogCliente(id): Promise<OrdemServicoResumo[]> {
