@@ -138,6 +138,7 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   const [consultandoRecibo, setConsultandoRecibo] = useState(false);
   const [motivo, setMotivo] = useState("");
   const emEnvio = useRef(false);
+  const [registrando, setRegistrando] = useState(false);
   const [perfilNovo, setPerfilNovo] = useState("");
   const [nomesEditados, setNomesEditados] = useState<Record<string, string>>({});
   const [perfilNovoId, setPerfilNovoId] = useState(() => crypto.randomUUID());
@@ -174,7 +175,8 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
     escopo === "*"
       ? confirmarGlobal
       : !api.clientes.isFetching && !api.clientes.isError && clientes.some((c) => c.id === escopo);
-  const ocupado = api.perfil.isPending || api.vinculo.isPending || api.concessao.isPending;
+  const ocupado =
+    registrando || api.perfil.isPending || api.vinculo.isPending || api.concessao.isPending;
   async function conferirSessao() {
     const { data, error } = await supabase.auth.getUser();
     if (error || data.user?.id !== userId || !montado.current) throw new Error("Sessão alterada.");
@@ -258,10 +260,12 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
   ) {
     if (emEnvio.current) return false;
     emEnvio.current = true;
+    setRegistrando(true);
     try {
       return await executarInterno(chave, payload, enviar);
     } finally {
       emEnvio.current = false;
+      setRegistrando(false);
     }
   }
 
@@ -493,7 +497,8 @@ function CapacidadesWorkspaceInterno({ userId }: { userId: string }) {
           será enviada.
         </p>
       )}
-      {pendente && (
+      {registrando && <output>Registrando alteração de capacidade…</output>}
+      {pendente && !registrando && (
         <Card className="space-y-2 p-4">
           <p>
             Há alteração de capacidade pendente nesta sessão. Repita o pedido antes de registrar

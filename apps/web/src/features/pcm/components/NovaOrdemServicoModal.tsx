@@ -6,13 +6,7 @@ import { abrirOrdemServico, carregarDadosAberturaOs } from "../application/abrir
 import { editarOrdemServico } from "../application/editar-ordem-servico";
 import { gerarTituloOs, iaTituloAtiva } from "../application/gerar-titulo-os";
 import type { DadosAberturaOs, EquipamentoAlvoOpcao } from "../application/ordem-servico-gateway";
-import {
-  CATEGORIAS_OS,
-  type CategoriaOs,
-  ORIGENS_OS,
-  type OrigemOs,
-  prioridadeParaOs,
-} from "../domain/abertura-os";
+import { CATEGORIAS_OS, type CategoriaOs, ORIGENS_OS, type OrigemOs } from "../domain/abertura-os";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PESOS_GUTD_PADRAO,
@@ -34,13 +28,15 @@ const PRIORIDADES: Array<{ value: PrioridadeBacklog; label: string }> = [
   { value: "critica", label: "Crítica" },
 ];
 
+type PrioridadeFormulario = PrioridadeBacklog | "normal";
+
 interface FormState {
   clientId: string;
   solicitante: string;
   titulo: string;
   descricao: string;
   categoria: CategoriaOs;
-  prioridade: PrioridadeBacklog;
+  prioridade: PrioridadeFormulario | null;
   tipoTarefaId: string;
   origem: OrigemOs;
   tecnicoId: string;
@@ -80,16 +76,14 @@ const FORM_INICIAL: FormState = {
   observacao: "",
 };
 
-/** Converte a prioridade livre de uma OS já existente pro conjunto fechado do formulário
- * (GUT-based: baixa/media/alta/critica) — `"normal"` é um valor legado que a criação nunca produz
- * (ver `prioridadeParaOs`), tratado como "media" ao editar. */
-function prioridadeParaForm(prioridade: string): PrioridadeBacklog {
-  return prioridade === "baixa" ||
+function prioridadeParaForm(prioridade: string): PrioridadeFormulario | null {
+  return prioridade === "normal" ||
+    prioridade === "baixa" ||
     prioridade === "media" ||
     prioridade === "alta" ||
     prioridade === "critica"
     ? prioridade
-    : "media";
+    : null;
 }
 
 export function NovaOrdemServicoModal({
@@ -207,8 +201,7 @@ export function NovaOrdemServicoModal({
     }
   }
 
-  // E01-S69: pré-preenche o formulário a partir da OS quando abre em modo edição — e trava a
-  // sugestão automática de prioridade (efeito abaixo) pra não sobrescrever o valor real da OS.
+  // E01-S69: em edição, a prioridade vem da OS existente.
   useEffect(() => {
     if (!aberto || !ordem) return;
     setForm({
@@ -225,12 +218,11 @@ export function NovaOrdemServicoModal({
       dorCliente: ordem.dorCliente,
       observacao: ordem.observacao ?? "",
     });
-    setPrioridadeManual(true);
   }, [aberto, ordem]);
 
   useEffect(() => {
-    if (!prioridadeManual) setForm((f) => ({ ...f, prioridade: prioridadeSugerida }));
-  }, [prioridadeManual, prioridadeSugerida]);
+    if (!editando && !prioridadeManual) setForm((f) => ({ ...f, prioridade: prioridadeSugerida }));
+  }, [editando, prioridadeManual, prioridadeSugerida]);
 
   if (!aberto) return null;
   const semClientes = !editando && dados.clientes.length === 0;
@@ -251,7 +243,7 @@ export function NovaOrdemServicoModal({
           titulo: form.titulo,
           descricao: form.descricao || null,
           categoria: form.categoria,
-          prioridade: prioridadeParaOs(form.prioridade),
+          prioridade: form.prioridade ?? undefined,
           gravidade: form.gravidade,
           urgencia: form.urgencia,
           tendencia: form.tendencia,
@@ -269,7 +261,7 @@ export function NovaOrdemServicoModal({
           titulo: form.titulo,
           descricao: form.descricao || null,
           categoria: form.categoria,
-          prioridade: prioridadeParaOs(form.prioridade),
+          prioridade: form.prioridade ?? prioridadeSugerida,
           gravidade: form.gravidade,
           urgencia: form.urgencia,
           tendencia: form.tendencia,
@@ -441,13 +433,19 @@ export function NovaOrdemServicoModal({
 
           <Field label="Prioridade">
             <select
-              value={form.prioridade}
+              value={form.prioridade ?? ordem?.prioridade ?? ""}
               onChange={(e) => {
                 setPrioridadeManual(true);
-                setForm((f) => ({ ...f, prioridade: e.target.value as PrioridadeBacklog }));
+                setForm((f) => ({ ...f, prioridade: e.target.value as PrioridadeFormulario }));
               }}
               className="input"
             >
+              {ordem && form.prioridade === null && (
+                <option value={ordem.prioridade} disabled>
+                  {ordem.prioridade || "Sem prioridade"}
+                </option>
+              )}
+              {editando && <option value="normal">Normal</option>}
               {PRIORIDADES.map((prioridade) => (
                 <option key={prioridade.value} value={prioridade.value}>
                   {prioridade.label}

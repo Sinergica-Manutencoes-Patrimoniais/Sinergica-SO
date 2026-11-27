@@ -684,6 +684,7 @@ export const supabaseCliente360Adapter: Cliente360Gateway = {
         .schema("pcm")
         .from("equipamentos")
         .select("auvo_equipment_id,updated_at")
+        .not("auvo_equipment_id", "is", null)
         .eq("auvo_customer_id", auvoId)
         .eq("ativo", true)
         .order("updated_at", { ascending: false })

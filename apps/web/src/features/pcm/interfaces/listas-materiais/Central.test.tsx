@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CentralMateriais, CentralMateriaisGlobal } from "./Central";
 
@@ -14,7 +14,21 @@ vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
 vi.mock("../../infrastructure/supabase-listas-materiais-adapter", () => ({
   supabaseListasMateriaisAdapter: { consultarCentral: mocks.consultar },
 }));
-vi.mock("./Workspace", () => ({ WorkspaceListasMateriais: () => null }));
+vi.mock("./Workspace", () => ({
+  WorkspaceListasMateriais: ({
+    rascunho,
+    onAlterarRascunho,
+  }: {
+    rascunho?: { texto: string; responsavel: string };
+    onAlterarRascunho: (rascunho: { texto: string; responsavel: string }) => void;
+  }) => (
+    <input
+      aria-label="Texto da OS"
+      value={rascunho?.texto ?? ""}
+      onChange={(e) => onAlterarRascunho({ texto: e.target.value, responsavel: "sinergica" })}
+    />
+  ),
+}));
 vi.mock("./ExcecoesOs", () => ({ ExcecoesOs: () => null }));
 
 afterEach(() => {
@@ -155,4 +169,46 @@ it("oferece os sete estados de materiais na entrada única", async () => {
   expect(await screen.findByRole("option", { name: "Aguardando aquisição" })).toBeTruthy();
   expect(screen.getByRole("option", { name: "Dispensada" })).toBeTruthy();
   expect(screen.getByRole("option", { name: "Concluída" })).toBeTruthy();
+});
+
+it("DEF-25: restaura o texto depois de ocultar a Central para revalidar permissão", async () => {
+  vi.stubEnv("VITE_SSO_CENTRAL_MATERIAIS_ENABLED", "true");
+  vi.stubEnv("VITE_SSO_LISTAS_MATERIAIS_ENABLED", "true");
+  mocks.consultar.mockResolvedValue([
+    {
+      id: "lista-ficticia",
+      ordem_servico_id: "os-ficticia",
+      responsavel: "cliente",
+      estado: "levantada",
+      revisao: 1,
+      texto_original: "Material já registrado",
+    },
+  ]);
+  mocks.autorizar.mockResolvedValue(true);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const relatar = vi.fn();
+  render(
+    <QueryClientProvider client={client}>
+      <CentralMateriais usuario="usuario" cliente="cliente" onRascunhoAlterado={relatar} />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Abrir materiais da OS" }));
+  fireEvent.change(screen.getByLabelText("Texto da OS"), {
+    target: { value: "Rascunho fictício" },
+  });
+  let autorizar!: (permitido: boolean) => void;
+  mocks.autorizar.mockImplementationOnce(
+    () =>
+      new Promise<boolean>((resolve) => {
+        autorizar = resolve;
+      }),
+  );
+  void client.invalidateQueries({
+    queryKey: ["listas-materiais-central", "usuario", "cliente", "permissao"],
+  });
+  await screen.findByText("Verificando acesso aos materiais…");
+  expect(screen.queryByLabelText("Texto da OS")).toBeNull();
+  expect(relatar).toHaveBeenLastCalledWith(true);
+  await act(async () => autorizar(true));
+  expect(await screen.findByLabelText("Texto da OS")).toHaveValue("Rascunho fictício");
 });

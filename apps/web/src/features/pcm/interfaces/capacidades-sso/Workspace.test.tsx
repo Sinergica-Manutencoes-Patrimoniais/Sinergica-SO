@@ -101,6 +101,39 @@ describe("configuração de capacidades", () => {
     fireEvent.click(screen.getByRole("button", { name: "Conceder ação" }));
   }
 
+  it("DEF-48: mostra processamento enquanto o vínculo ativo aguarda confirmação local", async () => {
+    let confirmarSessao = () => {};
+    gateway.listarVinculos.mockResolvedValueOnce([]);
+    gateway.listarVinculos.mockResolvedValue([
+      { id: "vinculo-ficticio", usuarioId: usuario, perfilId: perfil, ativo: true, revisao: 1 },
+    ]);
+    const definirVinculo = gateway.definirVinculoPerfil.getMockImplementation();
+    gateway.definirVinculoPerfil.mockImplementationOnce(async (comando) => {
+      servico.getUser.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            confirmarSessao = () => resolve({ data: { user: { id: usuario } }, error: null });
+          }),
+      );
+      return definirVinculo?.(comando);
+    });
+
+    montar();
+    await screen.findByRole("option", { name: "Operador" });
+    await screen.findByRole("option", { name: "Equipe PCM" });
+    fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "Teste" } });
+    fireEvent.change(screen.getByLabelText("Usuário"), { target: { value: usuario } });
+    fireEvent.change(screen.getByLabelText("Perfil"), { target: { value: perfil } });
+    fireEvent.click(screen.getByRole("button", { name: "Atribuir perfil ao usuário" }));
+
+    await screen.findByRole("button", { name: "Revogar" });
+    expect(screen.queryByRole("button", { name: /repetir alteração pendente/i })).toBeNull();
+    expect(screen.getByText("Registrando alteração de capacidade…")).toBeTruthy();
+    await act(async () => confirmarSessao());
+    await screen.findByText("Alteração registrada.");
+    expect(screen.queryByText("Registrando alteração de capacidade…")).toBeNull();
+  });
+
   it("confirma recibo direto mesmo com consulta mediada indisponível", async () => {
     servico.rpc.mockResolvedValue({ data: null, error: { code: "55000" } });
     await iniciarConcessao();
@@ -428,19 +461,19 @@ describe("configuração de capacidades", () => {
     montar();
     fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "PCM" } });
     fireEvent.change(screen.getByLabelText("Nome do perfil"), { target: { value: "Campo" } });
-    fireEvent.click(screen.getByRole("button", { name: "Criar perfil" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Criar perfil" })));
     expect(gateway.definirPerfil).not.toHaveBeenCalled();
     expect(screen.getByRole("alert").textContent).toMatch(/armazenamento/i);
     vi.restoreAllMocks();
   });
 
-  it("bloqueia envio e preserva registro corrompido", () => {
+  it("bloqueia envio e preserva registro corrompido", async () => {
     const chave = `sso-capacidades-pendente:${usuario}`;
     sessionStorage.setItem(chave, "registro inválido");
     montar();
     fireEvent.change(screen.getByLabelText("Motivo da alteração"), { target: { value: "PCM" } });
     fireEvent.change(screen.getByLabelText("Nome do perfil"), { target: { value: "Campo" } });
-    fireEvent.click(screen.getByRole("button", { name: "Criar perfil" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Criar perfil" })));
     expect(gateway.definirPerfil).not.toHaveBeenCalled();
     expect(sessionStorage.getItem(chave)).toBe("registro inválido");
   });
