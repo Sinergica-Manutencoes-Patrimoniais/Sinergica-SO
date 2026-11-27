@@ -4,7 +4,17 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { WorkspaceListasMateriais } from "./Workspace";
 
-const servidor = vi.hoisted(() => ({ listas: [] as object[], criar: vi.fn() }));
+const servidor = vi.hoisted(() => ({
+  listas: [] as {
+    id: string;
+    ordem_servico_id: string;
+    texto_original: string;
+    responsavel: string;
+    estado: string;
+    revisao: number;
+  }[],
+  criar: vi.fn(),
+}));
 vi.mock("../../../../lib/supabase-client", () => ({
   supabase: { auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) } },
 }));
@@ -14,7 +24,8 @@ vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
 vi.mock("../../infrastructure/supabase-listas-materiais-adapter", () => ({
   validarCriarListaMateriais: (entrada: unknown) => entrada,
   supabaseListasMateriaisAdapter: {
-    listar: async () => [...servidor.listas],
+    listar: async (_cliente: string, os: string) =>
+      servidor.listas.filter((lista) => lista.ordem_servico_id === os),
     criar: async (comando: {
       listaId: string;
       ordemServicoId: string;
@@ -22,6 +33,7 @@ vi.mock("../../infrastructure/supabase-listas-materiais-adapter", () => ({
       textoOriginal: string;
     }) => {
       await servidor.criar(comando);
+      if (servidor.listas.some((item) => item.id === comando.listaId)) return;
       servidor.listas.push({
         id: comando.listaId,
         ordem_servico_id: comando.ordemServicoId,
@@ -88,7 +100,16 @@ it("só permite repetir uma gravação incerta e conserva o mesmo comando", asyn
   expect(screen.queryByRole("button", { name: "Tentar salvar novamente" })).toBeNull();
   await vi.waitFor(() => expect(servidor.criar).toHaveBeenCalledTimes(1));
 
-  rejeitar(new Error("Conexão interrompida"));
+  const [pedido] = servidor.criar.mock.calls[0] ?? [];
+  servidor.listas.push({
+    id: pedido.listaId,
+    ordem_servico_id: pedido.ordemServicoId,
+    texto_original: pedido.textoOriginal,
+    responsavel: pedido.responsavel,
+    estado: "levantada",
+    revisao: 1,
+  });
+  rejeitar(new Error("Conexão interrompida após gravar"));
   const repetir = await screen.findByRole("button", { name: "Tentar salvar novamente" });
   fireEvent.click(repetir);
   fireEvent.click(repetir);
@@ -96,4 +117,41 @@ it("só permite repetir uma gravação incerta e conserva o mesmo comando", asyn
   expect(screen.queryByRole("button", { name: "Tentar salvar novamente" })).toBeNull();
   expect(servidor.criar).toHaveBeenCalledTimes(2);
   expect(servidor.criar.mock.calls[1]).toEqual(servidor.criar.mock.calls[0]);
+  expect(servidor.listas).toHaveLength(1);
+});
+
+it("sincroniza uma tentativa em curso após remontar o painel e mantém outro contexto independente", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  let confirmar!: () => void;
+  servidor.criar.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        confirmar = resolve;
+      }),
+  );
+  const arvore = (cliente: string, ordemServico: string, chave: string) => (
+    <QueryClientProvider client={client}>
+      <WorkspaceListasMateriais
+        key={chave}
+        usuario="usuario"
+        cliente={cliente}
+        ordemServico={ordemServico}
+      />
+    </QueryClientProvider>
+  );
+  const painel = render(arvore("cliente", "os", "primeiro"));
+  await screen.findByText("Nenhuma lista cadastrada nesta OS.");
+  fireEvent.change(screen.getByLabelText(/Texto original/), { target: { value: "Duas lâmpadas" } });
+  fireEvent.click(screen.getByRole("button", { name: "Registrar lista" }));
+  await vi.waitFor(() => expect(servidor.criar).toHaveBeenCalledTimes(1));
+  painel.rerender(arvore("outro-cliente", "outra-os", "outro"));
+  expect(await screen.findByRole("button", { name: "Registrar lista" })).toBeTruthy();
+  painel.rerender(arvore("cliente", "os", "remontado"));
+  expect(await screen.findByText("Salvando lista…")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Tentar salvar novamente" })).toBeNull();
+  confirmar();
+  expect(await screen.findByText("Duas lâmpadas")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Registrar lista" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Tentar salvar novamente" })).toBeNull();
+  expect(servidor.criar).toHaveBeenCalledTimes(1);
 });
