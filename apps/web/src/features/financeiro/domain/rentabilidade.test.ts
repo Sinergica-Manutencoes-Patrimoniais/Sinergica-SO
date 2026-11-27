@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cobertura,
-  custoHoraDerivado,
+  custoHoraDerivadoCentavos,
   ranquearPorMargem,
   temAlertaMargemNegativa,
   validarCustoFuncionario,
@@ -35,13 +35,15 @@ describe("validarCustoFuncionario", () => {
   });
 });
 
-describe("custoHoraDerivado", () => {
+describe("custoHoraDerivadoCentavos", () => {
   it("divide custo mensal por horas-base", () => {
-    expect(custoHoraDerivado(220000, 220)).toBe(1000);
+    expect(custoHoraDerivadoCentavos(220000, 220)).toBe(1000);
   });
 
   it("lanca erro para horas-base zero (divisao por zero)", () => {
-    expect(() => custoHoraDerivado(1000, 0)).toThrow("Horas-base do mês deve ser maior que zero.");
+    expect(() => custoHoraDerivadoCentavos(1000, 0)).toThrow(
+      "Horas-base do mês deve ser maior que zero.",
+    );
   });
 });
 

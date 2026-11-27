@@ -23,9 +23,12 @@ export function validarCustoFuncionario(input: CustoFuncionarioFormData): CustoF
   return { ...input };
 }
 
-/** R$/hora derivado — só pra exibição na tela de cadastro (o cálculo de verdade, com vigência
+/** Centavos por hora para exibição na tela de cadastro (o cálculo de verdade, com vigência
  * histórica, é sempre feito no banco por financeiro._fn_custo_hora_funcionario). */
-export function custoHoraDerivado(custoMensalCentavos: number, horasMesBase: number): number {
+export function custoHoraDerivadoCentavos(
+  custoMensalCentavos: number,
+  horasMesBase: number,
+): number {
   if (horasMesBase <= 0) throw new Error("Horas-base do mês deve ser maior que zero.");
   return custoMensalCentavos / horasMesBase;
 }

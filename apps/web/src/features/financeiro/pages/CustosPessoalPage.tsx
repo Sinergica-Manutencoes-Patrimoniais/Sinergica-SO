@@ -10,7 +10,7 @@ import {
   listarFuncionariosOpcoes,
 } from "../application/rentabilidade";
 import { centavosParaReais, reaisParaCentavos } from "../domain/dinheiro";
-import { custoHoraDerivado, validarCustoFuncionario } from "../domain/rentabilidade";
+import { custoHoraDerivadoCentavos, validarCustoFuncionario } from "../domain/rentabilidade";
 import type { CustoFuncionarioFormData, CustoFuncionarioItem } from "../domain/rentabilidade";
 import { supabaseFinanceiroAdapter } from "../infrastructure/supabase-financeiro-adapter";
 
@@ -146,9 +146,9 @@ export function CustosPessoalPage() {
                 {vigente && (
                   <p className="mt-1 text-2xl font-semibold text-ink">
                     R${" "}
-                    {custoHoraDerivado(vigente.custoMensalCentavos, vigente.horasMesBase)
-                      .toFixed(2)
-                      .replace(".", ",")}
+                    {centavosParaReais(
+                      custoHoraDerivadoCentavos(vigente.custoMensalCentavos, vigente.horasMesBase),
+                    )}
                     <span className="text-body font-normal text-ink-3">/hora</span>
                   </p>
                 )}
