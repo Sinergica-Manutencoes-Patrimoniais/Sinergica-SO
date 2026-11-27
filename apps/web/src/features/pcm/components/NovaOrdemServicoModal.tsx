@@ -90,6 +90,7 @@ export function NovaOrdemServicoModal({
   aberto,
   ordem,
   clienteFixoId,
+  clienteInicialId,
   onFechar,
   onCriada,
   onEditada,
@@ -99,6 +100,7 @@ export function NovaOrdemServicoModal({
    * modo criação (comportamento original, inalterado). */
   ordem?: OrdemServicoOperacional;
   clienteFixoId?: string;
+  clienteInicialId?: string;
   onFechar: () => void;
   onCriada?: (numero: string) => void;
   onEditada?: () => void;
@@ -135,7 +137,7 @@ export function NovaOrdemServicoModal({
       setDados(resultado);
       setForm((f) => ({
         ...f,
-        clientId: clienteFixoId || f.clientId || resultado.clientes[0]?.id || "",
+        clientId: clienteFixoId || f.clientId || clienteInicialId || "",
         tipoTarefaId: f.tipoTarefaId || resultado.tiposTarefa[0]?.id || "",
       }));
     } catch {
@@ -143,7 +145,7 @@ export function NovaOrdemServicoModal({
     } finally {
       setCarregando(false);
     }
-  }, [clienteFixoId]);
+  }, [clienteFixoId, clienteInicialId]);
 
   useEffect(() => {
     if (aberto) carregar();
@@ -324,6 +326,7 @@ export function NovaOrdemServicoModal({
             <>
               <Field label="Cliente *" className="md:col-span-2">
                 <select
+                  aria-label="Cliente"
                   value={form.clientId}
                   disabled={carregando}
                   onChange={(e) =>
@@ -335,11 +338,14 @@ export function NovaOrdemServicoModal({
                   {dados.clientes.length === 0 ? (
                     <option value="">Nenhum cliente disponível</option>
                   ) : (
-                    dados.clientes.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>
-                        {cliente.nome}
-                      </option>
-                    ))
+                    <>
+                      <option value="">Selecione o Cliente</option>
+                      {dados.clientes.map((cliente) => (
+                        <option key={cliente.id} value={cliente.id}>
+                          {cliente.nome}
+                        </option>
+                      ))}
+                    </>
                   )}
                 </select>
               </Field>

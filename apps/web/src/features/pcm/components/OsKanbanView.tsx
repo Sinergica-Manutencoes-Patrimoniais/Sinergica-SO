@@ -1,7 +1,6 @@
 import { Tooltip } from "@sinergica/ui";
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { type DragEvent, useState } from "react";
-import { flagLigada } from "../../../config/flags-sso";
 import type { PmocPreventivaResumo } from "../application/pmoc-gateway";
 import { type ItemCampoAConciliar, rotuloMotivoCampo } from "../domain/campo-a-conciliar";
 import {
@@ -14,14 +13,15 @@ import type { OrdemServicoOperacional, StatusOrdemServico } from "../domain/orde
 import {
   PRIORIDADE_LABEL,
   STATUS_OS,
-  deveAlterarStatusPorDrop,
+  ehItemBacklog,
+  ehItemPreTriagem,
   prioridadeColor,
   resumoTooltipOrdem,
   rotuloNumeroOrdem,
 } from "../domain/ordens-servico";
 import { TIPO_MANUTENCAO_LABEL } from "../domain/pmoc";
 import type { ResumoChamadoCard } from "../domain/progresso-chamado";
-import { transicaoPermitida } from "../domain/transicoes-os";
+import { transicaoManualOrdem } from "../domain/transicoes-os";
 import { ProgressoChamadoCard } from "./ProgressoChamadoCard";
 
 const DRAG_MIME = "application/x-sinergica-os-id";
@@ -48,7 +48,7 @@ function orientacaoDoCard(detalhes: Record<string, unknown> | null): string | nu
  * e sair dela é decisão de triagem (`sso_consultar_triagem_chamado_campo`, E01-S175), não
  * mudança de status — arrastar daqui fingiria um caminho que não existe. */
 export function OsKanbanView({
-  ordens,
+  ordens: ordensRecebidas,
   temEscrita,
   salvando,
   onAlterarStatus,
@@ -80,7 +80,9 @@ export function OsKanbanView({
 }) {
   const [colunaAlvo, setColunaAlvo] = useState<StatusOrdemServico | null>(null);
   const [recusa, setRecusa] = useState<string | null>(null);
-  const matrizLigada = flagLigada("VITE_SSO_MATRIZ_TRANSICOES_ENABLED");
+  const ordens = ordensRecebidas.filter(
+    (ordem) => !(ordem.origemInspecaoItemId && ehItemPreTriagem(ordem) && ehItemBacklog(ordem)),
+  );
 
   // Nenhuma OS pode sumir do quadro por ter um status sem coluna (ver `statusSemColuna`).
   const statusOrfaos = statusSemColuna(
@@ -92,23 +94,23 @@ export function OsKanbanView({
     .map((status) => STATUS_OS.find((s) => s.value === status)?.label ?? status)
     .join(", ");
 
+  function moverOrdem(ordem: OrdemServicoOperacional, destino: StatusOrdemServico) {
+    if (!temEscrita || salvando || ordem.status === destino) return;
+    const veredito = transicaoManualOrdem(ordem, destino);
+    if (!veredito.permitida) {
+      setRecusa(veredito.motivo);
+      return;
+    }
+    setRecusa(null);
+    onAlterarStatus(ordem.id, destino);
+  }
+
   function onDropNaColuna(destino: StatusOrdemServico, event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setColunaAlvo(null);
     const id = event.dataTransfer.getData(DRAG_MIME);
     const ordem = ordens.find((item) => item.id === id);
-    if (!ordem || !deveAlterarStatusPorDrop(ordem.status, destino)) return;
-    // E01-S200 (BL 007 AC-7): arrastar respeita as transições do fluxo aprovado. A recusa aparece
-    // na tela — soltar o cartão e nada acontecer, sem explicação, é pior que não poder arrastar.
-    if (matrizLigada) {
-      const veredito = transicaoPermitida(ordem.status as StatusOrdemServico, destino);
-      if (!veredito.permitida) {
-        setRecusa(veredito.motivo);
-        return;
-      }
-    }
-    setRecusa(null);
-    onAlterarStatus(id, destino);
+    if (ordem) moverOrdem(ordem, destino);
   }
 
   const colunasOcultas = colunas.filter((coluna) => !coluna.visivel);
@@ -116,9 +118,12 @@ export function OsKanbanView({
   return (
     <div className="flex flex-col gap-2">
       {recusa && (
-        <output className="block rounded-md border border-danger bg-danger-soft px-3 py-2 text-caption text-danger">
+        <p
+          role="alert"
+          className="block rounded-md border border-danger bg-danger-soft px-3 py-2 text-caption text-danger"
+        >
           {recusa}
-        </output>
+        </p>
       )}
 
       {colunasOcultas.length > 0 && (
@@ -352,11 +357,12 @@ export function OsKanbanView({
                             value={ordem.status}
                             disabled={salvando}
                             onChange={(event) =>
-                              onAlterarStatus(ordem.id, event.target.value as StatusOrdemServico)
+                              moverOrdem(ordem, event.target.value as StatusOrdemServico)
                             }
                             aria-label={`Mover ${rotuloNumeroOrdem(ordem)} para outra fase`}
                             className="mt-2 h-7 w-full rounded-md border border-line-soft bg-paper px-1.5 text-micro font-semibold text-ink-2"
                           >
+                            {ordem.status === "demanda" && <option value="demanda">Demanda</option>}
                             {STATUS_OS.map((status) => (
                               <option key={status.value} value={status.value}>
                                 {status.label}

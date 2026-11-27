@@ -9,7 +9,15 @@ vi.mock("./SeletorLocal", () => ({ SeletorLocal: () => null }));
 vi.mock("../../../app/auth-context", () => ({ useAuth: () => ({ user: { id: "operador" } }) }));
 vi.mock("../infrastructure/supabase-ordem-servico-adapter", () => ({
   supabaseOrdemServicoAdapter: {
-    carregarDadosAbertura: async () => ({ clientes: [], tecnicos: [], tiposTarefa: [] }),
+    carregarDadosAbertura: async () => ({
+      clientes: [
+        { id: "cliente-a", nome: "Cliente A" },
+        { id: "cliente-b", nome: "Cliente B" },
+      ],
+      tecnicos: [],
+      tiposTarefa: [{ id: "tipo-local", nome: "Tipo fictício" }],
+    }),
+    listarEquipamentosDoCliente: async () => [],
     obterPesosGutd: async () => ({ g: 1, u: 1, t: 1, d: 1 }),
     iaTituloAtiva: async () => false,
     editarOrdemServico: editar,
@@ -48,4 +56,21 @@ it.each([
   await waitFor(() =>
     expect(editar).toHaveBeenLastCalledWith(expect.objectContaining({ prioridade: esperada })),
   );
+});
+
+it("DEF-43: exige escolha explícita quando o backlog não informa um Cliente", async () => {
+  render(<NovaOrdemServicoModal aberto onFechar={() => {}} />);
+  await screen.findByRole("option", { name: "Cliente B" });
+  const seletor = screen.getByRole("option", { name: "Cliente B" }).closest("select");
+  if (!seletor) throw new Error("Seletor de cliente ausente");
+  expect(seletor).toHaveValue("");
+  expect(seletor).toBeInvalid();
+  fireEvent.change(seletor, { target: { value: "cliente-b" } });
+  expect(seletor).toBeValid();
+});
+
+it("DEF-43: prefere o Cliente do backlog ao primeiro cadastro", async () => {
+  render(<NovaOrdemServicoModal aberto clienteInicialId="cliente-b" onFechar={() => {}} />);
+  await screen.findByRole("option", { name: "Cliente B" });
+  expect(screen.getByRole("combobox", { name: "Cliente" })).toHaveValue("cliente-b");
 });

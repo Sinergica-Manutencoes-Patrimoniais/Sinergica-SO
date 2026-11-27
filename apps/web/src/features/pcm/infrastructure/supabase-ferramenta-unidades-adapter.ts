@@ -64,6 +64,7 @@ function mapUnidade(
     id: row.id,
     ferramentaId: row.ferramenta_id,
     ferramentaNome: ferramentas.get(row.ferramenta_id) ?? "Ferramenta removida",
+    ferramentaRemovida: !ferramentas.has(row.ferramenta_id),
     codigo: row.codigo,
     status: row.status,
     atribuidaA: row.atribuida_a,

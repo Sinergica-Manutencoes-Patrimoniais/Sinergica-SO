@@ -3,7 +3,7 @@
 -- testes Deno de pcm-auvo-webhook/pcm-auvo-tasks-import (mesma story), não repetido aqui.
 begin;
 set local app.auvo_sync_write = 'true';
-select plan(15);
+select plan(25);
 
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
  ('19400000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','s194-validador@test.local',crypt('x',gen_salt('bf')),'{}','{}',now(),now()),
@@ -22,9 +22,11 @@ insert into config.sso_usuario_perfis(usuario_id,perfil_id,ativo) values ('19400
 
 insert into pcm.ordens_servico(id,client_id,numero,titulo,categoria,status,created_by) values
  ('19400000-0000-4000-8000-000000000021','19400000-0000-4000-8000-000000000010','OS-S194-A','Em execução','corretiva','em_execucao','19400000-0000-4000-8000-000000000001'),
- ('19400000-0000-4000-8000-000000000022','19400000-0000-4000-8000-000000000010','OS-S194-B','Em execução','corretiva','em_execucao','19400000-0000-4000-8000-000000000001');
+ ('19400000-0000-4000-8000-000000000022','19400000-0000-4000-8000-000000000010','OS-S194-B','Em execução','corretiva','em_execucao','19400000-0000-4000-8000-000000000001'),
+ ('19400000-0000-4000-8000-000000000023','19400000-0000-4000-8000-000000000010','OS-S194-C','Solicitação','corretiva','solicitacao','19400000-0000-4000-8000-000000000001');
 
-select set_config('request.jwt.claims','{"sub":"19400000-0000-4000-8000-000000000002","role":"authenticated","user_role":"colaborador"}',true);
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"19400000-0000-4000-8000-000000000002","role":"authenticated","user_role":"colaborador","user_modulos":{"pcm":"escrita"}}',true);
 
 select is(
   (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000021'::uuid],'validacao_pcm')),
@@ -66,6 +68,46 @@ select is(
   'finalizado persiste quando autorizado'
 );
 
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000021'::uuid],'planejamento')),
+  false, 'Finalizada exige reabertura pelo fluxo próprio'
+);
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000022'::uuid],'finalizado')),
+  false, 'Execução não pode saltar a Validação PCM mesmo com capacidade'
+);
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000022'::uuid],'validacao_pcm')),
+  true, 'Contrato manual vigente permite ingresso a partir de execução'
+);
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000022'::uuid],'em_execucao')),
+  true, 'PCM pode devolver OS para execução'
+);
+
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000023'::uuid],'validacao_pcm')),
+  false, 'Solicitação não pode saltar para Validação PCM'
+);
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000023'::uuid],'planejamento')),
+  true, 'Solicitação pode avançar para Planejamento'
+);
+select is(
+  (select sucesso from pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000023'::uuid],'validacao_pcm')),
+  false, 'Origem persistida em Planejamento impede salto com tela desatualizada'
+);
+
+reset role;
+
+-- Simula a escrita que o importador emite após mapear uma tarefa concluída.
+update pcm.ordens_servico set status = 'validacao_pcm'
+where id = '19400000-0000-4000-8000-000000000022';
+select is(
+  (select status from pcm.ordens_servico where id='19400000-0000-4000-8000-000000000022'),
+  'validacao_pcm', 'Escrita de conclusão sintética do campo continua disponível fora do RPC manual'
+);
+
 select throws_ok(
   $$select pcm.fn_operacao_alterar_status_lote(array['19400000-0000-4000-8000-000000000022'::uuid],'nao_existe')$$,
   '22023',
@@ -104,6 +146,19 @@ select is(
   (select status from pcm.chamados where id='19400000-0000-4000-8000-000000000040'),
   'convertido_os',
   'Chamado transiciona pra convertido_os, mesmo padrão do caminho aberto→convertido_os'
+);
+
+-- O importador grava a fase derivada da conclusão sintética. O Chamado vinculado segue aberto
+-- para operação, no estado convertido_os, mesmo após receber a fase de Validação PCM.
+update pcm.ordens_servico set status = 'validacao_pcm'
+where id = '19400000-0000-4000-8000-000000000042';
+select is(
+  (select status from pcm.ordens_servico where id='19400000-0000-4000-8000-000000000042'),
+  'validacao_pcm', 'Conclusão sintética chega à Validação PCM na OS vinculada'
+);
+select is(
+  (select status from pcm.chamados where id='19400000-0000-4000-8000-000000000040'),
+  'convertido_os', 'Conclusão sintética preserva o Chamado aberto para operação'
 );
 
 -- AC-1/AC-4: Chamado em demanda SEM OS ainda aparece no Kanban como card sintético — mesmo

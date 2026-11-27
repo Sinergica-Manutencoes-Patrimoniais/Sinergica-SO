@@ -33,6 +33,14 @@ describe("ferramenta-unidades", () => {
     ).toEqual(["u1"]);
   });
 
+  it("DEF-51: exclui ferramenta removida da seleção e recusa a atribuição", () => {
+    const removida = unidade({ id: "u2", ferramentaRemovida: true });
+    expect(selecionarUnidadesDisponiveis([unidade(), removida], ["u1", "u2"])).toEqual([unidade()]);
+    expect(() =>
+      validarAtribuicaoUnidade({ unidadeId: "u2", funcionarioId: "func1" }, removida),
+    ).toThrow("ferramenta removida");
+  });
+
   it("atribui unidade disponível", () => {
     expect(
       validarAtribuicaoUnidade({ unidadeId: "u1", funcionarioId: "func1" }, unidade()),
