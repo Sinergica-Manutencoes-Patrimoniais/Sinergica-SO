@@ -24,7 +24,7 @@ export function validarCustoFuncionario(input: CustoFuncionarioFormData): CustoF
 }
 
 /** Centavos por hora para exibição na tela de cadastro (o cálculo de verdade, com vigência
- * histórica, é sempre feito no banco por financeiro._fn_custo_hora_funcionario). */
+ * histórica, é sempre feito no banco por financeiro._fn_custo_hora_centavos_funcionario). */
 export function custoHoraDerivadoCentavos(
   custoMensalCentavos: number,
   horasMesBase: number,
