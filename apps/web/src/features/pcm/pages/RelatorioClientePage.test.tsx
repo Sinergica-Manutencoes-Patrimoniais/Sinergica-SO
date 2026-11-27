@@ -3,10 +3,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PDFArray, PDFDocument, PDFRawStream, decodePDFRawStream } from "pdf-lib";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import { RelatorioClientePage } from "./RelatorioClientePage";
 
 const mocks = vi.hoisted(() => ({
-  listarOrdensServico: vi.fn(async () => []),
+  listarOrdensServico: vi.fn(async (): Promise<Partial<OrdemServicoOperacional>[]> => []),
   listarInspecoes: vi.fn(),
   publicar: vi.fn(async () => undefined),
 }));
@@ -186,6 +187,44 @@ describe("Relatório do Cliente", () => {
     expect(texto).not.toContain("Inspecao Beta");
     expect(texto).toContain("2 atendimento(s) realizado(s)");
   });
+
+  it.each([0, 1])(
+    "conta %i OS preventiva concluída no resumo e no PDF sem contar a vistoria",
+    async (total) => {
+      const pdf = capturarPdf();
+      mocks.listarInspecoes.mockResolvedValueOnce([
+        { ...inspecoes[0], titulo: "Vistoria preventiva" },
+      ]);
+      mocks.listarOrdensServico.mockResolvedValueOnce(
+        total === 1
+          ? [
+              {
+                numero: "CH-1",
+                titulo: "Limpeza dos filtros",
+                categoria: "preventiva",
+                dataAgendada: null,
+                descricao: null,
+                auvoTaskId: null,
+                checkOutAt: "2026-11-18T15:00:00Z",
+              },
+            ]
+          : [],
+      );
+      await abrir();
+      fireEvent.click(botao("Gerar relatório"));
+      await screen.findByText(/Vistoria preventiva/);
+      expect(screen.getByText(/Foram realizados/)).toHaveTextContent(
+        `Foram realizados ${total + 1} atendimento(s), incluindo ${total} preventiva(s).`,
+      );
+      fireEvent.click(botao("Exportar PDF"));
+      const texto = await pdf.texto();
+      expect(texto).toContain("Vistoria preventiva");
+      expect(texto).toContain(
+        `${total + 1} atendimento(s) realizado(s); ${total} preventiva(s) concluída(s).`,
+      );
+      if (total === 1) expect(texto).toContain("Limpeza dos filtros");
+    },
+  );
 
   it("descarta a resposta de uma geração se os filtros mudarem durante a consulta", async () => {
     let concluir!: (resultado: typeof inspecoes) => void;
