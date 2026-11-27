@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { TooltipProvider } from "@sinergica/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import type { ConsultaOperacao, ItemOperacaoResumo } from "../application/operacao-gateway";
 import { OPERACAO_KPI_VAZIO } from "../application/operacao-queries";
@@ -67,8 +67,12 @@ it.each(["kanban", "lista"] as const)(
   "carrega Clientes na visão %s antes do foco",
   async (abaInicial) => {
     montar({ abaInicial });
-    expect(await screen.findByRole("option", { name: "Cliente A" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Filtrar por cliente")).not.toHaveFocus();
+    // O esqueleto pode remontar o filtro enquanto o feed do Kanban termina de carregar.
+    await waitFor(() => {
+      const filtro = screen.getByRole("combobox", { name: "Filtrar por cliente" });
+      expect(within(filtro).getByRole("option", { name: "Cliente A" })).toBeInTheDocument();
+      expect(filtro).not.toHaveFocus();
+    });
   },
 );
 
