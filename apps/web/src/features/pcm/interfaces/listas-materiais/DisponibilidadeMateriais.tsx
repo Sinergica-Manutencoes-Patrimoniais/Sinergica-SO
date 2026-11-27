@@ -10,6 +10,7 @@ import { DetalheEvento } from "./DetalheEvento";
 import { EvidenciasExcecao } from "./EvidenciasExcecao";
 import { ImpedimentoMaterialOs } from "./ImpedimentoMaterialOs";
 import { ObservacoesExcecao } from "./ObservacoesExcecao";
+import { ResumoEventoMaterial } from "./ResumoEventoMaterial";
 
 // Os 5 tipos de evento que a lista aceita. `aquisicao`, `dispensa` e `conclusao` entraram com a
 // migration 1843 e são os que levam a lista aos 3 estados do §8.2 que antes não existiam.
@@ -431,8 +432,7 @@ function Conteudo({
                   eventoRevision={evento.revisao}
                 />
               )}
-              Revisão {evento.revisao} · {evento.tipo} · responsável {evento.ator_id} ·{" "}
-              {evento.criado_em}
+              <ResumoEventoMaterial evento={evento} usuario={usuario} />
               <DetalheEvento
                 usuario={usuario}
                 cliente={cliente}

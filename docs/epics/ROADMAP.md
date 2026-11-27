@@ -155,7 +155,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S176 | Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos | Terra | Em andamento — integridade de hierarquia (2026-10-26) | [spec](../../specs/E01-S176-estrutura-tecnica-grupos/spec.md) |
 | E01-S177 | Código público protegido, aliases e política de Equipment Auvo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S177-codigos-publicos-alias/spec.md) |
 | E01-S178 | Levantamentos de planilha/Auvo e aprovação PCM em staging | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S178-levantamentos-staging-aprovacao/spec.md) |
-| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Codex (Lucas, 25/11) | Entrada única Materiais e Aquisições implementada; continuação de AC-7/AC-8 em validação | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
+| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Codex (Onda 6) | Entrada única Materiais e Aquisições implementada; continuação de AC-7/AC-8 em validação | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
 | E01-S180 | Despesas previstas/realizadas por Visita | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S180-despesas-visita/spec.md) |
 | E01-S181 | Orçamento operacional canônico no Comercial | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S181-orcamentos-operacionais/spec.md) |
 | E01-S182 | Fila A Faturar e efetivação por origem única | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S182-faturaveis-origem/spec.md) |
