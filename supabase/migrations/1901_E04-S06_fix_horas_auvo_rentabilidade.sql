@@ -1,7 +1,7 @@
 -- 1901_E04-S06_fix_horas_auvo_rentabilidade.sql — Sinérgica SO
 --
 -- DEF-06 (Financeiro > Rentabilidade não carrega). `os.auvo_detalhes` é payload livre vindo do
--- Auvo: o valor de `duracaoHoras` é texto, não número. `(auvo_detalhes ->> 'duracaoHoras')::numeric`
+-- Auvo: o operador `->>` extrai `duracaoHoras` como texto. `(auvo_detalhes ->> 'duracaoHoras')::numeric`
 -- aborta a RPC inteira com 22P02 ("invalid input syntax for type numeric") assim que UMA OS
 -- finalizada no período traz string vazia, decimal com vírgula ou qualquer texto. Como a função
 -- varre todas as OS finalizadas dos últimos 12 meses, uma única linha ruim derruba a tela para
@@ -10,30 +10,39 @@
 -- `fn_custo_os_por_cliente_mes` (drill-down da mesma tela, AC-5) faz o mesmo cast três vezes e
 -- cai pelo mesmo motivo.
 --
--- Comportamento preservado: valor ausente já contava como 0 hora (`coalesce(..., 0)`); valor
--- não numérico passa a contar como 0 hora também, em vez de abortar. Nenhuma regra nova de
--- interpretação — "2,5" NÃO vira 2.5, porque converter vírgula decimal seria inventar leitura
--- sobre dado de terceiro.
+-- O cast do PostgreSQL continua definindo os formatos aceitos para horas finitas.
+-- Valores ausentes, inválidos (como "2,5"), fora da faixa de numeric ou não finitos
+-- contam como 0 hora.
 --
 -- Reverso: reaplicar as definições de 0149_security_db_ci_hardening.sql para as duas funções e
 --   drop function if exists financeiro._fn_horas_auvo(jsonb);
 
--- Horas de uma OS a partir do payload do Auvo. Devolve 0 quando ausente OU não numérico.
+-- Horas finitas de uma OS a partir do payload do Auvo.
 create or replace function financeiro._fn_horas_auvo(p_auvo_detalhes jsonb)
 returns numeric
-language sql
+language plpgsql
 immutable
 set search_path = pg_temp
 as $$
-  select case
-    when (p_auvo_detalhes ->> 'duracaoHoras') ~ '^\s*-?\d+(\.\d+)?\s*$'
-      then (p_auvo_detalhes ->> 'duracaoHoras')::numeric
-    else 0
-  end;
+declare
+  v_duracao text := p_auvo_detalhes ->> 'duracaoHoras';
+  v_horas numeric;
+begin
+  if v_duracao is null or not pg_input_is_valid(v_duracao, 'numeric') then
+    return 0;
+  end if;
+
+  v_horas := v_duracao::numeric;
+  if v_horas in ('NaN'::numeric, 'Infinity'::numeric, '-Infinity'::numeric) then
+    return 0;
+  end if;
+
+  return v_horas;
+end;
 $$;
 
 comment on function financeiro._fn_horas_auvo(jsonb) is
-  'DEF-06: extrai duracaoHoras do payload do Auvo sem abortar a consulta quando o texto não é numérico (0 hora, igual ao valor ausente).';
+  'DEF-06: extrai horas finitas do payload do Auvo e devolve 0 para valores ausentes, inválidos, fora da faixa de numeric ou não finitos.';
 
 create or replace function financeiro.fn_rentabilidade_cliente_mes(p_meses int default 12)
 returns table (
