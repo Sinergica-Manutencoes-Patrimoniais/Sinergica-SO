@@ -129,10 +129,9 @@ function Painel({ data, onNavegar }: { data: PortalSnapshot; onNavegar: (secao: 
     .filter((v) => v.data >= dataIsoLocal() && v.status !== "cancelado")
     .slice(0, 3);
   const abertos = data.chamados.filter((c) => !["cancelado", "convertido_os"].includes(c.status));
-  const osAbertas = data.os.filter((os) => !["concluida", "cancelada"].includes(os.status));
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Kpi titulo="OS em andamento" valor={osAbertas.length} onClick={() => onNavegar("os")} />
+      <Kpi titulo="OS em andamento" valor={data.osAbertas} onClick={() => onNavegar("os")} />
       <Kpi titulo="Chamados abertos" valor={abertos.length} onClick={() => onNavegar("chamados")} />
       <Kpi
         titulo="Próximas visitas"

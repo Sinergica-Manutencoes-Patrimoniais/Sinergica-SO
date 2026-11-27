@@ -48,7 +48,7 @@ _15 concluídas no histórico · maior ID usado: E00-S30_| ID | Título | Owner 
 | E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | **Fechada (2026-11-17)** — 0 fuga/0 não-declarada/0 órfã no repositório inteiro, 737 flags; gate ligado em `ci.yml`; inventário em `docs/ativacao/flags.md`. Pendência documentada: `podeAdministrar` real só em ~20 componentes, resto nasce `false` (lado seguro) — ver tasks.md | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S205_
+_75 concluídas no histórico · maior ID usado: E01-S206_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -183,6 +183,7 @@ _75 concluídas no histórico · maior ID usado: E01-S205_
 | E01-S203 | Plano PMOC criado à mão pelo PCM a partir de um Contrato PMOC (responde a pergunta aberta da ADR-1697 §3) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1871, 43 asserções pgTAP, ADR-1698. Nenhum Plano criado por migration: a criação é manual. PMOC continua no menu. Aguarda abrir `sso_pmoc_mediado_gate` + `sso_diagnostico_pmoc_gate` + concessão `plano.gerir` + flag | [spec](../../specs/E01-S203-plano-pmoc-manual/spec.md) |
 | E01-S204 | Definição única de OS aberta e unificação das contagens (ponto C do reteste, DEF-40/49) | Claude (worker Devinho, 27/11) | Em PR draft — migration 1913, pgTAP 25 asserções; decisões D1–D8 do dono | [spec](../../specs/E01-S204-definicao-os-aberta/spec.md) |
 | E01-S205 | Arquivar (não apagar) os dados [TESTE E2E] de produção — reversível, sem tocar o Auvo | Claude (Devinho) | Em PR draft — migration 1911, pgTAP 23 asserções; execução em produção depende do dono aprovar o inventário | [spec](../../specs/E01-S205-arquivar-dados-teste-e2e/spec.md) |
+| E01-S206 | Portal do Cliente conta toda OS como "em andamento" (status `concluida`/`cancelada` ≠ `finalizado`/`cancelado`); passa a usar a classificação de OS aberta da 1913 | Claude (worker Devinho, 27/11) | Em PR draft — sem migration; pgTAP 7 asserções + teste de front | — |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S43_

@@ -1,3 +1,4 @@
+import { flagLigada } from "../../../config/flags-sso";
 import { supabase } from "../../../lib/supabase-client";
 import {
   type RelatorioCliente,
@@ -20,7 +21,6 @@ import type {
 } from "../application/portal-gateway";
 import { statusConformidade } from "../domain/conformidade";
 import { projetarItensOrcamentoPublico } from "../domain/itens-orcamento-publico";
-import { flagLigada } from "../../../config/flags-sso";
 
 function falha(error: { message?: string } | null, contexto: string) {
   if (error) throw new Error(`${contexto}: ${error.message ?? "erro desconhecido"}`);
@@ -80,6 +80,7 @@ export const supabasePortalAdapter: PortalGateway = {
       faturasR,
       cobrancasR,
       relatoriosR,
+      contagemR,
     ] = await Promise.all([
       pcm.from("clientes").select("id,nome,cnpj").eq("id", clienteId).single(),
       pcm
@@ -142,6 +143,9 @@ export const supabasePortalAdapter: PortalGateway = {
         .from("relatorios_cliente_publicados")
         .select("id,titulo,conteudo,created_at")
         .order("created_at", { ascending: false }),
+      // E01-S206: a classificação de OS aberta mora no banco (1913). security invoker: o RLS do
+      // síndico já restringe ao Cliente dele; sem linha = zero.
+      pcm.rpc("fn_contagem_operacional_por_cliente", { p_cliente_id: clienteId }),
     ]);
 
     for (const [r, nome] of [
@@ -158,6 +162,7 @@ export const supabasePortalAdapter: PortalGateway = {
       [propostasR, "propostas comerciais"],
       [faturasR, "financeiro"],
       [relatoriosR, "relatórios"],
+      [contagemR, "contagem de OS"],
     ] as const) {
       falha(r.error, `Falha ao carregar ${nome}`);
     }
@@ -353,6 +358,7 @@ export const supabasePortalAdapter: PortalGateway = {
     return {
       cliente: clienteR.data,
       os,
+      osAbertas: Number(contagemR.data?.[0]?.os_abertas ?? 0),
       chamados,
       chamadoEventos,
       chamadoInteracoes,

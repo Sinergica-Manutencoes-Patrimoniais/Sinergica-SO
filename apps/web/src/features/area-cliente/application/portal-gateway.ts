@@ -121,6 +121,8 @@ export interface PortalFatura {
 export interface PortalSnapshot {
   cliente: PortalCliente;
   os: PortalOs[];
+  /** E01-S206: OS abertas pela classificação única do banco (migration 1913), não pela lista carregada. */
+  osAbertas: number;
   chamados: PortalChamado[];
   chamadoEventos: PortalHistoricoItem[];
   chamadoInteracoes: PortalHistoricoItem[];
