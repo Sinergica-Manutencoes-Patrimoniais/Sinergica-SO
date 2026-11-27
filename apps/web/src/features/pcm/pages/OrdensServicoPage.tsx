@@ -161,6 +161,7 @@ export function OrdensServicoPage({
     status: "ativos",
     ...filtrosIniciais,
   }));
+  const [prioridadeBacklog, setPrioridadeBacklog] = useState("todas");
   const [salvando, setSalvando] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
@@ -187,6 +188,9 @@ export function OrdensServicoPage({
         filtros.tecnicoFuncionarioId !== "todos" ? filtros.tecnicoFuncionarioId : undefined,
       clienteId: filtros.clienteId !== "todos" ? filtros.clienteId : undefined,
       somenteBacklog: visao === "backlog" || undefined,
+      prioridade:
+        visao === "backlog" && prioridadeBacklog !== "todas" ? prioridadeBacklog : undefined,
+      ocultarTriagemInspecao: visao === "lista" || undefined,
       categoria: filtros.categoria !== "todas" ? filtros.categoria : undefined,
       dataInicio:
         filtros.dataInicio ??
@@ -202,7 +206,7 @@ export function OrdensServicoPage({
             : "recentes",
       limite: visao === "timeline" || visao === "calendario" ? 200 : visao === "kanban" ? 210 : 50,
     }),
-    [buscaDebounced, filtros, visao, intervaloAgenda],
+    [buscaDebounced, filtros, visao, intervaloAgenda, prioridadeBacklog],
   );
   // E00-S29 — `!permissoesCarregando` saiu daqui de propósito. Ele serializava a tela: nenhuma
   // consulta de dado partia antes da viagem de permissão terminar. `temLeitura` já é `false`
@@ -228,7 +232,7 @@ export function OrdensServicoPage({
   );
   const feedsKanban = useFeedsKanban(
     supabaseOperacaoAdapter,
-    { ...consultaKpis, status: consulta.status },
+    { ...consultaKpis, status: consulta.status, ocultarTriagemInspecao: true },
     consultasAtivas && visao === "kanban",
   );
   const queryKpis = useKpisOperacao(supabaseOperacaoAdapter, consultaKpis, consultasAtivas);
@@ -762,7 +766,22 @@ export function OrdensServicoPage({
             <BacklogGutPage
               clienteControladoId={clienteSelecionadoId ?? "todos"}
               clientesControlados={dadosOs?.clientes}
-              carregandoControlado={feed.isPending || feed.isPlaceholderData}
+              carregandoControlado={
+                feed.isPending || feed.isPlaceholderData || filtros.busca !== buscaDebounced
+              }
+              filtrosControlados={{
+                busca: filtros.busca,
+                categoria: filtros.categoria,
+                prioridade: prioridadeBacklog,
+              }}
+              onAlterarFiltros={(novos) => {
+                setFiltros((atuais) => ({
+                  ...atuais,
+                  busca: novos.busca,
+                  categoria: novos.categoria,
+                }));
+                setPrioridadeBacklog(novos.prioridade);
+              }}
               onAlterarCliente={(clienteId) => setFiltros((atuais) => ({ ...atuais, clienteId }))}
               ordensControladas={feed.isPlaceholderData ? [] : ordensCarregadas}
               totalControlado={feed.isPlaceholderData ? undefined : totalFiltrado}

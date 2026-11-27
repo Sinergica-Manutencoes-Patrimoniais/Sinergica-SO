@@ -11,6 +11,7 @@ import {
 } from "../application/hub-os";
 import { AbrirOsAuvoModal } from "../components/AbrirOsAuvoModal";
 import { NovaOrdemServicoModal } from "../components/NovaOrdemServicoModal";
+import { CATEGORIAS_OS } from "../domain/abertura-os";
 import type { OrdemServicoOperacional } from "../domain/ordens-servico";
 import {
   PRIORIDADE_LABEL,
@@ -29,6 +30,8 @@ type Estado =
   | { fase: "erro"; mensagem: string }
   | { fase: "pronto"; ordens: OrdemServicoOperacional[] };
 
+type FiltrosFila = { busca: string; categoria: string; prioridade: string };
+
 export function BacklogGutPage({
   ordensControladas,
   onPlanejarControlado,
@@ -38,6 +41,8 @@ export function BacklogGutPage({
   clientesControlados,
   carregandoControlado = false,
   onAlterarCliente,
+  filtrosControlados,
+  onAlterarFiltros,
 }: {
   ordensControladas?: OrdemServicoOperacional[];
   onPlanejarControlado?: (ordem: OrdemServicoOperacional) => Promise<void> | void;
@@ -47,6 +52,8 @@ export function BacklogGutPage({
   clientesControlados?: { id: string; nome: string }[];
   carregandoControlado?: boolean;
   onAlterarCliente?: (clienteId: string) => void;
+  filtrosControlados?: FiltrosFila;
+  onAlterarFiltros?: (filtros: FiltrosFila) => void;
 } = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -59,12 +66,17 @@ export function BacklogGutPage({
   const [ordemParaDescartar, setOrdemParaDescartar] = useState<OrdemServicoOperacional | null>(
     null,
   );
-  const [busca, setBusca] = useState("");
+  const [filtrosLocais, setFiltrosLocais] = useState<FiltrosFila>({
+    busca: "",
+    categoria: "todas",
+    prioridade: "todas",
+  });
+  const filtrosFila = filtrosControlados ?? filtrosLocais;
+  const { busca, categoria: categoriaFiltro, prioridade: prioridadeFiltro } = filtrosFila;
+  const alterarFiltros = onAlterarFiltros ?? setFiltrosLocais;
   const [clienteLocal, setClienteLocal] = useState("todos");
   const clienteFiltro = clienteControladoId ?? clienteLocal;
   const setClienteFiltro = onAlterarCliente ?? setClienteLocal;
-  const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
-  const [prioridadeFiltro, setPrioridadeFiltro] = useState("todas");
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -107,15 +119,25 @@ export function BacklogGutPage({
     return [...clientes].sort(([, a], [, b]) => a.localeCompare(b));
   }, [clientesControlados, ordens]);
   const categoriasDisponiveis = useMemo(
-    () => Array.from(new Set(ordens.map((ordem) => ordem.categoria))).sort(),
+    () =>
+      [
+        ...new Set([
+          ...CATEGORIAS_OS.map((item) => item.value),
+          ...ordens.map((ordem) => ordem.categoria),
+        ]),
+      ].sort(),
     [ordens],
   );
   const prioridadesDisponiveis = useMemo(
-    () => Array.from(new Set(ordens.map((ordem) => ordem.prioridade))).sort(),
+    () =>
+      [
+        ...new Set([...Object.keys(PRIORIDADE_LABEL), ...ordens.map((ordem) => ordem.prioridade)]),
+      ].sort(),
     [ordens],
   );
 
   const ordensFiltradas = useMemo(() => {
+    if (filtrosControlados) return ordens;
     const termo = busca.trim().toLowerCase();
     return ordens.filter((ordem) => {
       const passaBusca =
@@ -128,7 +150,7 @@ export function BacklogGutPage({
       const passaPrioridade = prioridadeFiltro === "todas" || ordem.prioridade === prioridadeFiltro;
       return passaBusca && passaCliente && passaCategoria && passaPrioridade;
     });
-  }, [ordens, busca, clienteFiltro, categoriaFiltro, prioridadeFiltro]);
+  }, [ordens, filtrosControlados, busca, clienteFiltro, categoriaFiltro, prioridadeFiltro]);
 
   const filtrosAtivos =
     busca.trim() !== "" ||
@@ -137,10 +159,8 @@ export function BacklogGutPage({
     prioridadeFiltro !== "todas";
 
   function limparFiltros() {
-    setBusca("");
     setClienteFiltro("todos");
-    setCategoriaFiltro("todas");
-    setPrioridadeFiltro("todas");
+    alterarFiltros({ busca: "", categoria: "todas", prioridade: "todas" });
   }
 
   async function onPlanejar(ordem: OrdemServicoOperacional) {
@@ -316,7 +336,7 @@ export function BacklogGutPage({
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" />
             <input
               value={busca}
-              onChange={(event) => setBusca(event.target.value)}
+              onChange={(event) => alterarFiltros({ ...filtrosFila, busca: event.target.value })}
               placeholder="Buscar por número, cliente ou título"
               className="input w-full"
               style={{ paddingLeft: "2rem" }}
@@ -338,7 +358,7 @@ export function BacklogGutPage({
           <select
             className="input w-auto"
             value={categoriaFiltro}
-            onChange={(event) => setCategoriaFiltro(event.target.value)}
+            onChange={(event) => alterarFiltros({ ...filtrosFila, categoria: event.target.value })}
           >
             <option value="todas">Todas as categorias</option>
             {categoriasDisponiveis.map((categoria) => (
@@ -350,7 +370,7 @@ export function BacklogGutPage({
           <select
             className="input w-auto"
             value={prioridadeFiltro}
-            onChange={(event) => setPrioridadeFiltro(event.target.value)}
+            onChange={(event) => alterarFiltros({ ...filtrosFila, prioridade: event.target.value })}
           >
             <option value="todas">Todas as prioridades</option>
             {prioridadesDisponiveis.map((prioridade) => (
@@ -372,12 +392,7 @@ export function BacklogGutPage({
             {!carregandoControlado && (
               <>
                 {ordensFiltradas.length} de{" "}
-                {onAlterarCliente &&
-                !busca.trim() &&
-                categoriaFiltro === "todas" &&
-                prioridadeFiltro === "todas"
-                  ? resumo.total
-                  : `${ordens.length} carregados`}
+                {filtrosControlados ? resumo.total : `${ordens.length} carregados`}
               </>
             )}
           </span>

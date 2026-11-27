@@ -327,6 +327,12 @@ async function listarPagina(
   if (input.tecnicoFuncionarioId) {
     query = query.eq("tecnico_funcionario_id", input.tecnicoFuncionarioId);
   }
+  if (input.ocultarTriagemInspecao) {
+    query = query.or(
+      "origem_inspecao_item_id.is.null,chamado_id.not.is.null,data_agendada.not.is.null,tecnico_funcionario_id.not.is.null,auvo_task_id.not.is.null,status.in.(finalizado,cancelado)",
+    );
+  }
+  if (input.prioridade) query = query.eq("prioridade", input.prioridade);
   if (input.categoria) query = query.eq("categoria", input.categoria);
 
   const termo = input.busca ? buscaSegura(input.busca) : "";
