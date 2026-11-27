@@ -20,7 +20,7 @@ function Conteudo({ usuario, gateway = supabaseMateriaisClientesAdapter, onAbrir
   const [proximoCliente, setProximoCliente] = useState<string | null>(null);
   const consulta = useClientesMateriais(gateway, usuario);
   const disponivel = !consulta.isFetching && !consulta.isError;
-  const selecionado = disponivel && consulta.data?.some((c) => c.id === cliente);
+  const selecionado = consulta.data?.some((c) => c.id === cliente);
   return (
     <section className="space-y-4">
       <header>
@@ -35,18 +35,20 @@ function Conteudo({ usuario, gateway = supabaseMateriaisClientesAdapter, onAbrir
           className="input"
           value={cliente}
           onChange={(e) => {
-            if (temRascunho) setProximoCliente(e.target.value);
-            else setCliente(e.target.value);
+            if (selecionado && temRascunho) setProximoCliente(e.target.value);
+            else {
+              setTemRascunho(false);
+              setCliente(e.target.value);
+            }
           }}
           disabled={!disponivel}
         >
           <option value="">Selecione um Cliente</option>
-          {disponivel &&
-            consulta.data?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
+          {consulta.data?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nome}
+            </option>
+          ))}
         </select>
       </label>
       {consulta.isPending && <output>Carregando Clientes…</output>}

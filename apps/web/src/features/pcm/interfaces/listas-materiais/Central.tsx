@@ -1,6 +1,6 @@
 import { AvisoCarregando, Button, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
@@ -9,7 +9,7 @@ import { OrcamentosDaOs } from "../../../comercial/interfaces/orcamento-operacio
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseListasMateriaisAdapter } from "../../infrastructure/supabase-listas-materiais-adapter";
 import { ExcecoesOs } from "./ExcecoesOs";
-import { WorkspaceListasMateriais } from "./Workspace";
+import { type RascunhoNovaLista, WorkspaceListasMateriais } from "./Workspace";
 
 type Props = {
   usuario: string;
@@ -127,6 +127,10 @@ function Conteudo({
   const [aberta, setAberta] = useState<string | null>(null);
   const [orcamentoOs, setOrcamentoOs] = useState<string | null>(null);
   const [erro, setErro] = useState("");
+  // O formulário pode sair da tela enquanto listas e permissões são revalidadas.
+  const [rascunhos, setRascunhos] = useState(() => new Map<string, RascunhoNovaLista>());
+  const temRascunho = [...rascunhos.values()].some(({ texto }) => texto.length > 0);
+  useEffect(() => onRascunhoAlterado?.(temRascunho), [onRascunhoAlterado, temRascunho]);
   const filtroServidor = flagLigada("VITE_SSO_CENTRAL_MATERIAIS_SITUACAO_ENABLED");
   const permissao = useQuery({
     queryKey: ["listas-materiais-central", usuario, cliente, "permissao"],
@@ -390,7 +394,12 @@ function Conteudo({
                       usuario={usuario}
                       cliente={cliente}
                       ordemServico={lista.ordem_servico_id}
-                      onRascunhoAlterado={onRascunhoAlterado}
+                      rascunho={rascunhos.get(lista.ordem_servico_id)}
+                      onAlterarRascunho={(rascunho) =>
+                        setRascunhos((atuais) =>
+                          new Map(atuais).set(lista.ordem_servico_id, rascunho),
+                        )
+                      }
                     />
                   )}
                   {lista.responsavel === "sinergica" &&

@@ -1,6 +1,6 @@
 import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -19,11 +19,22 @@ import { ExcecoesOs } from "./ExcecoesOs";
 import { PublicarPortal } from "./PublicarPortal";
 import { VisibilidadePortal } from "./VisibilidadePortal";
 
+export type RascunhoNovaLista = {
+  texto: string;
+  responsavel: "cliente" | "sinergica";
+};
+
+const RASCUNHO_NOVA_LISTA_INICIAL: RascunhoNovaLista = {
+  texto: "",
+  responsavel: "cliente",
+};
+
 type Props = {
   usuario: string;
   cliente: string;
   ordemServico: string;
-  onRascunhoAlterado?: (temRascunho: boolean) => void;
+  rascunho?: RascunhoNovaLista;
+  onAlterarRascunho?: (rascunho: RascunhoNovaLista) => void;
 };
 /** Integração condicionada a rollout e validação da migration, sem efeito sobre OS/Auvo. */
 export function WorkspaceListasMateriais(props: Props) {
@@ -31,7 +42,7 @@ export function WorkspaceListasMateriais(props: Props) {
     <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />
   );
 }
-function Conteudo({ usuario, cliente, ordemServico, onRascunhoAlterado }: Props) {
+function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho }: Props) {
   const chave = `sso-lista-materiais:${usuario}:${cliente}:${ordemServico}`;
   const [recuperacao] = useState(() => {
     try {
@@ -44,13 +55,9 @@ function Conteudo({ usuario, cliente, ordemServico, onRascunhoAlterado }: Props)
     }
   });
   const [pendente, setPendente] = useState(recuperacao.comando);
-  const [texto, setTexto] = useState("");
-  const temRascunho = texto.length > 0;
-  useEffect(() => {
-    onRascunhoAlterado?.(temRascunho);
-    return () => onRascunhoAlterado?.(false);
-  }, [onRascunhoAlterado, temRascunho]);
-  const [responsavel, setResponsavel] = useState<"cliente" | "sinergica">("cliente");
+  const [rascunhoLocal, setRascunhoLocal] = useState(RASCUNHO_NOVA_LISTA_INICIAL);
+  const { texto, responsavel } = rascunho ?? rascunhoLocal;
+  const alterarRascunho = onAlterarRascunho ?? setRascunhoLocal;
   const [erro, setErro] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [listaAberta, setListaAberta] = useState<string | null>(null);
@@ -129,7 +136,7 @@ function Conteudo({ usuario, cliente, ordemServico, onRascunhoAlterado }: Props)
         throw new Error("Operação guardada divergente.");
       sessionStorage.removeItem(chave);
       setPendente(null);
-      setTexto("");
+      alterarRascunho({ texto: "", responsavel });
     } catch {
       setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
     } finally {
@@ -212,7 +219,12 @@ function Conteudo({ usuario, cliente, ordemServico, onRascunhoAlterado }: Props)
             Responsável pelo material{" "}
             <select
               value={responsavel}
-              onChange={(e) => setResponsavel(e.target.value as "cliente" | "sinergica")}
+              onChange={(e) =>
+                alterarRascunho({
+                  texto,
+                  responsavel: e.target.value as RascunhoNovaLista["responsavel"],
+                })
+              }
             >
               <option value="cliente">Cliente</option>
               <option value="sinergica">Sinérgica</option>
@@ -220,7 +232,11 @@ function Conteudo({ usuario, cliente, ordemServico, onRascunhoAlterado }: Props)
           </label>
           <label>
             Texto original{" "}
-            <textarea required value={texto} onChange={(e) => setTexto(e.target.value)} />
+            <textarea
+              required
+              value={texto}
+              onChange={(e) => alterarRascunho({ texto: e.target.value, responsavel })}
+            />
           </label>
           <button type="submit" disabled={ocupado}>
             Registrar lista

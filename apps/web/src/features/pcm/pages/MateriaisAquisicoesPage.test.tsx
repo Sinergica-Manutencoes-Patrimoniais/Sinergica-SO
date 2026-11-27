@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider, focusManager } from "@tanstack/react-query";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { expect, it, vi } from "vitest";
 import { MateriaisAquisicoesPage } from "./MateriaisAquisicoesPage";
@@ -60,4 +60,49 @@ it("E01-S179 AC-7/AC-8: seleciona Cliente e remove contexto anterior ao trocar",
   fireEvent.change(screen.getByLabelText("Cliente dos materiais"), { target: { value: "a" } });
   expect(await screen.findByText("Central do a")).toBeTruthy();
   expect(screen.getByLabelText("Anotação local")).toHaveValue("");
+});
+
+it("DEF-25: mantém o texto do mesmo Cliente ao voltar à aba", async () => {
+  const clientes = [
+    { id: "a", nome: "Escritório" },
+    { id: "b", nome: "Outro" },
+  ];
+  let concluir!: (dados: typeof clientes) => void;
+  const listar = vi
+    .fn()
+    .mockResolvedValue(clientes)
+    .mockImplementationOnce(async () => clientes)
+    .mockImplementationOnce(
+      () =>
+        new Promise<typeof clientes>((resolve) => {
+          concluir = resolve;
+        }),
+    );
+  const client = new QueryClient({ defaultOptions: { queries: { staleTime: 0 } } });
+  render(
+    <QueryClientProvider client={client}>
+      <MateriaisAquisicoesPage usuario="usuario" gateway={{ listar }} />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole("option", { name: "Escritório" });
+  fireEvent.change(screen.getByLabelText("Cliente dos materiais"), { target: { value: "a" } });
+  fireEvent.change(await screen.findByLabelText("Anotação local"), {
+    target: { value: "rascunho A" },
+  });
+  try {
+    await act(async () => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    expect(listar).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(screen.getByLabelText("Cliente dos materiais")).toBeDisabled());
+    await act(async () => concluir(clientes));
+    expect(await screen.findByLabelText("Anotação local")).toHaveValue("rascunho A");
+    fireEvent.change(screen.getByLabelText("Cliente dos materiais"), { target: { value: "b" } });
+    expect(
+      await screen.findByRole("dialog", { name: "Descartar rascunho de materiais?" }),
+    ).toBeTruthy();
+  } finally {
+    focusManager.setFocused(undefined);
+  }
 });
