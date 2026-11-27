@@ -10,7 +10,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, public;
 set local app.auvo_sync_write = 'true';
-select plan(27);
+select plan(37);
 
 -- ── Fixture ──────────────────────────────────────────────────────────────────────────────────
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
@@ -69,6 +69,12 @@ insert into pcm.visita_ordens_servico (id, visita_id, os_id, cliente_id, sequenc
  ('20200000-0000-4000-8000-000000000054', '20200000-0000-4000-8000-000000000030', '20200000-0000-4000-8000-000000000052', '20200000-0000-4000-8000-000000000010', 2, '20200000-0000-4000-8000-000000000001'),
  ('20200000-0000-4000-8000-000000000055', '20200000-0000-4000-8000-000000000030', '20200000-0000-4000-8000-000000000053', '20200000-0000-4000-8000-000000000010', 1, '20200000-0000-4000-8000-000000000001');
 
+-- DEF-03: a primeira OS tem tarefa sincronizada. A segunda tem hora planejada só no PCM.
+update pcm.ordens_servico set auvo_task_id = 202001, data_agendada = '2026-11-23 23:42+00'
+ where id = '20200000-0000-4000-8000-000000000052';
+update pcm.ordens_servico set data_agendada = '2026-11-23 17:00+00'
+ where id = '20200000-0000-4000-8000-000000000053';
+
 -- Capacidade: só o usuário (1) confirma Visita, e só no Cliente S202. O (2) fica sem nenhuma, de
 -- propósito — é o caminho negado.
 insert into config.sso_concessoes (usuario_id, acao, cliente_id) values
@@ -81,6 +87,12 @@ select throws_ok(
   $$ select * from pcm.sso_listar_agenda_tecnico_projetada(null, date '2026-11-23', 100) $$,
   '55000', 'agenda_capacidade_bloqueada',
   'AC-6: gate fechado por padrão recusa com erro nomeado, nunca com agenda vazia'
+);
+
+select throws_ok(
+  $$ select * from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100) $$,
+  '55000', 'agenda_capacidade_bloqueada',
+  'DEF-03: a projeção com horários respeita o gate da Agenda'
 );
 
 set local role postgres;
@@ -184,6 +196,53 @@ select is(
   'integral', 'AC-8: Visita que cruza o meio-dia local é integral'
 );
 
+-- DEF-03: a tarefa de 23:42 UTC aparece como 20:42 em America/Sao_Paulo.
+select is(
+  (select horarios_auvo from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100)
+    where visita_id = '20200000-0000-4000-8000-000000000030'),
+  array['20:42'],
+  'DEF-03: devolve taskDate no fuso da Visita e ignora o horário PCM sem tarefa Auvo'
+);
+select is(
+  (select horarios_auvo from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100)
+    where visita_id = '20200000-0000-4000-8000-000000000031'),
+  array[]::text[],
+  'DEF-03: sem tarefa com hora, lista vazia mantém o período como fallback'
+);
+set local role postgres;
+update pcm.ordens_servico set auvo_task_id = 202002, data_agendada = '2026-11-23 17:00+00'
+ where id = '20200000-0000-4000-8000-000000000053';
+set local role authenticated;
+select is(
+  (select horarios_auvo from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100)
+    where visita_id = '20200000-0000-4000-8000-000000000030'),
+  array['14:00', '20:42'],
+  'DEF-03: quando duas tarefas têm horários diferentes, devolve ambos em ordem'
+);
+set local role postgres;
+update pcm.ordens_servico set data_agendada = '2026-11-23 23:42+00'
+ where id = '20200000-0000-4000-8000-000000000053';
+set local role authenticated;
+select is(
+  (select horarios_auvo from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100)
+    where visita_id = '20200000-0000-4000-8000-000000000030'),
+  array['20:42'],
+  'DEF-03: tarefas no mesmo horário não repetem o rótulo'
+);
+set local role postgres;
+update pcm.ordens_servico set data_agendada = null
+ where id = '20200000-0000-4000-8000-000000000053';
+update pcm.visita_ordens_servico
+   set encerrado_em = now(), encerrado_por = created_by, encerramento_motivo = 'Teste DEF-03'
+ where id = '20200000-0000-4000-8000-000000000054';
+set local role authenticated;
+select is(
+  (select horarios_auvo from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100)
+    where visita_id = '20200000-0000-4000-8000-000000000030'),
+  array[]::text[],
+  'DEF-03: ignora tarefa sem hora e tarefa de OS com vínculo encerrado'
+);
+
 -- ── AC-6/AC-9: vazio, parâmetro inválido e negado são TRÊS coisas diferentes ────────────────
 select is(
   (select count(*) from pcm.sso_listar_agenda_tecnico_projetada(null, date '2026-12-28', 100)),
@@ -206,6 +265,26 @@ select throws_ok(
 select ok(
   not has_function_privilege('anon', 'pcm.sso_listar_agenda_tecnico_projetada(uuid,date,integer)', 'execute'),
   'AC-9: anon não executa a projeção'
+);
+
+select throws_ok(
+  $$ select * from pcm.sso_listar_agenda_tecnico_com_horarios_auvo(null, date '2026-11-23', 100) $$,
+  '42501', 'sem_acesso',
+  'DEF-03: horários seguem a mesma autorização por Cliente da projeção'
+);
+set local request.jwt.claims = '{"sub":"20200000-0000-4000-8000-000000000001","role":"authenticated","user_role":"superadmin"}';
+select throws_ok(
+  $$ select * from pcm.sso_listar_agenda_tecnico_com_horarios_auvo('20200000-0000-4000-8000-000000000011', date '2026-11-23', 100) $$,
+  '42501', 'sem_acesso',
+  'DEF-03: a concessão em um Cliente não autoriza consultar outro'
+);
+select ok(
+  not has_function_privilege('anon', 'pcm.sso_listar_agenda_tecnico_com_horarios_auvo(uuid,date,integer)', 'execute'),
+  'DEF-03: anon não executa a consulta de horários'
+);
+select ok(
+  not has_function_privilege('service_role', 'pcm.sso_listar_agenda_tecnico_com_horarios_auvo(uuid,date,integer)', 'execute'),
+  'DEF-03: a consulta só é concedida a authenticated'
 );
 
 -- ── AC-7: o cadastro manual está aposentado, não destruído ──────────────────────────────────

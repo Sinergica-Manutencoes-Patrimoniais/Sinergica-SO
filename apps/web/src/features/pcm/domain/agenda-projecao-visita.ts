@@ -19,6 +19,8 @@ export interface AlocacaoProjetada {
   /** ISO yyyy-mm-dd, data local da Visita. */
   data: string;
   periodo: PeriodoVisita;
+  /** Horários agendados no Auvo, em HH:MM no fuso da Visita. */
+  horariosAuvo: string[];
   estado: string;
   natureza: string;
   /** Números das OS vinculadas, na ordem da sequência da Visita. AC-2 do pacote: a agenda mostra
