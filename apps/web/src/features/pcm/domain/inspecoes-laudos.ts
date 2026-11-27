@@ -37,6 +37,8 @@ export interface TotaisInspecao {
   conformes: number;
   naoConformes: number;
   atencao: number;
+  naoAvaliados: number;
+  naoAplicaveis: number;
 }
 
 export const SISTEMAS_INSPECAO: Array<OpcaoSelect<SistemaInspecao>> = [
@@ -170,8 +172,10 @@ export function consolidarTotaisInspecao(
       conformes: totais.conformes + (item.resultado === "conforme" ? 1 : 0),
       naoConformes: totais.naoConformes + (item.resultado === "nao_conforme" ? 1 : 0),
       atencao: totais.atencao + (item.resultado === "atencao" ? 1 : 0),
+      naoAvaliados: totais.naoAvaliados + (item.resultado === "nao_avaliado" ? 1 : 0),
+      naoAplicaveis: totais.naoAplicaveis + (item.resultado === "nao_aplicavel" ? 1 : 0),
     }),
-    { total: 0, conformes: 0, naoConformes: 0, atencao: 0 },
+    { total: 0, conformes: 0, naoConformes: 0, atencao: 0, naoAvaliados: 0, naoAplicaveis: 0 },
   );
 }
 

@@ -73,6 +73,7 @@ import {
   SISTEMAS_INSPECAO,
   SISTEMA_ICONE,
   type SistemaInspecao,
+  consolidarTotaisInspecao,
   grauRiscoColor,
   resultadoColor,
   rotuloSistema,
@@ -261,15 +262,7 @@ export function InspecoesPage({
     [itens],
   );
 
-  const totais = useMemo(
-    () => ({
-      naoConformes: itens.filter((item) => item.resultado === "nao_conforme").length,
-      atencao: itens.filter((item) => item.resultado === "atencao").length,
-      conformes: itens.filter((item) => item.resultado === "conforme").length,
-      semResultado: itens.filter((item) => item.resultado === "nao_avaliado").length,
-    }),
-    [itens],
-  );
+  const totais = useMemo(() => consolidarTotaisInspecao(itens), [itens]);
 
   async function handleCriarOuEditarItem(input: NovoItemInput) {
     if (!user || !inspecaoSelecionada) return;
@@ -814,14 +807,23 @@ export function InspecoesPage({
               </div>
 
               {itens.length > 0 && (
-                <div className="mt-3 flex gap-4 border-t border-white/10 pt-3">
+                <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3">
                   <KpiInspecao label="NC" value={totais.naoConformes} tone="danger" />
                   <KpiInspecao label="Atenção" value={totais.atencao} tone="warning" />
                   <KpiInspecao label="Conf." value={totais.conformes} tone="success" />
-                  <KpiInspecao label="N/A" value={totais.semResultado} tone="muted" />
+                  <KpiInspecao
+                    label={RESULTADO_LABEL.nao_avaliado}
+                    value={totais.naoAvaliados}
+                    tone="muted"
+                  />
+                  <KpiInspecao
+                    label={RESULTADO_LABEL.nao_aplicavel}
+                    value={totais.naoAplicaveis}
+                    tone="muted"
+                  />
                   <KpiInspecao
                     label="Total"
-                    value={itens.length}
+                    value={totais.total}
                     tone="white"
                     className="ml-auto"
                   />

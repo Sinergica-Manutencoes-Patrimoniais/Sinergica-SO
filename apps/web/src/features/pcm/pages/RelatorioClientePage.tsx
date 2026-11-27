@@ -1,10 +1,18 @@
 import { Skeleton } from "@sinergica/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { Download, Send } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
+import { flagLigada } from "../../../config/flags-sso";
 import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
-import type { ClienteResumo } from "../application/cliente-360-gateway";
-import { obterRelatorioCliente } from "../application/relatorio-cliente";
+import {
+  erroPeriodoRelatorioCliente,
+  obterRelatorioCliente,
+} from "../application/relatorio-cliente";
+import {
+  relatorioClienteQueryKeys,
+  useClientesRelatorioQuery,
+} from "../application/relatorio-cliente-queries";
 import { type RelatorioCliente, formatarTextoRelatorioCliente } from "../domain/relatorio-cliente";
 import { supabaseAgendaTecnicoAdapter } from "../infrastructure/supabase-agenda-tecnico-adapter";
 import { supabaseCliente360Adapter } from "../infrastructure/supabase-cliente-360-adapter";
@@ -13,7 +21,6 @@ import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-adapter";
 import { supabaseRelatorioClienteAdapter } from "../infrastructure/supabase-relatorio-cliente-adapter";
 import { RelatorioClienteDespesas } from "../interfaces/despesas-visita/RelatorioClienteDespesas";
-import { flagLigada } from "../../../config/flags-sso";
 
 function hoje(): string {
   return new Date().toISOString().slice(0, 10);
@@ -26,56 +33,68 @@ function inicioDoMes(): string {
 
 export function RelatorioClientePage() {
   const { user } = useAuth();
-  const [clientes, setClientes] = useState<ClienteResumo[]>([]);
+  const queryClient = useQueryClient();
+  const consultaClientes = useClientesRelatorioQuery(supabaseCliente360Adapter, user?.id);
+  const clientes = consultaClientes.data ?? [];
+  const revisaoFiltros = useRef(0);
   const [clienteId, setClienteId] = useState("");
   const [inicio, setInicio] = useState(inicioDoMes);
   const [fim, setFim] = useState(hoje);
   const [relatorio, setRelatorio] = useState<RelatorioCliente | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(true);
+  const [gerando, setGerando] = useState(false);
   const [publicando, setPublicando] = useState(false);
   const [baixando, setBaixando] = useState(false);
   const [publicado, setPublicado] = useState(false);
 
-  useEffect(() => {
-    void supabaseCliente360Adapter
-      .listarClientes()
-      .then((itens) => setClientes(itens.filter((cliente) => cliente.ativo)))
-      .catch((causa) =>
-        setErro(causa instanceof Error ? causa.message : "Não foi possível carregar clientes."),
-      )
-      .finally(() => setCarregando(false));
-  }, []);
+  const erroPeriodo = erroPeriodoRelatorioCliente({ inicio, fim });
+  const carregando = consultaClientes.isLoading || gerando;
 
-  const gerar = useCallback(async () => {
+  function alterarFiltro(setValor: (valor: string) => void, valor: string) {
+    revisaoFiltros.current += 1;
+    setValor(valor);
+    setRelatorio(null);
+    setPublicado(false);
+    setErro(null);
+  }
+
+  async function gerar() {
     const cliente = clientes.find((item) => item.id === clienteId);
-    if (!cliente) {
-      setRelatorio(null);
-      return;
-    }
-    setCarregando(true);
+    if (!cliente || !user || erroPeriodo || gerando) return;
+
+    revisaoFiltros.current += 1;
+    const revisao = revisaoFiltros.current;
+    setGerando(true);
+    setRelatorio(null);
     setErro(null);
     setPublicado(false);
     try {
-      setRelatorio(
-        await obterRelatorioCliente(
-          supabaseHubOsAdapter,
-          supabaseAgendaTecnicoAdapter,
-          supabasePmocAdapter,
-          supabaseQualidadeAdapter,
-          cliente,
-          { inicio, fim },
-        ),
-      );
+      const resultado = await queryClient.fetchQuery({
+        queryKey: relatorioClienteQueryKeys.periodo(user.id, clienteId, inicio, fim),
+        staleTime: 0,
+        queryFn: () =>
+          obterRelatorioCliente(
+            supabaseHubOsAdapter,
+            supabaseAgendaTecnicoAdapter,
+            supabasePmocAdapter,
+            supabaseQualidadeAdapter,
+            cliente,
+            { inicio, fim },
+          ),
+      });
+      if (revisao === revisaoFiltros.current) setRelatorio(resultado);
     } catch (causa) {
-      setErro(causa instanceof Error ? causa.message : "Não foi possível gerar o relatório.");
+      if (revisao === revisaoFiltros.current) {
+        setErro(causa instanceof Error ? causa.message : "Não foi possível gerar o relatório.");
+      }
     } finally {
-      setCarregando(false);
+      setGerando(false);
     }
-  }, [clienteId, clientes, fim, inicio]);
+  }
 
   async function baixarPdf() {
-    if (!relatorio) return;
+    if (!relatorio || erroPeriodo || baixando) return;
+    const revisao = revisaoFiltros.current;
     setBaixando(true);
     try {
       const pdf = await criarRelatorioPdf({
@@ -83,30 +102,35 @@ export function RelatorioClientePage() {
         subtitulo: `${relatorio.clienteNome} · ${relatorio.inicio} a ${relatorio.fim}`,
       });
       pdf.escreverTexto(formatarTextoRelatorioCliente(relatorio));
+      const bytes = await pdf.finalizar();
+      if (revisao !== revisaoFiltros.current) return;
       const url = URL.createObjectURL(
-        new Blob([Uint8Array.from(await pdf.finalizar()).buffer], { type: "application/pdf" }),
+        new Blob([Uint8Array.from(bytes).buffer], { type: "application/pdf" }),
       );
       const link = document.createElement("a");
       link.href = url;
-      link.download = `relatorio-${relatorio.clienteNome.toLowerCase().replaceAll(/[^a-z0-9]+/gi, "-")}-${fim}.pdf`;
+      link.download = `relatorio-${relatorio.clienteNome.toLowerCase().replaceAll(/[^a-z0-9]+/gi, "-")}-${relatorio.fim}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     } catch {
-      setErro("Não foi possível gerar o PDF do relatório.");
+      if (revisao === revisaoFiltros.current) setErro("Não foi possível gerar o PDF do relatório.");
     } finally {
       setBaixando(false);
     }
   }
 
   async function publicar() {
-    if (!relatorio || !user) return;
+    if (!relatorio || !user || erroPeriodo || publicando || publicado) return;
+    const revisao = revisaoFiltros.current;
     setPublicando(true);
     setErro(null);
     try {
       await supabaseRelatorioClienteAdapter.publicar(relatorio, user.id);
-      setPublicado(true);
+      if (revisao === revisaoFiltros.current) setPublicado(true);
     } catch (causa) {
-      setErro(causa instanceof Error ? causa.message : "Não foi possível publicar no Portal.");
+      if (revisao === revisaoFiltros.current) {
+        setErro(causa instanceof Error ? causa.message : "Não foi possível publicar no Portal.");
+      }
     } finally {
       setPublicando(false);
     }
@@ -125,7 +149,7 @@ export function RelatorioClientePage() {
           aria-label="Cliente"
           className="input"
           value={clienteId}
-          onChange={(event) => setClienteId(event.target.value)}
+          onChange={(event) => alterarFiltro(setClienteId, event.target.value)}
         >
           <option value="">Selecione o cliente</option>
           {clientes.map((cliente) => (
@@ -139,20 +163,20 @@ export function RelatorioClientePage() {
           type="date"
           className="input"
           value={inicio}
-          onChange={(event) => setInicio(event.target.value)}
+          onChange={(event) => alterarFiltro(setInicio, event.target.value)}
         />
         <input
           aria-label="Fim"
           type="date"
           className="input"
           value={fim}
-          onChange={(event) => setFim(event.target.value)}
+          onChange={(event) => alterarFiltro(setFim, event.target.value)}
         />
         <button
           type="button"
           className="btn-primary"
           onClick={() => void gerar()}
-          disabled={!clienteId || carregando}
+          disabled={!clienteId || carregando || Boolean(erroPeriodo)}
         >
           Gerar relatório
         </button>
@@ -174,9 +198,12 @@ export function RelatorioClientePage() {
           {publicado ? "Publicado" : publicando ? "Publicando…" : "Publicar no Portal"}
         </button>
       </div>
-      {erro ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-body text-danger">
-          {erro}
+      {erroPeriodo || erro || consultaClientes.error ? (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-4 text-body text-danger"
+        >
+          {erroPeriodo ?? erro ?? consultaClientes.error?.message}
         </p>
       ) : null}
       {carregando ? <Skeleton className="h-4 w-40" /> : null}
@@ -241,12 +268,21 @@ export function RelatorioClientePage() {
           </section>
         </article>
       ) : null}
-      {flagLigada("VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED") && relatorio && relatorio.clienteId === clienteId && user?.id && (
-        <aside className="rounded-lg border border-line bg-card p-6" aria-label="Dados financeiros internos">
-          <RelatorioClienteDespesas userId={user.id} clienteId={relatorio.clienteId}
-            periodoInicial={{ inicio: relatorio.inicio, fim: relatorio.fim }} />
-        </aside>
-      )}
+      {flagLigada("VITE_SSO_RELATORIO_DESPESAS_CLIENTE_ENABLED") &&
+        relatorio &&
+        relatorio.clienteId === clienteId &&
+        user?.id && (
+          <aside
+            className="rounded-lg border border-line bg-card p-6"
+            aria-label="Dados financeiros internos"
+          >
+            <RelatorioClienteDespesas
+              userId={user.id}
+              clienteId={relatorio.clienteId}
+              periodoInicial={{ inicio: relatorio.inicio, fim: relatorio.fim }}
+            />
+          </aside>
+        )}
     </div>
   );
 }
