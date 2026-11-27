@@ -11,7 +11,12 @@ import { supabaseListasMateriaisAdapter } from "../../infrastructure/supabase-li
 import { ExcecoesOs } from "./ExcecoesOs";
 import { WorkspaceListasMateriais } from "./Workspace";
 
-type Props = { usuario: string; cliente: string; onAbrirOs?: (osId: string) => void };
+type Props = {
+  usuario: string;
+  cliente: string;
+  onAbrirOs?: (osId: string) => void;
+  onRascunhoAlterado?: (temRascunho: boolean) => void;
+};
 type Responsavel = "cliente" | "sinergica" | "todos";
 type EstadoLista =
   | "todos"
@@ -112,6 +117,7 @@ function Conteudo({
   usuario,
   cliente,
   onAbrirOs,
+  onRascunhoAlterado,
   permissaoMonitorada = false,
 }: Props & { permissaoMonitorada?: boolean }) {
   const [osDigitada, setOsDigitada] = useState("");
@@ -384,6 +390,7 @@ function Conteudo({
                       usuario={usuario}
                       cliente={cliente}
                       ordemServico={lista.ordem_servico_id}
+                      onRascunhoAlterado={onRascunhoAlterado}
                     />
                   )}
                   {lista.responsavel === "sinergica" &&

@@ -1,6 +1,6 @@
 import { AvisoCarregando } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
@@ -19,14 +19,19 @@ import { ExcecoesOs } from "./ExcecoesOs";
 import { PublicarPortal } from "./PublicarPortal";
 import { VisibilidadePortal } from "./VisibilidadePortal";
 
-type Props = { usuario: string; cliente: string; ordemServico: string };
+type Props = {
+  usuario: string;
+  cliente: string;
+  ordemServico: string;
+  onRascunhoAlterado?: (temRascunho: boolean) => void;
+};
 /** Integração condicionada a rollout e validação da migration, sem efeito sobre OS/Auvo. */
 export function WorkspaceListasMateriais(props: Props) {
   return (
     <Conteudo key={JSON.stringify([props.usuario, props.cliente, props.ordemServico])} {...props} />
   );
 }
-function Conteudo({ usuario, cliente, ordemServico }: Props) {
+function Conteudo({ usuario, cliente, ordemServico, onRascunhoAlterado }: Props) {
   const chave = `sso-lista-materiais:${usuario}:${cliente}:${ordemServico}`;
   const [recuperacao] = useState(() => {
     try {
@@ -40,6 +45,11 @@ function Conteudo({ usuario, cliente, ordemServico }: Props) {
   });
   const [pendente, setPendente] = useState(recuperacao.comando);
   const [texto, setTexto] = useState("");
+  const temRascunho = texto.length > 0;
+  useEffect(() => {
+    onRascunhoAlterado?.(temRascunho);
+    return () => onRascunhoAlterado?.(false);
+  }, [onRascunhoAlterado, temRascunho]);
   const [responsavel, setResponsavel] = useState<"cliente" | "sinergica">("cliente");
   const [erro, setErro] = useState("");
   const [ocupado, setOcupado] = useState(false);
