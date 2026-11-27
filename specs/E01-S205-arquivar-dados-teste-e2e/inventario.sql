@@ -13,7 +13,8 @@ from pcm.e2e_allowlist a left join pcm.clientes c on a.tabela = 'clientes' and c
 
 -- 4) Dependências: para cada FK que aponta para uma tabela da Fase 1, quantas linhas de
 --    OUTRAS tabelas (chamados, OS, inspeções, comercial...) referenciam as linhas selecionadas.
---    Essas linhas NÃO são tocadas (decisão do dono); só ficam sem o pai visível nos seletores.
+--    chamados e ordens_servico da lista são arquivados junto (decisão do dono); as demais tabelas
+--    (inspeções, comercial, financeiro...) NÃO são tocadas e ficam sem o pai visível nos seletores.
 with sel as (select tabela, id from pcm.e2e_selecionar_arquivaveis()),
 fks as (
   select c.conrelid::regclass::text as tabela_filha, a.attname as coluna,

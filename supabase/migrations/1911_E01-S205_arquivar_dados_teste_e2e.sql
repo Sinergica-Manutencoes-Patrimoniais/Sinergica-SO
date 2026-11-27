@@ -12,19 +12,23 @@
 --   select * from pcm.arquivar_dados_teste_e2e();        -- dry-run (padrão): lista, não escreve
 --   select * from pcm.arquivar_dados_teste_e2e(true);    -- executa (service_role / SQL editor)
 --
--- CRITÉRIO (Fase 1: clientes, áreas, locais, sistemas, equipamentos, ferramentas)
+-- CRITÉRIO (clientes, áreas, locais, sistemas, equipamentos, ferramentas, chamados, OS)
 --   Cliente  = nome começa com '[TESTE E2E] ', auvo_id IS NULL, fora da allowlist.
---   Área/Sistema = do cliente acima. Local = de uma Área acima.
+--   Área/Sistema/Chamado = do cliente acima. Local = de uma Área acima.
+--   OS = do cliente acima e auvo_task_id IS NULL (nunca arquiva OS que já existe no Auvo).
+--   Chamado cujo vínculo (chamado_id / ordem_servico_id) tem OS com auvo_task_id NÃO entra.
 --   Equipamento = auvo_id IS NULL, fora da allowlist e (do cliente acima, ou de um Local acima,
 --     ou nome com o prefixo e cliente fora da allowlist).
 --   Ferramenta = nome com o prefixo, auvo_id IS NULL, fora da allowlist.
 --   Só linhas vivas (deleted_at IS NULL). Filhos de cliente da allowlist nunca entram.
---   NÃO toca: chamados, OS, inspeções, comercial, financeiro, Atendimento (decisão do dono).
+--   NÃO toca: inspeções, comercial, financeiro, Atendimento.
 --
--- OPERAÇÃO: o mecanismo que já existe (deleted_at = now(), ativo = false), sem renomear. Os
---   seletores já filtram deleted_at IS NULL. NÃO toca auvo_sync_status e liga o GUC
---   app.auvo_sync_write na transação: sem isso fn_auvo_enqueue() enfileiraria um 'delete' por
---   linha para o Auvo REAL.
+-- OPERAÇÃO: o mecanismo que já existe em cada tabela, sem renomear: deleted_at = carimbo e, onde a
+--   tabela tem a coluna, ativo = false (chamados e OS só têm deleted_at). Os seletores já filtram
+--   deleted_at IS NULL. NÃO toca auvo_sync_status/status e liga o GUC app.auvo_sync_write na
+--   transação: sem isso fn_auvo_enqueue() enfileiraria um 'delete' por linha para o Auvo REAL.
+--   Linha a linha, em sub-transação: se um trigger-guarda recusar (ex.: OS ligada a chamado
+--   cancelado), a linha é IGNORADA (resultado 'ignorado: <motivo>'), sem abortar o lote.
 --
 -- IDEMPOTENTE: só age em deleted_at IS NULL e o log tem unique parcial (tabela, row_id) das linhas
 --   ainda arquivadas; a 2ª execução toca 0 linhas.
@@ -41,7 +45,7 @@
 -- ─────────────────────────── allowlist (massa ativa do caderno) ────────────────────────────────
 create table if not exists pcm.e2e_allowlist (
   tabela     text        not null check (tabela in
-    ('clientes','areas','locais','sistemas','equipamentos','ferramentas')),
+    ('clientes','areas','locais','sistemas','equipamentos','ferramentas','chamados','ordens_servico')),
   row_id     uuid        not null,
   motivo     text        not null,
   created_at timestamptz not null default now(),
@@ -68,20 +72,11 @@ alter table pcm.e2e_allowlist force row level security;
 alter table pcm.e2e_arquivamento enable row level security;
 alter table pcm.e2e_arquivamento force row level security;
 
+-- Infraestrutura pura: só service_role (SQL editor/CLI). authenticated não lê nem escreve.
 revoke all on pcm.e2e_allowlist from public, anon, authenticated;
 revoke all on pcm.e2e_arquivamento from public, anon, authenticated;
-grant select on pcm.e2e_allowlist to authenticated;
-grant select on pcm.e2e_arquivamento to authenticated;
 grant select, insert, update, delete on pcm.e2e_allowlist to service_role;
 grant select, insert, update, delete on pcm.e2e_arquivamento to service_role;
-
--- Leitura só superadmin; nenhuma policy de escrita para authenticated (RLS nega).
-create policy "e2e_allowlist_select" on pcm.e2e_allowlist
-  for select to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
-create policy "e2e_arquivamento_select" on pcm.e2e_arquivamento
-  for select to authenticated
-  using (auth.jwt() ->> 'user_role' = 'superadmin');
 create policy "e2e_allowlist_service" on pcm.e2e_allowlist
   for all to service_role using (true) with check (true);
 create policy "e2e_arquivamento_service" on pcm.e2e_arquivamento
@@ -153,23 +148,41 @@ as $$
   from pcm.ferramentas f
   where f.deleted_at is null and f.auvo_id is null
     and starts_with(f.nome, '[TESTE E2E] ')
-    and not exists (select 1 from pcm.e2e_allowlist w where w.tabela = 'ferramentas' and w.row_id = f.id);
+    and not exists (select 1 from pcm.e2e_allowlist w where w.tabela = 'ferramentas' and w.row_id = f.id)
+  union all
+  select 'ordens_servico', o.id, o.titulo, 'OS de cliente [TESTE E2E] sem tarefa no Auvo'
+  from pcm.ordens_servico o
+  where o.deleted_at is null and o.client_id in (select id from cli) and o.auvo_task_id is null
+    and not exists (select 1 from pcm.e2e_allowlist w where w.tabela = 'ordens_servico' and w.row_id = o.id)
+  union all
+  select 'chamados', h.id, h.titulo, 'chamado de cliente [TESTE E2E] sem OS no Auvo'
+  from pcm.chamados h
+  where h.deleted_at is null and h.cliente_id in (select id from cli)
+    and not exists (select 1 from pcm.e2e_allowlist w where w.tabela = 'chamados' and w.row_id = h.id)
+    and not exists (
+      select 1 from pcm.ordens_servico o
+      where o.auvo_task_id is not null and (o.chamado_id = h.id or o.id = h.ordem_servico_id)
+    );
 $$;
 
 -- ─────────────────────────── arquivar (dry-run por padrão) ─────────────────────────────────────
 create or replace function pcm.arquivar_dados_teste_e2e(p_executar boolean default false)
-returns table (tabela text, id uuid, nome text, lote uuid)
+returns table (tabela text, id uuid, nome text, lote uuid, resultado text)
 language plpgsql
 security definer
 set search_path = pcm, public
 as $$
 declare
-  v_lote  uuid := gen_random_uuid();
+  v_lote    uuid := gen_random_uuid();
   v_carimbo timestamptz := clock_timestamp();
-  v_tab   text;
+  r         record;
+  v_n       integer;
+  v_ativo   boolean;
 begin
   if not p_executar then
-    return query select s.tabela, s.id, s.nome, null::uuid from pcm.e2e_selecionar_arquivaveis() s;
+    return query
+      select s.tabela, s.id, s.nome, null::uuid, 'seria arquivado'::text
+      from pcm.e2e_selecionar_arquivaveis() s order by s.tabela, s.nome;
     return;
   end if;
 
@@ -181,62 +194,75 @@ begin
   -- Anti-loop do Auvo: sem isto, fn_auvo_enqueue() enfileiraria 'delete' para o Auvo real.
   perform set_config('app.auvo_sync_write', 'true', true);
 
-  foreach v_tab in array array['clientes','areas','locais','sistemas','equipamentos','ferramentas']
+  for r in select s.tabela as t, s.id as rid, s.nome as rnome from _e2e_sel s order by s.tabela, s.nome
   loop
-    execute format($f$
-      insert into pcm.e2e_arquivamento
-        (lote, tabela, row_id, nome, deleted_at_anterior, ativo_anterior, arquivado_em)
-      select %L, %L, t.id, t.nome, t.deleted_at, t.ativo, %L
-      from pcm.%I t
-      where t.id in (select s.id from _e2e_sel s where s.tabela = %L) and t.deleted_at is null
-      on conflict do nothing
-    $f$, v_lote, v_tab, v_carimbo, v_tab, v_tab);
-
-    execute format($f$
-      update pcm.%I t set deleted_at = %L, ativo = false
-      where t.id in (select s.id from _e2e_sel s where s.tabela = %L) and t.deleted_at is null
-    $f$, v_tab, v_carimbo, v_tab);
+    tabela := r.t; id := r.rid; nome := r.rnome; lote := v_lote;
+    v_ativo := r.t in ('clientes','areas','locais','sistemas','equipamentos','ferramentas');
+    begin
+      execute format($f$
+        insert into pcm.e2e_arquivamento
+          (lote, tabela, row_id, nome, deleted_at_anterior, ativo_anterior, arquivado_em)
+        select %L, %L, t.id, %L, t.deleted_at, %s, %L
+        from pcm.%I t where t.id = %L and t.deleted_at is null
+        on conflict do nothing
+      $f$, v_lote, r.t, r.rnome, case when v_ativo then 't.ativo' else 'null::boolean' end,
+           v_carimbo, r.t, r.rid);
+      get diagnostics v_n = row_count;
+      if v_n = 0 then
+        resultado := 'ignorado: ja arquivado';
+      else
+        execute format('update pcm.%I set deleted_at = %L%s where id = %L and deleted_at is null',
+                       r.t, v_carimbo, case when v_ativo then ', ativo = false' else '' end, r.rid);
+        resultado := 'arquivado';
+      end if;
+    exception when others then
+      resultado := 'ignorado: ' || sqlerrm;   -- sub-transação desfaz o log desta linha
+    end;
+    return next;
   end loop;
 
   perform set_config('app.auvo_sync_write', 'false', true);
-
-  return query select s.tabela, s.id, s.nome, v_lote from _e2e_sel s order by s.tabela, s.nome;
 end;
 $$;
 
 -- ─────────────────────────── restaurar (reversão) ──────────────────────────────────────────────
 create or replace function pcm.restaurar_dados_teste_e2e(p_lote uuid default null)
-returns table (tabela text, restauradas integer)
+returns table (tabela text, id uuid, resultado text)
 language plpgsql
 security definer
 set search_path = pcm, public
 as $$
 declare
-  v_tab text;
-  v_n   integer;
+  g       record;
+  v_n     integer;
+  v_ativo boolean;
 begin
   perform set_config('app.auvo_sync_write', 'true', true);
 
-  foreach v_tab in array array['clientes','areas','locais','sistemas','equipamentos','ferramentas']
+  for g in
+    select l.id as log_id, l.tabela as t, l.row_id as rid, l.deleted_at_anterior as da,
+           l.ativo_anterior as aa, l.arquivado_em as em
+    from pcm.e2e_arquivamento l
+    where l.restaurado_em is null and (p_lote is null or l.lote = p_lote)
+    order by l.tabela, l.row_id
   loop
-    -- só restaura se o deleted_at ainda é o carimbo do arquivamento
-    execute format($f$
-      with alvo as (
-        select g.id as log_id, g.row_id, g.deleted_at_anterior, g.ativo_anterior
-        from pcm.e2e_arquivamento g
-        join pcm.%I t on t.id = g.row_id and t.deleted_at = g.arquivado_em
-        where g.tabela = %L and g.restaurado_em is null and (%L::uuid is null or g.lote = %L::uuid)
-      ),
-      upd as (
-        update pcm.%I t set deleted_at = a.deleted_at_anterior, ativo = a.ativo_anterior
-        from alvo a where t.id = a.row_id
-        returning a.log_id
-      )
-      update pcm.e2e_arquivamento g set restaurado_em = clock_timestamp()
-      from upd where g.id = upd.log_id
-    $f$, v_tab, v_tab, p_lote, p_lote, v_tab);
-    get diagnostics v_n = row_count;
-    tabela := v_tab; restauradas := v_n;
+    tabela := g.t; id := g.rid;
+    v_ativo := g.t in ('clientes','areas','locais','sistemas','equipamentos','ferramentas');
+    begin
+      -- só restaura se o deleted_at ainda é o carimbo do arquivamento
+      execute format('update pcm.%I set deleted_at = %L%s where id = %L and deleted_at = %L',
+                     g.t, g.da, case when v_ativo then format(', ativo = %L', g.aa) else '' end,
+                     g.rid, g.em);
+      get diagnostics v_n = row_count;
+      if v_n = 0 then
+        resultado := 'ignorado: estado mudou depois do arquivamento';
+      else
+        update pcm.e2e_arquivamento set restaurado_em = clock_timestamp() where pcm.e2e_arquivamento.id = g.log_id;
+        resultado := 'restaurado';
+      end if;
+    exception when others then
+      resultado := 'ignorado: ' || sqlerrm;
+    end;
     return next;
   end loop;
 

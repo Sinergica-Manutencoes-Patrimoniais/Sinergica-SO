@@ -4,7 +4,7 @@
 -- Rodar com `supabase test db`.
 
 begin;
-select plan(20);
+select plan(23);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-0000000e2e01', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'e2e-arq-s205@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
@@ -41,6 +41,27 @@ insert into pcm.ferramentas (id, nome) values
   ('e2e00000-0000-0000-0000-0000000004a1', '[TESTE E2E] Ferramenta s205'),
   ('e2e00000-0000-0000-0000-0000000004c1', 'Furadeira real s205');
 
+-- chamados/OS: ch1+os1 de A (alvo); ch2+os2 de A com tarefa no Auvo (nao entram); chB do cliente B; osC do Escritorio
+insert into pcm.chamados (id, numero, cliente_id, titulo, created_by) values
+  ('e2e00000-0000-0000-0000-0000000005a1', 'CH-S205-1', 'e2e00000-0000-0000-0000-00000000000a', '[TESTE E2E] chamado A s205', '00000000-0000-0000-0000-0000000e2e01'),
+  ('e2e00000-0000-0000-0000-0000000005a2', 'CH-S205-2', 'e2e00000-0000-0000-0000-00000000000a', '[TESTE E2E] chamado A com auvo s205', '00000000-0000-0000-0000-0000000e2e01'),
+  ('e2e00000-0000-0000-0000-0000000005b1', 'CH-S205-3', 'e2e00000-0000-0000-0000-00000000000b', '[TESTE E2E] chamado B s205', '00000000-0000-0000-0000-0000000e2e01');
+insert into pcm.ordens_servico (id, client_id, numero, titulo, categoria, status, prioridade, gravidade, urgencia, tendencia, origem, created_by, chamado_id, auvo_task_id) values
+  ('e2e00000-0000-0000-0000-0000000006a1', 'e2e00000-0000-0000-0000-00000000000a', 'OS-S205-1', '[TESTE E2E] OS A s205', 'corretiva', 'solicitacao', 'media', 3, 3, 3, 'manual', '00000000-0000-0000-0000-0000000e2e01', 'e2e00000-0000-0000-0000-0000000005a1', null),
+  ('e2e00000-0000-0000-0000-0000000006a2', 'e2e00000-0000-0000-0000-00000000000a', 'OS-S205-2', '[TESTE E2E] OS A com auvo s205', 'corretiva', 'solicitacao', 'media', 3, 3, 3, 'manual', '00000000-0000-0000-0000-0000000e2e01', 'e2e00000-0000-0000-0000-0000000005a2', 987650009),
+  ('e2e00000-0000-0000-0000-0000000006c1', 'e2e00000-0000-0000-0000-00000000000c', 'OS-S205-3', 'OS Escritorio s205', 'corretiva', 'solicitacao', 'media', 3, 3, 3, 'manual', '00000000-0000-0000-0000-0000000e2e01', null, null);
+
+-- ferramenta que um trigger-guarda RECUSA arquivar: deve virar 'ignorado', sem abortar o lote
+insert into pcm.ferramentas (id, nome) values ('e2e00000-0000-0000-0000-0000000004f9', '[TESTE E2E] Ferramenta bloqueada s205');
+create function pcm._t_bloqueia_s205() returns trigger language plpgsql as $f$
+begin
+  if new.id = 'e2e00000-0000-0000-0000-0000000004f9' and new.deleted_at is not null then
+    raise exception 'guarda_simulada_s205';
+  end if;
+  return new;
+end $f$;
+create trigger t_bloqueia_s205 before update on pcm.ferramentas for each row execute function pcm._t_bloqueia_s205();
+
 -- allowlist por id (cliente B)
 insert into pcm.e2e_allowlist (tabela, row_id, motivo)
 values ('clientes', 'e2e00000-0000-0000-0000-00000000000b', 'teste s205');
@@ -53,9 +74,9 @@ select throws_ok($$ select * from pcm.arquivar_dados_teste_e2e(true) $$, '42501'
 select throws_ok($$ select * from pcm.restaurar_dados_teste_e2e() $$, '42501', null,
   'authenticated NAO executa a restauracao');
 select throws_ok($$ insert into pcm.e2e_allowlist (tabela, row_id, motivo) values ('clientes', gen_random_uuid(), 'x') $$,
-  null, null, 'authenticated NAO escreve na allowlist');
+  '42501', null, 'authenticated NAO escreve na allowlist');
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000e2e01","user_role":"colaborador","user_modulos":{"pcm":"escrita"}}';
-select is((select count(*)::int from pcm.e2e_arquivamento), 0, 'colaborador NAO le o log (RLS)');
+select throws_ok($$ select count(*) from pcm.e2e_arquivamento $$, '42501', null, 'colaborador NAO le o log (sem grant)');
 reset role;
 
 -- as inserts do cenario enfileiraram 'create' no outbox; zera para provar o arquivamento
@@ -63,14 +84,16 @@ delete from pcm.auvo_sync_outbox where row_id::text like 'e2e00000-%';
 
 -- Dry-run -------------------------------------------------------------------------------------
 set local role service_role;
-select is((select count(*)::int from pcm.arquivar_dados_teste_e2e()), 8,
-  'dry-run lista 8 linhas (cliente A, 2 areas, local, sistema, 2 equipamentos, ferramenta)');
+select is((select count(*)::int from pcm.arquivar_dados_teste_e2e()), 11,
+  'dry-run lista 11 linhas (cliente A, 2 areas, local, sistema, 2 equipamentos, ferramenta, chamado e OS sem Auvo, ferramenta bloqueada)');
 select is((select count(*)::int from pcm.clientes where starts_with(nome, '[TESTE E2E] ') and nome like '%s205' and deleted_at is not null), 1,
   'dry-run NAO escreve (so o cliente E ja estava apagado)');
 
 -- Execução --------------------------------------------------------------------------------------
 create temporary table _r as select * from pcm.arquivar_dados_teste_e2e(true);
-select is((select count(*)::int from _r), 8, 'execucao arquiva as mesmas 8 linhas');
+select is((select count(*)::int from _r where resultado = 'arquivado'), 10, 'execucao arquiva 10 linhas');
+select is((select resultado from _r where id = 'e2e00000-0000-0000-0000-0000000004f9'), 'ignorado: guarda_simulada_s205',
+  'linha recusada por trigger-guarda vira ignorada com o motivo, sem abortar o lote');
 
 select is((select count(*)::int from pcm.clientes where id = 'e2e00000-0000-0000-0000-00000000000a' and deleted_at is not null and ativo = false), 1,
   'cliente A arquivado (deleted_at + ativo=false)');
@@ -100,15 +123,22 @@ select is((select count(*)::int from pcm.clientes where id = 'e2e00000-0000-0000
 select is((select count(*)::int from pcm.auvo_sync_outbox where row_id in (select id from _r)), 0,
   'NADA enfileirado no outbox do Auvo (GUC anti-loop)');
 
+select is((select count(*)::int from pcm.chamados where id = 'e2e00000-0000-0000-0000-0000000005a1' and deleted_at is not null)
+        + (select count(*)::int from pcm.ordens_servico where id = 'e2e00000-0000-0000-0000-0000000006a1' and deleted_at is not null), 2,
+  'chamado e OS do cliente de teste arquivados (so deleted_at)');
+select is((select count(*)::int from pcm.chamados where id in ('e2e00000-0000-0000-0000-0000000005a2','e2e00000-0000-0000-0000-0000000005b1') and deleted_at is null)
+        + (select count(*)::int from pcm.ordens_servico where id in ('e2e00000-0000-0000-0000-0000000006a2','e2e00000-0000-0000-0000-0000000006c1') and deleted_at is null), 4,
+  'chamado/OS com tarefa no Auvo, do cliente da allowlist e do Escritorio INTACTOS');
+
 -- Idempotência ----------------------------------------------------------------------------------
-select is((select count(*)::int from pcm.arquivar_dados_teste_e2e(true)), 0, '2a execucao: 0 linhas');
-select is((select count(*)::int from pcm.e2e_arquivamento), 8, 'log nao duplica na 2a execucao');
+select is((select count(*)::int from pcm.arquivar_dados_teste_e2e(true) where resultado = 'arquivado'), 0, '2a execucao: 0 arquivadas');
+select is((select count(*)::int from pcm.e2e_arquivamento), 10, 'log nao duplica na 2a execucao');
 
 -- Reversão --------------------------------------------------------------------------------------
 -- alguém apaga de novo OUTRO carimbo: nao pode ser ressuscitado pela restauracao
 update pcm.ferramentas set deleted_at = now() + interval '1 hour' where id = 'e2e00000-0000-0000-0000-0000000004a1';
-select is((select sum(restauradas)::int from pcm.restaurar_dados_teste_e2e()), 7,
-  'restauracao devolve 7 (a ferramenta reapagada depois NAO ressuscita)');
+select is((select count(*)::int from pcm.restaurar_dados_teste_e2e() where resultado = 'restaurado'), 9,
+  'restauracao devolve 9 (a ferramenta reapagada depois NAO ressuscita)');
 select is((select count(*)::int from pcm.clientes where id = 'e2e00000-0000-0000-0000-00000000000a' and deleted_at is null and ativo), 1,
   'cliente A restaurado (deleted_at null, ativo true)');
 select is((select count(*)::int from pcm.clientes where id = 'e2e00000-0000-0000-0000-00000000000e' and deleted_at is not null), 1,
