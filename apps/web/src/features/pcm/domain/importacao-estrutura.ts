@@ -54,7 +54,9 @@ export interface PlanoImportacao {
   resumo: Record<ResultadoPlano["resultado"], number>;
 }
 
-export function montarPlanilhaEstrutura(estado: EstadoEstrutura): Record<string, unknown[][]> {
+export function montarPlanilhaEstrutura(
+  estado: EstadoEstrutura,
+): Record<string, (string | number)[][]> {
   const locaisPorId = new Map(estado.locais.map((local) => [local.id, local]));
   const areaNome = new Map(estado.areas.map((area) => [area.id, area.nome]));
   const caminho = (id: string | null) => {
@@ -468,9 +470,15 @@ function caminhoLocalComIndice(local: Local, porId: ReadonlyMap<string, Local>) 
   const visitados = new Set([local.id]);
   let paiId = local.parentId;
   while (paiId) {
-    if (visitados.has(paiId)) throw new Error("Hierarquia de Locais contém ciclo; corrija o cadastro antes da conferência.");
+    if (visitados.has(paiId))
+      throw new Error(
+        "Hierarquia de Locais contém ciclo; corrija o cadastro antes da conferência.",
+      );
     const pai = porId.get(paiId);
-    if (!pai || pai.areaId !== local.areaId) throw new Error("Hierarquia de Locais incompleta ou com Área divergente; confira o cadastro antes da importação.");
+    if (!pai || pai.areaId !== local.areaId)
+      throw new Error(
+        "Hierarquia de Locais incompleta ou com Área divergente; confira o cadastro antes da importação.",
+      );
     visitados.add(paiId);
     nomes.unshift(pai.nome);
     paiId = pai.parentId;

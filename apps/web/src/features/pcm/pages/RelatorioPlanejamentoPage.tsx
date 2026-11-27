@@ -1,5 +1,6 @@
 import { Skeleton } from "@sinergica/ui";
 import { useCallback, useEffect, useState } from "react";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import { listarOpcoesAgenda } from "../application/agenda-tecnico";
 import type { OpcaoClienteAgenda, OpcaoFuncionario } from "../application/agenda-tecnico-gateway";
@@ -12,10 +13,8 @@ import {
 import { supabaseAgendaTecnicoAdapter } from "../infrastructure/supabase-agenda-tecnico-adapter";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 
-const hoje = new Date().toISOString().slice(0, 10);
-
 export function RelatorioPlanejamentoPage() {
-  const [data, setData] = useState(hoje);
+  const [data, setData] = useState(dataIsoLocal);
   const [tecnicoId, setTecnicoId] = useState("");
   const [clienteId, setClienteId] = useState("");
   const [modo, setModo] = useState<ModoRelatorioPlanejamento>("planejamento");

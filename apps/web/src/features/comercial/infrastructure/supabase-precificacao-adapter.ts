@@ -266,9 +266,9 @@ export const supabasePrecificacaoAdapter: PrecificacaoGateway = {
         .schema("financeiro")
         .rpc("fn_custo_hora_medio_por_cargo", { p_cargo: nivel.cargoPcm });
       if (error) throw error;
-      // A RPC (via financeiro._fn_custo_hora_funcionario, E04-S06) já devolve centavos/hora —
-      // confirmado em produção: funcionário de R$4.400/mês a 220h devolve 2000 (R$20,00/h), não
-      // 20. O nome "custo_hora_reais" na E04-S06 é só um rótulo, não indica a unidade.
+      // A RPC (via financeiro._fn_custo_hora_centavos_funcionario, E04-S06) devolve centavos/hora
+      // — funcionário de R$4.400/mês a 220h devolve 2000 (R$20,00/h), não 20. Até a migration 1904
+      // o nome dizia "reais" e mentia sobre a unidade (DEF-23); aqui a leitura sempre foi a certa.
       custoHoraFinanceiro = data === null ? null : Number(data);
     }
 

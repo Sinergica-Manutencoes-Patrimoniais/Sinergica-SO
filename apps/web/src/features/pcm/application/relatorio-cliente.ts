@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { montarRelatorioCliente } from "../domain/relatorio-cliente";
 import type { AtividadeRelatorioCliente } from "../domain/relatorio-cliente";
 import type { AgendaTecnicoGateway } from "./agenda-tecnico-gateway";
@@ -11,6 +12,16 @@ function adicionarDias(iso: string, dias: number): string {
   return data.toISOString().slice(0, 10);
 }
 
+const dataIso = z.iso.date();
+
+export function erroPeriodoRelatorioCliente({ inicio, fim }: { inicio: string; fim: string }) {
+  if (!dataIso.safeParse(inicio).success || !dataIso.safeParse(fim).success) {
+    return "Informe as datas de início e fim do período.";
+  }
+  if (inicio > fim) return "O início do período deve ser anterior ou igual ao fim.";
+  return null;
+}
+
 /** E01-S135 T2: a leitura do relatório já restringe as OS ao cliente no servidor. O domínio só
  * transforma o conjunto permitido em passado e cronograma, sem acesso ao Supabase. */
 export async function obterRelatorioCliente(
@@ -21,6 +32,9 @@ export async function obterRelatorioCliente(
   cliente: { id: string; nome: string },
   periodo: { inicio: string; fim: string },
 ) {
+  const erroPeriodo = erroPeriodoRelatorioCliente(periodo);
+  if (erroPeriodo) throw new Error(erroPeriodo);
+
   const inicioFuturo = adicionarDias(periodo.fim, 1);
   const fimFuturo = adicionarDias(periodo.fim, 365);
   const [ordens, agenda, preventivas, inspecoes] = await Promise.all([
@@ -32,6 +46,7 @@ export async function obterRelatorioCliente(
   const atividades: AtividadeRelatorioCliente[] = inspecoes
     .filter(
       (inspecao) =>
+        inspecao.status === "concluida" &&
         inspecao.clientId === cliente.id &&
         inspecao.dataInspecao >= periodo.inicio &&
         inspecao.dataInspecao <= periodo.fim,

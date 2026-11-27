@@ -14,11 +14,9 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { baixarPlanilha } from "../../../lib/sheetjs";
+import { flagLigada } from "../../../config/flags-sso";
 import { supabase } from "../../../lib/supabase-client";
 import { ativosClienteQueryKeys } from "../application/ativos-cliente-queries";
-import { AnexosLocalizacaoAtualizada } from "../interfaces/levantamentos/AnexosLocalizacaoAtualizada";
-import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
 import type { ClienteHeader } from "../application/cliente-360-gateway";
 import {
   criarArea,
@@ -42,31 +40,33 @@ import type {
   LocalTipo,
 } from "../domain/hierarquia";
 import { montarArvore } from "../domain/hierarquia";
-import { montarPlanilhaEstrutura, nomeArquivoExportacao } from "../domain/importacao-estrutura";
+import { nomeArquivoExportacao } from "../domain/importacao-estrutura";
 import { sugerirSiglaUnica } from "../domain/siglas";
+import { gerarExportacaoEstruturaXlsx } from "../infrastructure/exportar-estrutura-xlsx";
+import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseCatalogosSimplesAdapter } from "../infrastructure/supabase-catalogos-simples-adapter";
 import { supabaseEquipamentosAdapter } from "../infrastructure/supabase-equipamentos-adapter";
 import { supabaseHierarquiaAdapter } from "../infrastructure/supabase-hierarquia-adapter";
 import { supabaseIdentificadorAtivoAdapter } from "../infrastructure/supabase-identificador-ativo-adapter";
 import { supabaseSistemasAdapter } from "../infrastructure/supabase-sistemas-adapter";
-import { supabaseCapacidadesSsoAdapter } from "../infrastructure/supabase-capacidades-sso-adapter";
-import { GruposQuantitativos } from "../interfaces/estrutura-tecnica/GruposQuantitativos";
-import { ComposicaoLocal } from "../interfaces/estrutura-tecnica/ComposicaoLocal";
-import { EntradaLevantamentos } from "../interfaces/levantamentos/Conectado";
-import { CentralMateriais } from "../interfaces/listas-materiais/Central";
+import { CapacidadeAgendaWorkspace } from "../interfaces/capacidade-agenda/Workspace";
 import { ConsultaCodigoPublico } from "../interfaces/codigos-publicos/Consulta";
 import { PoliticaEquipment } from "../interfaces/codigos-publicos/PoliticaEquipment";
 import { ReservasEquipment } from "../interfaces/codigos-publicos/ReservasEquipment";
-import { CapacidadeAgendaWorkspace } from "../interfaces/capacidade-agenda/Workspace";
-import { ReferenciasRetorno } from "../interfaces/pendencias-tecnicas/ReferenciasRetorno";
+import { ComposicaoLocal } from "../interfaces/estrutura-tecnica/ComposicaoLocal";
+import { GruposQuantitativos } from "../interfaces/estrutura-tecnica/GruposQuantitativos";
+import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
 import { ImportacaoPlanoWorkspace } from "../interfaces/importacao-plano/Workspace";
-import { ReconciliacaoWorkspace } from "../interfaces/reconciliacao/Workspace";
+import { AnexosLocalizacaoAtualizada } from "../interfaces/levantamentos/AnexosLocalizacaoAtualizada";
+import { EntradaLevantamentos } from "../interfaces/levantamentos/Conectado";
+import { HistoricoCadastroLevantamento } from "../interfaces/levantamentos/HistoricoCadastroLevantamento";
+import { CentralMateriais } from "../interfaces/listas-materiais/Central";
 import { DiagnosticoCliente } from "../interfaces/migracao/DiagnosticoCliente";
 import { DiagnosticoCodigosLegados } from "../interfaces/migracao/DiagnosticoCodigosLegados";
-import { SistemasDistribuidos } from "../interfaces/estrutura-tecnica/SistemasDistribuidos";
-import { ClassificarRetorno } from "../interfaces/retorno-campo/ClassificarRetorno";
 import { EstadoCampo } from "../interfaces/origem-campo/EstadoCampo";
-import { flagLigada } from "../../../config/flags-sso";
+import { ReferenciasRetorno } from "../interfaces/pendencias-tecnicas/ReferenciasRetorno";
+import { ReconciliacaoWorkspace } from "../interfaces/reconciliacao/Workspace";
+import { ClassificarRetorno } from "../interfaces/retorno-campo/ClassificarRetorno";
 
 type ModalArea = { modo: "novo" } | { modo: "editar"; area: Area } | null;
 type ModalLocal =
@@ -79,7 +79,10 @@ function achatar(nodes: LocalArvoreNode[]): LocalArvoreNode[] {
 }
 
 // Sublocais são nós da mesma árvore; exibir o caminho evita nomes iguais ambíguos.
-function locaisParaGrupo(nodes: LocalArvoreNode[], caminho: string[]): { id: string; nome: string }[] {
+function locaisParaGrupo(
+  nodes: LocalArvoreNode[],
+  caminho: string[],
+): { id: string; nome: string }[] {
   return nodes.flatMap((node) => {
     if (!node.ativo) return [];
     const proximo = [...caminho, node.nome];
@@ -135,14 +138,30 @@ export function EstruturaClientePage({
   const capacidadeHabilitada = flagLigada("VITE_SSO_CAPACIDADE_CADASTRO_LEGADO_ENABLED");
   async function conferirCapacidade() {
     const antes = await supabase.auth.getUser();
-    if (antes.error || antes.data.user?.id !== userId || await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId) !== true) throw new Error("Permissão de cadastro indisponível.");
+    if (
+      antes.error ||
+      antes.data.user?.id !== userId ||
+      (await supabaseCapacidadesSsoAdapter.autorizarAcao("cadastro.gerir", clienteId)) !== true
+    )
+      throw new Error("Permissão de cadastro indisponível.");
     const depois = await supabase.auth.getUser();
     if (depois.error || depois.data.user?.id !== userId) throw new Error("Sessão alterada.");
   }
-  const capacidade = useQuery({ queryKey: ["cadastro-legado-capacidade", userId, clienteId], gcTime: 0, retry: false,
-    enabled: capacidadeHabilitada && escritaLegada, refetchOnWindowFocus: true,
-    queryFn: async () => { await conferirCapacidade(); return true; } });
-  const temEscrita = escritaLegada && (!capacidadeHabilitada || (!capacidade.isFetching && !capacidade.isError && capacidade.data === true));
+  const capacidade = useQuery({
+    queryKey: ["cadastro-legado-capacidade", userId, clienteId],
+    gcTime: 0,
+    retry: false,
+    enabled: capacidadeHabilitada && escritaLegada,
+    refetchOnWindowFocus: true,
+    queryFn: async () => {
+      await conferirCapacidade();
+      return true;
+    },
+  });
+  const temEscrita =
+    escritaLegada &&
+    (!capacidadeHabilitada ||
+      (!capacidade.isFetching && !capacidade.isError && capacidade.data === true));
   async function exigirGestao() {
     if (!temEscrita) throw new Error("Permissão de cadastro indisponível.");
     if (capacidadeHabilitada) await conferirCapacidade();
@@ -202,33 +221,36 @@ export function EstruturaClientePage({
   }
 
   async function exportarExcel() {
-    await baixarPlanilha(
-      montarPlanilhaEstrutura({
-        cliente: { id: clienteId, nome: cliente.nome, sigla: cliente.sigla },
-        areas,
-        locais: Object.values(arvores).flatMap((arvore) => achatar(arvore)),
-        sistemas,
-        componentes,
-        membros,
-        categorias: categorias.map((categoria) => ({
-          id: categoria.id,
-          nome: categoria.descricao,
-          sigla: categoria.sigla,
-        })),
-        tiposLocal: tiposDeLocal,
-      }),
-      nomeArquivoExportacao(
-        { id: clienteId, nome: cliente.nome, sigla: cliente.sigla },
-        new Date(),
-      ),
-    );
+    const clienteExportacao = { id: clienteId, nome: cliente.nome, sigla: cliente.sigla };
+    const nomeArquivo = nomeArquivoExportacao(clienteExportacao, new Date());
+    const planilha = await gerarExportacaoEstruturaXlsx({
+      cliente: clienteExportacao,
+      areas,
+      locais: Object.values(arvores).flatMap((arvore) => achatar(arvore)),
+      sistemas,
+      componentes,
+      membros,
+      categorias: categorias.map((categoria) => ({
+        id: categoria.id,
+        nome: categoria.descricao,
+        sigla: categoria.sigla,
+      })),
+      tiposLocal: tiposDeLocal,
+    });
+    const url = URL.createObjectURL(planilha);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = nomeArquivo;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   async function executarImportacao(
     plano: Parameters<typeof executarPlanoEstrutura>[0],
     onProgresso: (atual: number, total: number) => void,
   ) {
-    if (capacidadeHabilitada) throw new Error("Use a recepção de levantamentos para conferência antes da incorporação.");
+    if (capacidadeHabilitada)
+      throw new Error("Use a recepção de levantamentos para conferência antes da incorporação.");
     await exigirGestao();
     const relatorio = await executarPlanoEstrutura(
       plano,
@@ -494,24 +516,70 @@ export function EstruturaClientePage({
         onAdicionar={adicionarTipoDeLocal}
         onRemover={setTipoParaRemover}
       />
-      {flagLigada("VITE_SSO_CONSULTA_CODIGOS_ENABLED") && <ConsultaCodigoPublico key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_CONSULTA_CODIGOS_ENABLED") && (
+        <ConsultaCodigoPublico
+          key={`${userId}:${clienteId}`}
+          userId={userId}
+          clienteId={clienteId}
+        />
+      )}
       <PoliticaEquipment userId={userId} />
       <ReservasEquipment userId={userId} clienteId={clienteId} />
-      {flagLigada("VITE_SSO_CAPACIDADE_AGENDA_ENABLED") && <CapacidadeAgendaWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {flagLigada("VITE_SSO_REFERENCIAS_RETORNO_ENABLED") && <ReferenciasRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {flagLigada("VITE_SSO_IMPORTACAO_PLANO_ENABLED") && <ImportacaoPlanoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {flagLigada("VITE_SSO_RECONCILIACAO_ENABLED") && <ReconciliacaoWorkspace key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
-      {flagLigada("VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED") && <DiagnosticoCliente key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {flagLigada("VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED") && <DiagnosticoCodigosLegados key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
+      {flagLigada("VITE_SSO_CAPACIDADE_AGENDA_ENABLED") && (
+        <CapacidadeAgendaWorkspace
+          key={`${userId}:${clienteId}`}
+          userId={userId}
+          clienteId={clienteId}
+        />
+      )}
+      {flagLigada("VITE_SSO_REFERENCIAS_RETORNO_ENABLED") && (
+        <ReferenciasRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      )}
+      {flagLigada("VITE_SSO_IMPORTACAO_PLANO_ENABLED") && (
+        <ImportacaoPlanoWorkspace
+          key={`${userId}:${clienteId}`}
+          userId={userId}
+          clienteId={clienteId}
+        />
+      )}
+      {flagLigada("VITE_SSO_RECONCILIACAO_ENABLED") && (
+        <ReconciliacaoWorkspace
+          key={`${userId}:${clienteId}`}
+          userId={userId}
+          clienteId={clienteId}
+          onAbrirOs={onAbrirOs}
+        />
+      )}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_MIGRACAO_ENABLED") && (
+        <DiagnosticoCliente key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      )}
+      {flagLigada("VITE_SSO_DIAGNOSTICO_CODIGOS_LEGADOS_ENABLED") && (
+        <DiagnosticoCodigosLegados
+          key={`${userId}:${clienteId}`}
+          userId={userId}
+          clienteId={clienteId}
+        />
+      )}
       <SistemasDistribuidos key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
-      {flagLigada("VITE_SSO_CLASSIFICAR_RETORNO_ENABLED") && <ClassificarRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />}
-      {flagLigada("VITE_SSO_ESTADO_CAMPO_ENABLED") && <EstadoCampo key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} onAbrirOs={onAbrirOs} />}
+      {flagLigada("VITE_SSO_CLASSIFICAR_RETORNO_ENABLED") && (
+        <ClassificarRetorno key={`${userId}:${clienteId}`} userId={userId} clienteId={clienteId} />
+      )}
+      {flagLigada("VITE_SSO_ESTADO_CAMPO_ENABLED") && (
+        <EstadoCampo
+          key={`${userId}:${clienteId}`}
+          userId={userId}
+          clienteId={clienteId}
+          onAbrirOs={onAbrirOs}
+        />
+      )}
       <CentralMateriais usuario={userId} cliente={clienteId} onAbrirOs={onAbrirOs} />
       <GruposQuantitativos
         key={clienteId}
         userId={userId}
         clienteId={clienteId}
-        locais={areas.filter((area) => area.ativo).flatMap((area) => locaisParaGrupo(arvores[area.id] ?? [], [area.nome]))}
+        locais={areas
+          .filter((area) => area.ativo)
+          .flatMap((area) => locaisParaGrupo(arvores[area.id] ?? [], [area.nome]))}
         categorias={categorias.map((categoria) => ({
           id: categoria.id,
           nome: categoria.descricao,
@@ -611,8 +679,18 @@ export function EstruturaClientePage({
               </div>
               {expandidas.has(area.id) && (
                 <div className="px-4 py-2">
-                  <AnexosLocalizacaoAtualizada userId={userId} clienteId={clienteId} tipo="area" entidadeId={area.id}/>
-                  <HistoricoCadastroLevantamento userId={userId} clienteId={clienteId} tipo="area" entidadeId={area.id}/>
+                  <AnexosLocalizacaoAtualizada
+                    userId={userId}
+                    clienteId={clienteId}
+                    tipo="area"
+                    entidadeId={area.id}
+                  />
+                  <HistoricoCadastroLevantamento
+                    userId={userId}
+                    clienteId={clienteId}
+                    tipo="area"
+                    entidadeId={area.id}
+                  />
                   {locais.length === 0 ? (
                     <p className="py-3 text-caption text-ink-3">
                       Nenhum Local cadastrado nesta Área.
@@ -867,9 +945,24 @@ function LocalTree({
               </div>
             )}
           </div>
-          <ComposicaoLocal userId={userId} clienteId={clienteId} localId={node.id} caminho={[...caminho, node.nome]} />
-          <AnexosLocalizacaoAtualizada userId={userId} clienteId={clienteId} tipo={nivel === 0 ? "local" : "sublocal"} entidadeId={node.id}/>
-          <HistoricoCadastroLevantamento userId={userId} clienteId={clienteId} tipo={nivel === 0 ? "local" : "sublocal"} entidadeId={node.id}/>
+          <ComposicaoLocal
+            userId={userId}
+            clienteId={clienteId}
+            localId={node.id}
+            caminho={[...caminho, node.nome]}
+          />
+          <AnexosLocalizacaoAtualizada
+            userId={userId}
+            clienteId={clienteId}
+            tipo={nivel === 0 ? "local" : "sublocal"}
+            entidadeId={node.id}
+          />
+          <HistoricoCadastroLevantamento
+            userId={userId}
+            clienteId={clienteId}
+            tipo={nivel === 0 ? "local" : "sublocal"}
+            entidadeId={node.id}
+          />
           {node.filhos.length > 0 && (
             <LocalTree
               nodes={node.filhos}

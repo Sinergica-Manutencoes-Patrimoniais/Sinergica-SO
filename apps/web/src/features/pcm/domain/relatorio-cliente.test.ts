@@ -64,6 +64,29 @@ describe("montarRelatorioCliente", () => {
     expect(formatarTextoRelatorioCliente(relatorio)).toContain("Preventiva de ar-condicionado");
   });
 
+  it("conta pela categoria das OS com check-out dentro do período", () => {
+    const relatorio = montarRelatorioCliente(
+      { id: "cliente-1", nome: "Condomínio Azul" },
+      "2026-08-01",
+      "2026-08-31",
+      [
+        os({ titulo: "Limpeza dos filtros", checkOutAt: "2026-08-10T15:00:00Z" }),
+        os({
+          categoria: "corretiva",
+          titulo: "Troca do disjuntor",
+          checkOutAt: "2026-08-11T15:00:00Z",
+        }),
+        os({ checkOutAt: "2026-09-01T15:00:00Z" }),
+        os({ status: "planejamento", dataAgendada: "2026-09-10" }),
+      ],
+    );
+    expect(relatorio.atividades).toHaveLength(2);
+    expect(relatorio.preventivasRealizadas).toBe(1);
+    expect(
+      relatorio.atividades.find((item) => item.titulo === "Limpeza dos filtros"),
+    ).toBeDefined();
+  });
+
   it("expõe estados vazios sem inventar conteúdo", () => {
     const relatorio = montarRelatorioCliente(
       { id: "cliente-1", nome: "Condomínio Azul" },
@@ -89,7 +112,7 @@ describe("montarRelatorioCliente", () => {
         atividades: [
           {
             numero: "INS-1",
-            titulo: "Inspeção: Cobertura",
+            titulo: "Inspeção: Vistoria preventiva",
             descricao: "Sem infiltrações",
             data: "2026-08-12",
             evidenciaUrl: null,
@@ -116,6 +139,7 @@ describe("montarRelatorioCliente", () => {
     expect(relatorio.atividades).toEqual(
       expect.arrayContaining([expect.objectContaining({ numero: "INS-1" })]),
     );
+    expect(relatorio.preventivasRealizadas).toBe(0);
     expect(relatorio.cronograma.map((item) => item.numero)).toEqual(["PMOC-1", "AGENDA-1"]);
   });
 });

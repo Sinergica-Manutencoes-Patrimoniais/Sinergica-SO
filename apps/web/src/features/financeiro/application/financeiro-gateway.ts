@@ -36,7 +36,8 @@ export interface CustoOsItem {
   data: string;
   tecnicoFuncionarioId: string | null;
   horas: number;
-  custoHoraReais: number | null;
+  /** Centavos por hora do técnico na data da OS (DEF-23). Null = funcionário sem custo vigente. */
+  custoHoraCentavos: number | null;
   custoMoCentavos: number;
   despesaCentavos: number;
   valorado: boolean;
