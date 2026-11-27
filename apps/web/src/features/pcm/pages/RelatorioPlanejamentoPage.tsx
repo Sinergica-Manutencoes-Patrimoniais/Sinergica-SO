@@ -160,7 +160,9 @@ export function RelatorioPlanejamentoPage() {
         <Skeleton className="h-4 w-40" />
       ) : itens.length === 0 ? (
         <p className="rounded-lg border border-line p-5 text-body text-ink-3">
-          Nada planejado para este dia/técnico.
+          {modo === "execucao"
+            ? "Nenhum registro de execução para os filtros selecionados."
+            : "Nada planejado para este dia/técnico."}
         </p>
       ) : (
         <pre className="whitespace-pre-wrap rounded-lg border border-line bg-card p-4 text-body text-ink">

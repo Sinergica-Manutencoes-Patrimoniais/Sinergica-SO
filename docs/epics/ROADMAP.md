@@ -126,7 +126,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S123 | Saúde Auvo: drill-down dos erros | Codex | Implementado localmente (2026-08-06). D… | [spec](../../specs/E01-S123-saude-auvo-drilldown-erros/spec.md) |
 | E01-S124 | Mover Chamado (Solicitação)→Corretiva converte em OS | Codex | Implementado localmente (2026-08-06). C… | [spec](../../specs/E01-S124-mover-chamado-corretiva-converte-os/spec.md) |
 | E01-S125 | Abertura de OS no Auvo sob demanda | Codex | Implementado localmente (2026-08-06). M… | [spec](../../specs/E01-S125-abertura-os-auvo-sob-demanda/product.md) |
-| E01-S126 | Relatório de planejamento/execução (dia/técnico/cliente) | Codex | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S126-relatorio-planejamento-execucao/spec.md) |
+| E01-S126 | Relatório de planejamento/execução (dia/técnico/cliente) | Codex (Onda 6) | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S126-relatorio-planejamento-execucao/spec.md) |
 | E01-S127 | Guia SO atualizado (todos os módulos) | Codex | Implementado localmente (2026-08-06). P… | [spec](../../specs/E01-S127-guia-so-atualizado/spec.md) |
 | E01-S129 | Release do PCM para produção (checklist/hardening) | Claude (sessão Lucas) | Produção aplicada (2026-08-06). Migrati… | [spec](../../specs/E01-S129-release-pcm-producao/spec.md) |
 | E01-S131 | Ferramenta: cadastro item-cêntrico | Codex | Implementado localmente (2026-08-06). U… | [spec](../../specs/E01-S131-ferramenta-cadastro-item-centrico/spec.md) |
