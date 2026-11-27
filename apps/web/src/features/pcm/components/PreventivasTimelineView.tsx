@@ -1,13 +1,15 @@
+import { formatarDataBr } from "../../../lib/data-br";
 import type { ItemCalendarioPreventiva } from "./PreventivasCalendarioView";
 
 function dataOperacional(ocorrencia: ItemCalendarioPreventiva): string {
-  return ocorrencia.visitaEm ?? `${ocorrencia.vencimento}T00:00:00`;
+  return ocorrencia.visitaEm ?? ocorrencia.vencimento;
 }
 
 function dataBr(valor: string): string {
+  if (!valor.includes("T")) return formatarDataBr(valor);
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "medium",
-    ...(valor.includes("T") ? { timeStyle: "short" } : {}),
+    timeStyle: "short",
   }).format(new Date(valor));
 }
 

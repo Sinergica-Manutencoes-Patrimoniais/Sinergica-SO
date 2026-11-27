@@ -1,16 +1,17 @@
 import { ExternalLink, Send } from "lucide-react";
 import { useEffect } from "react";
+import { formatarDataBr } from "../../../lib/data-br";
 import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
 import type { OcorrenciaPreventiva, PlanoPreventivo } from "../application/preventivas-gateway";
 import { Cliente360Drawer } from "./Cliente360Drawer";
 
 function dataHoraBr(valor: string | null): string {
-  if (!valor) return "—";
+  if (!valor?.includes("T")) return formatarDataBr(valor);
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return "—";
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
-    timeStyle: valor.includes("T") ? "short" : undefined,
+    timeStyle: "short",
   }).format(data);
 }
 
@@ -197,7 +198,9 @@ function OcorrenciasSecao({
           {ocorrencias.map((item) => (
             <li key={item.id} className="px-3 py-2 text-caption text-ink-2">
               {dataHoraBr(item.visita_em ?? item.vencimento)} · {item.os_numero ?? "Sem OS"} ·{" "}
-              {item.reconciliacao_legada === "substituida" ? "Substituída por ciclo SSO" : resultado(item.resultado_estado)}
+              {item.reconciliacao_legada === "substituida"
+                ? "Substituída por ciclo SSO"
+                : resultado(item.resultado_estado)}
             </li>
           ))}
         </ul>
