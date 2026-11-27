@@ -231,7 +231,7 @@ _7 concluídas no histórico · maior ID usado: E03-S14_
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
 | E03-S01 | Fundação do Comercial + Conta única | — | Pronta para implementar — 10 AC, 13 tas… | [spec](../../specs/E03-S01-fundacao-comercial/product.md) |
-| E03-S02 | Funil (Kanban) + etapas configuráveis | — | Pronta para implementar — 7 AC, 9 tasks | [spec](../../specs/E03-S02-funil-kanban-etapas/spec.md) |
+| E03-S02 | Funil (Kanban) + etapas configuráveis | Codex (Onda 6) | Pronta para implementar — 7 AC, 9 tasks | [spec](../../specs/E03-S02-funil-kanban-etapas/spec.md) |
 | E03-S03 | Parâmetros de precificação + catálogo de materiais + motor de preço | — | Pronta para implementar — 9 AC, 10 task… | [spec](../../specs/E03-S03-precificacao-catalogo/spec.md) |
 | E03-S04 | Editor de proposta | — | Pronta para implementar — 9 AC, 10 tasks | [spec](../../specs/E03-S04-editor-proposta/spec.md) |
 | E03-S05 | Levantamento de pré-venda | Claude (sessão Lucas) | Implementado (2026-08-11). Migrations 0… | [spec](../../specs/E03-S05-levantamento-pre-venda/spec.md) |
