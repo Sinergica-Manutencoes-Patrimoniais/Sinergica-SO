@@ -1,0 +1,42 @@
+@reference "../../../../index.css";
+
+@layer components {
+  .capacidade-agenda-blocos > section {
+    @apply space-y-3 rounded-xl border border-line bg-card p-4 sm:p-5;
+  }
+
+  .capacidade-agenda-blocos > section > h3 {
+    @apply text-heading font-semibold text-ink;
+  }
+
+  /* Os formulários das subseções são compartilhados com outras telas. */
+  .capacidade-agenda :where(form:not([class]), fieldset:not([class])) {
+    @apply flex min-w-0 flex-wrap items-end gap-3;
+  }
+
+  .capacidade-agenda :where(fieldset:not([class])) {
+    @apply w-full rounded-md border border-line p-3;
+  }
+
+  .capacidade-agenda :where(form, fieldset) > :where(p, output, ul, ol):not([class]) {
+    @apply w-full;
+  }
+
+  .capacidade-agenda :where(h4, legend):not([class]) {
+    @apply text-body font-semibold text-ink;
+  }
+
+  .capacidade-agenda
+    label:not([class]):has(> :is(input, select, textarea):not([type="checkbox"], [type="radio"])) {
+    @apply flex min-w-0 flex-col gap-1 text-caption font-semibold text-ink-2;
+  }
+
+  .capacidade-agenda
+    :where(input, select, textarea):not([class], [type="checkbox"], [type="radio"]) {
+    @apply min-h-9 max-w-full rounded-md border border-line bg-card px-2.5 py-1.5 text-caption text-ink focus-visible:border-navy;
+  }
+
+  .capacidade-agenda button:not([class]) {
+    @apply min-h-8 rounded-md border border-line bg-card px-2.5 py-1 text-caption font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50;
+  }
+}
