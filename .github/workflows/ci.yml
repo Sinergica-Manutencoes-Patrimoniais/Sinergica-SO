@@ -159,6 +159,15 @@ jobs:
           version: 2.114.0
       - name: Subir Supabase local (Docker) — aplica migrations do zero
         run: supabase start
+      - name: DEF-24 — ACOES_SSO do front espelha config.sso_acoes
+        # O banco é a fonte de verdade das capacidades. Ação criada por migration e ausente da
+        # lista do front derruba a consulta de concessões inteira (z.enum + z.array(...).parse),
+        # e divergência em exige_concessao_individual faz a prévia prometer o que o servidor
+        # recusa. Precisa do Postgres de pé e roda ANTES do pgTAP: `supabase test db` derruba a
+        # instância ao terminar, e depois dele o psql deste passo morria em "Connection refused".
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:55322/postgres
+        run: node scripts/check-acoes-sso.mjs
       - name: pgTAP — suíte SQL versionada
         # Arquivos manuais de setup/concorrência e remote_promotion_smoke.sql não são casos pgTAP
         # da suíte local; este glob seleciona os testes automatizados com plano .test.sql.

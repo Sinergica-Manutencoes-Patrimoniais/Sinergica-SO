@@ -35,6 +35,7 @@ const LABELS: Record<AcaoSso, string> = {
   "orcamento.excecao_preco": "Autorizar exceção de preço",
   "anexo_os.publicar": "Publicar anexo de OS",
   "backlog.promover": "Promover backlog",
+  "execucao.contingencia_auvo": "Abrir OS no Auvo em contingência",
 };
 
 type ConsultaPaginada<T> = {

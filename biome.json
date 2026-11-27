@@ -25,7 +25,8 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "suspicious": { "noExplicitAny": "error" }
+      "suspicious": { "noExplicitAny": "error" },
+      "correctness": { "useHookAtTopLevel": "error" }
     }
   },
   "formatter": {

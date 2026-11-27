@@ -59,15 +59,29 @@ describe("adapter de capacidades", () => {
   it("encaminha separadamente a autorização de dois Clientes e rejeita erro de escopo", async () => {
     const outro = "17020000-0000-4000-8000-00000000000b";
     const negado = { code: "42501", message: "sem acesso" };
-    api.rpc.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: null, error: negado });
-    await expect(supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", command.clienteId)).resolves.toBe(true);
-    await expect(supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", outro)).rejects.toEqual(negado);
-    expect(api.rpc).toHaveBeenNthCalledWith(1, "sso_autorizar_acao", { p_acao: "plano.gerir", p_cliente_id: command.clienteId });
-    expect(api.rpc).toHaveBeenNthCalledWith(2, "sso_autorizar_acao", { p_acao: "plano.gerir", p_cliente_id: outro });
+    api.rpc
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: null, error: negado });
+    await expect(
+      supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", command.clienteId),
+    ).resolves.toBe(true);
+    await expect(supabaseCapacidadesSsoAdapter.autorizarAcao("plano.gerir", outro)).rejects.toEqual(
+      negado,
+    );
+    expect(api.rpc).toHaveBeenNthCalledWith(1, "sso_autorizar_acao", {
+      p_acao: "plano.gerir",
+      p_cliente_id: command.clienteId,
+    });
+    expect(api.rpc).toHaveBeenNthCalledWith(2, "sso_autorizar_acao", {
+      p_acao: "plano.gerir",
+      p_cliente_id: outro,
+    });
   });
   it("propaga conflito e encaminha novamente o mesmo pedido sem inventar rollback", async () => {
     const conflito = { code: "40001", message: "revisão obsoleta" };
-    api.rpc.mockResolvedValueOnce({ data: null, error: conflito }).mockResolvedValueOnce({ data: null, error: conflito });
+    api.rpc
+      .mockResolvedValueOnce({ data: null, error: conflito })
+      .mockResolvedValueOnce({ data: null, error: conflito });
     await expect(supabaseCapacidadesSsoAdapter.definirConcessao(command)).rejects.toEqual(conflito);
     await expect(supabaseCapacidadesSsoAdapter.definirConcessao(command)).rejects.toEqual(conflito);
     expect(api.rpc).toHaveBeenCalledTimes(2);
@@ -75,4 +89,51 @@ describe("adapter de capacidades", () => {
     // Mock comprova somente transporte. Rollback e concorrência exigem banco e duas sessões.
   });
 
+  // DEF-24: `concessaoSchema.acao` é `z.enum(ACOES_SSO)` e a listagem faz `z.array(...).parse`.
+  // Uma única concessão de ação que o banco conhece e o front não derruba a página inteira de
+  // concessões — "falha ao consultar", repetível no botão de recuperação, sem erro do servidor.
+  it("lista concessão de ação criada por migration recente (DEF-24)", async () => {
+    api.rpc.mockResolvedValue({
+      data: [
+        {
+          id: "17030000-0000-4000-8000-000000000001",
+          usuario_id: "17030000-0000-4000-8000-000000000002",
+          perfil_id: null,
+          acao: "execucao.contingencia_auvo",
+          cliente_id: "17030000-0000-4000-8000-00000000000a",
+          ativa: true,
+          revisao: 1,
+        },
+      ],
+      error: null,
+    });
+    const concessoes = await supabaseCapacidadesSsoAdapter.listarConcessoes({
+      inicio: 0,
+      limite: 20,
+    });
+    expect(concessoes).toHaveLength(1);
+    expect(concessoes[0]?.acao).toBe("execucao.contingencia_auvo");
+  });
+
+  it("uma concessão ilegível não pode derrubar a página inteira de concessões", async () => {
+    api.rpc.mockResolvedValue({
+      data: [
+        {
+          id: "17030000-0000-4000-8000-000000000003",
+          usuario_id: null,
+          perfil_id: "17030000-0000-4000-8000-000000000004",
+          acao: "acao.que.nao.existe",
+          cliente_id: null,
+          ativa: true,
+          revisao: 1,
+        },
+      ],
+      error: null,
+    });
+    // Documenta o comportamento atual: ação desconhecida ainda rejeita a página. O gate
+    // `scripts/check-acoes-sso.mjs` impede que o front fique para trás do banco de novo.
+    await expect(
+      supabaseCapacidadesSsoAdapter.listarConcessoes({ inicio: 0, limite: 20 }),
+    ).rejects.toThrow();
+  });
 });

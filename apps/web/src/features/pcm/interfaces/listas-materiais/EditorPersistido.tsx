@@ -1,6 +1,7 @@
-import { AvisoCarregando } from "@sinergica/ui";
+import { AvisoCarregando, AvisoFalhaConsulta } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
 import { supabase } from "../../../../lib/supabase-client";
 import type { EdicaoMateriais } from "../../domain/edicao-materiais";
 import {
@@ -143,15 +144,15 @@ function Conteudo({
     );
   if (dados.isFetching || dados.isPending)
     return <AvisoCarregando>Consultando linhas…</AvisoCarregando>;
-  if (dados.isError)
+  if (dados.isError) {
+    // Negação de autorização não melhora repetindo: a tela explica e não oferece o botão.
+    const negacao = mensagemFalhaAtivacao(dados.error);
     return (
-      <p role="alert">
-        Não foi possível consultar as linhas.{" "}
-        <button type="button" onClick={() => void dados.refetch()}>
-          Tentar novamente
-        </button>
-      </p>
+      <AvisoFalhaConsulta onTentarNovamente={negacao ? undefined : () => void dados.refetch()}>
+        {negacao ? TEXTO_FALHA_ATIVACAO[negacao] : "Não foi possível consultar as linhas."}
+      </AvisoFalhaConsulta>
     );
+  }
   const inicial = dados.data === null ? undefined : { textoOriginal, linhas: dados.data };
   return (
     <>
