@@ -78,7 +78,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S47 | Verificar contrato Auvo real e habilitar escrita (funcionário → ferramenta → categoria →… | Codex (sessão 2026-07-1… | Implementada parcialmente com contrato… | [spec](../../specs/E01-S47-habilitar-escrita-real-auvo/spec.md) |
 | E01-S51 | Cliente-360 mais rico — nova pcm.clientes.detalhes jsonb (mesmo padrão do auvo_detalhes d… | Claude (sessão Lucas) | Escopo cortado em runtime (mesma causa… | [spec](../../specs/E01-S51-cliente-360-mais-rico/design.md) |
 | E01-S52 | GPS da equipe — pull GET /gps → pcm.gps_posicoes (retenção 7d) + card "Equipe agora" no d… | Codex + Claude (sessão… | Implementado localmente (migration 0078… | [spec](../../specs/E01-S52-gps-equipe/spec.md) |
-| E01-S53 | Tier arquitetural — design.md + ADR antes de codar; bloqueada em credencial de API | Codex | Design pronto — design.md + ADR-0008 (d… | [spec](../../specs/E01-S53-preventivo-service-orders/spec.md) |
+| E01-S53 | Tier arquitetural — design.md + ADR antes de codar; bloqueada em credencial de API | Codex (Onda 6) | Design pronto — design.md + ADR-0008 (d… | [spec](../../specs/E01-S53-preventivo-service-orders/spec.md) |
 | E01-S54 | Custo real da OS — espelhos pcm.despesa_tipos/pcm.despesas (/expenses+/expensetypes, writ… | Codex + Claude (sessão… | Implementado localmente (migration 0079… | [spec](../../specs/E01-S54-custo-real-despesas/spec.md) |
 | E01-S55 | Pesquisa de satisfação — espelho pcm.satisfacao_respostas (/satisfactionsurveys), nota mé… | Codex + Claude (sessão… | Implementado localmente (migration 0080… | [spec](../../specs/E01-S55-pesquisa-satisfacao/spec.md) |
 | E01-S56 | Catálogo de questionários — espelho pcm.questionarios (/questionnaires, read-only), check… | Codex + Claude (sessão… | Implementado localmente e contrato veri… | [spec](../../specs/E01-S56-catalogo-questionarios/spec.md) |
@@ -100,7 +100,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S101 | Tela de abertura de chamado com campos da OS + 3 datas | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S101-abertura-chamado-campos-os/spec.md) |
 | E01-S102 | Filtro por cliente na tela de Chamados | Claude (sessão Lucas) | Implementado localmente (2026-07-28). t… | [spec](../../specs/E01-S102-filtro-cliente-chamados/spec.md) |
 | E01-S103 | Responsável pelo cliente no cadastro | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S103-responsavel-cliente/spec.md) |
-| E01-S104 | Board semanal de agenda do técnico | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S104-agenda-tecnico-board/spec.md) |
+| E01-S104 | Board semanal de agenda do técnico | Codex (Onda 6) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S104-agenda-tecnico-board/spec.md) |
 | E01-S106 | Ferramenta alocável em um cliente | Claude (sessão Lucas) | Implementado localmente (2026-07-28). M… | [spec](../../specs/E01-S106-ferramenta-alocavel-cliente/spec.md) |
 | E01-S107 | Local do Chamado/OS: seleção da lista do cliente + "Outro" | Claude (sessão Lucas) | Implementado localmente (2026-07-29). S… | [spec](../../specs/E01-S107-local-selecao-lista-cliente/spec.md) |
 | E01-S108 | Fix: modal perde dados ao trocar de aba/tela do PCM | Claude (sessão Lucas) | Implementado localmente (2026-07-29). N… | [spec](../../specs/E01-S108-fix-modal-perde-dados-troca-aba/spec.md) |
@@ -126,11 +126,11 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S123 | Saúde Auvo: drill-down dos erros | Codex | Implementado localmente (2026-08-06). D… | [spec](../../specs/E01-S123-saude-auvo-drilldown-erros/spec.md) |
 | E01-S124 | Mover Chamado (Solicitação)→Corretiva converte em OS | Codex | Implementado localmente (2026-08-06). C… | [spec](../../specs/E01-S124-mover-chamado-corretiva-converte-os/spec.md) |
 | E01-S125 | Abertura de OS no Auvo sob demanda | Codex | Implementado localmente (2026-08-06). M… | [spec](../../specs/E01-S125-abertura-os-auvo-sob-demanda/product.md) |
-| E01-S126 | Relatório de planejamento/execução (dia/técnico/cliente) | Codex | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S126-relatorio-planejamento-execucao/spec.md) |
+| E01-S126 | Relatório de planejamento/execução (dia/técnico/cliente) | Codex (Onda 6) | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S126-relatorio-planejamento-execucao/spec.md) |
 | E01-S127 | Guia SO atualizado (todos os módulos) | Codex | Implementado localmente (2026-08-06). P… | [spec](../../specs/E01-S127-guia-so-atualizado/spec.md) |
 | E01-S129 | Release do PCM para produção (checklist/hardening) | Claude (sessão Lucas) | Produção aplicada (2026-08-06). Migrati… | [spec](../../specs/E01-S129-release-pcm-producao/spec.md) |
 | E01-S131 | Ferramenta: cadastro item-cêntrico | Codex | Implementado localmente (2026-08-06). U… | [spec](../../specs/E01-S131-ferramenta-cadastro-item-centrico/spec.md) |
-| E01-S133 | Redesign do relatório de apontamento de horas | Codex | Implementado localmente (2026-08-06). R… | [spec](../../specs/E01-S133-apontamento-horas-redesign/spec.md) |
+| E01-S133 | Redesign do relatório de apontamento de horas | Codex (Onda 6) | Implementado localmente (2026-08-06). R… | [spec](../../specs/E01-S133-apontamento-horas-redesign/spec.md) |
 | E01-S134 | Relatório diário da operação (Fabricio) | Codex | Implementado localmente (2026-08-06). T… | [spec](../../specs/E01-S134-relatorio-diario-operacao/spec.md) |
 | E01-S135 | Relatório do cliente (HTML + PDF + Portal) | Codex | Implementado localmente (2026-08-06). O… | [spec](../../specs/E01-S135-relatorio-cliente-html-pdf-portal/spec.md) |
 | E01-S136 | Dashboard PCM vira cockpit "bom dia" | Codex | Implementado localmente (2026-08-06). B… | [spec](../../specs/E01-S136-dashboard-cockpit-bom-dia/spec.md) |
@@ -155,7 +155,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S176 | Hierarquia técnica, Sistemas distribuídos e Grupos Quantitativos | Terra | Em andamento — integridade de hierarquia (2026-10-26) | [spec](../../specs/E01-S176-estrutura-tecnica-grupos/spec.md) |
 | E01-S177 | Código público protegido, aliases e política de Equipment Auvo | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S177-codigos-publicos-alias/spec.md) |
 | E01-S178 | Levantamentos de planilha/Auvo e aprovação PCM em staging | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S178-levantamentos-staging-aprovacao/spec.md) |
-| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Codex (Lucas, 25/11) | Entrada única Materiais e Aquisições implementada; continuação de AC-7/AC-8 em validação | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
+| E01-S179 | Central de Materiais, parser determinístico e exceções de campo | Codex (Onda 6) | Entrada única Materiais e Aquisições implementada; continuação de AC-7/AC-8 em validação | [spec](../../specs/E01-S179-central-materiais-os/spec.md) |
 | E01-S180 | Despesas previstas/realizadas por Visita | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S180-despesas-visita/spec.md) |
 | E01-S181 | Orçamento operacional canônico no Comercial | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S181-orcamentos-operacionais/spec.md) |
 | E01-S182 | Fila A Faturar e efetivação por origem única | Terra | Especificada — implementação não iniciada (2026-10-26) | [spec](../../specs/E01-S182-faturaveis-origem/spec.md) |
@@ -231,7 +231,7 @@ _7 concluídas no histórico · maior ID usado: E03-S14_
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
 | E03-S01 | Fundação do Comercial + Conta única | — | Pronta para implementar — 10 AC, 13 tas… | [spec](../../specs/E03-S01-fundacao-comercial/product.md) |
-| E03-S02 | Funil (Kanban) + etapas configuráveis | — | Pronta para implementar — 7 AC, 9 tasks | [spec](../../specs/E03-S02-funil-kanban-etapas/spec.md) |
+| E03-S02 | Funil (Kanban) + etapas configuráveis | Codex (Onda 6) | Pronta para implementar — 7 AC, 9 tasks | [spec](../../specs/E03-S02-funil-kanban-etapas/spec.md) |
 | E03-S03 | Parâmetros de precificação + catálogo de materiais + motor de preço | — | Pronta para implementar — 9 AC, 10 task… | [spec](../../specs/E03-S03-precificacao-catalogo/spec.md) |
 | E03-S04 | Editor de proposta | — | Pronta para implementar — 9 AC, 10 tasks | [spec](../../specs/E03-S04-editor-proposta/spec.md) |
 | E03-S05 | Levantamento de pré-venda | Claude (sessão Lucas) | Implementado (2026-08-11). Migrations 0… | [spec](../../specs/E03-S05-levantamento-pre-venda/spec.md) |

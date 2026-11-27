@@ -42,7 +42,7 @@ const dadosSchema = z.discriminatedUnion("tipo", [
     })
     .strict(),
 ]);
-const motivos = {
+export const motivosExcecaoMaterial = {
   faltante: "Material faltante",
   parcial: "Material parcial",
   errado: "Material incorreto",
@@ -108,7 +108,7 @@ export function DetalheEvento({
   return (
     <div>
       <p>
-        {motivos[p.data.dados.motivo]}: {p.data.dados.descricao}
+        {motivosExcecaoMaterial[p.data.dados.motivo]}: {p.data.dados.descricao}
       </p>
       {revisao !== undefined && posicao !== undefined && (
         <>

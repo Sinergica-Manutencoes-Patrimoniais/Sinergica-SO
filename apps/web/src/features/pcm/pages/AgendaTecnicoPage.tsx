@@ -169,20 +169,22 @@ export function AgendaTecnicoPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            aria-label="Semana anterior"
             onClick={() => setReferencia(semanaAnterior(referencia))}
             className="btn-secondary"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden />
           </button>
           <button type="button" onClick={() => setReferencia(new Date())} className="btn-secondary">
             Hoje
           </button>
           <button
             type="button"
+            aria-label="Próxima semana"
             onClick={() => setReferencia(semanaSeguinte(referencia))}
             className="btn-secondary"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { AvisoCarregando, Button, RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
 import { TEXTO_FALHA_ATIVACAO, mensagemFalhaAtivacao } from "../../../../lib/mensagem-ativacao";
@@ -9,7 +9,9 @@ import { OrcamentosDaOs } from "../../../comercial/interfaces/orcamento-operacio
 import { supabaseCapacidadesSsoAdapter } from "../../infrastructure/supabase-capacidades-sso-adapter";
 import { supabaseListasMateriaisAdapter } from "../../infrastructure/supabase-listas-materiais-adapter";
 import { ExcecoesOs } from "./ExcecoesOs";
+import { ResumoListaMaterial } from "./ResumoListaMaterial";
 import { type RascunhoNovaLista, WorkspaceListasMateriais } from "./Workspace";
+import { buscaOsCentralMateriaisOptions } from "./busca-os-central-materiais-queries";
 
 type Props = {
   usuario: string;
@@ -17,6 +19,9 @@ type Props = {
   onAbrirOs?: (osId: string) => void;
   onRascunhoAlterado?: (temRascunho: boolean) => void;
 };
+type PesquisaOs = { texto: string; termo: string };
+type ControlePesquisa = [PesquisaOs, Dispatch<SetStateAction<PesquisaOs>>];
+type PropsComPesquisa = Props & { pesquisa: ControlePesquisa };
 type Responsavel = "cliente" | "sinergica" | "todos";
 type EstadoLista =
   | "todos"
@@ -27,16 +32,6 @@ type EstadoLista =
   | "aguardando_aquisicao"
   | "dispensada"
   | "concluida";
-const estadosLista: Record<string, string> = {
-  levantada: "Levantada",
-  informada_disponivel: "Disponibilidade informada",
-  parcial: "Parcial",
-  indisponivel: "Indisponível",
-  aguardando_aquisicao: "Aguardando aquisição",
-  dispensada: "Dispensada",
-  concluida: "Concluída",
-};
-
 function erroTemporario(error: unknown): boolean {
   if (error instanceof TypeError && /^(Failed to fetch|NetworkError)/i.test(error.message))
     return true;
@@ -63,7 +58,7 @@ export function CentralMateriais(props: Props) {
       />
     );
   }
-  return <Conteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
+  return <CentralComPesquisa key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 
 /** Entrada na operação global, sempre limitada ao Cliente selecionado. */
@@ -77,10 +72,22 @@ export function CentralMateriaisGlobal(props: Props) {
       />
     );
   }
-  return <CentralGlobalConteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
+  return (
+    <CentralComPesquisa key={JSON.stringify([props.usuario, props.cliente])} {...props} global />
+  );
 }
 
-function CentralGlobalConteudo(props: Props) {
+function CentralComPesquisa({ global, ...props }: Props & { global?: boolean }) {
+  // Apenas o texto e o termo sobrevivem à remontagem por revalidação de acesso.
+  const pesquisa = useState<PesquisaOs>({ texto: "", termo: "" });
+  return global ? (
+    <CentralGlobalConteudo {...props} pesquisa={pesquisa} />
+  ) : (
+    <Conteudo {...props} pesquisa={pesquisa} />
+  );
+}
+
+function CentralGlobalConteudo(props: PropsComPesquisa) {
   const [aberta, setAberta] = useState(false);
   const permissao = useQuery({
     queryKey: ["listas-materiais-central", props.usuario, props.cliente, "permissao"],
@@ -88,7 +95,7 @@ function CentralGlobalConteudo(props: Props) {
     gcTime: 0,
     refetchOnWindowFocus: true,
   });
-  if (permissao.isPending || permissao.isFetching)
+  if (permissao.isPending || permissao.fetchStatus !== "idle")
     return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (permissao.isError)
     return (
@@ -118,8 +125,9 @@ function Conteudo({
   cliente,
   onAbrirOs,
   onRascunhoAlterado,
+  pesquisa,
   permissaoMonitorada = false,
-}: Props & { permissaoMonitorada?: boolean }) {
+}: PropsComPesquisa & { permissaoMonitorada?: boolean }) {
   const [osDigitada, setOsDigitada] = useState("");
   const [os, setOs] = useState<string | null>(null);
   const [responsavel, setResponsavel] = useState<Responsavel>("todos");
@@ -142,7 +150,20 @@ function Conteudo({
   // Na entrada global o componente pai mantém a mesma consulta ativa e só
   // monta esta área enquanto a autorização atual está confirmada.
   const permitido =
-    permissaoMonitorada || (permissao.data === true && !permissao.isFetching && !permissao.isError);
+    permissaoMonitorada ||
+    (permissao.data === true && permissao.fetchStatus === "idle" && !permissao.isError);
+  const buscaHabilitada = flagLigada("VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED");
+  const [{ termo }] = pesquisa;
+  const consultaOs = useInfiniteQuery({
+    ...buscaOsCentralMateriaisOptions(usuario, cliente, termo),
+    enabled: permitido && buscaHabilitada,
+  });
+  const numerosOs = new Map(
+    (consultaOs.isSuccess ? consultaOs.data.pages.flat() : []).map((item) => [
+      item.id,
+      item.numero,
+    ]),
+  );
   const listas = useInfiniteQuery({
     queryKey: [
       "listas-materiais-central",
@@ -185,7 +206,7 @@ function Conteudo({
     },
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
-  if (!permissaoMonitorada && (permissao.isPending || permissao.isFetching))
+  if (!permissaoMonitorada && (permissao.isPending || permissao.fetchStatus !== "idle"))
     return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (!permissaoMonitorada && permissao.isError)
     return (
@@ -208,12 +229,11 @@ function Conteudo({
       className="flex flex-col gap-4 rounded-lg border border-line bg-card p-4 shadow-raised"
     >
       <h2 className="text-heading font-semibold text-ink">Central de materiais</h2>
-      {flagLigada("VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED") && (
+      {buscaHabilitada && (
         <SelecionarOs
-          usuario={usuario}
-          cliente={cliente}
+          consulta={consultaOs}
+          pesquisa={pesquisa}
           onSelecionar={(id) => {
-            setOsDigitada(id);
             setOs(id);
             setAberta(null);
             setOrcamentoOs(null);
@@ -224,7 +244,7 @@ function Conteudo({
       <form
         onSubmit={(evento) => {
           evento.preventDefault();
-          const valor = osDigitada.trim();
+          const valor = buscaHabilitada ? (os ?? "") : osDigitada.trim();
           if (valor && !z.string().guid().safeParse(valor).success) {
             setErro("Informe o identificador UUID da OS ou deixe vazio.");
             return;
@@ -237,16 +257,31 @@ function Conteudo({
         }}
         className="grid grid-cols-1 items-end gap-3 rounded-md border border-line-soft bg-paper/60 p-3 sm:grid-cols-2 lg:grid-cols-4"
       >
-        <label className="block">
-          <span className="mb-1 block text-micro font-semibold text-ink-3">
-            Identificador da OS
-          </span>
-          <input
-            className="input w-full"
-            value={osDigitada}
-            onChange={(evento) => setOsDigitada(evento.target.value)}
-          />
-        </label>
+        {buscaHabilitada ? (
+          os && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setOs(null);
+                setAberta(null);
+                setOrcamentoOs(null);
+              }}
+            >
+              Limpar filtro de OS
+            </Button>
+          )
+        ) : (
+          <label className="block">
+            <span className="mb-1 block text-micro font-semibold text-ink-3">
+              Identificador da OS
+            </span>
+            <input
+              className="input w-full"
+              value={osDigitada}
+              onChange={(evento) => setOsDigitada(evento.target.value)}
+            />
+          </label>
+        )}
         <label className="block">
           <span className="mb-1 block text-micro font-semibold text-ink-3">Responsável</span>
           <select
@@ -347,15 +382,18 @@ function Conteudo({
                   className="flex flex-col gap-2 rounded-lg border border-line bg-paper/40 p-3"
                 >
                   <p className="text-caption font-semibold text-ink-2">
-                    OS {lista.ordem_servico_id} ·{" "}
-                    {lista.responsavel === "cliente" ? "Cliente" : "Sinérgica"} ·{" "}
-                    {estadosLista[lista.estado] ?? lista.estado} · revisão {lista.revisao}
+                    <ResumoListaMaterial
+                      estado={lista.estado}
+                      responsavel={lista.responsavel}
+                      revisao={lista.revisao}
+                      numeroOs={numerosOs.get(lista.ordem_servico_id)}
+                    />
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       onClick={() => {
-                        setOsDigitada(lista.ordem_servico_id);
+                        if (!buscaHabilitada) setOsDigitada(lista.ordem_servico_id);
                         setOs(lista.ordem_servico_id);
                         setAberta(null);
                         setOrcamentoOs(null);
@@ -446,34 +484,19 @@ function Conteudo({
 }
 
 function SelecionarOs({
-  usuario,
-  cliente,
+  consulta,
+  pesquisa,
   onSelecionar,
-}: { usuario: string; cliente: string; onSelecionar: (id: string) => void }) {
-  const [texto, setTexto] = useState("");
-  const [busca, setBusca] = useState("");
-  const consulta = useInfiniteQuery({
-    queryKey: ["listas-materiais-central", usuario, cliente, "busca-os", busca],
-    initialPageParam: null as string | null,
-    gcTime: 0,
-    queryFn: async ({ pageParam, signal }) => {
-      const antes = await supabase.auth.getUser();
-      if (antes.error || antes.data.user?.id !== usuario || signal.aborted)
-        throw new Error("Sessão alterada.");
-      const pagina = await supabaseListasMateriaisAdapter.buscarOsCentral(
-        cliente,
-        busca,
-        20,
-        pageParam,
-        signal,
-      );
-      const depois = await supabase.auth.getUser();
-      if (depois.error || depois.data.user?.id !== usuario || signal.aborted)
-        throw new Error("Sessão alterada.");
-      return pagina;
-    },
-    getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
-  });
+}: {
+  consulta: ReturnType<
+    typeof useInfiniteQuery<
+      Awaited<ReturnType<typeof supabaseListasMateriaisAdapter.buscarOsCentral>>
+    >
+  >;
+  pesquisa: ControlePesquisa;
+  onSelecionar: (id: string) => void;
+}) {
+  const [{ texto, termo }, setPesquisa] = pesquisa;
   return (
     <section
       aria-label="Selecionar OS com materiais"
@@ -489,8 +512,8 @@ function SelecionarOs({
         onSubmit={(evento) => {
           evento.preventDefault();
           const valor = texto.trim();
-          if (valor === busca) void consulta.refetch();
-          else setBusca(valor);
+          if (valor === termo) void consulta.refetch();
+          else setPesquisa((atual) => ({ ...atual, termo: valor }));
         }}
         className="flex flex-wrap items-end gap-2"
       >
@@ -500,13 +523,17 @@ function SelecionarOs({
             className="input w-full"
             maxLength={80}
             value={texto}
-            onChange={(evento) => setTexto(evento.target.value)}
+            onChange={(evento) => {
+              const texto = evento.target.value;
+              setPesquisa((atual) => ({ ...atual, texto }));
+            }}
           />
         </label>
         <Button type="submit" size="sm">
           Buscar OS
         </Button>
       </form>
+      {consulta.isPaused && <output>Busca de OS pausada. Aguardando conexão.</output>}
       {consulta.isFetching && <output className="text-body text-ink-3">Buscando OS…</output>}
       {consulta.isError && (
         <p
@@ -519,10 +546,13 @@ function SelecionarOs({
           </Button>
         </p>
       )}
-      {!consulta.isFetching && !consulta.isError && consulta.data?.pages.flat().length === 0 && (
-        <p className="text-body text-ink-3">Nenhuma OS com lista encontrada.</p>
-      )}
-      {!consulta.isFetching && !consulta.isError && (
+      {!consulta.isPaused &&
+        !consulta.isFetching &&
+        !consulta.isError &&
+        consulta.data?.pages.flat().length === 0 && (
+          <p className="text-body text-ink-3">Nenhuma OS com lista encontrada.</p>
+        )}
+      {!consulta.isPaused && !consulta.isFetching && !consulta.isError && (
         <ul className="flex flex-col gap-1.5">
           {consulta.data?.pages.flat().map((item) => (
             <li
@@ -539,7 +569,7 @@ function SelecionarOs({
           ))}
         </ul>
       )}
-      {!consulta.isFetching && !consulta.isError && consulta.hasNextPage && (
+      {!consulta.isPaused && !consulta.isFetching && !consulta.isError && consulta.hasNextPage && (
         <Button size="sm" className="self-start" onClick={() => void consulta.fetchNextPage()}>
           Mais OS
         </Button>

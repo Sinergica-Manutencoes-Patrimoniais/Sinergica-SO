@@ -4,7 +4,7 @@
  * `OsKanbanView.tsx`): `draggable` + `dataTransfer` com MIME custom, coluna com `onDragOver`/
  * `onDrop`. Não reinventa a roda nem importa `dnd-kit`/`react-beautiful-dnd` para isto. */
 
-import { Badge, Button, Card, EmptyState } from "@sinergica/ui";
+import { Badge, Button, Card, EmptyState, Select } from "@sinergica/ui";
 import { RefreshCw } from "lucide-react";
 import { type DragEvent, useMemo, useState } from "react";
 import { usePermissoes } from "../../../app/permissoes-context";
@@ -33,7 +33,7 @@ function formatarValor(centavos: number): string {
 
 /** Pendência de soltar numa etapa `perdida`: guarda a origem para devolver o card se o usuário
  * cancelar o modal de motivo (AC-4 — nada é gravado no cancelamento). */
-interface SolturaPendente {
+interface MovimentoPendente {
   oportunidade: OportunidadeComConta;
   etapaDestino: Etapa;
 }
@@ -54,7 +54,7 @@ export function FunilPage({
   const mover = useMoverOportunidade(supabaseComercialAdapter);
 
   const [colunaAlvo, setColunaAlvo] = useState<string | null>(null);
-  const [pendente, setPendente] = useState<SolturaPendente | null>(null);
+  const [pendente, setPendente] = useState<MovimentoPendente | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   const etapas = etapasQuery.data ?? [];
@@ -81,12 +81,9 @@ export function FunilPage({
     }
   }
 
-  function onDropNaColuna(destino: Etapa, event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    setColunaAlvo(null);
-    const id = event.dataTransfer.getData(DRAG_MIME);
-    const oportunidade = oportunidades.find((op) => op.id === id);
-    if (!oportunidade || oportunidade.etapaId === destino.id) return;
+  function solicitarMovimento(oportunidade: OportunidadeComConta, destino: Etapa) {
+    if (!temEscrita || mover.isPending || pendente || oportunidade.etapaId === destino.id) return;
+    setErro(null);
 
     // Perda exige motivo ANTES de gravar (AC-4) — abre o modal em vez de escrever direto.
     if (destino.tipo === "perdida") {
@@ -100,6 +97,14 @@ export function FunilPage({
       return;
     }
     mover_(oportunidade, destino);
+  }
+
+  function onDropNaColuna(destino: Etapa, event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setColunaAlvo(null);
+    const id = event.dataTransfer.getData(DRAG_MIME);
+    const oportunidade = oportunidades.find((op) => op.id === id);
+    if (oportunidade) solicitarMovimento(oportunidade, destino);
   }
 
   if (permissoesCarregando) return null;
@@ -120,7 +125,7 @@ export function FunilPage({
         <div>
           <h1 className="font-brand text-title font-bold text-ink">Funil</h1>
           <p className="text-body text-ink-2">
-            Arraste o card para mudar a etapa. Etapas e motivos: Configuração do funil.
+            {temEscrita && "Para mudar a etapa, use o seletor no cartão ou arraste o cartão."}
           </p>
         </div>
         <Button
@@ -137,7 +142,9 @@ export function FunilPage({
 
       {erro && (
         <Card>
-          <p className="p-3 text-body text-danger">{erro}</p>
+          <p role="alert" className="p-3 text-body text-danger">
+            {erro}
+          </p>
         </Card>
       )}
 
@@ -226,6 +233,14 @@ export function FunilPage({
                             )}
                           </div>
                         </button>
+                        {temEscrita && visiveis.length > 1 && (
+                          <MoverEtapaForm
+                            oportunidade={op}
+                            etapas={visiveis}
+                            ocupado={mover.isPending}
+                            onMover={(destino) => solicitarMovimento(op, destino)}
+                          />
+                        )}
                       </div>
                     ))
                   )}
@@ -247,5 +262,48 @@ export function FunilPage({
         />
       )}
     </div>
+  );
+}
+
+function MoverEtapaForm({
+  oportunidade,
+  etapas,
+  ocupado,
+  onMover,
+}: {
+  oportunidade: OportunidadeComConta;
+  etapas: Etapa[];
+  ocupado: boolean;
+  onMover: (destino: Etapa) => void;
+}) {
+  const [destinoId, setDestinoId] = useState("");
+  const destinos = etapas.filter((etapa) => etapa.id !== oportunidade.etapaId);
+  const destino = destinos.find((etapa) => etapa.id === destinoId);
+
+  return (
+    <form
+      className="mt-2 flex flex-wrap items-center gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (destino) onMover(destino);
+      }}
+    >
+      <Select
+        aria-label={`Etapa de destino para ${oportunidade.titulo} · ${oportunidade.clienteNome}`}
+        value={destino?.id ?? ""}
+        onChange={(event) => setDestinoId(event.target.value)}
+        disabled={ocupado}
+      >
+        <option value="">Escolher etapa</option>
+        {destinos.map((etapa) => (
+          <option key={etapa.id} value={etapa.id}>
+            {etapa.nome}
+          </option>
+        ))}
+      </Select>
+      <Button type="submit" variant="secondary" disabled={ocupado || !destino}>
+        Mover oportunidade
+      </Button>
+    </form>
   );
 }

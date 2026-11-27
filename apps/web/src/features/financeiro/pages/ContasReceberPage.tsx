@@ -1,4 +1,4 @@
-import { Button, DataTable, Modal, Skeleton } from "@sinergica/ui";
+import { Button, DataTable, EmptyState, Modal, Skeleton } from "@sinergica/ui";
 import { AlertCircle, Copy, QrCode, RefreshCw, TrendingUp, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -151,19 +151,23 @@ export function ContasReceberPage() {
       </section>
 
       {visao === "faixa" ? (
-        <div className="flex flex-col gap-4">
-          {ORDEM_FAIXAS.map((faixa) => (
-            <FaixaSection
-              key={faixa}
-              faixa={faixa}
-              itens={grupos[faixa]}
-              clientePorId={clientePorId}
-              temEscrita={temEscrita}
-              onBaixar={setBaixando}
-              onCobrar={setCobrandoRecebivel}
-            />
-          ))}
-        </div>
+        recebiveis.length === 0 ? (
+          <EmptyState titulo="Nenhuma conta a receber em aberto." />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {ORDEM_FAIXAS.map((faixa) => (
+              <FaixaSection
+                key={faixa}
+                faixa={faixa}
+                itens={grupos[faixa]}
+                clientePorId={clientePorId}
+                temEscrita={temEscrita}
+                onBaixar={setBaixando}
+                onCobrar={setCobrandoRecebivel}
+              />
+            ))}
+          </div>
+        )
       ) : (
         <div className="rounded-lg border border-line bg-card p-4">
           <DataTable

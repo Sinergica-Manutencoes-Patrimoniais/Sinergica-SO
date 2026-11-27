@@ -9,7 +9,7 @@ export type CursorOperacao =
 
 export interface ConsultaOperacao {
   busca?: string;
-  status?: "ativos" | "todos" | "demanda" | StatusOrdemServico;
+  status?: "ativos" | "todos" | "aberto" | "demanda" | StatusOrdemServico;
   clienteId?: string;
   somenteBacklog?: boolean;
   prioridade?: string;

@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CentralMateriais, CentralMateriaisGlobal } from "./Central";
 
-const mocks = vi.hoisted(() => ({ consultar: vi.fn(), autorizar: vi.fn() }));
+const mocks = vi.hoisted(() => ({ consultar: vi.fn(), autorizar: vi.fn(), buscar: vi.fn() }));
 vi.mock("../../../../lib/supabase-client", () => ({
   supabase: { auth: { getUser: async () => ({ data: { user: { id: "usuario" } }, error: null }) } },
 }));
@@ -12,7 +12,10 @@ vi.mock("../../infrastructure/supabase-capacidades-sso-adapter", () => ({
   supabaseCapacidadesSsoAdapter: { autorizarAcao: mocks.autorizar },
 }));
 vi.mock("../../infrastructure/supabase-listas-materiais-adapter", () => ({
-  supabaseListasMateriaisAdapter: { consultarCentral: mocks.consultar },
+  supabaseListasMateriaisAdapter: {
+    consultarCentral: mocks.consultar,
+    buscarOsCentral: mocks.buscar,
+  },
 }));
 vi.mock("./Workspace", () => ({
   WorkspaceListasMateriais: ({
@@ -211,4 +214,30 @@ it("DEF-25: restaura o texto depois de ocultar a Central para revalidar permiss�
   expect(relatar).toHaveBeenLastCalledWith(true);
   await act(async () => autorizar(true));
   expect(await screen.findByLabelText("Texto da OS")).toHaveValue("Rascunho fictício");
+});
+
+it("mostra o número resolvido pelo seletor mediado sem imprimir o ID da OS", async () => {
+  vi.stubEnv("VITE_SSO_CENTRAL_MATERIAIS_ENABLED", "true");
+  vi.stubEnv("VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED", "true");
+  const id = "17900000-0000-4000-8000-000000000099";
+  mocks.autorizar.mockResolvedValue(true);
+  mocks.buscar.mockResolvedValue([{ id, numero: "CH-MATERIAL", titulo: "OS fictícia" }]);
+  mocks.consultar.mockResolvedValue([
+    {
+      id: "lista",
+      ordem_servico_id: id,
+      responsavel: "cliente",
+      estado: "concluida",
+      revisao: 3,
+      texto_original: "Material fictício",
+    },
+  ]);
+  const { container } = render(
+    <QueryClientProvider client={new QueryClient()}>
+      <CentralMateriais usuario="usuario" cliente="cliente" />
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText("OS CH-MATERIAL · Cliente · Concluída · revisão 3")).toBeVisible();
+  expect(container).not.toHaveTextContent(id);
+  expect(mocks.buscar).toHaveBeenCalledWith("cliente", "", 20, null, expect.any(AbortSignal));
 });

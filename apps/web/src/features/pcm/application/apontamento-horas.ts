@@ -20,12 +20,26 @@ export async function obterApontamentoHoras(
     gateway.listarTecnicos(),
     gateway.obterParametros(),
   ]);
+  const tecnicosDoHistorico = new Map(tecnicos.map((tecnico) => [tecnico.id, tecnico]));
+  // O período e o acesso aos apontamentos são aplicados pelo gateway. A escolha de
+  // técnico não pode reduzir as próprias opções; o Cliente continua delimitando o histórico.
+  const itensDoCliente = filtrarApontamentos(itensBrutos, {
+    ...filtros,
+    tecnicoFuncionarioId: null,
+  });
+  for (const item of itensDoCliente) {
+    const id = item.tecnicoFuncionarioId;
+    if (!id || !(item.horas > 0) || tecnicosDoHistorico.has(id)) continue;
+    tecnicosDoHistorico.set(id, { id, nome: item.tecnicoNome, jornadaDiariaHoras: null });
+  }
   const itens = filtrarApontamentos(itensBrutos, filtros);
   const jornadaPorTecnico = new Map(tecnicos.map((t) => [t.id, t.jornadaDiariaHoras] as const));
   return {
     itens,
     clientes,
-    tecnicos,
+    tecnicos: [...tecnicosDoHistorico.values()].sort((a, b) =>
+      a.nome.localeCompare(b.nome, "pt-BR"),
+    ),
     porCliente: agregarPorCliente(itens),
     porTecnico: agregarPorTecnico(itens),
     porDia: enriquecerComJornada(agruparPorDia(itens), jornadaPorTecnico),

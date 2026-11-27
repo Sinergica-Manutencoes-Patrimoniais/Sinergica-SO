@@ -659,7 +659,7 @@ export function InspecoesPage({
               className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-success px-2 text-caption font-semibold text-success hover:bg-success-soft"
             >
               <Sheet className="h-4 w-4" />
-              XLS
+              Importar XLS
             </button>
             <button
               type="button"
@@ -670,7 +670,7 @@ export function InspecoesPage({
               className="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-info px-2 text-caption font-semibold text-info hover:bg-info-soft"
             >
               <FileText className="h-4 w-4" />
-              PDF
+              Importar PDF
             </button>
             <button
               type="button"
@@ -1811,28 +1811,33 @@ function NovoItemModal({
       title={item ? "Editar item de inspeção" : "Novo item de inspeção"}
       onClose={onClose}
     >
-      <div>
-        <p className="mb-2 text-center text-caption font-semibold text-ink-3">Sistema / Área *</p>
+      <fieldset>
+        <legend className="mb-2 w-full text-center text-caption font-semibold text-ink-3">
+          Sistema / Área *
+        </legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {SISTEMAS.map((sistema) => (
             <button
               key={sistema}
               type="button"
+              aria-pressed={form.sistema === sistema}
               onClick={() => setForm((atual) => ({ ...atual, sistema }))}
               className={`flex min-h-18 flex-col items-center justify-center gap-1 rounded-lg border px-2 py-3 text-body font-semibold transition-colors ${
                 form.sistema === sistema
-                  ? "border-navy bg-info-soft text-navy"
+                  ? "border-info bg-info-soft text-info"
                   : "border-line text-ink-3 hover:border-navy/40 hover:text-ink"
               }`}
             >
-              <span className="text-title">{SISTEMA_ICONE[sistema]}</span>
+              <span aria-hidden className="text-title">
+                {SISTEMA_ICONE[sistema]}
+              </span>
               <span className="text-center text-caption">
                 {rotuloSistema(sistema).split("/")[0]}
               </span>
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Categoria">
           <input

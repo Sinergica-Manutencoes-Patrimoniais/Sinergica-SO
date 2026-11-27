@@ -10,6 +10,7 @@ import { DetalheEvento } from "./DetalheEvento";
 import { EvidenciasExcecao } from "./EvidenciasExcecao";
 import { ImpedimentoMaterialOs } from "./ImpedimentoMaterialOs";
 import { ObservacoesExcecao } from "./ObservacoesExcecao";
+import { ResumoEventoMaterial } from "./ResumoEventoMaterial";
 
 // Os 5 tipos de evento que a lista aceita. `aquisicao`, `dispensa` e `conclusao` entraram com a
 // migration 1843 e são os que levam a lista aos 3 estados do §8.2 que antes não existiam.
@@ -29,6 +30,7 @@ type Props = {
   ordemServico: string;
   listaId: string;
   revisao: number;
+  somenteLeitura?: boolean;
   rascunho?: RascunhoInformacaoMaterial;
   onRascunho?: (rascunho: RascunhoInformacaoMaterial) => void;
   onSalvo?: () => void;
@@ -47,6 +49,7 @@ function Conteudo({
   ordemServico,
   listaId,
   revisao,
+  somenteLeitura: leituraSolicitada = false,
   rascunho,
   onRascunho,
   onSalvo,
@@ -85,6 +88,8 @@ function Conteudo({
     if (JSON.stringify(estado) !== estadoInicial.current) relatarRascunho.current?.(estado);
   }, [tipo, situacao, motivo, descricao, linha, justificativa]);
   const [erro, setErro] = useState("");
+  const [concluidaNoServidor, setConcluidaNoServidor] = useState(false);
+  const somenteLeitura = leituraSolicitada || concluidaNoServidor;
   const [confirmacao, setConfirmacao] = useState<string | null>(null);
   const fotografia = JSON.stringify({
     usuario,
@@ -115,7 +120,7 @@ function Conteudo({
         throw new Error("Sessão alterada.");
       return dados;
     },
-    enabled: tipo === "excecao" && !pendente,
+    enabled: !somenteLeitura && tipo === "excecao" && !pendente,
     gcTime: 0,
   });
   const eventos = useInfiniteQuery({
@@ -140,7 +145,7 @@ function Conteudo({
     gcTime: 0,
   });
   async function enviar(comando: InformarMaterial) {
-    if (emEnvio.current) return;
+    if (somenteLeitura || emEnvio.current) return;
     emEnvio.current = true;
     setOcupado(true);
     setErro("");
@@ -168,7 +173,17 @@ function Conteudo({
       setPendente(null);
       setConfirmacao(null);
       onSalvo?.();
-    } catch {
+    } catch (falha) {
+      if (
+        falha &&
+        typeof falha === "object" &&
+        "message" in falha &&
+        falha.message === "lista_materiais_concluida"
+      ) {
+        setConcluidaNoServidor(true);
+        void client.invalidateQueries({ queryKey: [...raiz, "listas"] });
+        return;
+      }
       setErro(
         "Não foi possível confirmar. Tente novamente com os mesmos dados ou consulte o suporte.",
       );
@@ -242,9 +257,11 @@ function Conteudo({
         Disponibilidade é informativa e não comprova conferência física. Registrar exceção não
         altera a OS.
       </p>
-      {recuperacao.falhou && <p role="alert">Operação guardada inválida. Consulte o suporte.</p>}
-      {erro && <p role="alert">{erro}</p>}
-      {revisaoAlterada && !pendente && (
+      {!somenteLeitura && recuperacao.falhou && (
+        <p role="alert">Operação guardada inválida. Consulte o suporte.</p>
+      )}
+      {!somenteLeitura && erro && <p role="alert">{erro}</p>}
+      {!somenteLeitura && revisaoAlterada && !pendente && (
         <p role="alert">
           A lista mudou desde o início da informação. Confira a revisão atual; a linha de exceção
           precisará ser escolhida novamente.{" "}
@@ -260,12 +277,12 @@ function Conteudo({
           </button>
         </p>
       )}
-      {pendente && (
+      {!somenteLeitura && pendente && (
         <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>
           Tentar informar novamente
         </button>
       )}
-      {!pendente && !recuperacao.falhou && (
+      {!somenteLeitura && !pendente && !recuperacao.falhou && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -388,6 +405,9 @@ function Conteudo({
           </button>
         </form>
       )}
+      {concluidaNoServidor && (
+        <p role="alert">Lista concluída. A alteração não pode ser registrada.</p>
+      )}
       {eventos.isFetching && <output>Consultando histórico…</output>}
       {eventos.isError && (
         <p role="alert">
@@ -404,7 +424,7 @@ function Conteudo({
         <ul>
           {eventos.data?.pages.flat().map((evento) => (
             <li key={evento.revisao}>
-              {evento.tipo === "excecao" && (
+              {!somenteLeitura && evento.tipo === "excecao" && (
                 <EvidenciasExcecao
                   usuario={usuario}
                   cliente={cliente}
@@ -412,7 +432,7 @@ function Conteudo({
                   revision={evento.revisao}
                 />
               )}
-              {evento.tipo === "excecao" && (
+              {!somenteLeitura && evento.tipo === "excecao" && (
                 <ObservacoesExcecao
                   usuario={usuario}
                   cliente={cliente}
@@ -422,7 +442,7 @@ function Conteudo({
                   eventoRevision={evento.revisao}
                 />
               )}
-              {evento.tipo === "excecao" && (
+              {!somenteLeitura && evento.tipo === "excecao" && (
                 <ImpedimentoMaterialOs
                   usuario={usuario}
                   cliente={cliente}
@@ -431,8 +451,7 @@ function Conteudo({
                   eventoRevision={evento.revisao}
                 />
               )}
-              Revisão {evento.revisao} · {evento.tipo} · responsável {evento.ator_id} ·{" "}
-              {evento.criado_em}
+              <ResumoEventoMaterial evento={evento} usuario={usuario} />
               <DetalheEvento
                 usuario={usuario}
                 cliente={cliente}

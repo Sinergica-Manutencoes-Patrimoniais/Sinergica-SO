@@ -121,6 +121,12 @@ export function useFeedsKanban(
     { ...base, status: "solicitacao" },
     enabled && permitido("solicitacao"),
   );
+  const incluirAbertos = permitido("solicitacao");
+  const abertos = useFeedOperacao(
+    gateway,
+    { ...base, status: "aberto" },
+    enabled && incluirAbertos,
+  );
   const corretiva = useFeedOperacao(
     gateway,
     { ...base, status: "corretiva" },
@@ -163,6 +169,7 @@ export function useFeedsKanban(
   );
   const consultas = [
     [solicitacao, permitido("solicitacao")],
+    [abertos, incluirAbertos],
     [corretiva, permitido("corretiva")],
     [backlog, permitido("backlog")],
     [demanda, permitido("demanda")],
