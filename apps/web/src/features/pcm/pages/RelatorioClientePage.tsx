@@ -4,6 +4,7 @@ import { Download, Send } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { flagLigada } from "../../../config/flags-sso";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { criarRelatorioPdf } from "../../../lib/pdf/relatorio-pdf";
 import {
   erroPeriodoRelatorioCliente,
@@ -22,13 +23,9 @@ import { supabaseQualidadeAdapter } from "../infrastructure/supabase-qualidade-a
 import { supabaseRelatorioClienteAdapter } from "../infrastructure/supabase-relatorio-cliente-adapter";
 import { RelatorioClienteDespesas } from "../interfaces/despesas-visita/RelatorioClienteDespesas";
 
-function hoje(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function inicioDoMes(): string {
   const agora = new Date();
-  return new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString().slice(0, 10);
+  return dataIsoLocal(new Date(agora.getFullYear(), agora.getMonth(), 1));
 }
 
 export function RelatorioClientePage() {
@@ -39,7 +36,7 @@ export function RelatorioClientePage() {
   const revisaoFiltros = useRef(0);
   const [clienteId, setClienteId] = useState("");
   const [inicio, setInicio] = useState(inicioDoMes);
-  const [fim, setFim] = useState(hoje);
+  const [fim, setFim] = useState(dataIsoLocal);
   const [relatorio, setRelatorio] = useState<RelatorioCliente | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [gerando, setGerando] = useState(false);

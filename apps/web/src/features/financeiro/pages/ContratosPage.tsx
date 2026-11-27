@@ -3,6 +3,7 @@ import { AlertTriangle, FileText, Pencil, Plus, RefreshCw, Wand2 } from "lucide-
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { dataIsoLocal } from "../../../lib/data-br";
 import {
   criarContrato,
   editarContrato,
@@ -271,7 +272,7 @@ function ContratoModal({
     contrato ? centavosParaReais(contrato.valorMensalCentavos) : "",
   );
   const [diaVencimento, setDiaVencimento] = useState(contrato?.diaVencimento ?? 10);
-  const [inicio, setInicio] = useState(contrato?.inicio ?? new Date().toISOString().slice(0, 10));
+  const [inicio, setInicio] = useState(contrato?.inicio ?? dataIsoLocal());
   const [fim, setFim] = useState(contrato?.fim ?? "");
   const [status, setStatus] = useState<ContratoStatus>(contrato?.status ?? "ativo");
   const [bloqueia, setBloqueia] = useState(contrato?.bloqueiaOsEmAtraso ?? false);

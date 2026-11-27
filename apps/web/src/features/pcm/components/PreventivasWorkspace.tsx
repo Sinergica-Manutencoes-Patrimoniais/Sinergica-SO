@@ -2,6 +2,8 @@ import { Button, ConfirmDialog, Modal, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Clock3, List, Pause, Play, Plus, RefreshCw, Send } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { flagLigada } from "../../../config/flags-sso";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { erroDetalhado } from "../../../lib/http/edge-function-error";
 import { supabase } from "../../../lib/supabase-client";
 import { registrarEventoCliente360 } from "../application/cliente-360-telemetria";
@@ -26,7 +28,6 @@ import { PreventivaDetalheDrawer } from "./PreventivaDetalheDrawer";
 import { PreventivasCalendarioView } from "./PreventivasCalendarioView";
 import { PreventivasListaView } from "./PreventivasListaView";
 import { PreventivasTimelineView } from "./PreventivasTimelineView";
-import { flagLigada } from "../../../config/flags-sso";
 
 type VisaoPreventivas = "lista" | "timeline" | "calendario";
 
@@ -71,7 +72,7 @@ const criarFormVazio = (clienteId = ""): FormPlano => ({
   alvoId: "",
   questionarioId: "",
   tipoTarefaId: "",
-  primeiraData: new Date().toISOString().slice(0, 10),
+  primeiraData: dataIsoLocal(),
   intervaloN: 1,
   unidade: "meses",
 });
@@ -303,7 +304,7 @@ export function PreventivasWorkspace({
         alvoId: plano.sistema_id ?? plano.equipamento_id ?? "",
         questionarioId: plano.questionario_id,
         tipoTarefaId: plano.tipo_tarefa_id,
-        primeiraData: new Date().toISOString().slice(0, 10),
+        primeiraData: dataIsoLocal(),
         intervaloN: plano.intervalo_n,
         unidade: plano.intervalo_unidade,
       });
@@ -480,7 +481,7 @@ export function PreventivasWorkspace({
   const planos = dados?.planos ?? [];
   const ocorrencias = dados?.ocorrencias ?? [];
   const avaliacoes = dados?.avaliacoes ?? [];
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = dataIsoLocal();
   const avaliacoesPorOcorrencia = new Map<string, AvaliacaoPreventiva[]>();
   for (const avaliacao of avaliacoes) {
     avaliacoesPorOcorrencia.set(avaliacao.ocorrencia_id, [
@@ -489,18 +490,20 @@ export function PreventivasWorkspace({
     ]);
   }
   const estadoDaOcorrencia = (ocorrencia: OcorrenciaPreventiva) =>
-    (ocorrencia.ordens_vinculadas?.length ?? 0) > 1 ? "conferencia" as const : calcularStatusOcorrenciaPreventiva(
-      {
-        vencimento: ocorrencia.vencimento,
-        ordemServico: ocorrencia.auvo_task_id
-          ? {
-              status: ocorrencia.os_status ?? "planejamento",
-              auvoDisponivel: ocorrencia.envio_estado === "disponivel",
-            }
-          : null,
-      },
-      hoje,
-    );
+    (ocorrencia.ordens_vinculadas?.length ?? 0) > 1
+      ? ("conferencia" as const)
+      : calcularStatusOcorrenciaPreventiva(
+          {
+            vencimento: ocorrencia.vencimento,
+            ordemServico: ocorrencia.auvo_task_id
+              ? {
+                  status: ocorrencia.os_status ?? "planejamento",
+                  auvoDisponivel: ocorrencia.envio_estado === "disponivel",
+                }
+              : null,
+          },
+          hoje,
+        );
   const historico = ocorrencias
     .filter((ocorrencia) => ocorrencia.auvo_task_id !== null)
     .sort((a, b) =>
@@ -546,14 +549,16 @@ export function PreventivasWorkspace({
       : ocorrenciaSelecionada
         ? (planoPorId.get(ocorrenciaSelecionada.plano_id) ?? null)
         : null;
-  const itensDaVisao = ocorrencias.filter((ocorrencia) => ocorrencia.reconciliacao_legada !== "substituida").map((ocorrencia) => ({
-    id: ocorrencia.id,
-    nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
-    vencimento: ocorrencia.vencimento,
-    visitaEm: ocorrencia.visita_em,
-    estado: estadoDaOcorrencia(ocorrencia),
-    resultado: ocorrencia.resultado_estado,
-  }));
+  const itensDaVisao = ocorrencias
+    .filter((ocorrencia) => ocorrencia.reconciliacao_legada !== "substituida")
+    .map((ocorrencia) => ({
+      id: ocorrencia.id,
+      nomePlano: planoPorId.get(ocorrencia.plano_id)?.nome ?? "Plano removido",
+      vencimento: ocorrencia.vencimento,
+      visitaEm: ocorrencia.visita_em,
+      estado: estadoDaOcorrencia(ocorrencia),
+      resultado: ocorrencia.resultado_estado,
+    }));
 
   function selecionarOcorrencia(ocorrenciaId: string) {
     setDetalhePreventiva({ tipo: "ocorrencia", id: ocorrenciaId });
@@ -710,18 +715,24 @@ export function PreventivasWorkspace({
                       </p>
                       <p className="text-sm text-ink-3">
                         {(ocorrencia.ordens_vinculadas?.length ?? 0) > 1
-                          ? `${ocorrencia.ordens_vinculadas!.length} OS vinculadas — conferir ordens`
+                          ? `${ocorrencia.ordens_vinculadas?.length} OS vinculadas — conferir ordens`
                           : ocorrencia.os_numero
-                          ? `OS ${ocorrencia.os_numero}`
-                          : `Tarefa Auvo #${ocorrencia.auvo_task_id}`}{" "}
+                            ? `OS ${ocorrencia.os_numero}`
+                            : `Tarefa Auvo #${ocorrencia.auvo_task_id}`}{" "}
                         · Técnico: {ocorrencia.tecnico_nome ?? "não informado"} ·{" "}
                         {ocorrencia.os_concluida_em
                           ? `Executada em ${dataHoraLocal(ocorrencia.os_concluida_em)}`
                           : rotuloEstado(ocorrencia)}
                       </p>
-                      {(ocorrencia.ordens_vinculadas?.length ?? 0) > 1 && <ul aria-label="Ordens vinculadas à ocorrência">
-                        {ocorrencia.ordens_vinculadas!.map((ordem) => <li key={ordem.id}>OS {ordem.numero} · {ordem.status}</li>)}
-                      </ul>}
+                      {(ocorrencia.ordens_vinculadas?.length ?? 0) > 1 && (
+                        <ul aria-label="Ordens vinculadas à ocorrência">
+                          {ocorrencia.ordens_vinculadas?.map((ordem) => (
+                            <li key={ordem.id}>
+                              OS {ordem.numero} · {ordem.status}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                     <span
                       className={`rounded-full px-2 py-1 text-caption font-semibold ${classeResultado(ocorrencia)}`}

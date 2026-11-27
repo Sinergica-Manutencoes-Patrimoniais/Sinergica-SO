@@ -1,6 +1,5 @@
-import { consultarEstadosLegadas } from "./estados-legadas-inertes";
+import { dataIsoLocal } from "../../../lib/data-br";
 import { supabase } from "../../../lib/supabase-client";
-import { listarOrdensDasOcorrencias, listarPaginasPreventivas } from "./supabase-preventivas-adapter";
 import type { DetalheSistemaGateway } from "../application/detalhe-sistema-gateway";
 import type {
   CadastroSistema,
@@ -9,6 +8,11 @@ import type {
   PreventivaSistema,
 } from "../domain/detalhe-sistema";
 import { agregarOsSistema } from "../domain/detalhe-sistema";
+import { consultarEstadosLegadas } from "./estados-legadas-inertes";
+import {
+  listarOrdensDasOcorrencias,
+  listarPaginasPreventivas,
+} from "./supabase-preventivas-adapter";
 
 type SistemaRow = {
   id: string;
@@ -78,21 +82,46 @@ function lancarSeErro(resultado: { error: unknown }) {
 }
 
 async function membrosAtuais(sistemaId: string, clienteId: string): Promise<ComponenteRow[]> {
-  const membros = await listarPaginasPreventivas<{ id: string; item_id: string }>((inicio, fim) => supabase
-    .schema("pcm").from("sistema_itens").select("id,item_id", { count: "exact" })
-    .eq("sistema_id", sistemaId).order("id").range(inicio, fim) as unknown as PromiseLike<{ data: Array<{ id: string; item_id: string }> | null; count: number | null; error: unknown }>);
+  const membros = await listarPaginasPreventivas<{ id: string; item_id: string }>(
+    (inicio, fim) =>
+      supabase
+        .schema("pcm")
+        .from("sistema_itens")
+        .select("id,item_id", { count: "exact" })
+        .eq("sistema_id", sistemaId)
+        .order("id")
+        .range(inicio, fim) as unknown as PromiseLike<{
+        data: Array<{ id: string; item_id: string }> | null;
+        count: number | null;
+        error: unknown;
+      }>,
+  );
   const ids = membros.map((row) => row.item_id);
-  if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length) throw new Error("Vínculos de Componentes duplicados.");
+  if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length)
+    throw new Error("Vínculos de Componentes duplicados.");
   if (ids.length === 0) return [];
   const componentes: ComponenteRow[] = [];
   for (let i = 0; i < ids.length; i += 100) {
     const lote = ids.slice(i, i + 100);
-    const pagina = await listarPaginasPreventivas<ComponenteRow>((inicio, fim) => supabase
-      .schema("pcm").from("equipamentos")
-      .select("id,nome,identificador,area_id,local_id,auvo_equipment_id", { count: "exact" })
-      .eq("client_id", clienteId).eq("ativo", true).is("deleted_at", null).in("id", lote)
-      .order("id").range(inicio, fim) as unknown as PromiseLike<{ data: ComponenteRow[] | null; count: number | null; error: unknown }>);
-    if (pagina.some((item) => !lote.includes(item.id))) throw new Error("Componente fora do contexto.");
+    const pagina = await listarPaginasPreventivas<ComponenteRow>(
+      (inicio, fim) =>
+        supabase
+          .schema("pcm")
+          .from("equipamentos")
+          .select("id,nome,identificador,area_id,local_id,auvo_equipment_id", { count: "exact" })
+          .eq("client_id", clienteId)
+          .eq("ativo", true)
+          .is("deleted_at", null)
+          .in("id", lote)
+          .order("id")
+          .range(inicio, fim) as unknown as PromiseLike<{
+          data: ComponenteRow[] | null;
+          count: number | null;
+          error: unknown;
+        }>,
+    );
+    if (pagina.some((item) => !lote.includes(item.id)))
+      throw new Error("Componente fora do contexto.");
     componentes.push(...pagina);
   }
   return componentes.sort((a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id));
@@ -143,10 +172,16 @@ async function posicoesDoCliente(clienteId: string) {
     let atual: string | null = id;
     let valido = true;
     while (atual) {
-      if (visitados.has(atual)) { valido = false; break; }
+      if (visitados.has(atual)) {
+        valido = false;
+        break;
+      }
       visitados.add(atual);
       const local = porId.get(atual);
-      if (!local || local.areaId !== primeiro.areaId) { valido = false; break; }
+      if (!local || local.areaId !== primeiro.areaId) {
+        valido = false;
+        break;
+      }
       nomes.push(local.nome);
       atual = local.parentId;
     }
@@ -378,25 +413,47 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
     const nomeSistema = sistemaResultado.data.nome as string;
     const idsComponentes = componentes.map((item) => item.id);
     const colunasPlano = "id,nome,estado,sistema_id,equipamento_id,intervalo_unidade,intervalo_n";
-    const planosSistema = await listarPaginasPreventivas<PlanoRow>((inicio, fim) => supabase
-      .schema("pcm").from("planos_preventivos").select(colunasPlano, { count: "exact" })
-      .eq("cliente_id", clienteId).eq("sistema_id", sistemaId).order("id").range(inicio, fim) as unknown as PromiseLike<{ data: PlanoRow[] | null; count: number | null; error: unknown }>);
+    const planosSistema = await listarPaginasPreventivas<PlanoRow>(
+      (inicio, fim) =>
+        supabase
+          .schema("pcm")
+          .from("planos_preventivos")
+          .select(colunasPlano, { count: "exact" })
+          .eq("cliente_id", clienteId)
+          .eq("sistema_id", sistemaId)
+          .order("id")
+          .range(inicio, fim) as unknown as PromiseLike<{
+          data: PlanoRow[] | null;
+          count: number | null;
+          error: unknown;
+        }>,
+    );
     const planosComponentes: PlanoRow[] = [];
     for (let i = 0; i < idsComponentes.length; i += 100) {
       const lote = idsComponentes.slice(i, i + 100);
-      const pagina = await listarPaginasPreventivas<PlanoRow>((inicio, fim) => supabase
-        .schema("pcm").from("planos_preventivos").select(colunasPlano, { count: "exact" })
-        .eq("cliente_id", clienteId).in("equipamento_id", lote).order("id").range(inicio, fim) as unknown as PromiseLike<{ data: PlanoRow[] | null; count: number | null; error: unknown }>);
-      if (pagina.some((plano) => !plano.equipamento_id || !lote.includes(plano.equipamento_id))) throw new Error("Plano fora do contexto.");
+      const pagina = await listarPaginasPreventivas<PlanoRow>(
+        (inicio, fim) =>
+          supabase
+            .schema("pcm")
+            .from("planos_preventivos")
+            .select(colunasPlano, { count: "exact" })
+            .eq("cliente_id", clienteId)
+            .in("equipamento_id", lote)
+            .order("id")
+            .range(inicio, fim) as unknown as PromiseLike<{
+            data: PlanoRow[] | null;
+            count: number | null;
+            error: unknown;
+          }>,
+      );
+      if (pagina.some((plano) => !plano.equipamento_id || !lote.includes(plano.equipamento_id)))
+        throw new Error("Plano fora do contexto.");
       planosComponentes.push(...pagina);
       if (planosComponentes.length > 50_000) throw new Error("Limite de Planos excedido.");
     }
     const planos = [
       ...new Map(
-        [
-          ...planosSistema,
-          ...planosComponentes,
-        ].map((plano) => [plano.id, plano]),
+        [...planosSistema, ...planosComponentes].map((plano) => [plano.id, plano]),
       ).values(),
     ];
     if (planos.length === 0) return [];
@@ -404,15 +461,32 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
     const ocorrencias: OcorrenciaRow[] = [];
     for (let i = 0; i < planoIds.length; i += 100) {
       const lote = planoIds.slice(i, i + 100);
-      const pagina = await listarPaginasPreventivas<OcorrenciaRow>((inicio, fim) => supabase
-        .schema("pcm").from("ocorrencias_preventivas")
-        .select("id,plano_id,vencimento,visita_em,envio_estado,auvo_task_id,tecnico_funcionario_id,resultado_estado", { count: "exact" })
-        .in("plano_id", lote).eq("origem", "legado").order("id").range(inicio, fim) as unknown as PromiseLike<{ data: OcorrenciaRow[] | null; count: number | null; error: unknown }>);
-      if (pagina.some((ocorrencia) => !lote.includes(ocorrencia.plano_id))) throw new Error("Ocorrência fora do contexto.");
+      const pagina = await listarPaginasPreventivas<OcorrenciaRow>(
+        (inicio, fim) =>
+          supabase
+            .schema("pcm")
+            .from("ocorrencias_preventivas")
+            .select(
+              "id,plano_id,vencimento,visita_em,envio_estado,auvo_task_id,tecnico_funcionario_id,resultado_estado",
+              { count: "exact" },
+            )
+            .in("plano_id", lote)
+            .eq("origem", "legado")
+            .order("id")
+            .range(inicio, fim) as unknown as PromiseLike<{
+            data: OcorrenciaRow[] | null;
+            count: number | null;
+            error: unknown;
+          }>,
+      );
+      if (pagina.some((ocorrencia) => !lote.includes(ocorrencia.plano_id)))
+        throw new Error("Ocorrência fora do contexto.");
       ocorrencias.push(...pagina);
       if (ocorrencias.length > 50_000) throw new Error("Limite de ocorrências excedido.");
     }
-    ocorrencias.sort((a, b) => a.vencimento.localeCompare(b.vencimento) || a.id.localeCompare(b.id));
+    ocorrencias.sort(
+      (a, b) => a.vencimento.localeCompare(b.vencimento) || a.id.localeCompare(b.id),
+    );
     const ocorrenciaIds = ocorrencias.map((ocorrencia) => ocorrencia.id);
     const estadosLegadas = await consultarEstadosLegadas(clienteId, ocorrenciaIds);
     const [ordens, tecnicos] = await Promise.all([
@@ -448,7 +522,7 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
       (tecnicos.data ?? []).map((tecnico) => [tecnico.id as string, tecnico.nome as string]),
     );
     const componentePorId = new Map(componentes.map((item) => [item.id, item.nome]));
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = dataIsoLocal();
     return planos.map((plano) => {
       const ocorrenciasDoPlano = ocorrencias.filter(
         (ocorrencia) => ocorrencia.plano_id === plano.id,
@@ -464,8 +538,11 @@ export const supabaseDetalheSistemaAdapter: DetalheSistemaGateway = {
         proximoVencimento:
           plano.estado === "pausado"
             ? null
-            : (ocorrenciasDoPlano.find((ocorrencia) => estadosLegadas.get(ocorrencia.id) !== "substituida" && ocorrencia.vencimento >= hoje)?.vencimento ??
-              null),
+            : (ocorrenciasDoPlano.find(
+                (ocorrencia) =>
+                  estadosLegadas.get(ocorrencia.id) !== "substituida" &&
+                  ocorrencia.vencimento >= hoje,
+              )?.vencimento ?? null),
         ocorrencias: ocorrenciasDoPlano.map((ocorrencia) => {
           const vinculadas = osPorOcorrencia.get(ocorrencia.id) ?? [];
           const ordem = vinculadas.length === 1 ? vinculadas[0] : undefined;

@@ -1,10 +1,11 @@
+import { dataIsoLocal } from "../../../lib/data-br";
 /** Dashboard comercial (E03-S08). Responde "o funil está funcionando?" — tudo agregado server-side
  * (RPCs, migration 0196), nunca calculado no browser a partir da tabela inteira (AC-1). */
 
 import { Card, EmptyState, Skeleton } from "@sinergica/ui";
 import { useState } from "react";
-import { usePermissoes } from "../../../app/permissoes-context";
 import { useAuth } from "../../../app/auth-context";
+import { usePermissoes } from "../../../app/permissoes-context";
 import type { PeriodoDashboard } from "../application/dashboard-gateway";
 import {
   useCicloVenda,
@@ -24,11 +25,10 @@ import {
 import { supabaseDashboardAdapter } from "../infrastructure/supabase-dashboard-adapter";
 import { PainelGlobalOperacional } from "../interfaces/orcamento-operacional/PainelGlobalOperacional";
 
-function hojeIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 function diasAtrasIso(dias: number): string {
-  return new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const data = new Date();
+  data.setDate(data.getDate() - dias);
+  return dataIsoLocal(data);
 }
 
 function formatarValor(centavos: number | null): string {
@@ -64,7 +64,7 @@ export function DashboardComercialPage() {
 
   const [periodo, setPeriodo] = useState<PeriodoDashboard>({
     inicio: diasAtrasIso(90),
-    fim: hojeIso(),
+    fim: dataIsoLocal(),
   });
 
   const conversaoQuery = useConversaoEtapas(supabaseDashboardAdapter, periodo, temLeitura);
@@ -90,7 +90,9 @@ export function DashboardComercialPage() {
 
   return (
     <div className="space-y-4">
-      {user?.id && <PainelGlobalOperacional usuario={user.id} inicio={periodo.inicio} fim={periodo.fim} />}
+      {user?.id && (
+        <PainelGlobalOperacional usuario={user.id} inicio={periodo.inicio} fim={periodo.fim} />
+      )}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">Dashboard comercial</h1>

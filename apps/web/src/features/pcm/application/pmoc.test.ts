@@ -381,6 +381,22 @@ describe("pmoc application", () => {
     );
   });
 
+  it.each([20, 21])("grava a data local ao fechar uma NC às %ih", async (hora) => {
+    vi.stubEnv("TZ", "America/Sao_Paulo");
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 26, hora, 30));
+    try {
+      const gateway = gatewayFake();
+      await avancarStatusNc(gateway, "em_andamento", { id: "nc-1", status: "fechado" });
+      expect(gateway.atualizarStatusNc).toHaveBeenCalledWith(
+        expect.objectContaining({ completedAt: "2026-11-26" }),
+      );
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("bloqueia pulo direto aberto->fechado (AC-6)", async () => {
     await expect(
       avancarStatusNc(gatewayFake(), "aberto", { id: "nc-1", status: "fechado" }),

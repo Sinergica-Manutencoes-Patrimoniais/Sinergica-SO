@@ -1,3 +1,4 @@
+import { dataIsoLocal } from "../../../lib/data-br";
 /** Adapter Supabase do contrato comercial (E03-S07). Roda sob RLS.
  *
  * Criar/ativar/encerrar passam pelas RPCs (migration 0193) — nunca insert/update solto pra essas
@@ -123,7 +124,7 @@ export const supabaseContratoAdapter: ContratoGateway = {
       .rpc("fn_encerrar_contrato", {
         p_contrato_id: input.contratoId,
         p_motivo: input.motivo,
-        p_data: input.data ?? new Date().toISOString().slice(0, 10),
+        p_data: input.data ?? dataIsoLocal(),
       })
       .single();
     if (error) throw error;

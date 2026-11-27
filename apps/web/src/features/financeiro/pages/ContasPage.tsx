@@ -3,7 +3,7 @@ import { ArrowLeftRight, Building2, Pencil, Plus, RefreshCw, Trash2 } from "luci
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
-import { formatarDataBr } from "../../../lib/data-br";
+import { dataIsoLocal, formatarDataBr } from "../../../lib/data-br";
 import { criarConta, desativarConta, editarConta, listarContas } from "../application/contas";
 import { criarTransferencia } from "../application/robustez";
 import type { ContaBancariaFormData, ContaBancariaItem } from "../domain/conta-bancaria";
@@ -249,9 +249,7 @@ function ContaModal({
   const [saldoInicial, setSaldoInicial] = useState(
     conta ? centavosParaReais(conta.saldoInicialCentavos) : "0,00",
   );
-  const [saldoInicialEm, setSaldoInicialEm] = useState(
-    conta?.saldoInicialEm ?? new Date().toISOString().slice(0, 10),
-  );
+  const [saldoInicialEm, setSaldoInicialEm] = useState(conta?.saldoInicialEm ?? dataIsoLocal());
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -352,7 +350,7 @@ function TransferenciaModal({
   const [contaOrigemId, setContaOrigemId] = useState("");
   const [contaDestinoId, setContaDestinoId] = useState("");
   const [valor, setValor] = useState("");
-  const [data, setData] = useState(new Date().toISOString().slice(0, 10));
+  const [data, setData] = useState(dataIsoLocal());
   const [descricao, setDescricao] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
