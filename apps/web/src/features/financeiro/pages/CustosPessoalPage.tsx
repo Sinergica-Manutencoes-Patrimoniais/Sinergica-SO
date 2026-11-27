@@ -1,71 +1,42 @@
 import { Button, Modal, Skeleton } from "@sinergica/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus, RefreshCw, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
+import { dataIsoLocal, formatarDataBr } from "../../../lib/data-br";
 import type { FuncionarioOpcao } from "../application/financeiro-gateway";
-import {
-  criarCustoFuncionario,
-  listarCustosFuncionario,
-  listarFuncionariosOpcoes,
-} from "../application/rentabilidade";
+import { criarCustoFuncionario } from "../application/rentabilidade";
+import { rentabilidadeQueryKeys, useCustosPessoal } from "../application/rentabilidade-queries";
 import { centavosParaReais, reaisParaCentavos } from "../domain/dinheiro";
-import { custoHoraDerivado, validarCustoFuncionario } from "../domain/rentabilidade";
+import { custoHoraDerivadoCentavos, validarCustoFuncionario } from "../domain/rentabilidade";
 import type { CustoFuncionarioFormData, CustoFuncionarioItem } from "../domain/rentabilidade";
 import { supabaseFinanceiroAdapter } from "../infrastructure/supabase-financeiro-adapter";
-
-type Estado =
-  | { fase: "carregando" }
-  | { fase: "erro"; mensagem: string }
-  | { fase: "pronto"; custos: CustoFuncionarioItem[]; funcionarios: FuncionarioOpcao[] };
 
 export function CustosPessoalPage() {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
-  const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
+  const queryClient = useQueryClient();
   const [modalAberto, setModalAberto] = useState(false);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
 
   const temLeitura = podeAcessar("financeiro", "leitura");
   const temEscrita = podeAcessar("financeiro", "escrita");
-
-  const carregar = useCallback(async () => {
-    setEstado((atual) => (atual.fase === "pronto" ? atual : { fase: "carregando" }));
-    try {
-      const [custos, funcionarios] = await Promise.all([
-        listarCustosFuncionario(supabaseFinanceiroAdapter),
-        listarFuncionariosOpcoes(supabaseFinanceiroAdapter),
-      ]);
-      setEstado({ fase: "pronto", custos, funcionarios });
-    } catch (error) {
-      setEstado({
-        fase: "erro",
-        mensagem: error instanceof Error ? error.message : "Falha ao carregar custos de pessoal.",
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!permissoesCarregando && temLeitura) carregar();
-  }, [permissoesCarregando, temLeitura, carregar]);
+  const consulta = useCustosPessoal(
+    supabaseFinanceiroAdapter,
+    user?.id,
+    !permissoesCarregando && temLeitura,
+  );
 
   async function salvar(input: CustoFuncionarioFormData) {
     if (!user) return;
-    setErroAcao(null);
     await criarCustoFuncionario(supabaseFinanceiroAdapter, { ...input, userId: user.id });
     setModalAberto(false);
-    await carregar();
+    await queryClient.invalidateQueries({
+      queryKey: rentabilidadeQueryKeys.custosPessoal(user.id),
+    });
   }
 
-  if (permissoesCarregando || estado.fase === "carregando")
-    return (
-      <div className="flex flex-col gap-3 p-8">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-full max-w-md" />
-        <Skeleton className="h-4 w-full max-w-sm" />
-      </div>
-    );
-  if (!temLeitura) {
+  if (!permissoesCarregando && !temLeitura) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Acesso restrito</h2>
@@ -75,14 +46,26 @@ export function CustosPessoalPage() {
       </div>
     );
   }
-  if (estado.fase === "erro") {
+  if (permissoesCarregando || consulta.isPending)
+    return (
+      <div className="flex flex-col gap-3 p-8">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-full max-w-sm" />
+      </div>
+    );
+  if (consulta.isError) {
     return (
       <div className="p-12 text-center">
         <h2 className="text-lg font-semibold text-ink-2">Algo deu errado</h2>
-        <p className="mt-1 text-body text-ink-3">{estado.mensagem}</p>
+        <p className="mt-1 text-body text-ink-3">
+          {consulta.error instanceof Error
+            ? consulta.error.message
+            : "Falha ao carregar custos de pessoal."}
+        </p>
         <button
           type="button"
-          onClick={carregar}
+          onClick={() => consulta.refetch()}
           className="mt-4 inline-flex items-center gap-2 text-body font-semibold text-orange hover:text-orange-deep"
         >
           <RefreshCw className="h-4 w-4" />
@@ -92,7 +75,8 @@ export function CustosPessoalPage() {
     );
   }
 
-  const { custos, funcionarios } = estado;
+  const { custos, funcionarios } = consulta.data;
+  const hoje = dataIsoLocal();
   const funcionarioPorId = new Map(funcionarios.map((f) => [f.id, f.nome]));
   const porFuncionario = new Map<string, CustoFuncionarioItem[]>();
   for (const c of custos) {
@@ -122,11 +106,6 @@ export function CustosPessoalPage() {
             </button>
           )}
         </div>
-        {erroAcao && (
-          <div className="mt-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-body text-danger">
-            {erroAcao}
-          </div>
-        )}
       </section>
 
       {porFuncionario.size === 0 ? (
@@ -137,25 +116,27 @@ export function CustosPessoalPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {[...porFuncionario.entries()].map(([funcionarioId, historico]) => {
-            const vigente = historico[0]; // já ordenado desc por vigente_desde
+            const vigente = historico.find((custo) => custo.vigenteDesde <= hoje);
             return (
               <div key={funcionarioId} className="rounded-lg border border-line bg-card p-4">
                 <h4 className="text-body font-semibold text-ink">
                   {funcionarioPorId.get(funcionarioId) ?? "Funcionário"}
                 </h4>
-                {vigente && (
+                {vigente ? (
                   <p className="mt-1 text-2xl font-semibold text-ink">
                     R${" "}
-                    {custoHoraDerivado(vigente.custoMensalCentavos, vigente.horasMesBase)
-                      .toFixed(2)
-                      .replace(".", ",")}
+                    {centavosParaReais(
+                      custoHoraDerivadoCentavos(vigente.custoMensalCentavos, vigente.horasMesBase),
+                    )}
                     <span className="text-body font-normal text-ink-3">/hora</span>
                   </p>
+                ) : (
+                  <p className="mt-1 text-body text-ink-3">Sem custo vigente</p>
                 )}
                 <ul className="mt-3 flex flex-col gap-1 text-caption text-ink-3">
                   {historico.map((c) => (
                     <li key={c.id}>
-                      Desde {new Date(c.vigenteDesde).toLocaleDateString("pt-BR")}: R${" "}
+                      Desde {formatarDataBr(c.vigenteDesde)}: R${" "}
                       {centavosParaReais(c.custoMensalCentavos)}/mês · {c.horasMesBase}h base
                     </li>
                   ))}
@@ -189,7 +170,7 @@ function CustoModal({
   const [funcionarioId, setFuncionarioId] = useState("");
   const [custoMensal, setCustoMensal] = useState("");
   const [horasMesBase, setHorasMesBase] = useState(220);
-  const [vigenteDesde, setVigenteDesde] = useState(new Date().toISOString().slice(0, 10));
+  const [vigenteDesde, setVigenteDesde] = useState(() => dataIsoLocal());
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
