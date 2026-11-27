@@ -51,8 +51,10 @@ export function montarRelatorioCliente(
   ordens: readonly OrdemServicoOperacional[],
   fontes: FontesRelatorioCliente = {},
 ): RelatorioCliente {
-  const atividadesOs = ordens
-    .filter((ordem) => estaNoPeriodo(diaEvento(ordem.checkOutAt), inicio, fim))
+  const ordensRealizadas = ordens.filter((ordem) =>
+    estaNoPeriodo(diaEvento(ordem.checkOutAt), inicio, fim),
+  );
+  const atividadesOs = ordensRealizadas
     .map((ordem) => paraAtividade(ordem, diaEvento(ordem.checkOutAt) ?? inicio))
     .sort((a, b) => b.data.localeCompare(a.data));
   const cronogramaOs = ordens
@@ -78,7 +80,7 @@ export function montarRelatorioCliente(
     fim,
     atividades,
     cronograma,
-    preventivasRealizadas: atividades.filter((atividade) => /preventiv/i.test(atividade.titulo))
+    preventivasRealizadas: ordensRealizadas.filter((ordem) => ordem.categoria === "preventiva")
       .length,
   };
 }
