@@ -166,7 +166,7 @@ jobs:
         # recusa. Precisa do Postgres de pé e roda ANTES do pgTAP: `supabase test db` derruba a
         # instância ao terminar, e depois dele o psql deste passo morria em "Connection refused".
         env:
-          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+          SUPABASE_DB_URL: postgresql://postgres:postgres@127.0.0.1:55322/postgres
         run: node scripts/check-acoes-sso.mjs
       - name: pgTAP — suíte SQL versionada
         # Arquivos manuais de setup/concorrência e remote_promotion_smoke.sql não são casos pgTAP
