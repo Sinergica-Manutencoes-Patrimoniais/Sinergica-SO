@@ -76,7 +76,6 @@ import {
   calcularKpisOrdens,
   calcularMetricasOperacao,
   ehCardChamadoAberto,
-  ehItemBacklog,
   filtrarOrdens,
   prioridadeColor,
   resumoTooltipOrdem,
@@ -177,10 +176,16 @@ export function OrdensServicoPage({
   const consulta = useMemo<ConsultaOperacao>(
     () => ({
       busca: buscaDebounced || undefined,
-      status: filtros.status === "todas" ? "todos" : (filtros.status as ConsultaOperacao["status"]),
+      status:
+        visao === "backlog"
+          ? "ativos"
+          : filtros.status === "todas"
+            ? "todos"
+            : (filtros.status as ConsultaOperacao["status"]),
       tecnicoFuncionarioId:
         filtros.tecnicoFuncionarioId !== "todos" ? filtros.tecnicoFuncionarioId : undefined,
       clienteId: filtros.clienteId !== "todos" ? filtros.clienteId : undefined,
+      somenteBacklog: visao === "backlog" || undefined,
       categoria: filtros.categoria !== "todas" ? filtros.categoria : undefined,
       dataInicio:
         filtros.dataInicio ??
@@ -229,7 +234,7 @@ export function OrdensServicoPage({
   const queryCatalogos = useQuery({
     queryKey: [...operacaoQueryKeys.catalogos(), "abertura-os"],
     queryFn: () => carregarDadosAberturaOs(supabaseOrdemServicoAdapter),
-    enabled: false,
+    enabled: consultasAtivas && visao === "backlog",
     staleTime: OPERACAO_CATALOGO_STALE_TIME,
   });
   const dadosOs: DadosAberturaOs | null = queryCatalogos.data ?? null;
@@ -669,7 +674,7 @@ export function OrdensServicoPage({
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-6">
           {[
             ["Total", kpis.total],
-            ["Abertas", kpis.abertas],
+            ["Chamados e OS abertos", kpis.abertas],
             ["Planejamento", kpis.emPlanejamento],
             ["Execução", kpis.emExecucao],
             ["Finalizadas", kpis.finalizadas],
@@ -730,13 +735,13 @@ export function OrdensServicoPage({
       ) : (
         <div className="anim-conteudo flex flex-col gap-4">
           {visao === "backlog" ? (
-            // E01-S151: `ordensFiltradas` é o conjunto geral da página (Lista/Kanban) — sem técnico,
-            // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
-            // filtra por `ehItemBacklog` igual `listarBacklogGut` já faz pro modo não-controlado.
             <BacklogGutPage
-              key={clienteSelecionadoId ?? "todos"}
-              clienteControladoId={clienteSelecionadoId ?? undefined}
-              ordensControladas={ordensFiltradas.filter(ehItemBacklog)}
+              clienteControladoId={clienteSelecionadoId ?? "todos"}
+              clientesControlados={dadosOs?.clientes}
+              carregandoControlado={feed.isPending || feed.isPlaceholderData}
+              onAlterarCliente={(clienteId) => setFiltros((atuais) => ({ ...atuais, clienteId }))}
+              ordensControladas={feed.isPlaceholderData ? [] : ordensCarregadas}
+              totalControlado={feed.isPlaceholderData ? undefined : totalFiltrado}
               onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
               onAtualizarControlado={carregar}
             />

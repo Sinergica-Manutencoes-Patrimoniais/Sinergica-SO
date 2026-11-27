@@ -11,6 +11,7 @@ export interface ConsultaOperacao {
   busca?: string;
   status?: "ativos" | "todos" | StatusOrdemServico;
   clienteId?: string;
+  somenteBacklog?: boolean;
   tecnicoFuncionarioId?: string;
   categoria?: string;
   dataInicio?: string | null;

@@ -316,6 +316,13 @@ async function listarPagina(
   } else if (input.status !== "todos") {
     query = query.eq("status", input.status);
   }
+  if (input.somenteBacklog) {
+    query = query
+      .eq("item_tipo", "ordem_servico")
+      .is("data_agendada", null)
+      .is("tecnico_funcionario_id", null)
+      .is("auvo_task_id", null);
+  }
   if (input.clienteId) query = query.eq("cliente_id", input.clienteId);
   if (input.tecnicoFuncionarioId) {
     query = query.eq("tecnico_funcionario_id", input.tecnicoFuncionarioId);

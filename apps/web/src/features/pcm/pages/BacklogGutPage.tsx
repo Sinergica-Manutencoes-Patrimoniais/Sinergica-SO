@@ -35,12 +35,18 @@ export function BacklogGutPage({
   onAtualizarControlado,
   totalControlado,
   clienteControladoId,
+  clientesControlados,
+  carregandoControlado = false,
+  onAlterarCliente,
 }: {
   ordensControladas?: OrdemServicoOperacional[];
   onPlanejarControlado?: (ordem: OrdemServicoOperacional) => Promise<void> | void;
   onAtualizarControlado?: () => Promise<void> | void;
   totalControlado?: number;
   clienteControladoId?: string;
+  clientesControlados?: { id: string; nome: string }[];
+  carregandoControlado?: boolean;
+  onAlterarCliente?: (clienteId: string) => void;
 } = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -54,7 +60,9 @@ export function BacklogGutPage({
     null,
   );
   const [busca, setBusca] = useState("");
-  const [clienteFiltro, setClienteFiltro] = useState("todos");
+  const [clienteLocal, setClienteLocal] = useState("todos");
+  const clienteFiltro = clienteControladoId ?? clienteLocal;
+  const setClienteFiltro = onAlterarCliente ?? setClienteLocal;
   const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
   const [prioridadeFiltro, setPrioridadeFiltro] = useState("todas");
 
@@ -89,17 +97,15 @@ export function BacklogGutPage({
     };
   }, [ordens, totalControlado]);
 
-  const clientesDisponiveis = useMemo(
-    () =>
-      [
-        ...new Map(
-          ordens.flatMap((ordem) =>
-            ordem.clienteId ? [[ordem.clienteId, ordem.clienteNome] as const] : [],
-          ),
-        ),
-      ].sort(([, a], [, b]) => a.localeCompare(b)),
-    [ordens],
-  );
+  const clientesDisponiveis = useMemo(() => {
+    const clientes = new Map(
+      ordens.flatMap((ordem) =>
+        ordem.clienteId ? [[ordem.clienteId, ordem.clienteNome] as const] : [],
+      ),
+    );
+    for (const cliente of clientesControlados ?? []) clientes.set(cliente.id, cliente.nome);
+    return [...clientes].sort(([, a], [, b]) => a.localeCompare(b));
+  }, [clientesControlados, ordens]);
   const categoriasDisponiveis = useMemo(
     () => Array.from(new Set(ordens.map((ordem) => ordem.categoria))).sort(),
     [ordens],
@@ -260,7 +266,7 @@ export function BacklogGutPage({
         <div>
           <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>
           <p className="text-body text-ink-3">
-            OS abertas priorizadas por gravidade, urgência e tendência
+            OS em aberto sem técnico, sem data prevista e sem tarefa no Auvo
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -291,11 +297,11 @@ export function BacklogGutPage({
         </div>
       )}
 
-      {resumo && (
+      {!carregandoControlado && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Resumo label="OS abertas" valor={resumo.total} />
-          <Resumo label="Críticas" valor={resumo.criticas} />
-          <Resumo label="Maior score" valor={resumo.maiorScore} />
+          <Resumo label="Itens de backlog" valor={resumo.total} />
+          <Resumo label="Críticas carregadas" valor={resumo.criticas} />
+          <Resumo label="Maior score carregado" valor={resumo.maiorScore} />
         </div>
       )}
 
@@ -319,6 +325,7 @@ export function BacklogGutPage({
           <select
             className="input w-auto"
             value={clienteFiltro}
+            aria-label="Filtrar backlog por Cliente"
             onChange={(event) => setClienteFiltro(event.target.value)}
           >
             <option value="todos">Todos os clientes</option>
@@ -362,12 +369,24 @@ export function BacklogGutPage({
             </button>
           )}
           <span className="ml-auto text-caption text-ink-3">
-            {ordensFiltradas.length} de {ordens.length}
+            {!carregandoControlado && (
+              <>
+                {ordensFiltradas.length} de{" "}
+                {onAlterarCliente &&
+                !busca.trim() &&
+                categoriaFiltro === "todas" &&
+                prioridadeFiltro === "todas"
+                  ? resumo.total
+                  : `${ordens.length} carregados`}
+              </>
+            )}
           </span>
         </div>
 
         <div className="divide-y divide-line-soft">
-          {ordens.length === 0 ? (
+          {carregandoControlado ? (
+            <output className="block p-5 text-body text-ink-3">Consultando backlog…</output>
+          ) : ordens.length === 0 ? (
             <div className="px-5 py-8 text-body text-ink-3">Nenhuma OS aberta no backlog.</div>
           ) : ordensFiltradas.length === 0 ? (
             <div className="px-5 py-8 text-center text-body text-ink-3">

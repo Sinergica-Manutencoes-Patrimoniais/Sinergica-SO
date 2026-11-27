@@ -2,10 +2,24 @@ import { expect, it, vi } from "vitest";
 const banco = vi.hoisted(() => ({
   linha: null as Record<string, unknown> | null,
   filtros: [] as [string, unknown][],
+  etapas: [] as string[],
 }));
 vi.mock("../../../lib/supabase-client", () => {
   const consulta = {
     select: () => consulta,
+    is: (campo: string, valor: unknown) => {
+      banco.etapas.push(`${campo}=${valor}`);
+      return consulta;
+    },
+    not: (campo: string) => {
+      banco.etapas.push(campo);
+      return consulta;
+    },
+    order: () => consulta,
+    limit: () => {
+      banco.etapas.push("pagina");
+      return { data: [], count: 67, error: null };
+    },
     eq: (campo: string, valor: unknown) => {
       banco.filtros.push([campo, valor]);
       return consulta;
@@ -14,7 +28,7 @@ vi.mock("../../../lib/supabase-client", () => {
   };
   return { supabase: { schema: () => ({ from: () => consulta }) } };
 });
-import { obterResumoOsDoCliente } from "./supabase-operacao-adapter";
+import { obterResumoOsDoCliente, supabaseOperacaoAdapter } from "./supabase-operacao-adapter";
 
 const cliente = "17900000-0000-4000-8000-000000000001";
 const os = "17900000-0000-4000-8000-000000000002";
@@ -70,4 +84,25 @@ it("recupera OS finalizada do Cliente mesmo fora da página de operação", asyn
 it("recusa resposta de outra Conta ainda que o servidor a retorne", async () => {
   banco.linha = { ...linha, cliente_id: "17900000-0000-4000-8000-000000000099" };
   await expect(obterResumoOsDoCliente(cliente, os)).rejects.toThrow();
+});
+
+it("DEF-49: delimita o backlog e o cliente antes de paginar e contar", async () => {
+  banco.etapas = [];
+  banco.filtros = [];
+  const pagina = await supabaseOperacaoAdapter.listarPagina({
+    ordem: "gutd",
+    limite: 50,
+    clienteId: cliente,
+    somenteBacklog: true,
+  });
+  expect(banco.filtros).toContainEqual(["cliente_id", cliente]);
+  expect(banco.filtros).toContainEqual(["item_tipo", "ordem_servico"]);
+  expect(banco.etapas).toEqual([
+    "status",
+    "data_agendada=null",
+    "tecnico_funcionario_id=null",
+    "auvo_task_id=null",
+    "pagina",
+  ]);
+  expect(pagina.total).toBe(67);
 });
