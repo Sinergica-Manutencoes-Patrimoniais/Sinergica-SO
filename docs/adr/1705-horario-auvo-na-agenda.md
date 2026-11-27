@@ -6,16 +6,19 @@ alwaysApply: false
 
 # Horário Auvo na Agenda do Técnico
 
-E01-S202 · DEF-03. A Agenda usa o horário agendado das tarefas Auvo das OS ativas
-com vínculo vigente à Visita. A importação grava `taskDate` em
-`pcm.ordens_servico.data_agendada`. O identificador `auvo_task_id` distingue as
-OS que têm tarefa Auvo. A coluna Visita do Monitor usa o início local planejado
-no PCM e tem uma origem diferente.
+E01-S202 · DEF-03. A Agenda usa o horário recebido do Auvo nas tarefas das OS
+ativas com vínculo vigente à Visita. A referência é `projecao.dataAgendada`
+do último evento aceito da tarefa em `pcm.sso_origem_campo_eventos`, incluindo
+o evento inicial criado pelo processamento de origem. O histórico de origem
+valida a projeção contra o envelope recebido e permanece disponível mesmo
+quando o PCM edita a data prevista da OS. A coluna Visita do Monitor usa
+`visitas.inicio_em`.
 
-A consulta nova reutiliza o recorte e a autorização da projeção existente. Ela
-retorna os horários distintos, ordenados e formatados em `HH:MM` no fuso
-da Visita. Quando a lista é vazia, a interface exibe o período. A data e a
-equipe continuam vindo da Visita.
+A consulta reutiliza o recorte e a autorização da projeção existente e vincula
+cada evento à tarefa Auvo atual, à OS e ao Cliente do processamento de origem.
+Ela retorna horários distintos, em ordem e em `HH:MM` no fuso da Visita. Quando
+o último evento aceito não tem hora ou a tarefa só tem dados legados na OS, a
+Agenda exibe o período. A data e a equipe continuam vindo da Visita.
 
 A migração adiciona uma RPC de leitura. O contrato anterior permite publicar ou
 reverter o frontend independentemente. Durante a publicação da migração, se o
