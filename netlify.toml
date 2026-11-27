@@ -17,9 +17,6 @@
   # gate pcm.sso_consulta_estado_campo_gate aberto e capacidade concedida no mesmo dia.
   # Só leitura: não escreve no SO nem no Auvo.
   VITE_SSO_CAMPO_A_CONCILIAR_ENABLED = "true"
-  # E01-S200: matriz de movimentacoes do Kanban. LIGADA em 24/11/2026. Só RESTRINGE movimentação
-  # manual; a automação (retorno do Auvo, T-24, campo) continua livre por desenho.
-  VITE_SSO_MATRIZ_TRANSICOES_ENABLED = "true"
   # E01-S201: monitor consolidado das excecoes do Auvo em T-24. LIGADA em 24/11/2026.
   # Só leitura — lê a fila do Auvo com left join, nunca enfileira.
   VITE_SSO_MONITOR_EXCECOES_AUVO_ENABLED = "true"
