@@ -55,6 +55,7 @@ function Conteudo({
   });
   const [pendente, setPendente] = useState(recuperacao.comando);
   const [erro, setErro] = useState("");
+  const [concluidaNoServidor, setConcluidaNoServidor] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const emEnvio = useRef(false);
   const queryClient = useQueryClient();
@@ -105,6 +106,18 @@ function Conteudo({
       setPendente(null);
       onSalvo?.();
     } catch (falha) {
+      if (
+        falha &&
+        typeof falha === "object" &&
+        "message" in falha &&
+        falha.message === "lista_materiais_concluida"
+      ) {
+        setConcluidaNoServidor(true);
+        void queryClient.invalidateQueries({
+          queryKey: ["listas-materiais", usuario, cliente, ordemServico, "listas"],
+        });
+        throw falha;
+      }
       setErro("Não foi possível confirmar o salvamento. Repita a operação ou consulte o suporte.");
       throw falha;
     } finally {
@@ -126,6 +139,8 @@ function Conteudo({
     setPendente(comando);
     await enviar(comando);
   }
+  if (concluidaNoServidor)
+    return <p role="alert">Lista concluída. As linhas não podem ser alteradas.</p>;
   if (recuperacao.falhou)
     return <p role="alert">Não foi possível recuperar edição pendente. Consulte o suporte.</p>;
   if (pendente)

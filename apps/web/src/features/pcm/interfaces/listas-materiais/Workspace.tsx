@@ -16,7 +16,9 @@ import {
 import type { RascunhoEditorMateriais } from "./EditorMateriais";
 import { EditorPersistido } from "./EditorPersistido";
 import { ExcecoesOs } from "./ExcecoesOs";
+import { HistoricoVersoes } from "./HistoricoVersoes";
 import { PublicarPortal } from "./PublicarPortal";
+import { rotuloEstadoListaMaterial } from "./ResumoListaMaterial";
 import { VisibilidadePortal } from "./VisibilidadePortal";
 
 export type RascunhoNovaLista = {
@@ -319,7 +321,7 @@ function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho 
           <li key={lista.id}>
             <p>
               Responsável: {lista.responsavel === "cliente" ? "Cliente" : "Sinérgica"} · Estado:{" "}
-              {lista.estado} · Revisão: {lista.revisao}
+              {rotuloEstadoListaMaterial(lista.estado)} · Revisão: {lista.revisao}
             </p>
             <pre>{lista.texto_original}</pre>
             {[...rascunhosInformacao.current.entries()]
@@ -372,47 +374,74 @@ function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho 
                   )}
                 </details>
               ))}
+            {lista.estado === "concluida" && (
+              <p>
+                Lista concluída. O histórico está disponível para consulta e a lista não pode ser
+                alterada.
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setListaAberta(listaAberta === lista.id ? null : lista.id)}
             >
-              {listaAberta === lista.id ? "Fechar organização" : "Organizar linhas"}
+              {lista.estado === "concluida"
+                ? listaAberta === lista.id
+                  ? "Fechar histórico"
+                  : "Consultar histórico"
+                : listaAberta === lista.id
+                  ? "Fechar organização"
+                  : "Organizar linhas"}
             </button>
             {listaAberta === lista.id && (
               <>
-                <EditorPersistido
-                  usuario={usuario}
-                  cliente={cliente}
-                  ordemServico={ordemServico}
-                  listaId={lista.id}
-                  revisao={lista.revisao}
-                  textoOriginal={lista.texto_original}
-                  rascunho={rascunhos.current.get(`${lista.id}:${lista.revisao}`)}
-                  onRascunho={(edicao) =>
-                    rascunhos.current.set(`${lista.id}:${lista.revisao}`, edicao)
-                  }
-                  onSalvo={() => rascunhos.current.delete(`${lista.id}:${lista.revisao}`)}
-                />
+                {lista.estado === "concluida" ? (
+                  <HistoricoVersoes
+                    usuario={usuario}
+                    cliente={cliente}
+                    ordemServico={ordemServico}
+                    listaId={lista.id}
+                    revisao={lista.revisao}
+                  />
+                ) : (
+                  <EditorPersistido
+                    usuario={usuario}
+                    cliente={cliente}
+                    ordemServico={ordemServico}
+                    listaId={lista.id}
+                    revisao={lista.revisao}
+                    textoOriginal={lista.texto_original}
+                    rascunho={rascunhos.current.get(`${lista.id}:${lista.revisao}`)}
+                    onRascunho={(edicao) =>
+                      rascunhos.current.set(`${lista.id}:${lista.revisao}`, edicao)
+                    }
+                    onSalvo={() => rascunhos.current.delete(`${lista.id}:${lista.revisao}`)}
+                  />
+                )}
                 <DisponibilidadeMateriais
                   usuario={usuario}
                   cliente={cliente}
                   ordemServico={ordemServico}
                   listaId={lista.id}
                   revisao={lista.revisao}
+                  somenteLeitura={lista.estado === "concluida"}
                   rascunho={rascunhosInformacao.current.get(`${lista.id}:${lista.revisao}`)}
                   onRascunho={(rascunho) =>
                     rascunhosInformacao.current.set(`${lista.id}:${lista.revisao}`, rascunho)
                   }
                   onSalvo={() => rascunhosInformacao.current.delete(`${lista.id}:${lista.revisao}`)}
                 />
-                <PublicarPortal
-                  usuario={usuario}
-                  cliente={cliente}
-                  ordemServico={ordemServico}
-                  listaId={lista.id}
-                  revisao={lista.revisao}
-                />
-                <VisibilidadePortal usuario={usuario} cliente={cliente} listaId={lista.id} />
+                {lista.estado !== "concluida" && (
+                  <>
+                    <PublicarPortal
+                      usuario={usuario}
+                      cliente={cliente}
+                      ordemServico={ordemServico}
+                      listaId={lista.id}
+                      revisao={lista.revisao}
+                    />
+                    <VisibilidadePortal usuario={usuario} cliente={cliente} listaId={lista.id} />
+                  </>
+                )}
               </>
             )}
           </li>

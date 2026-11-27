@@ -63,7 +63,7 @@ describe("estado da busca de OS offline (DEF-26)", () => {
     expect(await seletor.findByRole("button", { name: "Selecionar CH-9901" })).toBeVisible();
   });
 
-  it.fails("explica que a busca aguarda a conexão", async () => {
+  it("explica que a busca aguarda a conexão", async () => {
     const seletor = await pausarBusca();
     expect(seletor.getByRole("status")).toHaveTextContent(
       /offline|sem conexão|aguardando conexão/i,

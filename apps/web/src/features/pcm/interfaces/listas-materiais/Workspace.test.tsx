@@ -155,3 +155,26 @@ it("sincroniza uma tentativa em curso após remontar o painel e mantém outro co
   expect(screen.queryByRole("button", { name: "Tentar salvar novamente" })).toBeNull();
   expect(servidor.criar).toHaveBeenCalledTimes(1);
 });
+
+it("oferece somente consulta para lista concluída", async () => {
+  servidor.listas = [
+    {
+      id: "lista-pronta",
+      ordem_servico_id: "os",
+      texto_original: "Material de teste",
+      responsavel: "cliente",
+      estado: "concluida",
+      revisao: 3,
+    },
+  ];
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <WorkspaceListasMateriais usuario="usuario" cliente="cliente" ordemServico="os" />
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText(/Estado: Concluída/)).toBeVisible();
+  expect(screen.getByText(/a lista não pode ser alterada/)).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Organizar linhas" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Consultar histórico" }));
+  expect(screen.getByRole("button", { name: "Fechar histórico" })).toBeVisible();
+});

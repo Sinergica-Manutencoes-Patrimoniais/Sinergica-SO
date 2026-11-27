@@ -43,3 +43,22 @@ it("mostra rótulo e horário local no histórico sem exibir o UUID", async () =
     ),
   );
 });
+
+it("mantém eventos visíveis sem formulário ou retry de alteração na lista concluída", async () => {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <DisponibilidadeMateriais
+        usuario="u"
+        cliente="c"
+        ordemServico="os"
+        listaId="l"
+        revisao={2}
+        somenteLeitura
+      />
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText(/Revisão 2 · Aquisição/)).toBeVisible();
+  expect(
+    screen.queryByRole("button", { name: /Registrar informação|Tentar informar novamente/ }),
+  ).not.toBeInTheDocument();
+});
