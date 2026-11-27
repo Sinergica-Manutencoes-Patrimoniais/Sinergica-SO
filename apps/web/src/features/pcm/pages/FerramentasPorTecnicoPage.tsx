@@ -28,6 +28,7 @@ import {
   type FerramentaUnidadeItem,
   type MovimentacaoFerramentaItem,
   calcularDivergenciaAuvo,
+  unidadeDisponivelParaAtribuicao,
 } from "../domain/ferramenta-unidades";
 import type {
   FerramentaAlocacaoItem,
@@ -104,7 +105,8 @@ export function FerramentasPorTecnicoPage() {
   const unidadesDisponiveisDaFerramenta = useMemo(() => {
     if (estado.fase !== "pronto") return [];
     return estado.unidades.filter(
-      (unidade) => unidade.ferramentaId === ferramentaId && unidade.status === "disponivel",
+      (unidade) =>
+        unidade.ferramentaId === ferramentaId && unidadeDisponivelParaAtribuicao(unidade),
     );
   }, [estado, ferramentaId]);
 
@@ -481,7 +483,7 @@ function TecnicoFerramentasModal({
   onHistorico: () => void;
   onDevolver: (unidade: FerramentaUnidadeItem) => void;
 }) {
-  const disponiveis = unidades.filter((unidade) => unidade.status === "disponivel");
+  const disponiveis = unidades.filter(unidadeDisponivelParaAtribuicao);
   const posse = unidades.filter((unidade) => unidade.atribuidaA === funcionario.id);
   return (
     <Modal

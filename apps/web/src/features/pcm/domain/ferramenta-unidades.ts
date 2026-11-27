@@ -6,6 +6,7 @@ export interface FerramentaUnidadeItem {
   id: string;
   ferramentaId: string;
   ferramentaNome: string;
+  ferramentaRemovida?: boolean;
   codigo: string;
   status: StatusUnidadeFerramenta;
   atribuidaA: string | null;
@@ -49,6 +50,10 @@ export function rotuloStatusUnidade(status: StatusUnidadeFerramenta): string {
   return "Baixada";
 }
 
+export function unidadeDisponivelParaAtribuicao(unidade: FerramentaUnidadeItem): boolean {
+  return unidade.status === "disponivel" && !unidade.ferramentaRemovida;
+}
+
 export function validarAtribuicaoUnidade(
   input: AtribuirUnidadeFormData,
   unidade?: FerramentaUnidadeItem,
@@ -56,7 +61,8 @@ export function validarAtribuicaoUnidade(
   if (!input.unidadeId) throw new Error("Unidade é obrigatória.");
   if (!input.funcionarioId) throw new Error("Técnico é obrigatório.");
   if (!unidade) throw new Error("Unidade não encontrada.");
-  if (unidade.status !== "disponivel") {
+  if (unidade.ferramentaRemovida) throw new Error("Unidade de ferramenta removida.");
+  if (!unidadeDisponivelParaAtribuicao(unidade)) {
     throw new Error(
       `Unidade ${unidade.codigo} não está disponível (status atual: ${rotuloStatusUnidade(unidade.status)}).`,
     );
@@ -110,6 +116,6 @@ export function selecionarUnidadesDisponiveis(
 ): FerramentaUnidadeItem[] {
   const permitidos = new Set(ids);
   return unidades.filter(
-    (unidade) => permitidos.has(unidade.id) && unidade.status === "disponivel",
+    (unidade) => permitidos.has(unidade.id) && unidadeDisponivelParaAtribuicao(unidade),
   );
 }
