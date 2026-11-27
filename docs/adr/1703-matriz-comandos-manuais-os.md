@@ -14,3 +14,8 @@ A migration da matriz usa 1905 após a reserva de 1904 para o DEF-23 no PR #129.
 view em 1906 mantém o filtro de ponto de E01-S142 no banco antes da contagem e da paginação,
 inclusive para acentos decompostos e espaços externos. A ordem preserva o Chamado sintético em
 Demanda na view introduzida em 1861.
+
+O encerramento atestado de E01-S168 mantém o comando privado, com os gates, a autorização
+por Cliente e as verificações de retorno, cobertura e revisão vigentes. A migration 1907 grava
+a finalização dentro desse comando após as verificações e preserva o registro auditado e o
+replay. A presença de uma atestação não libera um salto pelo RPC manual.
