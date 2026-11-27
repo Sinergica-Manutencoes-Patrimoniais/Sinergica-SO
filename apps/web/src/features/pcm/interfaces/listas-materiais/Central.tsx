@@ -19,6 +19,9 @@ type Props = {
   onAbrirOs?: (osId: string) => void;
   onRascunhoAlterado?: (temRascunho: boolean) => void;
 };
+type PesquisaOs = { texto: string; termo: string };
+type ControlePesquisa = ReturnType<typeof useState<PesquisaOs>>;
+type PropsComPesquisa = Props & { pesquisa: ControlePesquisa };
 type Responsavel = "cliente" | "sinergica" | "todos";
 type EstadoLista =
   | "todos"
@@ -55,7 +58,7 @@ export function CentralMateriais(props: Props) {
       />
     );
   }
-  return <Conteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
+  return <CentralComPesquisa key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
 }
 
 /** Entrada na operação global, sempre limitada ao Cliente selecionado. */
@@ -69,10 +72,22 @@ export function CentralMateriaisGlobal(props: Props) {
       />
     );
   }
-  return <CentralGlobalConteudo key={JSON.stringify([props.usuario, props.cliente])} {...props} />;
+  return (
+    <CentralComPesquisa key={JSON.stringify([props.usuario, props.cliente])} {...props} global />
+  );
 }
 
-function CentralGlobalConteudo(props: Props) {
+function CentralComPesquisa({ global, ...props }: Props & { global?: boolean }) {
+  // Apenas o texto e o termo sobrevivem à remontagem por revalidação de acesso.
+  const pesquisa = useState<PesquisaOs>({ texto: "", termo: "" });
+  return global ? (
+    <CentralGlobalConteudo {...props} pesquisa={pesquisa} />
+  ) : (
+    <Conteudo {...props} pesquisa={pesquisa} />
+  );
+}
+
+function CentralGlobalConteudo(props: PropsComPesquisa) {
   const [aberta, setAberta] = useState(false);
   const permissao = useQuery({
     queryKey: ["listas-materiais-central", props.usuario, props.cliente, "permissao"],
@@ -80,7 +95,7 @@ function CentralGlobalConteudo(props: Props) {
     gcTime: 0,
     refetchOnWindowFocus: true,
   });
-  if (permissao.isPending || permissao.isFetching)
+  if (permissao.isPending || permissao.fetchStatus !== "idle")
     return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (permissao.isError)
     return (
@@ -110,8 +125,9 @@ function Conteudo({
   cliente,
   onAbrirOs,
   onRascunhoAlterado,
+  pesquisa,
   permissaoMonitorada = false,
-}: Props & { permissaoMonitorada?: boolean }) {
+}: PropsComPesquisa & { permissaoMonitorada?: boolean }) {
   const [osDigitada, setOsDigitada] = useState("");
   const [os, setOs] = useState<string | null>(null);
   const [responsavel, setResponsavel] = useState<Responsavel>("todos");
@@ -134,11 +150,12 @@ function Conteudo({
   // Na entrada global o componente pai mantém a mesma consulta ativa e só
   // monta esta área enquanto a autorização atual está confirmada.
   const permitido =
-    permissaoMonitorada || (permissao.data === true && !permissao.isFetching && !permissao.isError);
+    permissaoMonitorada ||
+    (permissao.data === true && permissao.fetchStatus === "idle" && !permissao.isError);
   const buscaHabilitada = flagLigada("VITE_SSO_BUSCA_OS_MATERIAIS_ENABLED");
-  const [buscaOs, setBuscaOs] = useState("");
+  const [{ termo }] = pesquisa;
   const consultaOs = useInfiniteQuery({
-    ...buscaOsCentralMateriaisOptions(usuario, cliente, buscaOs),
+    ...buscaOsCentralMateriaisOptions(usuario, cliente, termo),
     enabled: permitido && buscaHabilitada,
   });
   const numerosOs = new Map(
@@ -189,7 +206,7 @@ function Conteudo({
     },
     getNextPageParam: (pagina) => (pagina.length === 20 ? pagina.at(-1)?.id : undefined),
   });
-  if (!permissaoMonitorada && (permissao.isPending || permissao.isFetching))
+  if (!permissaoMonitorada && (permissao.isPending || permissao.fetchStatus !== "idle"))
     return <AvisoCarregando>Verificando acesso aos materiais…</AvisoCarregando>;
   if (!permissaoMonitorada && permissao.isError)
     return (
@@ -215,8 +232,7 @@ function Conteudo({
       {buscaHabilitada && (
         <SelecionarOs
           consulta={consultaOs}
-          busca={buscaOs}
-          setBusca={setBuscaOs}
+          pesquisa={pesquisa}
           onSelecionar={(id) => {
             setOs(id);
             setAberta(null);
@@ -469,8 +485,7 @@ function Conteudo({
 
 function SelecionarOs({
   consulta,
-  busca,
-  setBusca,
+  pesquisa,
   onSelecionar,
 }: {
   consulta: ReturnType<
@@ -478,11 +493,10 @@ function SelecionarOs({
       Awaited<ReturnType<typeof supabaseListasMateriaisAdapter.buscarOsCentral>>
     >
   >;
-  busca: string;
-  setBusca: (busca: string) => void;
+  pesquisa: ControlePesquisa;
   onSelecionar: (id: string) => void;
 }) {
-  const [texto, setTexto] = useState("");
+  const [{ texto, termo }, setPesquisa] = pesquisa;
   return (
     <section
       aria-label="Selecionar OS com materiais"
@@ -498,8 +512,8 @@ function SelecionarOs({
         onSubmit={(evento) => {
           evento.preventDefault();
           const valor = texto.trim();
-          if (valor === busca) void consulta.refetch();
-          else setBusca(valor);
+          if (valor === termo) void consulta.refetch();
+          else setPesquisa((atual) => ({ ...atual, termo: valor }));
         }}
         className="flex flex-wrap items-end gap-2"
       >
@@ -509,7 +523,10 @@ function SelecionarOs({
             className="input w-full"
             maxLength={80}
             value={texto}
-            onChange={(evento) => setTexto(evento.target.value)}
+            onChange={(evento) => {
+              const texto = evento.target.value;
+              setPesquisa((atual) => ({ ...atual, texto }));
+            }}
           />
         </label>
         <Button type="submit" size="sm">
