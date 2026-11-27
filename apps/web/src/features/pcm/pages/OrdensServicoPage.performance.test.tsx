@@ -106,6 +106,13 @@ function BotaoStatus({ ids = ["1"] }: { ids?: string[] }) {
 describe("fluidez do feed de Chamados", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("mantém o identificador de Cliente de cada OS para filtrar o backlog", () => {
+    const primeira = item("1", "Inspeção");
+    const segunda = { ...item("2", "Vistoria"), clienteId: "outro-cliente" };
+    const ordens = dadosFeedParaOrdens([pagina(primeira, segunda)]);
+    expect(ordens.map((ordem) => ordem.clienteId)).toEqual(["cliente", "outro-cliente"]);
+  });
+
   it("mantém dados anteriores durante troca de filtro", async () => {
     let resolverNova: ((value: PaginaOperacao) => void) | undefined;
     mocks.listarPagina.mockImplementation(({ busca }: { busca: string }) => {

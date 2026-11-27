@@ -47,6 +47,7 @@ export function resumoParaOrdem(item: ItemOperacaoResumo): OrdemServicoOperacion
     numero: item.numero,
     titulo: item.titulo,
     descricao: null,
+    clienteId: item.clienteId,
     clienteNome: item.clienteNome,
     categoria: item.categoria,
     status: item.status,

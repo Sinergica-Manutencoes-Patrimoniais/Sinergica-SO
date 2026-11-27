@@ -77,6 +77,7 @@ function mapearOrdem(
     numero: row.numero,
     titulo: row.titulo,
     descricao: row.descricao,
+    clienteId: row.client_id,
     clienteNome: clientes.get(row.client_id) ?? "Cliente não identificado",
     categoria: row.categoria,
     status: row.status,

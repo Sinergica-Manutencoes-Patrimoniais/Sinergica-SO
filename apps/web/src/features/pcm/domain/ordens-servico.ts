@@ -21,6 +21,7 @@ export interface OrdemServicoOperacional {
   numero: string;
   titulo: string;
   descricao: string | null;
+  clienteId?: string;
   clienteNome: string;
   categoria: string;
   status: string;

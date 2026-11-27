@@ -734,6 +734,8 @@ export function OrdensServicoPage({
             // sem data, planejamento/execução misturados. Backlog GUT é a fila de triagem de verdade,
             // filtra por `ehItemBacklog` igual `listarBacklogGut` já faz pro modo não-controlado.
             <BacklogGutPage
+              key={clienteSelecionadoId ?? "todos"}
+              clienteControladoId={clienteSelecionadoId ?? undefined}
               ordensControladas={ordensFiltradas.filter(ehItemBacklog)}
               onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
               onAtualizarControlado={carregar}

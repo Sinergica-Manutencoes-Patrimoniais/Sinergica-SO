@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
 import { usePermissoes } from "../../../app/permissoes-context";
 import { confirmarChamadoBacklog } from "../application/abrir-ordem-servico";
-import { RecuperarConfirmacaoOs } from "../interfaces/chamados-os/RecuperarConfirmacaoOs";
 import {
   alterarStatusOrdemServico,
   listarBacklogGut,
@@ -23,6 +22,7 @@ import {
 } from "../domain/ordens-servico";
 import { supabaseHubOsAdapter } from "../infrastructure/supabase-hub-os-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
+import { RecuperarConfirmacaoOs } from "../interfaces/chamados-os/RecuperarConfirmacaoOs";
 
 type Estado =
   | { fase: "carregando" }
@@ -34,11 +34,13 @@ export function BacklogGutPage({
   onPlanejarControlado,
   onAtualizarControlado,
   totalControlado,
+  clienteControladoId,
 }: {
   ordensControladas?: OrdemServicoOperacional[];
   onPlanejarControlado?: (ordem: OrdemServicoOperacional) => Promise<void> | void;
   onAtualizarControlado?: () => Promise<void> | void;
   totalControlado?: number;
+  clienteControladoId?: string;
 } = {}) {
   const { user } = useAuth();
   const { carregando: permissoesCarregando, podeAcessar } = usePermissoes();
@@ -88,7 +90,14 @@ export function BacklogGutPage({
   }, [ordens, totalControlado]);
 
   const clientesDisponiveis = useMemo(
-    () => Array.from(new Set(ordens.map((ordem) => ordem.clienteNome))).sort(),
+    () =>
+      [
+        ...new Map(
+          ordens.flatMap((ordem) =>
+            ordem.clienteId ? [[ordem.clienteId, ordem.clienteNome] as const] : [],
+          ),
+        ),
+      ].sort(([, a], [, b]) => a.localeCompare(b)),
     [ordens],
   );
   const categoriasDisponiveis = useMemo(
@@ -108,7 +117,7 @@ export function BacklogGutPage({
         ordem.numero.toLowerCase().includes(termo) ||
         ordem.titulo.toLowerCase().includes(termo) ||
         ordem.clienteNome.toLowerCase().includes(termo);
-      const passaCliente = clienteFiltro === "todos" || ordem.clienteNome === clienteFiltro;
+      const passaCliente = clienteFiltro === "todos" || ordem.clienteId === clienteFiltro;
       const passaCategoria = categoriaFiltro === "todas" || ordem.categoria === categoriaFiltro;
       const passaPrioridade = prioridadeFiltro === "todas" || ordem.prioridade === prioridadeFiltro;
       return passaBusca && passaCliente && passaCategoria && passaPrioridade;
@@ -161,7 +170,9 @@ export function BacklogGutPage({
         if (onAtualizarControlado) await onAtualizarControlado();
         else await carregar();
       } catch {
-        setErroAcao(`Chamado ${confirmado.numero} confirmado, mas o quadro não foi atualizado. Atualize a tela antes de continuar.`);
+        setErroAcao(
+          `Chamado ${confirmado.numero} confirmado, mas o quadro não foi atualizado. Atualize a tela antes de continuar.`,
+        );
       }
     } catch (error) {
       setErroAcao(error instanceof Error ? error.message : "Não foi possível confirmar o chamado.");
@@ -237,8 +248,14 @@ export function BacklogGutPage({
 
   return (
     <div className="flex flex-col gap-4">
-      {user && <RecuperarConfirmacaoOs key={user.id} usuario={user.id} revisaoTela={salvandoId}
-        aoConcluir={() => onAtualizarControlado ? onAtualizarControlado() : carregar()} />}
+      {user && (
+        <RecuperarConfirmacaoOs
+          key={user.id}
+          usuario={user.id}
+          revisaoTela={salvandoId}
+          aoConcluir={() => (onAtualizarControlado ? onAtualizarControlado() : carregar())}
+        />
+      )}
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-heading font-semibold text-ink">Backlog GUT</h1>
@@ -305,9 +322,9 @@ export function BacklogGutPage({
             onChange={(event) => setClienteFiltro(event.target.value)}
           >
             <option value="todos">Todos os clientes</option>
-            {clientesDisponiveis.map((cliente) => (
-              <option key={cliente} value={cliente}>
-                {cliente}
+            {clientesDisponiveis.map(([id, nome]) => (
+              <option key={id} value={id}>
+                {nome}
               </option>
             ))}
           </select>
@@ -488,6 +505,9 @@ export function BacklogGutPage({
       {criando && (
         <NovaOrdemServicoModal
           aberto={criando}
+          clienteInicialId={
+            clienteControladoId ?? (clienteFiltro === "todos" ? undefined : clienteFiltro)
+          }
           onFechar={() => setCriando(false)}
           onCriada={() => {
             setCriando(false);
