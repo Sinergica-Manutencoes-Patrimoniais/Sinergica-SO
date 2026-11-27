@@ -42,7 +42,10 @@ nenhum** — ela dá alcance ao que já existe, no lugar onde o pacote mandou.
 - **AC-6:** a fila de um Cliente não mostra item de outro Cliente.
 - **AC-7:** o cartão informa o **motivo** da provisoriedade e o **identificador da tarefa Auvo** de
   origem, para o PCM decidir sem abrir a OS.
-- **AC-8:** clicar no cartão abre a OS correspondente.
+- **AC-8:** clicar no cartão abre a triagem da tarefa Auvo, com o motivo e os identificadores da OS
+  e do Chamado provisório. A triagem permite vincular a OS a outro Chamado do mesmo Cliente com
+  motivo e confirmação. Após o vínculo, o cartão sai da fila e a OS mantém sua fase. A triagem
+  não oferece alteração livre de status da OS.
 - **AC-9:** a coluna não aceita arrastar-e-soltar: sair da fila é **decisão de triagem**, não
   mudança de status.
 - **AC-10:** gate fechado, flag desligada ou falta de capacidade **se anunciam** com frase própria;
@@ -71,5 +74,5 @@ nenhum** — ela dá alcance ao que já existe, no lugar onde o pacote mandou.
 - Reescrever a triagem, a união de Chamado ou a recepção de envelope (`E01-S175` — já existem).
 - Criar gate ou capacidade nova: a fila reusa `pcm.sso_consulta_estado_campo_gate` e
   `execucao.validar`.
-- Resolver a conciliação **dentro** do Kanban: o cartão leva à OS; a decisão continua na tela de
-  triagem que já existe.
+- Mover o cartão entre fases do Kanban: o cartão leva à triagem dedicada, que reutiliza a vinculação
+  de E01-S175.

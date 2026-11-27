@@ -15,7 +15,7 @@ Detalhe técnico em `plan.md`.
 | 3 | pgTAP: permitido e negado, gate fechado com erro nomeado, os quatro recortes da fila e isolamento por Cliente | AC-2→AC-7, AC-10 | `supabase test db` | **done** — 13 asserções, todas verdes |
 | 4 | `domain/campo-a-conciliar.ts` — tipo e rótulo de motivo, puros | AC-7 | `pnpm vitest run src/features/pcm` | **done** |
 | 5 | Adapter com Zod `.strict()` + chave de query + `useQuery` com `retry: false` | AC-1, AC-10 | `tsc --noEmit` | **done** |
-| 6 | Coluna virtual no `OsKanbanView`, sem drag/drop, na posição do pacote | AC-1, AC-8, AC-9 | `pnpm vitest run src/features/pcm/components/OsKanbanViewCampoAConciliar.test.tsx` | **done** — 6/6 verdes |
+| 6 | Coluna virtual no `OsKanbanView`, sem drag/drop, abre a triagem. Validar vínculo com motivo e permanência da OS na fase em navegador local | AC-1, AC-8, AC-9 | `pnpm vitest run src/features/pcm/components/OsKanbanViewCampoAConciliar.test.tsx` | **done** — 6/6 verdes |
 | 7 | Teste de domínio: ordem literal do quadro e entradas antes das etapas | AC-1 | `pnpm vitest run src/features/pcm/domain/kanban-colunas.test.ts` | **done** — 11/11 verdes |
 | 8 | Flag declarada no registro, `.env.example` e `netlify.toml` | AC-F2 | `node scripts/check-flags-declaradas.mjs` | **done** — 740 flags, nenhuma não declarada |
 | 9 | "Disponível, não ativado" com frase por caso (flag, gate, capacidade) | AC-10, AC-F3 | teste de componente da task 6 | **done** — 3 casos cobertos |

@@ -1,5 +1,5 @@
 import { Button, Modal, Tooltip, useCargaVisivel } from "@sinergica/ui";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
   ClipboardList,
@@ -53,6 +53,7 @@ import { OsCalendarioView } from "../components/OsCalendarioView";
 import { OsKanbanView } from "../components/OsKanbanView";
 import { OsTimelineView } from "../components/OsTimelineView";
 import { CATEGORIAS_OS } from "../domain/abertura-os";
+import { type ItemCampoAConciliar, rotuloMotivoCampo } from "../domain/campo-a-conciliar";
 import type { ChamadoFormData } from "../domain/chamados";
 import { montarOpcoesTecnico } from "../domain/filtro-tecnicos";
 import { TIPO_OS_HUB_LABEL, calcularPrioridadeHub } from "../domain/hub-os";
@@ -98,6 +99,7 @@ import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-se
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { QuadroGerencial } from "../interfaces/chamados-os/QuadroGerencial";
 import { CentralMateriaisGlobal } from "../interfaces/listas-materiais/Central";
+import { VincularChamadoCampo } from "../interfaces/origem-campo/TriagemChamadoProvisorio";
 import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { BacklogGutPage } from "./BacklogGutPage";
 
@@ -172,6 +174,12 @@ export function OrdensServicoPage({
   const [preventivas, setPreventivas] = useState<PmocPreventivaResumo[]>([]);
   const [novoChamadoAberto, setNovoChamadoAberto] = useState(false);
   const [aberturaAuvoOsId, setAberturaAuvoOsId] = useState<string | null>(null);
+  const [triagemCampo, setTriagemCampo] = useState<{
+    item: ItemCampoAConciliar;
+    clienteId: string;
+    userId: string;
+  } | null>(null);
+  const queryClient = useQueryClient();
 
   const temLeitura = podeAcessar("pcm", "leitura");
   const temEscrita = podeAcessar("pcm", "escrita");
@@ -527,6 +535,7 @@ export function OrdensServicoPage({
   }
 
   function onMudarClienteFiltro(clienteId: string) {
+    setTriagemCampo(null);
     setFiltros((atuais) => ({ ...atuais, clienteId }));
     setSelecionados(new Set());
     setSelecionadaId(null);
@@ -534,6 +543,7 @@ export function OrdensServicoPage({
   }
 
   function onMudarVisao(proxima: Visao) {
+    setTriagemCampo(null);
     setVisao(proxima);
     setSelecionados(new Set());
   }
@@ -1005,6 +1015,15 @@ export function OrdensServicoPage({
                       salvando={salvando}
                       onAlterarStatus={(id, status) => onAlterarStatusDe(id, status)}
                       onSelecionar={abrirDetalheCard}
+                      onTriarCampo={(item) => {
+                        if (user && clienteSelecionadoId) {
+                          setTriagemCampo({
+                            item,
+                            clienteId: clienteSelecionadoId,
+                            userId: user.id,
+                          });
+                        }
+                      }}
                       selecionados={selecionados}
                       onToggleSelecionado={onToggleSelecionado}
                       colunas={colunasKanban}
@@ -1278,6 +1297,51 @@ export function OrdensServicoPage({
           onAberta={carregar}
         />
       )}
+      {triagemCampo &&
+        visao === "kanban" &&
+        temLeitura &&
+        user?.id === triagemCampo.userId &&
+        clienteSelecionadoId === triagemCampo.clienteId && (
+          <Modal
+            open
+            onOpenChange={(aberto) => {
+              if (!aberto) setTriagemCampo(null);
+            }}
+            titulo="Triagem de Campo a conciliar"
+            descricao={rotuloMotivoCampo(triagemCampo.item.motivo)}
+            tamanho="lg"
+          >
+            <div className="space-y-4">
+              <div className="space-y-1 rounded-md border border-line bg-paper p-3">
+                <p className="text-body font-semibold text-ink">{triagemCampo.item.titulo}</p>
+                <p className="text-caption text-ink-2">
+                  {triagemCampo.item.osNumero} · {triagemCampo.item.chamadoNumero}
+                  {triagemCampo.item.taskId !== null &&
+                    ` · Tarefa Auvo ${triagemCampo.item.taskId}`}
+                </p>
+              </div>
+              <VincularChamadoCampo
+                userId={triagemCampo.userId}
+                clienteId={triagemCampo.clienteId}
+                osId={triagemCampo.item.osId}
+                chamadoId={triagemCampo.item.chamadoId}
+                onVinculado={() => {
+                  void queryClient.invalidateQueries({
+                    queryKey: operacaoQueryKeys.campoAConciliar(triagemCampo.clienteId),
+                  });
+                  void queryClient.invalidateQueries({
+                    queryKey: operacaoQueryKeys.detalhe(triagemCampo.item.osId),
+                  });
+                  void queryClient.invalidateQueries({
+                    queryKey: operacaoQueryKeys.feeds(),
+                    refetchType: "none",
+                  });
+                  void carregar();
+                }}
+              />
+            </div>
+          </Modal>
+        )}
     </div>
   );
 }

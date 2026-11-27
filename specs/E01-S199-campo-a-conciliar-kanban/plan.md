@@ -51,11 +51,14 @@ capacidade da triagem, resolve sem tocar na view.
   e `enabled` só com Cliente selecionado, visão Kanban e flag ligada.
 - `components/OsKanbanView.tsx` — coluna virtual no mesmo molde de "Preventiva": sem drag, sem
   drop. Arrastar daqui fingiria um caminho que não existe — sair da fila é decisão de triagem.
+- A triagem abre em diálogo próprio e consulta o contexto de E01-S175 antes de oferecer a vinculação.
+  Reusa a consulta de destinos autorizados e a RPC de união, com revisão, motivo e confirmação.
+  Após validar o recibo, atualiza a fila e os dados da OS. A fase da OS continua com seu cartão.
 
 ## Alcance no front (AC-F1 a AC-F5)
 
 - **Caminho (AC-F1):** PCM → Ordens de Serviço → Kanban → selecionar um Cliente no filtro → coluna
-  "Campo a conciliar" → clicar no cartão abre a OS.
+  "Campo a conciliar" → clicar no cartão abre a triagem.
 - **Flag (AC-F2):** `VITE_SSO_CAMPO_A_CONCILIAR_ENABLED`, no registro de flags, em `.env.example`
   e em `netlify.toml`, `false` explícito.
 - **Desligado se anuncia (AC-F3):** três frases distintas — flag desligada, gate fechado
@@ -71,6 +74,7 @@ capacidade da triagem, resolve sem tocar na view.
 - **Linha de ativação (AC-F5):** falta abrir `pcm.sso_consulta_estado_campo_gate`, ligar
   `VITE_SSO_CAMPO_A_CONCILIAR_ENABLED` e conceder `execucao.validar` a quem concilia. O código
   está pronto e testado; a jornada só não está em uso até essas três decisões.
+  A vinculação requer também os gates, capacidades e flags já previstos em E01-S175.
 
 ## Riscos
 
