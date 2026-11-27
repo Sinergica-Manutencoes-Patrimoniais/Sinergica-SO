@@ -50,6 +50,8 @@ nenhum** — ela dá alcance ao que já existe, no lugar onde o pacote mandou.
   mudança de status.
 - **AC-10:** gate fechado, flag desligada ou falta de capacidade **se anunciam** com frase própria;
   nenhum desses estados pode ser confundido com "nada a conciliar".
+- **AC-11:** descartar com motivo cancela o Chamado provisório pelo comando auditado e tira o
+  cartão da fila. A OS, sua fase e a tarefa Auvo são preservadas, inclusive em Planejamento.
 
 ## Alcance no front — obrigatório nesta story
 

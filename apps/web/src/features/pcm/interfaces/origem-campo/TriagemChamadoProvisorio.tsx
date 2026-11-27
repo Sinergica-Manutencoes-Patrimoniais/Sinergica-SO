@@ -77,9 +77,9 @@ function useContextoTriagem({ userId, clienteId, osId }: IdentidadeTriagem) {
   });
 }
 
-type PropsVincular = IdentidadeTriagem & { chamadoId: string; onVinculado: () => void };
+type PropsTriagemCampo = IdentidadeTriagem & { chamadoId: string; onConcluida: () => void };
 
-export function VincularChamadoCampo(props: PropsVincular) {
+export function TriagemCampoAConciliar(props: PropsTriagemCampo) {
   if (!flagLigada("VITE_SSO_TRIAGEM_CHAMADO_CAMPO_ENABLED")) {
     return (
       <RecursoNaoAtivado
@@ -90,23 +90,19 @@ export function VincularChamadoCampo(props: PropsVincular) {
     );
   }
   return (
-    <Vinculacao
+    <AcoesTriagemCampo
       key={JSON.stringify([props.userId, props.clienteId, props.osId, props.chamadoId])}
       {...props}
     />
   );
 }
 
-function Vinculacao({ userId, clienteId, osId, chamadoId, onVinculado }: PropsVincular) {
+function AcoesTriagemCampo({ userId, clienteId, osId, chamadoId, onConcluida }: PropsTriagemCampo) {
   const contexto = useContextoTriagem({ userId, clienteId, osId });
-  const [vinculada, setVinculada] = useState(false);
+  const [recibo, setRecibo] = useState<string | null>(null);
   const atual = contexto.data;
-  if (vinculada) {
-    return (
-      <output className="text-body text-success">
-        OS vinculada ao Chamado de destino. A tarefa Auvo e a execução foram preservadas.
-      </output>
-    );
+  if (recibo) {
+    return <output className="text-body text-success">{recibo}</output>;
   }
   if (contexto.isPending) return <AvisoCarregando>Consultando triagem…</AvisoCarregando>;
   if (contexto.isError) {
@@ -121,34 +117,52 @@ function Vinculacao({ userId, clienteId, osId, chamadoId, onVinculado }: PropsVi
       </div>
     );
   }
-  if (
-    !atual ||
-    atual.chamadoId !== chamadoId ||
-    !atual.triagemPendente ||
-    atual.encerrado ||
-    atual.statusChamado === "cancelado"
-  ) {
+  if (!atual || atual.chamadoId !== chamadoId || !atual.triagemPendente || atual.encerrado) {
     return (
       <output className="text-body text-ink-2">
-        O Chamado provisório está indisponível para vinculação.
+        O Chamado provisório está indisponível para triagem.
       </output>
     );
   }
+  const cancelado = atual.statusChamado === "cancelado";
+  const disponivel = !contexto.isFetching && !cancelado;
   return (
-    <UnirChamadoCampo
-      userId={userId}
-      clienteId={clienteId}
-      osId={osId}
-      origemId={atual.chamadoId}
-      origemRevision={atual.chamadoRevision}
-      osUpdatedAt={atual.osUpdatedAt}
-      taskId={atual.taskId}
-      disponivel={!contexto.isFetching}
-      onVinculado={() => {
-        setVinculada(true);
-        onVinculado();
-      }}
-    />
+    <div className="space-y-4">
+      {!cancelado && (
+        <UnirChamadoCampo
+          userId={userId}
+          clienteId={clienteId}
+          osId={osId}
+          origemId={atual.chamadoId}
+          origemRevision={atual.chamadoRevision}
+          osUpdatedAt={atual.osUpdatedAt}
+          taskId={atual.taskId}
+          disponivel={disponivel}
+          onVinculado={() => {
+            setRecibo(
+              "OS vinculada ao Chamado de destino. A tarefa Auvo e a execução foram preservadas.",
+            );
+            onConcluida();
+          }}
+        />
+      )}
+      <CancelarChamadoCampo
+        userId={userId}
+        clienteId={clienteId}
+        osId={osId}
+        chamadoId={atual.chamadoId}
+        revision={atual.chamadoRevision}
+        osUpdatedAt={atual.osUpdatedAt}
+        taskId={atual.taskId}
+        disponivel={disponivel}
+        onDescartado={() => {
+          setRecibo(
+            "Chamado provisório cancelado. A OS, sua fase e a tarefa Auvo foram preservadas.",
+          );
+          onConcluida();
+        }}
+      />
+    </div>
   );
 }
 

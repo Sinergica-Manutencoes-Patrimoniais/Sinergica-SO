@@ -99,7 +99,7 @@ import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-se
 import { supabasePmocAdapter } from "../infrastructure/supabase-pmoc-adapter";
 import { QuadroGerencial } from "../interfaces/chamados-os/QuadroGerencial";
 import { CentralMateriaisGlobal } from "../interfaces/listas-materiais/Central";
-import { VincularChamadoCampo } from "../interfaces/origem-campo/TriagemChamadoProvisorio";
+import { TriagemCampoAConciliar } from "../interfaces/origem-campo/TriagemChamadoProvisorio";
 import { PainelLateralBacklog } from "../interfaces/pendencias-tecnicas/PainelLateralBacklog";
 import { BacklogGutPage } from "./BacklogGutPage";
 
@@ -1320,12 +1320,12 @@ export function OrdensServicoPage({
                     ` · Tarefa Auvo ${triagemCampo.item.taskId}`}
                 </p>
               </div>
-              <VincularChamadoCampo
+              <TriagemCampoAConciliar
                 userId={triagemCampo.userId}
                 clienteId={triagemCampo.clienteId}
                 osId={triagemCampo.item.osId}
                 chamadoId={triagemCampo.item.chamadoId}
-                onVinculado={() => {
+                onConcluida={() => {
                   void queryClient.invalidateQueries({
                     queryKey: operacaoQueryKeys.campoAConciliar(triagemCampo.clienteId),
                   });

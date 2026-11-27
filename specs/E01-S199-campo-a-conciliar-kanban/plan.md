@@ -30,7 +30,8 @@ alwaysApply: false
   jornada vista de dois lugares, não uma jornada nova;
 - recorte da fila: `provisorio` **e** `o.chamado_id = p.chamado_id` (se o PCM já uniu a OS a outro
   Chamado, ela saiu) **e** sem linha em `sso_triagem_chamado_campo_decisoes` **e** Chamado não
-  encerrado;
+  encerrado nem cancelado. A migration de descarte amplia o recorte de 1866 para excluir o
+  Chamado cancelado pelo comando preservado (1430) antes de aplicar o limite;
 - ordenação por `criado_em, os_id` — o que chegou primeiro aparece primeiro.
 
 **Por que não estender `pcm.operacao_itens`:** a view já foi recriada duas vezes nesta rodada
@@ -53,7 +54,8 @@ capacidade da triagem, resolve sem tocar na view.
   drop. Arrastar daqui fingiria um caminho que não existe — sair da fila é decisão de triagem.
 - A triagem abre em diálogo próprio e consulta o contexto de E01-S175 antes de oferecer a vinculação.
   Reusa a consulta de destinos autorizados e a RPC de união, com revisão, motivo e confirmação.
-  Após validar o recibo, atualiza a fila e os dados da OS. A fase da OS continua com seu cartão.
+  O descarte reutiliza a RPC de cancelamento preservado com motivo e confirmação. Após validar
+  o recibo de qualquer ação, atualiza a fila e os dados da OS. A OS mantém o cartão da sua fase.
 
 ## Alcance no front (AC-F1 a AC-F5)
 
@@ -75,6 +77,8 @@ capacidade da triagem, resolve sem tocar na view.
   `VITE_SSO_CAMPO_A_CONCILIAR_ENABLED` e conceder `execucao.validar` a quem concilia. O código
   está pronto e testado; a jornada só não está em uso até essas três decisões.
   A vinculação requer também os gates, capacidades e flags já previstos em E01-S175.
+  O descarte requer o gate e a flag de cancelamento e as capacidades `execucao.validar` e
+  `chamado.encerrar` para o Cliente.
 
 ## Riscos
 
