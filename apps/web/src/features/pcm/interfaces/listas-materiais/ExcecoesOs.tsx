@@ -1,5 +1,6 @@
 import { RecursoNaoAtivado } from "@sinergica/ui";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { z } from "zod";
 import { flagLigada } from "../../../../config/flags-sso";
 import { supabase } from "../../../../lib/supabase-client";
@@ -41,6 +42,7 @@ export function ExcecoesOs({
   );
 }
 function Conteudo({ usuario, cliente, os }: { usuario: string; cliente: string; os: string }) {
+  const [referencia, setReferencia] = useState("");
   const consulta = useInfiniteQuery({
     queryKey: ["listas-materiais", usuario, cliente, os, "excecoes-os"],
     gcTime: 0,
@@ -84,52 +86,84 @@ function Conteudo({ usuario, cliente, os }: { usuario: string; cliente: string; 
         : undefined;
     },
   });
+  const excecoes =
+    !consulta.isFetching && !consulta.isError ? (consulta.data?.pages.flat() ?? []) : [];
+  const selecionada = excecoes.find((e) => `${e.lista_id}:${e.revisao}` === referencia);
+
   return (
-    <section>
-      <h3>Histórico de exceções da OS</h3>
-      <p>Eventos registrados, não uma confirmação de que a exceção permanece aberta.</p>
-      {consulta.isPending && <output>Consultando exceções…</output>}
-      {consulta.isError && (
-        <p role="alert">
-          Não foi possível consultar exceções.{" "}
-          <button type="button" onClick={() => void consulta.refetch()}>
-            Tentar novamente
+    <>
+      <section aria-label="Histórico de exceções da OS">
+        <h3>Histórico de exceções da OS</h3>
+        <p>Eventos registrados, não uma confirmação de que a exceção permanece aberta.</p>
+        {consulta.isPending && <output>Consultando exceções…</output>}
+        {consulta.isError && (
+          <p role="alert">
+            Não foi possível consultar exceções.{" "}
+            <button type="button" onClick={() => void consulta.refetch()}>
+              Tentar novamente
+            </button>
+          </p>
+        )}
+        {!consulta.isFetching && !consulta.isError && consulta.data?.pages.flat().length === 0 && (
+          <p>Nenhuma exceção registrada nesta OS.</p>
+        )}
+        {!consulta.isFetching && !consulta.isError && (
+          <ul>
+            {consulta.data?.pages.flat().map((e) => (
+              <li key={`${e.lista_id}:${e.revisao}`}>
+                Lista de materiais · revisão {e.revisao} ·{" "}
+                {Object.entries(motivosExcecaoMaterial).find(
+                  ([codigo]) => codigo === e.motivo,
+                )?.[1] ?? "Motivo indisponível"}
+                : {e.descricao} · {new Date(e.criado_em).toLocaleString("pt-BR")} ·{" "}
+                {e.ator_id === usuario ? "Registrado por você" : "Nome do responsável indisponível"}
+              </li>
+            ))}
+          </ul>
+        )}
+        {consulta.hasNextPage && (
+          <button
+            type="button"
+            disabled={consulta.isFetchingNextPage}
+            onClick={() => void consulta.fetchNextPage()}
+          >
+            Mais exceções
           </button>
-        </p>
+        )}
+      </section>
+      {flagLigada("VITE_SSO_IMPEDIMENTO_MATERIAL_OS_ENABLED") && excecoes.length > 0 && (
+        <section aria-label="Ação da OS: intenção de impedimento">
+          <h3>Intenção de impedimento da OS</h3>
+          <p>
+            Use uma exceção registrada como referência para a intenção da OS. A lista de materiais
+            permanece inalterada.
+          </p>
+          <label>
+            Exceção de referência
+            <select
+              value={selecionada ? referencia : ""}
+              onChange={(e) => setReferencia(e.target.value)}
+            >
+              <option value="">Selecione uma exceção</option>
+              {excecoes.map((e) => (
+                <option key={`${e.lista_id}:${e.revisao}`} value={`${e.lista_id}:${e.revisao}`}>
+                  Revisão {e.revisao} · {e.descricao} ·{" "}
+                  {new Date(e.criado_em).toLocaleString("pt-BR")}
+                </option>
+              ))}
+            </select>
+          </label>
+          {selecionada && (
+            <ImpedimentoMaterialOs
+              usuario={usuario}
+              cliente={cliente}
+              os={os}
+              lista={selecionada.lista_id}
+              eventoRevision={selecionada.revisao}
+            />
+          )}
+        </section>
       )}
-      {!consulta.isFetching && !consulta.isError && consulta.data?.pages.flat().length === 0 && (
-        <p>Nenhuma exceção registrada nesta OS.</p>
-      )}
-      {!consulta.isFetching && !consulta.isError && (
-        <ul>
-          {consulta.data?.pages.flat().map((e) => (
-            <li key={`${e.lista_id}:${e.revisao}`}>
-              Lista de materiais · revisão {e.revisao} ·{" "}
-              {Object.entries(motivosExcecaoMaterial).find(
-                ([codigo]) => codigo === e.motivo,
-              )?.[1] ?? "Motivo indisponível"}
-              : {e.descricao} · {new Date(e.criado_em).toLocaleString("pt-BR")} ·{" "}
-              {e.ator_id === usuario ? "Registrado por você" : "Nome do responsável indisponível"}
-              <ImpedimentoMaterialOs
-                usuario={usuario}
-                cliente={cliente}
-                os={os}
-                lista={e.lista_id}
-                eventoRevision={e.revisao}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      {consulta.hasNextPage && (
-        <button
-          type="button"
-          disabled={consulta.isFetchingNextPage}
-          onClick={() => void consulta.fetchNextPage()}
-        >
-          Mais exceções
-        </button>
-      )}
-    </section>
+    </>
   );
 }
