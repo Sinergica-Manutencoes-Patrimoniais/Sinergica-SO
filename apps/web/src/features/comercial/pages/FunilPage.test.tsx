@@ -49,7 +49,7 @@ describe("movimentação pelo seletor do funil", () => {
     });
   }
 
-  it("aguarda confirmação e limita os destinos às etapas ativas", () => {
+  it("aguarda confirmação e limita os destinos às etapas ativas", async () => {
     render(<FunilPage />);
     expect(screen.queryByRole("option", { name: "Inativa" })).not.toBeInTheDocument();
     escolher("qualificada");
@@ -60,6 +60,10 @@ describe("movimentação pelo seletor do funil", () => {
       etapaDestinoId: "qualificada",
       motivoPerdaId: null,
     });
+    await screen.findByText("Inspeção fictícia movida para Qualificada.");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Inspeção fictícia movida para Qualificada.",
+    );
   });
 
   it("abre o motivo da perda e só grava na confirmação", () => {
