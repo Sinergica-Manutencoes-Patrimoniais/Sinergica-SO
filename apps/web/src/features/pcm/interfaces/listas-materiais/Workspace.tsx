@@ -60,6 +60,7 @@ function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho 
   const alterarRascunho = onAlterarRascunho ?? setRascunhoLocal;
   const [erro, setErro] = useState("");
   const [ocupado, setOcupado] = useState(false);
+  const [limpezaFalhou, setLimpezaFalhou] = useState(false);
   const [listaAberta, setListaAberta] = useState<string | null>(null);
   const [excecoesAbertas, setExcecoesAbertas] = useState(false);
   const rascunhos = useRef(new Map<string, RascunhoEditorMateriais>());
@@ -126,26 +127,30 @@ function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho 
       )
         throw new Error("Operação alterada.");
       await supabaseListasMateriaisAdapter.criar(comando);
-      await conferirSessao();
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [...raiz, "listas"] }),
-        queryClient.invalidateQueries({ queryKey: ["listas-materiais-central", usuario, cliente] }),
-      ]);
-      await conferirSessao();
-      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
-        throw new Error("Operação guardada divergente.");
-      sessionStorage.removeItem(chave);
-      setPendente(null);
-      alterarRascunho({ texto: "", responsavel });
     } catch {
       setErro("Não foi possível confirmar o salvamento. Tente novamente com os mesmos dados.");
+      return;
     } finally {
       emEnvio.current = false;
       setOcupado(false);
     }
+    setPendente(null);
+    alterarRascunho({ texto: "", responsavel });
+    try {
+      if (sessionStorage.getItem(chave) !== JSON.stringify(comando))
+        throw new Error("Operação guardada divergente.");
+      sessionStorage.removeItem(chave);
+    } catch {
+      setLimpezaFalhou(true);
+      setErro("Lista salva. Não foi possível limpar a tentativa local. Consulte o suporte.");
+    }
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: [...raiz, "listas"] }),
+      queryClient.invalidateQueries({ queryKey: ["listas-materiais-central", usuario, cliente] }),
+    ]);
   }
   function iniciar() {
-    if (emEnvio.current || pendente || recuperacao.falhou || !permitido) return;
+    if (emEnvio.current || pendente || recuperacao.falhou || limpezaFalhou || !permitido) return;
     try {
       const comando = validarCriarListaMateriais({
         requestId: crypto.randomUUID(),
@@ -203,12 +208,16 @@ function Conteudo({ usuario, cliente, ordemServico, rascunho, onAlterarRascunho 
         </p>
       )}
       {erro && <p role="alert">{erro}</p>}
-      {pendente && (
-        <button type="button" disabled={ocupado} onClick={() => void enviar(pendente)}>
+      {pendente && !ocupado && !erro && (
+        <p role="alert">Há um salvamento pendente nesta sessão. Confira e repita a tentativa.</p>
+      )}
+      {ocupado && <output>Salvando lista…</output>}
+      {pendente && !ocupado && (
+        <button type="button" onClick={() => void enviar(pendente)}>
           Tentar salvar novamente
         </button>
       )}
-      {!pendente && !recuperacao.falhou && (
+      {!pendente && !recuperacao.falhou && !limpezaFalhou && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
