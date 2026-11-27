@@ -48,7 +48,7 @@ _15 concluídas no histórico · maior ID usado: E00-S30_| ID | Título | Owner 
 | E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | **Fechada (2026-11-17)** — 0 fuga/0 não-declarada/0 órfã no repositório inteiro, 737 flags; gate ligado em `ci.yml`; inventário em `docs/ativacao/flags.md`. Pendência documentada: `podeAdministrar` real só em ~20 componentes, resto nasce `false` (lado seguro) — ver tasks.md | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S203_
+_75 concluídas no histórico · maior ID usado: E01-S205_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
@@ -181,6 +181,7 @@ _75 concluídas no histórico · maior ID usado: E01-S203_
 | E01-S201 | Monitor consolidado de exceções do Auvo em T−24 (fecha o monitor de exceções de BL 004) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1867, 17 asserções pgTAP, tela em PCM → Operação. Só leitura; reprocessar fica para a fatia seguinte. Aguarda abrir `sso_consulta_estado_campo_gate` + flag | [spec](../../specs/E01-S201-monitor-excecoes-auvo/spec.md) |
 | E01-S202 | Agenda do Técnico como projeção da Visita (fecha o SPEC_DEVIATION AC-3 de E01-S192) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1870, 27 asserções pgTAP, cadastro manual aposentado sem DROP. Aguarda abrir `capacidade_agenda_tecnico_gate` + concessão `visita.confirmar` + flag | [spec](../../specs/E01-S202-agenda-projecao-visita/spec.md) |
 | E01-S203 | Plano PMOC criado à mão pelo PCM a partir de um Contrato PMOC (responde a pergunta aberta da ADR-1697 §3) | Claude (sessão Lucas) | Implementada (2026-11-24) — migration 1871, 43 asserções pgTAP, ADR-1698. Nenhum Plano criado por migration: a criação é manual. PMOC continua no menu. Aguarda abrir `sso_pmoc_mediado_gate` + `sso_diagnostico_pmoc_gate` + concessão `plano.gerir` + flag | [spec](../../specs/E01-S203-plano-pmoc-manual/spec.md) |
+| E01-S205 | Arquivar (não apagar) os dados [TESTE E2E] de produção — reversível, sem tocar o Auvo | Claude (Devinho) | Em PR draft — migration 1911, pgTAP 20 asserções; execução em produção depende do dono aprovar o inventário | [spec](../../specs/E01-S205-arquivar-dados-teste-e2e/spec.md) |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S43_
