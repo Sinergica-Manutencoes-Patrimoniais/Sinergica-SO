@@ -362,6 +362,7 @@ export function OsKanbanView({
                             aria-label={`Mover ${rotuloNumeroOrdem(ordem)} para outra fase`}
                             className="mt-2 h-7 w-full rounded-md border border-line-soft bg-paper px-1.5 text-micro font-semibold text-ink-2"
                           >
+                            {ordem.status === "demanda" && <option value="demanda">Demanda</option>}
                             {STATUS_OS.map((status) => (
                               <option key={status.value} value={status.value}>
                                 {status.label}

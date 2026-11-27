@@ -3,6 +3,7 @@ import {
   destinosPermitidos,
   ehStatusDoFluxoAprovado,
   ehStatusLegado,
+  transicaoManualOrdem,
   transicaoPermitida,
 } from "./transicoes-os";
 
@@ -65,6 +66,15 @@ describe("transicoes-os — matriz do fluxo aprovado (BL 007 AC-7)", () => {
       expect(r.motivo.length).toBeGreaterThan(0);
     }
   });
+});
+
+it("Demanda só permite iniciar a conversão em Planejamento para card de Chamado", () => {
+  const chamado = { id: "chamado-aberto:1", status: "demanda" };
+  expect(transicaoManualOrdem(chamado, "planejamento").permitida).toBe(true);
+  expect(transicaoManualOrdem(chamado, "validacao_pcm").permitida).toBe(false);
+  expect(
+    transicaoManualOrdem({ id: "os-ficticia", status: "demanda" }, "planejamento").permitida,
+  ).toBe(false);
 });
 
 describe("transicoes-os — status legado", () => {

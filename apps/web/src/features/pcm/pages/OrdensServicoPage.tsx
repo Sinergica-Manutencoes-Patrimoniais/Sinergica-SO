@@ -323,7 +323,8 @@ export function OrdensServicoPage({
   const feedBuscando = visao === "kanban" ? feedsKanban.isFetching : feed.isFetching;
   const feedErro = visao === "kanban" ? feedsKanban.isError : feed.isError;
   const erroFeed = visao === "kanban" ? feedsKanban.error : feed.error;
-  const temProximaPagina = visao === "kanban" ? feedsKanban.hasNextPage : feed.hasNextPage;
+  const temProximaPagina =
+    visao === "kanban" ? feedsKanban.hasNextPage : !feed.isPlaceholderData && feed.hasNextPage;
   const buscandoProximaPagina =
     visao === "kanban" ? feedsKanban.isFetchingNextPage : feed.isFetchingNextPage;
   const recarregando = feedBuscando || queryKpis.isFetching;
@@ -492,6 +493,13 @@ export function OrdensServicoPage({
 
   function limparFiltros() {
     setFiltros({ ...FILTROS_ORDENS_VAZIO, status: "ativos" });
+  }
+
+  function onMudarClienteFiltro(clienteId: string) {
+    setFiltros((atuais) => ({ ...atuais, clienteId }));
+    setSelecionados(new Set());
+    setSelecionadaId(null);
+    setOrigemCentral(null);
   }
 
   function onMudarVisao(proxima: Visao) {
@@ -782,7 +790,7 @@ export function OrdensServicoPage({
                 }));
                 setPrioridadeBacklog(novos.prioridade);
               }}
-              onAlterarCliente={(clienteId) => setFiltros((atuais) => ({ ...atuais, clienteId }))}
+              onAlterarCliente={onMudarClienteFiltro}
               ordensControladas={feed.isPlaceholderData ? [] : ordensCarregadas}
               totalControlado={feed.isPlaceholderData ? undefined : totalFiltrado}
               onPlanejarControlado={(ordem) => onAlterarStatusDe(ordem.id, "planejamento")}
@@ -832,7 +840,7 @@ export function OrdensServicoPage({
                   onFocus={() => {
                     if (!dadosOs) queryCatalogos.refetch();
                   }}
-                  onChange={(event) => setFiltros((f) => ({ ...f, clienteId: event.target.value }))}
+                  onChange={(event) => onMudarClienteFiltro(event.target.value)}
                 >
                   <option value="todos">Todos os clientes</option>
                   {(dadosOs?.clientes ?? []).map((cliente) => (
