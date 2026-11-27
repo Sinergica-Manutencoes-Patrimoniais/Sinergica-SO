@@ -105,6 +105,34 @@ async function textoPdf(bytes: Uint8Array) {
   }).join("\n");
 }
 
+function capturarPdf() {
+  let bytes: Uint8Array | undefined;
+  vi.stubGlobal("URL", {
+    createObjectURL: (blob: Blob) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        bytes = new Uint8Array(reader.result as ArrayBuffer);
+      };
+      reader.readAsArrayBuffer(blob);
+      return "blob:teste";
+    },
+    revokeObjectURL: vi.fn(),
+  });
+  const downloads: string[] = [];
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+    this: HTMLAnchorElement,
+  ) {
+    downloads.push(this.download);
+  });
+  return {
+    downloads,
+    async texto() {
+      await waitFor(() => expect(bytes).toBeDefined());
+      return textoPdf(bytes as Uint8Array);
+    },
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.listarInspecoes.mockResolvedValue(inspecoes);
@@ -118,24 +146,7 @@ afterEach(() => {
 
 describe("Relatório do Cliente", () => {
   it("invalida o período anterior e baixa o PDF do novo recorte com nome e conteúdo coerentes", async () => {
-    let bytes: Uint8Array | undefined;
-    vi.stubGlobal("URL", {
-      createObjectURL: (blob: Blob) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          bytes = new Uint8Array(reader.result as ArrayBuffer);
-        };
-        reader.readAsArrayBuffer(blob);
-        return "blob:teste";
-      },
-      revokeObjectURL: vi.fn(),
-    });
-    const downloads: string[] = [];
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
-      this: HTMLAnchorElement,
-    ) {
-      downloads.push(this.download);
-    });
+    const pdf = capturarPdf();
     await abrir();
     fireEvent.click(botao("Gerar relatório"));
     await screen.findByText(/Inspecao recente/);
@@ -149,9 +160,8 @@ describe("Relatório do Cliente", () => {
     expect(screen.queryByText(/Inspecao recente/)).toBeNull();
 
     fireEvent.click(botao("Exportar PDF"));
-    await waitFor(() => expect(bytes).toBeDefined());
-    expect(downloads).toEqual(["relatorio-condominio-alfa-2026-11-20.pdf"]);
-    const texto = await textoPdf(bytes as Uint8Array);
+    const texto = await pdf.texto();
+    expect(pdf.downloads).toEqual(["relatorio-condominio-alfa-2026-11-20.pdf"]);
     expect(texto).toContain("2026-11-01 a 2026-11-20");
     expect(texto).toContain("Inspecao antiga");
     expect(texto).not.toContain("Inspecao recente");
@@ -159,6 +169,22 @@ describe("Relatório do Cliente", () => {
     alterar("Cliente", "b");
     expect(screen.queryByRole("article")).toBeNull();
     expect(botao("Publicar no Portal")).toBeDisabled();
+  });
+
+  it("apresenta só inspeções concluídas como trabalho realizado na tela e no PDF", async () => {
+    const pdf = capturarPdf();
+    await abrir();
+    fireEvent.click(botao("Gerar relatório"));
+    await screen.findByText(/Inspecao antiga/);
+    expect(screen.queryByText(/Inspecao aberta/)).toBeNull();
+    expect(screen.queryByText(/Inspecao Beta/)).toBeNull();
+    fireEvent.click(botao("Exportar PDF"));
+    const texto = await pdf.texto();
+    expect(texto).toContain("Inspecao antiga");
+    expect(texto).toContain("Inspecao recente");
+    expect(texto).not.toContain("Inspecao aberta");
+    expect(texto).not.toContain("Inspecao Beta");
+    expect(texto).toContain("2 atendimento(s) realizado(s)");
   });
 
   it("descarta a resposta de uma geração se os filtros mudarem durante a consulta", async () => {

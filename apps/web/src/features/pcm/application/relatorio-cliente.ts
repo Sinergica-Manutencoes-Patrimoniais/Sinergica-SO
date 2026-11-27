@@ -46,6 +46,7 @@ export async function obterRelatorioCliente(
   const atividades: AtividadeRelatorioCliente[] = inspecoes
     .filter(
       (inspecao) =>
+        inspecao.status === "concluida" &&
         inspecao.clientId === cliente.id &&
         inspecao.dataInspecao >= periodo.inicio &&
         inspecao.dataInspecao <= periodo.fim,
