@@ -310,9 +310,11 @@ function ChannelMixCard({ mixCanal }: { mixCanal: PainelAtendimento["mixCanal"] 
   return (
     <section className="rounded-xl border border-line bg-card p-4 shadow-raised">
       <h3 className="text-body font-semibold text-ink">Mix de canal</h3>
-      <p className="mt-0.5 text-caption text-ink-3">De onde vem a demanda no período.</p>
+      <p className="mt-0.5 text-caption text-ink-3">
+        Conversas abertas agora, por canal (mesma base do KPI Abertas).
+      </p>
       {mixCanal.length === 0 ? (
-        <p className="mt-6 text-center text-body text-ink-3">Sem conversas no período.</p>
+        <p className="mt-6 text-center text-body text-ink-3">Sem conversas abertas.</p>
       ) : (
         <div className="mt-4 space-y-2.5">
           {mixCanal.map((m) => (
