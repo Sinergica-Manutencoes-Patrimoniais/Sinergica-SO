@@ -1081,7 +1081,7 @@ export function OrdensServicoPage({
               )}
 
               {visao !== "lista" && selecionada && (
-                <section className="bg-card rounded-xl border border-line">
+                <section className="min-w-0 rounded-xl border border-line bg-card">
                   <DetalheOs
                     key={selecionada.id}
                     selecionada={selecionada}
@@ -1234,7 +1234,7 @@ export function OrdensServicoPage({
                     )}
                   </section>
 
-                  <section className="rounded-xl border border-line bg-card max-h-[calc(100vh-220px)] overflow-y-auto">
+                  <section className="min-w-0 max-h-[calc(100vh-220px)] overflow-y-auto rounded-xl border border-line bg-card">
                     {selecionada ? (
                       <DetalheOs
                         key={selecionada.id}
@@ -1679,7 +1679,7 @@ function DetalheOs({
   );
 
   return (
-    <div>
+    <div className="wrap-anywhere">
       <div className="border-b border-line-soft px-4 py-3">
         <div className="flex items-start justify-between gap-2">
           <p className="text-micro font-semibold uppercase tracking-[0.14em] text-ink-3">
@@ -1715,7 +1715,7 @@ function DetalheOs({
         </Tooltip>
         <h3 className="mt-1 text-heading font-semibold text-ink">{selecionada.titulo}</h3>
         <p className="mt-0.5 text-caption text-ink-3">{selecionada.clienteNome}</p>
-        <p className="mt-2 text-caption leading-relaxed text-ink-2">
+        <p className="mt-2 whitespace-pre-wrap text-caption leading-relaxed text-ink-2">
           {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
         </p>
       </div>
@@ -1731,9 +1731,9 @@ function DetalheOs({
           onOpenChange={(aberto) => {
             if (!aberto) setExpandido(false);
           }}
-          titulo={selecionada.titulo}
+          titulo={<span className="wrap-anywhere">{selecionada.titulo}</span>}
           descricao={
-            <>
+            <span className="wrap-anywhere">
               <Tooltip content="Identificador da OS ou do Chamado. O vínculo com várias OS está em preparação; sem identificador CH, pode aparecer o ID do Auvo.">
                 <span className="inline-block font-brand tabular-nums">
                   {rotuloNumeroOrdem(selecionada)}
@@ -1741,12 +1741,12 @@ function DetalheOs({
               </Tooltip>
               {" · "}
               {selecionada.clienteNome}
-            </>
+            </span>
           }
           tamanho="lg"
         >
-          <div className="flex flex-col gap-3">
-            <p className="text-body leading-relaxed text-ink-2">
+          <div className="flex flex-col gap-3 wrap-anywhere">
+            <p className="whitespace-pre-wrap text-body leading-relaxed text-ink-2">
               {selecionada.descricao?.trim() || "Sem descrição informada para esta OS."}
             </p>
             {corpo}

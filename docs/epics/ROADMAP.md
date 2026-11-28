@@ -48,7 +48,7 @@ _15 concluídas no histórico · maior ID usado: E00-S30_| ID | Título | Owner 
 | E00-S28 | Ativação visível no front — flag declarada, recurso desligado que se anuncia | Claude (sessão Lucas) | **Fechada (2026-11-17)** — 0 fuga/0 não-declarada/0 órfã no repositório inteiro, 737 flags; gate ligado em `ci.yml`; inventário em `docs/ativacao/flags.md`. Pendência documentada: `podeAdministrar` real só em ~20 componentes, resto nasce `false` (lado seguro) — ver tasks.md | [spec](../../specs/E00-S28-ativacao-visivel-no-front/spec.md) |
 
 ### E01 — PCM · Operação
-_75 concluídas no histórico · maior ID usado: E01-S207_
+_75 concluídas no histórico · maior ID usado: E01-S208_
 
 | ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|

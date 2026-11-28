@@ -1,4 +1,4 @@
-import { Button, DataTable, Modal } from "@sinergica/ui";
+import { Button, DataTable, Modal, RecursosNaoAtivadosGrupo } from "@sinergica/ui";
 import { useState } from "react";
 import type {
   PesquisaEstruturaGateway,
@@ -133,17 +133,22 @@ function Conteudo({
         <Button size="sm" variant="secondary" onClick={() => voltar(0)}>
           Voltar ao Cliente
         </Button>
-        {caminho.map((item, i) => (
-          <Button key={item.chave} size="sm" variant="secondary" onClick={() => voltar(i + 1)}>
-            {nomes[item.tipo]}: {item.nome}
-          </Button>
-        ))}
+        {caminho.map((item, i) =>
+          item === contexto ? (
+            <span
+              key={item.chave}
+              aria-current="location"
+              className="self-center text-body font-semibold text-ink"
+            >
+              {nomes[item.tipo]}: {item.nome}
+            </span>
+          ) : (
+            <Button key={item.chave} size="sm" variant="secondary" onClick={() => voltar(i + 1)}>
+              {nomes[item.tipo]}: {item.nome}
+            </Button>
+          ),
+        )}
       </nav>
-      {contexto && (
-        <h3 className="text-body font-semibold text-ink">
-          {nomes[contexto.tipo]}: {contexto.nome}
-        </h3>
-      )}
       {consulta.isError && (
         <p role="alert">
           {recusado
@@ -217,60 +222,74 @@ function Conteudo({
             }}
             titulo={`${nomes[detalhe.tipo]}: ${detalhe.nome}`}
           >
-            <p>Código / TAG: {detalhe.codigo || "não informado"}</p>
-            {detalhe.tipo === "local" && (
-              <ComposicaoLocal
-                userId={usuario}
-                clienteId={clienteId}
-                localId={detalhe.id}
-                caminho={[...caminho.map((r) => r.nome), detalhe.nome]}
-              />
-            )}
-            {detalhe.tipo === "grupo_quantitativo" && (
-              <>
-                {resumoGrupo.isPending ? (
-                  <p>Carregando dados do grupo…</p>
-                ) : resumoGrupo.isError || !resumoGrupo.data ? (
-                  <p role="alert">Os dados do grupo estão indisponíveis.</p>
-                ) : (
-                  <dl className="grid gap-2">
-                    <div>
-                      <dt>Quantidade</dt>
-                      <dd>
-                        {resumoGrupo.data.quantidade}{" "}
-                        {resumoGrupo.data.quantidade === 1 ? "unidade" : "unidades"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Local</dt>
-                      <dd>{resumoGrupo.data.local ?? "Indisponível"}</dd>
-                    </div>
-                    <div>
-                      <dt>Sistema</dt>
-                      <dd>
-                        {resumoGrupo.data.sistema ??
-                          (resumoGrupo.data.temSistema ? "Indisponível" : "Não vinculado")}
-                      </dd>
-                    </div>
-                  </dl>
+            <div className="space-y-4 wrap-anywhere text-body text-ink">
+              <RecursosNaoAtivadosGrupo compacto>
+                <p className="text-caption text-ink-3">
+                  Código / TAG: {detalhe.codigo || "não informado"}
+                </p>
+                {detalhe.tipo === "local" && (
+                  <ComposicaoLocal
+                    userId={usuario}
+                    clienteId={clienteId}
+                    localId={detalhe.id}
+                    caminho={[...caminho.map((r) => r.nome), detalhe.nome]}
+                  />
                 )}
-                <HistoricoGrupo userId={usuario} clienteId={clienteId} grupoId={detalhe.id} />
-                <PlanosDoAlvo userId={usuario} clienteId={clienteId} tipo="grupo" id={detalhe.id} />
-                <PendenciasDoAlvo
-                  userId={usuario}
-                  clienteId={clienteId}
-                  tipo="grupo"
-                  id={detalhe.id}
-                />
-              </>
-            )}
-            <Button
-              onClick={() => {
-                navegar(detalhe);
-              }}
-            >
-              Navegar neste contexto
-            </Button>
+                {detalhe.tipo === "grupo_quantitativo" && (
+                  <>
+                    {resumoGrupo.isPending ? (
+                      <p>Carregando dados do grupo…</p>
+                    ) : resumoGrupo.isError || !resumoGrupo.data ? (
+                      <p role="alert">Os dados do grupo estão indisponíveis.</p>
+                    ) : (
+                      <dl className="grid gap-3 rounded-lg border border-line bg-paper p-3 sm:grid-cols-3">
+                        <div>
+                          <dt className="text-caption text-ink-3">Quantidade</dt>
+                          <dd>
+                            {resumoGrupo.data.quantidade}{" "}
+                            {resumoGrupo.data.quantidade === 1 ? "unidade" : "unidades"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-caption text-ink-3">Local</dt>
+                          <dd>{resumoGrupo.data.local ?? "Indisponível"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-caption text-ink-3">Sistema</dt>
+                          <dd>
+                            {resumoGrupo.data.sistema ??
+                              (resumoGrupo.data.temSistema ? "Indisponível" : "Não vinculado")}
+                          </dd>
+                        </div>
+                      </dl>
+                    )}
+                    <section className="rounded-lg border border-line bg-paper p-3">
+                      <h3 className="mb-2 text-body font-semibold text-ink">Histórico do Grupo</h3>
+                      <HistoricoGrupo userId={usuario} clienteId={clienteId} grupoId={detalhe.id} />
+                    </section>
+                    <PlanosDoAlvo
+                      userId={usuario}
+                      clienteId={clienteId}
+                      tipo="grupo"
+                      id={detalhe.id}
+                    />
+                    <PendenciasDoAlvo
+                      userId={usuario}
+                      clienteId={clienteId}
+                      tipo="grupo"
+                      id={detalhe.id}
+                    />
+                  </>
+                )}
+                <Button
+                  onClick={() => {
+                    navegar(detalhe);
+                  }}
+                >
+                  Navegar neste contexto
+                </Button>
+              </RecursosNaoAtivadosGrupo>
+            </div>
           </Modal>
         ))}
     </section>

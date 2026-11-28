@@ -96,7 +96,7 @@ export function Cliente360Drawer({
         className="drawer-panel relative flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-line bg-card shadow-modal"
       >
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line bg-card px-4 py-3">
-          <div>
+          <div className="min-w-0 wrap-anywhere">
             <h2 className="text-heading font-semibold text-ink">{titulo}</h2>
             {descricao && <p className="mt-0.5 text-caption text-ink-3">{descricao}</p>}
           </div>
