@@ -19,6 +19,7 @@ import type {
   PortalSnapshot,
   PortalVisita,
 } from "../application/portal-gateway";
+import { osAguardandoAvaliacao } from "../domain/avaliacao-os";
 import { statusConformidade } from "../domain/conformidade";
 import { projetarItensOrcamentoPublico } from "../domain/itens-orcamento-publico";
 
@@ -371,9 +372,7 @@ export const supabasePortalAdapter: PortalGateway = {
       orcamentos,
       propostas,
       faturas,
-      osAguardandoAvaliacao: os.filter(
-        (item) => item.status === "concluida" && !avaliadas.has(item.id),
-      ),
+      osAguardandoAvaliacao: osAguardandoAvaliacao(os, avaliadas),
     };
   },
 
