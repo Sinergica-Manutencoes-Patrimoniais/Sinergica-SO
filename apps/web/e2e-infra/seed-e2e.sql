@@ -35,3 +35,13 @@ values (
 insert into config.usuarios (user_id, papel, nome, ativo)
 values ('e2e00000-0000-4000-8000-000000000001', 'superadmin', 'Superadmin E2E', true)
 on conflict (user_id) do update set papel = 'superadmin', ativo = true;
+
+-- Clientes fictícios: os testes de Chamado, Contas e lista de Clientes partem de pelo menos um
+-- cliente existente (o banco local começa vazio). Nomes inventados, sem CNPJ nem Auvo.
+insert into pcm.clientes (id, nome, tipo, status_comercial, ativo, cidade, estado, created_by)
+values
+  ('e2e00000-0000-4000-8000-0000000000c1', 'Condomínio Fictício Alfa (E2E)', 'cliente', 'ativo', true,
+   'Cidade Fictícia', 'SP', 'e2e00000-0000-4000-8000-000000000001'),
+  ('e2e00000-0000-4000-8000-0000000000c2', 'Condomínio Fictício Beta (E2E)', 'cliente', 'ativo', true,
+   'Cidade Fictícia', 'SP', 'e2e00000-0000-4000-8000-000000000001')
+on conflict (id) do nothing;

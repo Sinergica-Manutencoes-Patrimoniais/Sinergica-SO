@@ -29,8 +29,9 @@ alwaysApply: false
 ## Stories em aberto por épico
 
 ### E00 — Shell & Infra
-_15 concluídas no histórico · maior ID usado: E00-S31_| ID | Título | Owner | Status | Spec |
+_15 concluídas no histórico · maior ID usado: E00-S32_| ID | Título | Owner | Status | Spec |
 |----|--------|-------|--------|------|
+| E00-S32 | Atualizar os 43 testes E2E pendentes (desatualizados ou dependentes de produção), sem fixture de produção | — (livre) | Aberta (2026-11-27) — lista em `apps/web/e2e-infra/pendentes.ts` | [spec](../../specs/E00-S32-atualizar-specs-e2e-pendentes/spec.md) |
 | E00-S31 | E2E fora de produção — Supabase local, seed fictício e trava que recusa o project ref de produção (SEC-006) | Claude (Devinho) | Em PR draft (2026-11-27) | — (chore, sem spec; `apps/web/e2e-infra/README.md`) |
 | E00-S30 | Destrave do Financeiro e do Comercial — 72 travas de banco abertas e 85 flags declaradas | Claude (sessão Lucas) | Implementada (2026-11-25) — migration 1872, 74 asserções pgTAP. Autorização do Lucas em 25/11 | — (chore, sem spec) |
 | E00-S25 | Workflow enxuto — ROADMAP compacto, Spec Kit, gates só nos afetados | Claude (sessão Lucas) | Em andamento | [spec](../../specs/E00-S25-workflow-enxuto/spec.md) |

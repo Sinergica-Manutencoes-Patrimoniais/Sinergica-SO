@@ -44,11 +44,12 @@ O script lê `API_URL`/`ANON_KEY` de `supabase status`, confere a trava, aplica 
 ## Seed fictício
 
 `seed-e2e.sql`: usuário `e2e-superadmin@sinergica.invalid` (papel `superadmin`, senha só local
-`e2e-local-somente`) e cadastros fictícios mínimos. Não é migration nem `db.seed`: não entra no
+`e2e-local-somente`) e dois clientes fictícios; o resto cada teste cria. Não é migration nem `db.seed`: não entra no
 pgTAP do CI nem em produção. Idempotente.
 
 ## Specs fora da suíte padrão
 
 - `calendario-contratual`, `capacidades-sso`, `estrutura-tecnica`, `plano-manutencao`: têm
   fixture e config próprias (`playwright.s1NN-isolado.config.ts`); ficam em `testIgnore`.
-- A lista de specs que ainda dependem de dado específico está no PR da E00-S31.
+- 43 testes desatualizados ou dependentes de dado de produção: fora da suíte padrão,
+  listados com motivo em `pendentes.ts` (story E00-S32). Ao corrigir, tire a linha de lá.

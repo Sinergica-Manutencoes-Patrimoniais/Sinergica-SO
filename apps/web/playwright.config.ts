@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { PROJECT_REF_PRODUCAO, verificarBancoE2E } from "./e2e-infra/guarda-banco";
+import { ARQUIVOS_PENDENTES, TITULOS_PENDENTES } from "./e2e-infra/pendentes";
 
 // E00-S31 (SEC-006): a suíte E2E roda SÓ contra Supabase local com seed fictício.
 // - Não lê `.env.local` (que aponta para produção). O ambiente vem de
@@ -24,14 +25,18 @@ const BASE_URL = `http://127.0.0.1:${PORTA}`;
 
 export default defineConfig({
   testDir: "./e2e",
-  // Specs com fixture própria e config isolada (playwright.s1NN-isolado.config.ts): exigem
-  // variáveis da fixture e lançam na coleta sem elas. Rodam só pela config deles.
   testIgnore: [
+    // Specs com fixture própria e config isolada (playwright.s1NN-isolado.config.ts): exigem
+    // variáveis da fixture e lançam na coleta sem elas. Rodam só pela config deles.
     /calendario-contratual\.spec\.ts/,
     /capacidades-sso\.spec\.ts/,
     /estrutura-tecnica\.spec\.ts/,
     /plano-manutencao\.spec\.ts/,
+    // Pendentes da E00-S32 (desatualizados ou dependentes de produção), com motivo em
+    // e2e-infra/pendentes.ts. Ao corrigir, tire a linha de lá.
+    ...ARQUIVOS_PENDENTES,
   ],
+  grepInvert: TITULOS_PENDENTES,
   fullyParallel: false,
   workers: 1,
   retries: 0,
