@@ -1,7 +1,8 @@
 import { Button, Skeleton } from "@sinergica/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
+import { flagLigada } from "../../../config/flags-sso";
 import { carregarDadosAberturaOs } from "../application/abrir-ordem-servico";
 import type { OrdemServicoResumo } from "../application/cliente-360-gateway";
 import { cliente360QueryKeys } from "../application/cliente-360-query-keys";
@@ -11,12 +12,11 @@ import type { StatusOrdemServico } from "../domain/ordens-servico";
 import { rotuloStatusOs } from "../domain/ordens-servico";
 import { supabaseOperacaoAdapter } from "../infrastructure/supabase-operacao-adapter";
 import { supabaseOrdemServicoAdapter } from "../infrastructure/supabase-ordem-servico-adapter";
-import { WorkspaceListasMateriais } from "../interfaces/listas-materiais/Workspace";
-import { RelatorioOsDespesas } from "../interfaces/despesas-visita/RelatorioOsDespesas";
 import { PublicarAnexo } from "../interfaces/anexos-os/PublicarAnexo";
+import { RelatorioOsDespesas } from "../interfaces/despesas-visita/RelatorioOsDespesas";
+import { WorkspaceListasMateriais } from "../interfaces/listas-materiais/Workspace";
 import { ChamadoPainel } from "./ChamadoPainel";
 import { Cliente360Drawer } from "./Cliente360Drawer";
-import { flagLigada } from "../../../config/flags-sso";
 
 const STATUS: StatusOrdemServico[] = [
   "solicitacao",
@@ -123,7 +123,7 @@ export function OrdemServicoDetalheDrawer({
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 wrap-anywhere">
           <section>
             <h3 className="text-body font-semibold text-ink">{ordem.titulo}</h3>
             <p className="mt-1 whitespace-pre-wrap text-body text-ink-2">
@@ -132,7 +132,7 @@ export function OrdemServicoDetalheDrawer({
                 "Sem descrição informada para esta OS."}
             </p>
           </section>
-          <dl className="grid grid-cols-1 gap-3 rounded-lg border border-line bg-surface p-4 text-caption sm:grid-cols-2">
+          <dl className="grid grid-cols-1 gap-3 rounded-lg border border-line bg-paper p-4 text-caption sm:grid-cols-2">
             <Campo titulo="Status" valor={rotuloStatusOs(statusAtual)} />
             <Campo titulo="Categoria" valor={ordem.categoria} />
             <Campo titulo="Técnico" valor={ordem.tecnicoNome ?? "Não atribuído"} />
@@ -154,8 +154,12 @@ export function OrdemServicoDetalheDrawer({
             />
           )}
           {aberto && painelOrcamento}
-          {aberto && user?.id && <RelatorioOsDespesas userId={user.id} clienteId={clienteId} osId={ordem.id} />}
-          {aberto && user?.id && <PublicarAnexo usuario={user.id} cliente={clienteId} ordemServico={ordem.id} />}
+          {aberto && user?.id && (
+            <RelatorioOsDespesas userId={user.id} clienteId={clienteId} osId={ordem.id} />
+          )}
+          {aberto && user?.id && (
+            <PublicarAnexo usuario={user.id} cliente={clienteId} ordemServico={ordem.id} />
+          )}
           {temEscrita && (
             <label className="text-caption font-semibold text-ink-2">
               Alterar status

@@ -66,7 +66,9 @@ export function IndicadoresMetaPage() {
 
   const ultima = sincronizacoesQuery.data?.[0];
   const relatorio = indicadoresQuery.data;
-  const vazio = relatorio ? semVeiculacao(relatorio) : false;
+  const semCampanhas = Boolean(
+    relatorio && !indicadoresQuery.isPlaceholderData && semVeiculacao(relatorio),
+  );
 
   const linhas = useMemo(
     () => (relatorio ? linhasVisiveis(relatorio, abertos) : []),
@@ -280,23 +282,30 @@ export function IndicadoresMetaPage() {
           <Card>
             <CardHeader>
               <h2 className="text-body font-semibold text-ink">Campanha → conjunto → anúncio</h2>
-              <p className="text-caption text-ink-3">
-                Abra uma campanha para ver os conjuntos; abra o conjunto para ver os anúncios.
-              </p>
+              {linhas.length > 0 && !semCampanhas && (
+                <p className="text-caption text-ink-3">
+                  Abra uma campanha para ver os conjuntos; abra o conjunto para ver os anúncios.
+                </p>
+              )}
             </CardHeader>
-            <DataTable
-              colunas={colunas}
-              itens={linhas}
-              chaveLinha={(l) => l.chave}
-              carregando={indicadoresQuery.isPending}
-              vazio={
-                // AC-4: vazio nomeado. Uma tabela de zeros afirmaria que houve veiculação sem
-                // resultado, que é outra coisa.
-                vazio
-                  ? `Nenhuma veiculação entre ${dataCurta(periodo.de)} e ${dataCurta(periodo.ate)}.`
-                  : "Nenhuma campanha para mostrar."
-              }
-            />
+            {semCampanhas ? (
+              <div className="p-3">
+                <EmptyState titulo="Nenhuma veiculação no período">
+                  De {dataCurta(periodo.de)} a {dataCurta(periodo.ate)}.
+                </EmptyState>
+              </div>
+            ) : (
+              <DataTable
+                colunas={colunas}
+                itens={linhas}
+                chaveLinha={(l) => l.chave}
+                carregando={
+                  indicadoresQuery.isPending ||
+                  (linhas.length === 0 && indicadoresQuery.isPlaceholderData)
+                }
+                vazio="Nenhuma campanha para mostrar."
+              />
+            )}
           </Card>
         </>
       )}

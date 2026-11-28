@@ -102,3 +102,31 @@ it("1 único recurso desligado usa singular no rótulo do grupo", () => {
 
   expect(screen.getByText("1 recurso deste painel ainda não está ativado")).toBeInTheDocument();
 });
+
+it("resume os cartões na Visão 360 e retira os detalhes ao perder a permissão", () => {
+  function painel(podeAdministrar: boolean) {
+    return (
+      <RecursosNaoAtivadosGrupo compacto>
+        <RecursoNaoAtivado
+          recurso="Política"
+          podeAdministrar={podeAdministrar}
+          faltando={["FLAG_POLITICA"]}
+        />
+        <RecursoNaoAtivado
+          recurso="Reservas"
+          podeAdministrar={false}
+          faltando={["FLAG_RESERVAS"]}
+        />
+      </RecursosNaoAtivadosGrupo>
+    );
+  }
+  const { rerender } = render(painel(true));
+  expect(screen.getByText("2 recursos deste painel ainda não estão ativados.")).toBeInTheDocument();
+  expect(document.querySelector("[data-recurso-nao-ativado]")).toBeNull();
+  expect(screen.getByText("FLAG_POLITICA")).toBeInTheDocument();
+  expect(screen.queryByText("FLAG_RESERVAS")).toBeNull();
+
+  rerender(painel(false));
+  expect(screen.queryByText("Detalhes de ativação")).toBeNull();
+  expect(screen.queryByText(/FLAG_/)).toBeNull();
+});

@@ -26,6 +26,9 @@ export function ReceitaPorCampanhaPage() {
   const erro = receitaQuery.error;
   const semComercial = erro instanceof ErroDoMarketing && erro.codigo === "sem_permissao_comercial";
   const totais = receitaQuery.data?.totais;
+  const linhas = receitaQuery.data?.linhas ?? [];
+  const semCampanhas =
+    receitaQuery.isSuccess && !receitaQuery.isPlaceholderData && linhas.length === 0;
 
   function trocarAtalho(novo: AtalhoDePeriodo) {
     setAtalho(novo);
@@ -174,15 +177,25 @@ export function ReceitaPorCampanhaPage() {
                 Uma oportunidade conta uma vez só, na campanha da entrada que a originou.
               </p>
             </CardHeader>
-            <DataTable
-              colunas={colunas}
-              itens={receitaQuery.data ? [...receitaQuery.data.linhas] : []}
-              chaveLinha={(l) => l.campanhaId}
-              carregando={receitaQuery.isPending}
-              ordenacao={{ coluna, direcao: "desc" }}
-              onOrdenar={(chave) => setColuna(chave as ColunaDeReceita)}
-              vazio={`Nenhuma campanha com gasto ou lead entre ${dataCurta(periodo.de)} e ${dataCurta(periodo.ate)}.`}
-            />
+            {semCampanhas ? (
+              <div className="p-3">
+                <EmptyState titulo="Nenhuma campanha com gasto ou lead no período">
+                  De {dataCurta(periodo.de)} a {dataCurta(periodo.ate)}.
+                </EmptyState>
+              </div>
+            ) : (
+              <DataTable
+                colunas={colunas}
+                itens={[...linhas]}
+                chaveLinha={(l) => l.campanhaId}
+                carregando={
+                  receitaQuery.isPending || (linhas.length === 0 && receitaQuery.isPlaceholderData)
+                }
+                ordenacao={{ coluna, direcao: "desc" }}
+                onOrdenar={(chave) => setColuna(chave as ColunaDeReceita)}
+                vazio="Nenhuma campanha para mostrar."
+              />
+            )}
           </Card>
         </>
       )}

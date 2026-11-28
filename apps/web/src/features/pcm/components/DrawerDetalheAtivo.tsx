@@ -1,7 +1,7 @@
 // E01-S78: drawer lateral de detalhe do ativo. Reusa `obterContextoItem` (E01-S76) para
 // breadcrumb/sistemas/componentes e acrescenta o histórico de OS (E01-S16). Fecha por X e por Esc.
 // E01-S79: passa a permitir editar o ativo direto do drawer (antes só visualização).
-import { Skeleton } from "@sinergica/ui";
+import { RecursosNaoAtivadosGrupo, Skeleton } from "@sinergica/ui";
 import { Pencil, Puzzle, Wrench, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../../app/auth-context";
@@ -147,8 +147,8 @@ export function DrawerDetalheAtivo({
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: Esc já fecha via listener global acima. */}
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden="true" />
-      <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card shadow-modal">
+      <div className="absolute inset-0 bg-navy-deep/60" onClick={onClose} aria-hidden="true" />
+      <div className="drawer-panel relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-line bg-card text-ink shadow-drawer">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h3 className="text-heading font-semibold text-ink">Detalhe do ativo</h3>
           <div className="flex items-center gap-3">
@@ -184,74 +184,82 @@ export function DrawerDetalheAtivo({
         {estado.fase === "erro" && (
           <div className="p-8 text-center text-body text-danger">{estado.mensagem}</div>
         )}
-        {detalheAtual && <Conteudo detalhe={detalheAtual} />}
-        {user &&
-          item &&
-          (item.tipo === "componente" || item.tipo === "equipamento") &&
-          item.clientId && (
-            <EdicaoRascunhoCodigo
-              userId={user.id}
-              clienteId={item.clientId}
-              tipo="componente"
-              ativoId={item.id}
-              onAtualizado={() => {
-                void atualizarDetalheCodigo();
-              }}
-            />
-          )}
-        {estado.fase === "pronto" && !estado.detalhe.contexto && (
+        {estado.fase === "pronto" && (detalheAtual || !estado.detalhe.contexto) && (
           <Conteudo detalhe={estado.detalhe} />
         )}
-        {user && item && item.clientId && (
-          <ResultadosDoAlvo
-            userId={user.id}
-            clienteId={item.clientId}
-            tipo="componente"
-            id={item.id}
-            nome={item.nome}
-          />
-        )}
-        {user && item && item.clientId && (
-          <PendenciasDoAlvo
-            userId={user.id}
-            clienteId={item.clientId}
-            tipo="componente"
-            id={item.id}
-          />
-        )}
-        {user && item && item.clientId && (
-          <PlanosDoAlvo userId={user.id} clienteId={item.clientId} tipo="componente" id={item.id} />
-        )}
-        {user &&
-          item &&
-          (item.tipo === "componente" || item.tipo === "equipamento") &&
-          item.clientId && (
-            <FotosStagingAtivo
-              userId={user.id}
-              clienteId={item.clientId}
-              tipo={item.tipo}
-              entidadeId={item.id}
-            />
-          )}
-        {user && item?.tipo === "componente" && item.clientId && (
-          <DocumentosStagingAtivo
-            userId={user.id}
-            clienteId={item.clientId}
-            tipo="componente"
-            entidadeId={item.id}
-          />
-        )}
-        {user &&
-          item &&
-          (item.tipo === "componente" || item.tipo === "equipamento") &&
-          item.clientId && (
-            <HistoricoCadastroLevantamento
-              userId={user.id}
-              clienteId={item.clientId}
-              tipo={item.tipo}
-              entidadeId={item.id}
-            />
-          )}
+        <div className="space-y-3 px-4 pb-4">
+          <RecursosNaoAtivadosGrupo compacto>
+            {user &&
+              item &&
+              (item.tipo === "componente" || item.tipo === "equipamento") &&
+              item.clientId && (
+                <EdicaoRascunhoCodigo
+                  userId={user.id}
+                  clienteId={item.clientId}
+                  tipo="componente"
+                  ativoId={item.id}
+                  onAtualizado={() => {
+                    void atualizarDetalheCodigo();
+                  }}
+                />
+              )}
+            {user && item && item.clientId && (
+              <ResultadosDoAlvo
+                userId={user.id}
+                clienteId={item.clientId}
+                tipo="componente"
+                id={item.id}
+                nome={item.nome}
+              />
+            )}
+            {user && item && item.clientId && (
+              <PendenciasDoAlvo
+                userId={user.id}
+                clienteId={item.clientId}
+                tipo="componente"
+                id={item.id}
+              />
+            )}
+            {user && item && item.clientId && (
+              <PlanosDoAlvo
+                userId={user.id}
+                clienteId={item.clientId}
+                tipo="componente"
+                id={item.id}
+              />
+            )}
+            {user &&
+              item &&
+              (item.tipo === "componente" || item.tipo === "equipamento") &&
+              item.clientId && (
+                <FotosStagingAtivo
+                  userId={user.id}
+                  clienteId={item.clientId}
+                  tipo={item.tipo}
+                  entidadeId={item.id}
+                />
+              )}
+            {user && item?.tipo === "componente" && item.clientId && (
+              <DocumentosStagingAtivo
+                userId={user.id}
+                clienteId={item.clientId}
+                tipo="componente"
+                entidadeId={item.id}
+              />
+            )}
+            {user &&
+              item &&
+              (item.tipo === "componente" || item.tipo === "equipamento") &&
+              item.clientId && (
+                <HistoricoCadastroLevantamento
+                  userId={user.id}
+                  clienteId={item.clientId}
+                  tipo={item.tipo}
+                  entidadeId={item.id}
+                />
+              )}
+          </RecursosNaoAtivadosGrupo>
+        </div>
       </div>
 
       {editando && item && opcoes && (
@@ -394,7 +402,7 @@ function Conteudo({ detalhe }: { detalhe: DetalheAtivo }) {
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section className="rounded-lg border border-line bg-paper p-3 wrap-anywhere">
       <h5 className="mb-1.5 text-micro font-semibold uppercase tracking-wide text-ink-3">
         {titulo}
       </h5>

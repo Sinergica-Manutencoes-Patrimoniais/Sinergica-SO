@@ -54,6 +54,7 @@ describe("E01-S190 AC-9/AC-10", () => {
     await screen.findByRole("button", { name: "Navegar em Área Prédio" });
     fireEvent.click(screen.getByRole("button", { name: "Navegar em Área Prédio" }));
     expect(await screen.findByText("Sala técnica")).toBeTruthy();
+    expect(screen.getAllByText("Área: Prédio", { exact: true })).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Voltar ao Cliente" }));
     expect(await screen.findByRole("button", { name: "Navegar em Área Prédio" })).toBeTruthy();
   });

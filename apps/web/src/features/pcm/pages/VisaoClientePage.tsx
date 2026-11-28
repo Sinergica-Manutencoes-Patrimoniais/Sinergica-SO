@@ -1,4 +1,4 @@
-import { Button, RecursoNaoAtivado, Skeleton } from "@sinergica/ui";
+import { Button, RecursoNaoAtivado, RecursosNaoAtivadosGrupo, Skeleton } from "@sinergica/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -594,7 +594,7 @@ export function VisaoClientePage({
       )}
 
       {aba === "estrutura" && user && (
-        <>
+        <RecursosNaoAtivadosGrupo compacto>
           <PesquisaGlobalEstrutura
             usuario={user.id}
             clienteId={cliente.id}
@@ -607,7 +607,7 @@ export function VisaoClientePage({
             userId={user.id}
             onAbrirOs={abrirDetalheOs}
           />
-        </>
+        </RecursosNaoAtivadosGrupo>
       )}
 
       {aba === "sistemas" && user && (
