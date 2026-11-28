@@ -184,7 +184,7 @@ _75 concluídas no histórico · maior ID usado: E01-S207_
 | E01-S204 | Definição única de OS aberta e unificação das contagens (ponto C do reteste, DEF-40/49) | Claude (worker Devinho, 27/11) | Em PR draft — migration 1913, pgTAP 25 asserções; decisões D1–D8 do dono | [spec](../../specs/E01-S204-definicao-os-aberta/spec.md) |
 | E01-S205 | Arquivar (não apagar) os dados [TESTE E2E] de produção — reversível, sem tocar o Auvo | Claude (Devinho) | Em PR draft — migration 1911, pgTAP 23 asserções; execução em produção depende do dono aprovar o inventário | [spec](../../specs/E01-S205-arquivar-dados-teste-e2e/spec.md) |
 | E01-S206 | Portal do Cliente conta toda OS como "em andamento" (status `concluida`/`cancelada` ≠ `finalizado`/`cancelado`); passa a usar a classificação de OS aberta da 1913 | Claude (worker Devinho, 27/11) | Em PR draft — sem migration; pgTAP 7 asserções + teste de front | — |
-| E01-S207 | Síndico nunca consegue avaliar OS: policy `portal_satisfacao_insert` e filtro de avaliação usam `concluida` em vez de `finalizado` | Claude (worker Devinho, 27/11) | Em PR draft — migration 1914, pgTAP 8 asserções + teste de front | — |
+| E01-S207 | Síndico nunca consegue avaliar OS: policy `portal_satisfacao_insert` e filtro de avaliação usam `concluida` em vez de `finalizado` | Claude (worker Devinho, 27/11) | Em PR draft — migration 1914, pgTAP 10 asserções + teste de front | — |
 
 ### E02 — Atendimento · Zé
 _6 concluídas no histórico · maior ID usado: E02-S43_

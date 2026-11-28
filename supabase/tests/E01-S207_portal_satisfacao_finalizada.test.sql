@@ -1,7 +1,7 @@
 -- E01-S207_portal_satisfacao_finalizada.test.sql — pgTAP
 -- O síndico avalia OS finalizada do próprio Cliente; nada além disso.
 begin;
-select plan(8);
+select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000002071', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sindico-s207@test.local', crypt('x', gen_salt('bf')), now(), '{}', '{}', now(), now())
@@ -45,7 +45,28 @@ select throws_ok($$ insert into pcm.portal_satisfacao (ordem_servico_id, cliente
   values ('00000000-0000-0000-0000-0000000020d4','00000000-0000-0000-0000-0000000020a7',5,'00000000-0000-0000-0000-000000002071') $$,
   '42501', null, 'OS de B declarando cliente_id de A: negada');
 
+-- Revogação imediata (ADR-1691): JWT ainda válido, mas usuário desativado: negado.
 reset role;
+update config.usuarios set ativo = false where user_id = '00000000-0000-0000-0000-000000002071';
+insert into pcm.ordens_servico (id, client_id, numero, titulo, categoria, status, created_by)
+  values ('00000000-0000-0000-0000-0000000020d5', '00000000-0000-0000-0000-0000000020a7', 'OS-S207-5', '[TESTE] finalizada 2', 'corretiva', 'solicitacao', '00000000-0000-0000-0000-000000002071');
+alter table pcm.ordens_servico disable trigger user;
+update pcm.ordens_servico set status = 'finalizado' where id = '00000000-0000-0000-0000-0000000020d5';
+alter table pcm.ordens_servico enable trigger user;
+set local role authenticated;
+select throws_ok($$ insert into pcm.portal_satisfacao (ordem_servico_id, cliente_id, csat, created_by)
+  values ('00000000-0000-0000-0000-0000000020d5','00000000-0000-0000-0000-0000000020a7',5,'00000000-0000-0000-0000-000000002071') $$,
+  '42501', null, 'síndico revogado com JWT ainda válido: negado');
+reset role;
+update config.usuarios set ativo = true where user_id = '00000000-0000-0000-0000-000000002071';
+delete from config.usuario_cliente where user_id = '00000000-0000-0000-0000-000000002071';
+set local role authenticated;
+select throws_ok($$ insert into pcm.portal_satisfacao (ordem_servico_id, cliente_id, csat, created_by)
+  values ('00000000-0000-0000-0000-0000000020d5','00000000-0000-0000-0000-0000000020a7',5,'00000000-0000-0000-0000-000000002071') $$,
+  '42501', null, 'vínculo com o Cliente removido, JWT ainda válido: negado');
+reset role;
+insert into config.usuario_cliente (user_id, cliente_id) values ('00000000-0000-0000-0000-000000002071', '00000000-0000-0000-0000-0000000020a7');
+
 set local role anon;
 select throws_ok($$ insert into pcm.portal_satisfacao (ordem_servico_id, cliente_id, csat, created_by)
   values ('00000000-0000-0000-0000-0000000020d1','00000000-0000-0000-0000-0000000020a7',5,'00000000-0000-0000-0000-000000002071') $$,
